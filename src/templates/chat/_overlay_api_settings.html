@@ -1,0 +1,105 @@
+<!-- API Settings Overlay -->
+<div id="api-settings-overlay" class="overlay hidden">
+    <div class="overlay-content">
+        <div class="overlay-header">
+            <h2>API / Chat Einstellungen</h2>
+            <button class="close-btn" id="close-api-settings">&times;</button>
+        </div>
+        <div class="overlay-body">
+            <div class="settings-form">
+                <div class="form-group">
+                    <label for="api-model">Claude Modell:</label>
+                    <select id="api-model" name="api-model" class="form-input">
+                    </select>
+                    <small class="form-hint">Wähle das Claude-Modell für die Konversation</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="api-temperature">Temperatur: <span id="temperature-display">0.7</span></label>
+                    <div class="slider-with-labels">
+                        <span class="slider-label">Sachlich</span>
+                        <input type="range" id="api-temperature" name="api-temperature" 
+                               class="temperature-slider" min="0.1" max="1.2" step="0.1" value="0.7">
+                        <span class="slider-label">Kreativ</span>
+                    </div>
+                    <small class="form-hint">Niedrige Werte = sachlicher, höhere Werte = kreativer</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="context-limit">Kontext-Limit: <span id="context-limit-display">25</span> Nachrichten</label>
+                    <div class="slider-with-labels">
+                        <span class="slider-label">10</span>
+                        <input type="range" id="context-limit" name="context-limit" 
+                               class="temperature-slider" min="10" max="100" step="5" value="25">
+                        <span class="slider-label">100</span>
+                    </div>
+                    <small class="form-hint form-hint-warning">
+                        ⚠️ Höhere Werte = mehr Kontext für die KI, aber auch höhere API-Kosten!
+                    </small>
+                </div>
+
+                <!-- Experimental Mode Toggle -->
+                <div class="form-group">
+                    <label>Prompt-Modus</label>
+                    <div class="experimental-info-frame">
+                        <div class="mode-toggle-container" title="Default / Experimental Modus umschalten">
+                            <span class="mode-label default-label">Default</span>
+                            <label class="mode-switch">
+                                <input type="checkbox" id="mode-toggle">
+                                <span class="mode-slider"></span>
+                            </label>
+                            <span class="mode-label experimental-label-text">Experimental</span>
+                        </div>
+                        <div class="experimental-info-text">
+                            <strong>Default:</strong> Standard-Prompting mit Content-Filter und eingeschränktem Rollenspiel-Kontext.<br>
+                            <strong>Experimental:</strong> Erweitertes Prompting mit Consent-Agreement, Impersonation-Prefill und uneingeschränktem Charakter-Template. Erhöhter Token-Verbrauch.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nachgedanke (Afterthought) Toggle -->
+                <div class="form-group">
+                    <label>Nachgedanke</label>
+                    <div class="experimental-info-frame">
+                        <div class="mode-toggle-container" title="Nachgedanke-System aktivieren/deaktivieren">
+                            <span class="mode-label nachgedanke-off-label">Aus</span>
+                            <label class="mode-switch">
+                                <input type="checkbox" id="nachgedanke-toggle">
+                                <span class="mode-slider"></span>
+                            </label>
+                            <span class="mode-label nachgedanke-on-label">An</span>
+                        </div>
+                        <div class="experimental-info-text">
+                            <strong>Nachgedanke:</strong> Die Persona führt nach jeder Antwort einen inneren Dialog und entscheidet, ob sie spontan etwas ergänzen möchte. Erzeugt natürliches, sporadisches Schreibverhalten mit eskalierenden Zeitintervallen (10s → 1min → 5min → 15min → 1h). Zusätzliche API-Kosten pro Check.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Token-Info Feature -->
+                <div class="form-group">
+                    <label>Token & Kosten-Kontrolle</label>
+                    <div class="token-info-section">
+                        <div class="token-info-description">
+                            <p>Bei jeder Antwort der Persona erscheint ein <strong>Info-Button (i)</strong> rechts neben der Nachricht. Klicken Sie darauf, um detaillierte Informationen zu sehen:</p>
+                            <ul class="feature-list">
+                                <li>📈 Token-Verbrauch (Input/Output)</li>
+                                <li>🔍 Aufschlüsselung nach Komponenten (System, Memory, History)</li>
+                                <li>💰 Ungefähre Kostenberechnung</li>
+                            </ul>
+                            <div class="token-info-image-wrapper">
+                                <img src="/static/images/token_info.png" alt="Token Info Feature" class="token-info-preview">
+                            </div>
+                            <div class="token-info-disclaimer">
+                                <strong>⚠️ Wichtiger Hinweis:</strong> Die angezeigten Kosten sind ungefähre Berechnungen, da die Claude API keine Kosteninformationen zurückgibt. Die Berechnung basiert auf den aktuellen Preisen des gewählten Modells. Bitte gleichen Sie die Werte mit Ihrer Anbieter-Rechnung ab, um sicherzustellen, dass die Preise noch aktuell sind.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="overlay-footer">
+            <button class="btn btn-secondary" id="reset-api-settings-btn">Zurücksetzen</button>
+            <button class="btn btn-primary" id="save-api-settings-btn">Speichern</button>
+        </div>
+    </div>
+</div>

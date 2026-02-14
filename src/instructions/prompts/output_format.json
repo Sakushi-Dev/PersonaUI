@@ -1,0 +1,10 @@
+{
+  "output_format": {
+    "variants": {
+      "default": {
+        "content": "**CODE FORMATTING**\n\nIf your persona can program and wants to demonstrate it, they can do so as follows:\n\nWhen sharing code examples in any programming language, use standard markdown code blocks:\n- Start with ```language on its own line (e.g., ```python, ```javascript, ```java)\n- Include the code with proper line breaks and indentation\n- End with ``` on its own line\n\nExample:\n```python\ndef example():\n    print('Python example')\n```"
+      }
+    },
+    "placeholders_used": []
+  }
+}

@@ -1,0 +1,51 @@
+<!-- Avatar Gallery Overlay (inline) -->
+<div class="ob-avatar-gallery-overlay hidden" id="ob-avatar-gallery-overlay">
+    <div class="ob-avatar-gallery-card">
+        <div class="ob-avatar-gallery-header">
+            <h3>Avatar auswählen</h3>
+            <button class="ob-avatar-gallery-close" id="ob-avatar-gallery-close">&times;</button>
+        </div>
+        
+        <!-- Step 1: Gallery + Upload -->
+        <div id="ob-avatar-select-step" class="ob-avatar-step active">
+            <div class="ob-avatar-dropzone" id="ob-avatar-dropzone">
+                <div class="ob-dropzone-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                </div>
+                <span class="ob-dropzone-text">Eigenes Bild hierher ziehen</span>
+                <span class="ob-dropzone-hint">oder klicken zum Auswählen</span>
+            </div>
+            <input type="file" id="ob-avatar-file" accept=".png,.jpg,.jpeg,.webp" class="hidden">
+            
+            <div class="ob-avatar-divider"><span>oder aus der Galerie wählen</span></div>
+            
+            <div class="ob-avatar-grid" id="ob-avatar-grid">
+                <!-- Dynamisch befüllt -->
+            </div>
+        </div>
+        
+        <!-- Step 2: Crop -->
+        <div id="ob-avatar-crop-step" class="ob-avatar-step hidden">
+            <h4 class="ob-crop-title">Bild zuschneiden:</h4>
+            <div class="ob-crop-container">
+                <div class="ob-crop-canvas-wrap">
+                    <canvas id="ob-crop-canvas" width="400" height="400"></canvas>
+                </div>
+                <div class="ob-crop-preview-area">
+                    <div class="ob-crop-preview-circle">
+                        <canvas id="ob-crop-preview" width="160" height="160"></canvas>
+                    </div>
+                    <p class="ob-crop-hint">Ziehe den Ausschnitt oder nutze das Mausrad zum Zoomen.</p>
+                </div>
+            </div>
+            <div class="ob-crop-actions">
+                <button class="ob-btn ob-btn-ghost" id="ob-crop-back">Zurück</button>
+                <button class="ob-btn ob-btn-primary" id="ob-crop-save">Speichern</button>
+            </div>
+        </div>
+    </div>
+</div>

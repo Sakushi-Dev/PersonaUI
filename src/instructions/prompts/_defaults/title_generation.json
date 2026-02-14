@@ -1,0 +1,12 @@
+{
+  "title_generation": {
+    "variants": {
+      "default": {
+        "content": "Create a short, concise title (max 3 words) for the following conversation:\n\n{{context}}\n\nRespond only with the title, without quotation marks or additional text."
+      }
+    },
+    "placeholders_used": [
+      "context"
+    ]
+  }
+}

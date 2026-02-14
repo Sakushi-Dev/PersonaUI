@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PersonaUI – Prompt Editor</title>
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    <style>{{EDITOR_CSS}}</style>
+</head>
+<body>
+
+<div id="app">
+    <!-- ===== SIDEBAR ===== -->
+    <aside id="sidebar">
+        <header class="sidebar-header">
+            <h1>Prompt Editor</h1>
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="Suchen..." spellcheck="false">
+            </div>
+        </header>
+
+        <div class="sidebar-content" id="prompt-list">
+            <div class="sidebar-loading">Lädt...</div>
+        </div>
+
+        <div class="sidebar-footer">
+            <button id="btn-new-prompt" class="btn btn-accent btn-block">+ Neuer Prompt</button>
+            <div class="sidebar-actions">
+                <button id="btn-validate" class="btn btn-outline btn-sm">Validieren</button>
+                <button id="btn-full-preview" class="btn btn-outline btn-sm">Full Preview</button>
+                <button id="btn-compositor" class="btn btn-outline btn-sm" title="Ctrl+Shift+K">Compositor</button>
+                <button id="btn-placeholder-mgr" class="btn btn-outline btn-sm" title="Ctrl+Shift+P">Placeholder</button>
+                <button id="btn-reload" class="btn btn-outline btn-sm">Reload</button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main id="main-content">
+        <!-- Welcome Screen (kein Prompt ausgewählt) -->
+        <div id="welcome-screen">
+            <div class="welcome-icon">📝</div>
+            <h2>Prompt Editor</h2>
+            <p>Wähle einen Prompt aus der Sidebar zum Bearbeiten</p>
+            <div class="welcome-shortcuts">
+                <p class="welcome-hint">Shortcuts</p>
+                <div class="shortcut-grid">
+                    <kbd>Ctrl+S</kbd><span>Speichern</span>
+                    <kbd>Ctrl+F</kbd><span>Suche</span>
+                    <kbd>Ctrl+Shift+N</kbd><span>Neuer Prompt</span>
+                    <kbd>Ctrl+Shift+D</kbd><span>Duplizieren</span>
+                    <kbd>Ctrl+Shift+P</kbd><span>Placeholder</span>
+                    <kbd>Ctrl+Shift+K</kbd><span>Compositor</span>
+                    <kbd>{{</kbd><span>Autocomplete</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Editor Container (sichtbar wenn Prompt geladen) -->
+        <div id="editor-container" style="display:none">
+            <!-- Metadata Panel -->
+            <section id="metadata-panel">
+                <div class="meta-row">
+                    <div class="meta-field meta-field-id">
+                        <label for="meta-id">ID</label>
+                        <input type="text" id="meta-id" readonly>
+                    </div>
+                    <div class="meta-field meta-field-name">
+                        <label for="meta-name">Name</label>
+                        <input type="text" id="meta-name" spellcheck="false">
+                    </div>
+                    <div class="meta-field meta-field-category">
+                        <label for="meta-category">Category</label>
+                        <select id="meta-category">
+                            <option value="system">System</option>
+                            <option value="persona">Persona</option>
+                            <option value="context">Context</option>
+                            <option value="prefill">Prefill</option>
+                            <option value="dialog_injection">Dialog Injection</option>
+                            <option value="afterthought">Afterthought</option>
+                            <option value="summary">Summary</option>
+                            <option value="spec_autofill">Spec Autofill</option>
+                            <option value="utility">Utility</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="meta-row">
+                    <div class="meta-field">
+                        <label for="meta-description">Beschreibung</label>
+                        <input type="text" id="meta-description" spellcheck="false">
+                    </div>
+                </div>
+                <div class="meta-row">
+                    <div class="meta-field meta-field-target">
+                        <label for="meta-target">Target</label>
+                        <select id="meta-target">
+                            <option value="system_prompt">system_prompt</option>
+                            <option value="message">message</option>
+                            <option value="prefill">prefill</option>
+                        </select>
+                    </div>
+                    <div class="meta-field meta-field-position">
+                        <label for="meta-position">Position</label>
+                        <select id="meta-position">
+                            <option value="system_prompt">system_prompt</option>
+                            <option value="system_prompt_append">system_prompt_append</option>
+                            <option value="first_assistant">first_assistant</option>
+                            <option value="consent_dialog">consent_dialog</option>
+                            <option value="user_message">user_message</option>
+                            <option value="prefill">prefill</option>
+                        </select>
+                    </div>
+                    <div class="meta-field meta-field-order">
+                        <label for="meta-order">Order</label>
+                        <input type="number" id="meta-order" min="0" step="100">
+                    </div>
+                    <div class="meta-field meta-field-domain">
+                        <label for="meta-domain">Domain-Datei</label>
+                        <input type="text" id="meta-domain" spellcheck="false">
+                    </div>
+                    <div class="meta-field meta-field-toggle">
+                        <label for="meta-enabled">Enabled</label>
+                        <label class="toggle-switch-lg">
+                            <input type="checkbox" id="meta-enabled">
+                            <span class="toggle-slider-lg"></span>
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Variant Tabs + Save Actions -->
+            <div class="editor-toolbar">
+                <div id="variant-tabs"></div>
+                <div class="editor-actions">
+                    <button id="btn-restore" class="btn btn-outline btn-sm" title="Auf Default zurücksetzen">↺ Default</button>
+                    <button id="btn-duplicate" class="btn btn-outline btn-sm" title="Duplizieren (Ctrl+Shift+D)">Duplizieren</button>
+                    <button id="btn-delete" class="btn btn-danger btn-sm" title="Prompt löschen">Löschen</button>
+                    <button id="btn-discard" class="btn btn-outline btn-sm">Verwerfen</button>
+                    <button id="btn-save" class="btn btn-accent btn-sm">Speichern</button>
+                </div>
+            </div>
+
+            <!-- Content Editor -->
+            <section id="content-section">
+                <textarea id="content-editor" spellcheck="false" placeholder="Prompt-Content hier eingeben..."></textarea>
+                <!-- Multi-Turn Editor (für dialog_injection) -->
+                <div id="multiturn-editor" style="display:none">
+                    <div class="mt-header">
+                        <span class="mt-label">Startet mit:</span>
+                        <div class="mt-role-toggle">
+                            <button class="mt-role-btn active" data-role="assistant">Assistant</button>
+                            <button class="mt-role-btn" data-role="user">User</button>
+                        </div>
+                    </div>
+                    <div id="mt-messages"></div>
+                    <div class="mt-actions">
+                        <button class="btn btn-outline btn-sm" id="btn-mt-add">+ Nachricht</button>
+                        <button class="btn btn-outline btn-sm" id="btn-mt-remove">Letzte entfernen</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Placeholder Info -->
+            <section id="placeholder-section">
+                <div class="section-title-row">
+                    <h3 class="section-title">Placeholder</h3>
+                    <button id="btn-insert-placeholder" class="btn btn-outline btn-xs" title="Placeholder einfügen">+ Einfügen</button>
+                </div>
+                <div id="placeholder-list"></div>
+            </section>
+
+            <!-- Preview -->
+            <section id="preview-section">
+                <h3 class="section-title">Preview (aufgelöst)</h3>
+                <div id="preview-content" class="preview-box"></div>
+            </section>
+        </div>
+    </main>
+</div>
+
+<!-- Status Bar -->
+<div id="status-bar">
+    <span id="status-text">Lädt...</span>
+</div>
+
+<!-- Autocomplete Dropdown -->
+<div id="autocomplete-dropdown" class="ac-dropdown" style="display:none"></div>
+
+<!-- Modal Overlay -->
+<div id="modal-overlay" style="display:none">
+    <div id="modal-dialog">
+        <div id="modal-header">
+            <h2 id="modal-title"></h2>
+            <button id="modal-close" class="modal-close-btn">&times;</button>
+        </div>
+        <div id="modal-body"></div>
+        <div id="modal-footer"></div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toast-container"></div>
+
+<script>
+{{EDITOR_JS}}
+</script>
+
+</body>
+</html>

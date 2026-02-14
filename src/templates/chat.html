@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.8">
+    <title>{{ character.char_name }} - Chat</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+    <script>
+        // Farben sofort aus localStorage laden, bevor der Hintergrund sichtbar wird
+        (function() {
+            var r = document.documentElement.style;
+            var darkMode = localStorage.getItem('darkMode') === 'true';
+            var mode = darkMode ? 'dark' : 'light';
+            
+            // Default colors
+            var defaultLight = { bg: '#a3baff', g1: '#66cfff', c2: '#fd91ee' };
+            var defaultDark = { bg: '#1a2332', g1: '#2a3f5f', c2: '#3d4f66' };
+            var defaults = darkMode ? defaultDark : defaultLight;
+            
+            var bg = localStorage.getItem('backgroundColor_' + mode) || defaults.bg;
+            var g1 = localStorage.getItem('colorGradient1_' + mode) || defaults.g1;
+            var c2 = localStorage.getItem('color2_' + mode) || defaults.c2;
+            
+            r.setProperty('--color-white', bg);
+            r.setProperty('--color-gradient1', g1);
+            r.setProperty('--color-sky', c2);
+            
+            if (darkMode) document.documentElement.classList.add('dark-mode-early');
+        })();
+    </script>
+</head>
+<body class="chat-layout">
+    <!-- Dynamischer Hintergrund -->
+    <div class="dynamic-background">
+        <div class="color-blob blob-1"></div>
+        <div class="color-blob blob-2"></div>
+    </div>
+    
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    {# ==================== SIDEBAR ==================== #}
+    {% include 'chat/_sidebar.html' %}
+
+    <!-- Main Content Area -->
+    <div class="main-content" id="main-content">
+    
+    {# ==================== HEADER ==================== #}
+    {% include 'chat/_header.html' %}
+
+    {# ==================== OVERLAYS ==================== #}
+    {% include 'chat/_overlay_api_warning.html' %}
+    {% include 'chat/_overlay_credit_exhausted.html' %}
+    {% include 'chat/_overlay_persona_settings.html' %}
+    {% include 'chat/_overlay_interface_settings.html' %}
+    {% include 'chat/_overlay_api_key.html' %}
+    {% include 'chat/_overlay_api_settings.html' %}
+    {% include 'chat/_overlay_server_settings.html' %}
+    {% include 'chat/_overlay_avatar_editor.html' %}
+    {% include 'chat/_overlay_memory.html' %}
+    {% include 'chat/_overlay_qr_code.html' %}
+    {% include 'chat/_overlay_custom_specs.html' %}
+    {% include 'chat/_overlay_access_control.html' %}
+    {% include 'chat/_overlay_user_profile.html' %}
+    {#{% include 'chat/_overlay_debug.html' %}#}
+
+    {# ==================== LOADING ==================== #}
+    {% include 'chat/_loading.html' %}
+
+    {# ==================== CHAT BEREICH ==================== #}
+    {% include 'chat/_chat_messages.html' %}
+    {% include 'chat/_chat_input.html' %}
+
+    </div> <!-- Ende main-content -->
+
+    <script>
+        // Übergebe session_id und character avatar data an JavaScript
+        window.currentSessionId = {% if current_session_id %}{{ current_session_id }}{% else %}null{% endif %};
+        window.activePersonaId = '{{ active_persona_id | default("default") }}';
+        window.totalMessageCount = {% if total_message_count %}{{ total_message_count }}{% else %}0{% endif %};
+        window.characterAvatar = {
+            image: {% if character.avatar %}'{{ character.avatar }}'{% else %}null{% endif %},
+            type: {% if character.get('avatar_type') %}'{{ character.avatar_type }}'{% else %}'standard'{% endif %}
+        };
+        window.userProfile = {{ user_profile | tojson }};
+        window.lastMemoryMessageId = {% if last_memory_message_id %}{{ last_memory_message_id }}{% else %}null{% endif %};
+
+        // Global Toast Notification System
+        window.showNotification = function(message, type, duration) {
+            type = type || 'info';
+            duration = duration || 4000;
+            var container = document.getElementById('toast-container');
+            if (!container) return;
+            var toast = document.createElement('div');
+            toast.className = 'toast toast-' + type;
+            toast.textContent = message;
+            container.appendChild(toast);
+            // Trigger reflow for animation
+            toast.offsetHeight;
+            toast.classList.add('show');
+            setTimeout(function() {
+                toast.classList.remove('show');
+                setTimeout(function() { toast.remove(); }, 400);
+            }, duration);
+        };
+    </script>
+    <script type="module" src="{{ url_for('static', filename='js/chat.js') }}"></script>
+</body>
+</html>

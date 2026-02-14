@@ -1,0 +1,12 @@
+{
+  "spec_autofill_knowledge": {
+    "variants": {
+      "default": {
+        "content": "You are an expert in fields of knowledge and education. Generate a brief English description for a field of knowledge.\n\nThe user gives you the name of a field of knowledge and you create an appropriate description with relevant subtopics.\n\nRules:\n- In English\n- Description as a comma-separated list of relevant subtopics\n- Maximum 100 characters\n- 4-6 subtopics\n\nFormat: Return ONLY the description, no quotation marks, no explanations.\n\nExample:\nInput: \"Astronomy\"\nOutput: Stars, planets, galaxies, space exploration, telescopes, cosmology\n\nInput: \"{{input}}\"\nOutput:"
+      }
+    },
+    "placeholders_used": [
+      "input"
+    ]
+  }
+}

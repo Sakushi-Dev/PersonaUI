@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+<style>
+{{RESET_CSS}}
+</style>
+</head>
+<body>
+    <div id="glow-bloom"></div>
+    <div id="console-wrapper"></div>
+    <div id="center-content">
+        <div id="title">PERSONA UI</div>
+        <div id="subtitle">SYSTEM RESET</div>
+        <div id="spinner"></div>
+        <div id="confirm-box">
+            <div id="confirm-text">
+                Alle Daten werden unwiderruflich gelöscht:<br>
+                <span class="detail">Chat-Nachrichten, Sitzungen, Einstellungen,<br>
+                erstellte Personas, Avatare, API-Schlüssel</span>
+            </div>
+            <div id="confirm-buttons">
+                <button id="btn-cancel" onclick="onCancel()">Abbrechen</button>
+                <button id="btn-confirm" onclick="onConfirm()">Reset ausführen</button>
+            </div>
+        </div>
+        <div id="finish-buttons" style="display:none;">
+            <button id="btn-start" onclick="onStart()">PersonaUI starten</button>
+            <button id="btn-close" onclick="onClose()">Schließen</button>
+        </div>
+    </div>
+<script>
+{{RESET_JS}}
+</script>
+</body>
+</html>

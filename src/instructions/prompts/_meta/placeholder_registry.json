@@ -1,0 +1,331 @@
+{
+  "version": "2.0",
+  "placeholders": {
+    "char_name": {
+      "name": "Persona-Name",
+      "description": "Name der aktiven Persona",
+      "source": "persona_config",
+      "source_path": "persona_settings.name",
+      "type": "string",
+      "default": "Assistant",
+      "category": "persona",
+      "resolve_phase": "static"
+    },
+    "char_age": {
+      "name": "Persona-Alter",
+      "description": "Alter der Persona",
+      "source": "persona_config",
+      "source_path": "persona_settings.age",
+      "type": "number",
+      "default": 18,
+      "category": "persona",
+      "resolve_phase": "static"
+    },
+    "char_gender": {
+      "name": "Persona-Geschlecht",
+      "description": "Geschlecht der Persona",
+      "source": "persona_config",
+      "source_path": "persona_settings.gender",
+      "type": "string",
+      "default": "divers",
+      "category": "persona",
+      "resolve_phase": "static"
+    },
+    "persona_type": {
+      "name": "Persona-Typ",
+      "description": "Typ der Persona (z.B. Fee, Vampir, Mensch)",
+      "source": "persona_config",
+      "source_path": "persona_settings.persona",
+      "type": "string",
+      "default": "KI",
+      "category": "persona",
+      "resolve_phase": "static"
+    },
+    "persona_type_description": {
+      "name": "Persona-Typ Beschreibung",
+      "description": "Ausführliche Beschreibung des Persona-Typs aus der Spec-Datei",
+      "source": "computed",
+      "compute_function": "build_persona_type_description",
+      "type": "string",
+      "default": "",
+      "category": "persona",
+      "resolve_phase": "computed"
+    },
+    "char_core_traits": {
+      "name": "Kernmerkmale",
+      "description": "Aufgelöste Kerncharaktereigenschaften mit Beschreibungen aus der Spec-Datei",
+      "source": "computed",
+      "compute_function": "build_char_core_traits",
+      "type": "string",
+      "default": "",
+      "category": "persona",
+      "resolve_phase": "computed"
+    },
+    "char_knowledge": {
+      "name": "Wissensgebiete",
+      "description": "Aufgelöste Wissensgebiete mit Beschreibungen aus der Spec-Datei",
+      "source": "computed",
+      "compute_function": "build_char_knowledge",
+      "type": "string",
+      "default": "",
+      "category": "persona",
+      "resolve_phase": "computed"
+    },
+    "char_expression": {
+      "name": "Ausdrucksstil",
+      "description": "Aufgelöster Kommunikationsstil mit Details aus der Spec-Datei",
+      "source": "computed",
+      "compute_function": "build_char_expression",
+      "type": "string",
+      "default": "",
+      "category": "persona",
+      "resolve_phase": "computed"
+    },
+    "char_scenarios": {
+      "name": "Szenarien",
+      "description": "Aufgelöste Szenarien/Settings mit Details aus der Spec-Datei",
+      "source": "computed",
+      "compute_function": "build_char_scenarios",
+      "type": "string",
+      "default": "",
+      "category": "persona",
+      "resolve_phase": "computed"
+    },
+    "char_background": {
+      "name": "Hintergrundgeschichte",
+      "description": "Hintergrundgeschichte der Persona",
+      "source": "persona_config",
+      "source_path": "persona_settings.background",
+      "type": "string",
+      "default": "",
+      "category": "persona",
+      "resolve_phase": "static"
+    },
+    "char_description": {
+      "name": "Vollständige Persona-Beschreibung",
+      "description": "Automatisch generiert aus allen Persona-Settings",
+      "source": "computed",
+      "compute_function": "build_character_description",
+      "type": "string",
+      "default": "",
+      "category": "persona",
+      "resolve_phase": "computed"
+    },
+    "user_name": {
+      "name": "Benutzername",
+      "description": "Name des Benutzers",
+      "source": "user_profile",
+      "source_path": "user_name",
+      "type": "string",
+      "default": "User",
+      "category": "user",
+      "resolve_phase": "static"
+    },
+    "user_type": {
+      "name": "Benutzertyp",
+      "description": "Typ des Benutzers",
+      "source": "user_profile",
+      "source_path": "user_type",
+      "type": "string",
+      "default": "Nicht angegeben",
+      "category": "user",
+      "resolve_phase": "static"
+    },
+    "user_type_description": {
+      "name": "Benutzertyp-Beschreibung",
+      "description": "Beschreibung des Benutzertyps",
+      "source": "user_profile",
+      "source_path": "user_type_description",
+      "type": "string",
+      "default": "Keine Beschreibung",
+      "category": "user",
+      "resolve_phase": "static"
+    },
+    "user_gender": {
+      "name": "Benutzer-Geschlecht",
+      "description": "Geschlecht des Benutzers",
+      "source": "user_profile",
+      "source_path": "user_gender",
+      "type": "string",
+      "default": "Nicht angegeben",
+      "category": "user",
+      "resolve_phase": "static"
+    },
+    "user_interested_in": {
+      "name": "Benutzer-Interesse",
+      "description": "Geschlechter, für die sich der Benutzer interessiert",
+      "source": "user_profile",
+      "source_path": "user_interested_in",
+      "type": "list",
+      "default": "Nicht angegeben",
+      "category": "user",
+      "resolve_phase": "static"
+    },
+    "user_info": {
+      "name": "Benutzer-Info",
+      "description": "Zusätzliche Informationen zum Benutzer",
+      "source": "user_profile",
+      "source_path": "user_info",
+      "type": "string",
+      "default": "Keine Angaben",
+      "category": "user",
+      "resolve_phase": "static"
+    },
+    "language": {
+      "name": "Sprache",
+      "description": "Sprache für die Konversation",
+      "source": "runtime",
+      "type": "string",
+      "default": "de",
+      "category": "system",
+      "resolve_phase": "runtime"
+    },
+    "current_date": {
+      "name": "Aktuelles Datum",
+      "description": "Heutiges Datum (DD.MM.YYYY)",
+      "source": "computed",
+      "compute_function": "get_time_context.current_date",
+      "type": "string",
+      "default": "",
+      "category": "context",
+      "resolve_phase": "computed"
+    },
+    "current_time": {
+      "name": "Aktuelle Uhrzeit",
+      "description": "Aktuelle Uhrzeit (HH:MM)",
+      "source": "computed",
+      "compute_function": "get_time_context.current_time",
+      "type": "string",
+      "default": "",
+      "category": "context",
+      "resolve_phase": "computed"
+    },
+    "current_weekday": {
+      "name": "Aktueller Wochentag",
+      "description": "Aktueller Wochentag auf Deutsch",
+      "source": "computed",
+      "compute_function": "get_time_context.current_weekday",
+      "type": "string",
+      "default": "",
+      "category": "context",
+      "resolve_phase": "computed"
+    },
+    "elapsed_time": {
+      "name": "Vergangene Zeit",
+      "description": "Vergangene Zeit seit letzter Antwort (für Afterthought)",
+      "source": "runtime",
+      "type": "string",
+      "default": "",
+      "category": "afterthought",
+      "resolve_phase": "runtime"
+    },
+    "inner_dialogue": {
+      "name": "Innerer Dialog",
+      "description": "Ergebnis des inneren Dialogs (für Afterthought Followup)",
+      "source": "runtime",
+      "type": "string",
+      "default": "",
+      "category": "afterthought",
+      "resolve_phase": "runtime"
+    },
+    "memory_entries": {
+      "name": "Erinnerungen",
+      "description": "Formatierte Memory-Einträge für den Prompt-Kontext",
+      "source": "runtime",
+      "type": "string",
+      "default": "",
+      "category": "context",
+      "resolve_phase": "runtime"
+    },
+    "input": {
+      "name": "Input-Text",
+      "description": "Dynamischer Input-Text (für Spec-Autofill)",
+      "source": "runtime",
+      "type": "string",
+      "default": "",
+      "category": "spec_autofill",
+      "resolve_phase": "runtime"
+    },
+    "chat_text": {
+      "name": "Chat-Verlauf",
+      "description": "Formatierter Chat-Verlauf für Summary",
+      "source": "runtime",
+      "type": "string",
+      "default": "",
+      "category": "summary",
+      "resolve_phase": "runtime"
+    },
+    "max_words": {
+      "name": "Maximale Wortanzahl",
+      "description": "Maximale Wortanzahl für Summary",
+      "source": "runtime",
+      "type": "number",
+      "default": 300,
+      "category": "summary",
+      "resolve_phase": "runtime"
+    },
+    "context": {
+      "name": "Chat-Kontext",
+      "description": "Chat-History für Titel-Generierung",
+      "source": "runtime",
+      "type": "string",
+      "default": "",
+      "category": "utility",
+      "resolve_phase": "runtime"
+    },
+    "user_hint_section": {
+      "name": "User-Hinweis",
+      "description": "Benutzereingabe für Background-Generierung, falls leer wird ein Standard-Prompt verwendet",
+      "source": "runtime",
+      "type": "string",
+      "default": "",
+      "category": "utility",
+      "resolve_phase": "runtime"
+    },
+    "reference_text": {
+      "name": "Referenz-Text",
+      "description": "Bereits vorhandene Persona-Daten als Referenz für Background-Generierung",
+      "source": "runtime",
+      "type": "string",
+      "default": "",
+      "category": "utility",
+      "resolve_phase": "runtime"
+    },
+    "history": {
+      "name": "Konversationsverlauf",
+      "description": "Platzhalter für die Konversationshistorie – wird zu user/assistant Messages expandiert. Darf nur alleinstehend ohne Zusatztext verwendet werden.",
+      "source": "runtime",
+      "type": "message_array",
+      "default": "",
+      "category": "context",
+      "resolve_phase": "runtime"
+    },
+    "experimental_01": {
+      "name": "Experimental Erweiterung 1",
+      "description": "Optionale experimentelle Erweiterung für Prompts (Summary/Spec)",
+      "source": "runtime",
+      "type": "string",
+      "default": "",
+      "category": "system",
+      "resolve_phase": "runtime"
+    },
+    "experimental_02": {
+      "name": "Experimental Erweiterung 2",
+      "description": "Optionale experimentelle Erweiterung für Summary-Charakter",
+      "source": "runtime",
+      "type": "string",
+      "default": "",
+      "category": "system",
+      "resolve_phase": "runtime"
+    },
+    "experimental_03": {
+      "name": "Experimental Erweiterung 3",
+      "description": "Optionale experimentelle Erweiterung für Summary-Remember",
+      "source": "runtime",
+      "type": "string",
+      "default": "",
+      "category": "system",
+      "resolve_phase": "runtime"
+    }
+  }
+}

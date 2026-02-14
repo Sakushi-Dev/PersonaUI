@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zugang angefragt – PersonaUI</title>
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #ffffff;
+            overflow: hidden;
+        }
+
+        .waiting-container {
+            text-align: center;
+            max-width: 480px;
+            padding: 40px 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .pulse-ring {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 32px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pulse-ring::before,
+        .pulse-ring::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid rgba(100, 180, 255, 0.4);
+            animation: pulse-expand 2.5s ease-out infinite;
+        }
+
+        .pulse-ring::after {
+            animation-delay: 1.25s;
+        }
+
+        @keyframes pulse-expand {
+            0% { transform: scale(0.8); opacity: 1; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+
+        .pulse-icon {
+            font-size: 48px;
+            animation: gentle-bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes gentle-bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+
+        .waiting-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            letter-spacing: -0.3px;
+        }
+
+        .waiting-subtitle {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        .status-box {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(10px);
+        }
+
+        .status-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-bottom: 12px;
+        }
+
+        #status-text {
+            font-size: 18px;
+            font-weight: 500;
+            color: #64b4ff;
+            transition: color 0.3s ease;
+        }
+
+        #status-text.approved {
+            color: #4ade80;
+        }
+
+        #status-text.denied {
+            color: #f87171;
+        }
+
+        #status-text.rate-limited {
+            color: #fbbf24;
+        }
+
+        .timer {
+            margin-top: 16px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.35);
+        }
+
+        #timer-value {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .retry-btn {
+            display: none;
+            margin: 20px auto 0;
+            padding: 12px 32px;
+            background: rgba(100, 180, 255, 0.15);
+            border: 1px solid rgba(100, 180, 255, 0.3);
+            color: #64b4ff;
+            border-radius: 12px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .retry-btn:hover {
+            background: rgba(100, 180, 255, 0.25);
+            border-color: rgba(100, 180, 255, 0.5);
+        }
+
+        .retry-btn.visible {
+            display: inline-block;
+        }
+
+        /* Dezente Hintergrund-Animation */
+        .bg-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.15;
+            pointer-events: none;
+        }
+
+        .bg-orb-1 {
+            width: 400px;
+            height: 400px;
+            background: #3b82f6;
+            top: -100px;
+            left: -100px;
+            animation: float-orb 20s ease-in-out infinite alternate;
+        }
+
+        .bg-orb-2 {
+            width: 350px;
+            height: 350px;
+            background: #8b5cf6;
+            bottom: -80px;
+            right: -80px;
+            animation: float-orb 25s ease-in-out infinite alternate-reverse;
+        }
+
+        @keyframes float-orb {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(60px, 40px); }
+        }
+
+        /* Redirect-Animation */
+        .redirect-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .redirect-overlay.visible {
+            display: flex;
+        }
+
+        .redirect-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .redirect-text {
+            font-size: 20px;
+            color: #4ade80;
+        }
+    </style>
+</head>
+<body>
+    <!-- Hintergrund-Effekte -->
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+
+    <div class="waiting-container">
+        <div class="pulse-ring">
+            <div class="pulse-icon">🔐</div>
+        </div>
+
+        <h1 class="waiting-title">Zugang angefragt</h1>
+        <p class="waiting-subtitle">
+            Deine Anfrage wurde an den Gerätebesitzer gesendet.<br>
+            Bitte warte, bis der Zugang genehmigt wird.
+        </p>
+
+        <div class="status-box">
+            <div class="status-label">Status</div>
+            <div id="status-text">Warte auf Genehmigung…</div>
+            <div class="timer">Wartezeit: <span id="timer-value">0s</span></div>
+        </div>
+
+        <button class="retry-btn" id="retry-btn" onclick="retryRequest()">Erneut versuchen</button>
+    </div>
+
+    <!-- Redirect-Overlay -->
+    <div class="redirect-overlay" id="redirect-overlay">
+        <div class="redirect-icon">✅</div>
+        <div class="redirect-text">Zugang genehmigt – Weiterleitung…</div>
+    </div>
+
+    <script>
+        let pollInterval = null;
+        let timerInterval = null;
+        let startTime = Date.now();
+
+        // Timer aktualisieren
+        function updateTimer() {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            const timerEl = document.getElementById('timer-value');
+            
+            if (minutes > 0) {
+                timerEl.textContent = `${minutes}m ${seconds}s`;
+            } else {
+                timerEl.textContent = `${seconds}s`;
+            }
+        }
+
+        // Zugangsanfrage stellen
+        async function requestAccess() {
+            try {
+                const response = await fetch('/api/access/request', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+
+                if (data.status === 'approved') {
+                    onApproved();
+                    return;
+                }
+
+                if (data.status === 'denied') {
+                    onDenied();
+                    return;
+                }
+
+                if (data.status === 'rate_limited') {
+                    onRateLimited();
+                    return;
+                }
+
+                // pending → Polling starten
+                startPolling();
+
+            } catch (error) {
+                console.error('Fehler bei Zugangsanfrage:', error);
+                document.getElementById('status-text').textContent = 'Verbindungsfehler. Versuche erneut…';
+                setTimeout(requestAccess, 3000);
+            }
+        }
+
+        // Polling starten
+        function startPolling() {
+            if (pollInterval) return;
+            
+            pollInterval = setInterval(async () => {
+                try {
+                    const response = await fetch('/api/access/poll');
+                    const data = await response.json();
+
+                    if (data.status === 'approved') {
+                        onApproved();
+                    } else if (data.status === 'denied') {
+                        onDenied();
+                    } else if (data.status === 'expired') {
+                        onExpired();
+                    }
+                    // 'pending' → weiter warten
+                } catch (error) {
+                    console.error('Polling-Fehler:', error);
+                }
+            }, 2000);
+        }
+
+        function stopPolling() {
+            if (pollInterval) {
+                clearInterval(pollInterval);
+                pollInterval = null;
+            }
+        }
+
+        // Status-Handler
+        function onApproved() {
+            stopPolling();
+            clearInterval(timerInterval);
+            
+            const statusText = document.getElementById('status-text');
+            statusText.textContent = 'Zugang genehmigt!';
+            statusText.className = 'approved';
+            
+            // Redirect-Overlay zeigen
+            document.getElementById('redirect-overlay').classList.add('visible');
+            
+            // Zur Hauptseite weiterleiten
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 1500);
+        }
+
+        function onDenied() {
+            stopPolling();
+            clearInterval(timerInterval);
+            
+            const statusText = document.getElementById('status-text');
+            statusText.textContent = 'Zugang verweigert';
+            statusText.className = 'denied';
+            
+            document.querySelector('.pulse-icon').textContent = '🚫';
+            document.querySelector('.waiting-title').textContent = 'Zugang abgelehnt';
+            document.querySelector('.waiting-subtitle').textContent = 
+                'Der Gerätebesitzer hat den Zugang verweigert.';
+        }
+
+        function onRateLimited() {
+            stopPolling();
+            
+            const statusText = document.getElementById('status-text');
+            statusText.textContent = 'Zu viele Anfragen – bitte 5 Minuten warten';
+            statusText.className = 'rate-limited';
+            
+            document.querySelector('.pulse-icon').textContent = '⏳';
+            
+            // Retry-Button nach 5 Minuten anzeigen
+            const retryBtn = document.getElementById('retry-btn');
+            setTimeout(() => {
+                retryBtn.classList.add('visible');
+                statusText.textContent = 'Du kannst es jetzt erneut versuchen';
+                statusText.className = '';
+                document.querySelector('.pulse-icon').textContent = '🔐';
+            }, 300000); // 5 Minuten
+        }
+
+        function onExpired() {
+            stopPolling();
+            clearInterval(timerInterval);
+            
+            const statusText = document.getElementById('status-text');
+            statusText.textContent = 'Anfrage abgelaufen';
+            statusText.className = '';
+            
+            const retryBtn = document.getElementById('retry-btn');
+            retryBtn.classList.add('visible');
+        }
+
+        function retryRequest() {
+            document.getElementById('retry-btn').classList.remove('visible');
+            document.getElementById('status-text').textContent = 'Warte auf Genehmigung…';
+            document.getElementById('status-text').className = '';
+            document.querySelector('.pulse-icon').textContent = '🔐';
+            document.querySelector('.waiting-title').textContent = 'Zugang angefragt';
+            document.querySelector('.waiting-subtitle').textContent = 
+                'Deine Anfrage wurde an den Gerätebesitzer gesendet.\nBitte warte, bis der Zugang genehmigt wird.';
+            
+            startTime = Date.now();
+            timerInterval = setInterval(updateTimer, 1000);
+            
+            requestAccess();
+        }
+
+        // Init
+        timerInterval = setInterval(updateTimer, 1000);
+        requestAccess();
+    </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "summary_persona_block": {
+    "variants": {
+      "default": {
+        "content": "\n=== YOUR PERSONA ===\n{{char_description}}\n=== END PERSONA ==="
+      }
+    },
+    "placeholders_used": [
+      "char_description"
+    ]
+  }
+}

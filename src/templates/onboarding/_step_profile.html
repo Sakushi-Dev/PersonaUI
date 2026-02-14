@@ -1,0 +1,76 @@
+<!-- ==================== STEP 1: USER PROFIL ==================== -->
+<div class="ob-step" data-step="1">
+    <div class="ob-card">
+        <div class="ob-card-header">
+            <span class="ob-card-step">1 / 4</span>
+            <h2>Dein Profil</h2>
+            <p class="ob-card-desc">So lernen dich deine Personas kennen.</p>
+        </div>
+        <div class="ob-card-body">
+            
+            <!-- Avatar -->
+            <div class="ob-field-group ob-avatar-group">
+                <div class="ob-avatar-upload" id="ob-avatar-upload" title="Klicke um Avatar zu ändern">
+                    <span class="ob-avatar-placeholder" id="ob-avatar-placeholder">U</span>
+                    <div class="ob-avatar-overlay">
+                        <span>📷</span>
+                    </div>
+                </div>
+                <button class="ob-avatar-remove-btn hidden" id="ob-avatar-remove-btn" title="Avatar entfernen">&times;</button>
+            </div>
+
+            <!-- Avatar Gallery Overlay -->
+            {% include 'onboarding/_avatar_gallery.html' %}
+
+            <!-- Name -->
+            <div class="ob-field-group">
+                <label class="ob-label" for="ob-user-name">Dein Name *</label>
+                <input type="text" id="ob-user-name" class="ob-input" placeholder="Wie möchtest du genannt werden?" maxlength="30">
+            </div>
+
+            <!-- Typ -->
+            <div class="ob-field-group">
+                <label class="ob-label">Dein Typ <span style="font-weight: normal;">(optional)</span></label>
+                <div class="ob-type-grid" id="ob-type-grid">
+                    <!-- Dynamisch befüllt -->
+                </div>
+            </div>
+
+            <!-- Geschlecht -->
+            <div class="ob-field-group">
+                <label class="ob-label">Dein Geschlecht <span style="font-weight: normal;">(optional)</span></label>
+                <div class="ob-gender-grid" id="ob-gender-grid">
+                    <div class="ob-type-chip" data-gender="Männlich">Männlich</div>
+                    <div class="ob-type-chip" data-gender="Weiblich">Weiblich</div>
+                    <div class="ob-type-chip" data-gender="Divers">Divers</div>
+                </div>
+            </div>
+
+            <!-- Interessiere mich für -->
+            <div class="ob-field-group">
+                <label class="ob-label">Interessiere mich für <span style="font-weight: normal;">(du kannst mehrere auswählen, optional)</span></label>
+                <div class="ob-gender-grid" id="ob-interested-grid">
+                    <div class="ob-type-chip" data-interest="Männlich">Männlich</div>
+                    <div class="ob-type-chip" data-interest="Weiblich">Weiblich</div>
+                    <div class="ob-type-chip" data-interest="Divers">Divers</div>
+                </div>
+            </div>
+
+            <!-- Über mich -->
+            <div class="ob-field-group">
+                <label class="ob-label" for="ob-user-info">Über mich <span style="font-weight: normal;">(optional)</span></label>
+                <textarea id="ob-user-info" class="ob-textarea" 
+                          placeholder="Erzähl etwas über dich... Interessen, Besonderheiten – je mehr deine Personas über dich wissen, desto besser." 
+                          maxlength="500" rows="3"></textarea>
+                <div class="ob-char-counter">
+                    <span id="ob-info-count">0</span>/500
+                </div>
+            </div>
+
+        </div>
+        <div class="ob-card-footer">
+            <button class="ob-btn ob-btn-ghost" id="ob-back-1">Zurück</button>
+            <button class="ob-btn ob-btn-primary" id="ob-next-1">Weiter</button>
+        </div>
+    </div>
+</div>

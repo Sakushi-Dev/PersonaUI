@@ -1,0 +1,220 @@
+<!-- Custom Specs Overlay -->
+<div id="custom-specs-overlay" class="overlay hidden">
+    <div class="overlay-content custom-specs-content">
+        <div class="overlay-header">
+            <h2>Custom Specs</h2>
+            <button class="close-btn" id="close-custom-specs">&times;</button>
+        </div>
+        <div class="overlay-body custom-specs-body">
+            
+            <!-- Info Banner -->
+            <div class="custom-specs-info">
+                <div class="custom-specs-info-icon">ℹ️</div>
+                <div class="custom-specs-info-text">
+                    <strong>Eigene Spezifikationen erstellen</strong>
+                    <p>Erstelle eigene Persona-Typen, Traits, Wissensgebiete, Szenarien und Schreibstile. 
+                       Diese werden im Persona Creator mit <span class="custom-spec-badge-inline">blauem Rahmen</span> angezeigt.</p>
+                </div>
+            </div>
+            
+            <!-- API Cost Info -->
+            <div class="custom-specs-cost-info">
+                <span class="cost-icon">⚡</span>
+                <span>KI Auto-Fill nutzt die API (Modell: Sonnet 4.5). Geschätzte Kosten pro Generierung: ~0.001–0.003$ (~200-500 Token). 
+                      Wesentlich günstiger als eine Chat-Nachricht.</span>
+            </div>
+
+            <!-- Category Selector -->
+            <div class="custom-specs-categories">
+                <button class="custom-specs-cat-btn active" data-category="persona-type">
+                    <span class="cat-icon">👤</span> Persona Typ
+                </button>
+                <button class="custom-specs-cat-btn" data-category="core-trait">
+                    <span class="cat-icon">🧠</span> Core Trait
+                </button>
+                <button class="custom-specs-cat-btn" data-category="knowledge">
+                    <span class="cat-icon">📚</span> Wissen
+                </button>
+                <button class="custom-specs-cat-btn" data-category="scenario">
+                    <span class="cat-icon">🌍</span> Szenario
+                </button>
+                <button class="custom-specs-cat-btn" data-category="expression-style">
+                    <span class="cat-icon">✍️</span> Schreibstil
+                </button>
+            </div>
+
+            <!-- ===== PERSONA TYPE FRAME ===== -->
+            <div class="custom-specs-frame active" id="cs-frame-persona-type">
+                <h3>Neuen Persona-Typ erstellen</h3>
+                <div class="cs-field-group">
+                    <label>Name des Typs <span class="cs-required">*</span></label>
+                    <div class="cs-input-with-ai">
+                        <input type="text" id="cs-type-name" class="form-input" placeholder="z.B. Fee, Vampir, Roboter..." maxlength="40">
+                    </div>
+                </div>
+                <div class="cs-field-group">
+                    <label>Beschreibung <span class="cs-char-count" id="cs-type-desc-count">0/120</span></label>
+                    <div class="cs-input-with-ai">
+                        <input type="text" id="cs-type-description" class="form-input" placeholder="Kurze Beschreibung des Typs..." maxlength="120">
+                        <button class="cs-ai-btn" data-ai-type="persona_type" data-ai-source="cs-type-name" data-ai-target="cs-type-description" title="KI Auto-Fill">
+                            <span class="cs-ai-icon">✨</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Existierende Custom Persona Types -->
+                <div class="cs-existing-list" id="cs-existing-persona-types">
+                    <h4>Eigene Persona-Typen</h4>
+                    <div class="cs-existing-items" id="cs-items-persona-type"></div>
+                </div>
+                
+                <button class="btn btn-primary cs-create-btn" id="cs-create-persona-type">Erstellen</button>
+            </div>
+
+            <!-- ===== CORE TRAIT FRAME ===== -->
+            <div class="custom-specs-frame" id="cs-frame-core-trait">
+                <h3>Neues Core Trait erstellen</h3>
+                <div class="cs-field-group">
+                    <label>Name des Traits <span class="cs-required">*</span></label>
+                    <div class="cs-input-with-ai">
+                        <input type="text" id="cs-trait-name" class="form-input" placeholder="z.B. mutig, geheimnisvoll..." maxlength="30">
+                    </div>
+                </div>
+                <div class="cs-field-group">
+                    <label>Beschreibung</label>
+                    <div class="cs-input-with-ai">
+                        <input type="text" id="cs-trait-description" class="form-input" placeholder="Beschreibung des Traits...">
+                        <button class="cs-ai-btn cs-ai-btn-full" data-ai-type="core_trait" data-ai-source="cs-trait-name" data-ai-target="cs-trait-full" title="KI Auto-Fill (alle Felder)">
+                            <span class="cs-ai-icon">✨</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="cs-field-group">
+                    <label>Verhaltensmuster (3 Stück) <span class="cs-required">*</span></label>
+                    <input type="text" id="cs-trait-behavior-1" class="form-input cs-behavior-input" placeholder="Verhalten 1...">
+                    <input type="text" id="cs-trait-behavior-2" class="form-input cs-behavior-input" placeholder="Verhalten 2...">
+                    <input type="text" id="cs-trait-behavior-3" class="form-input cs-behavior-input" placeholder="Verhalten 3...">
+                </div>
+                
+                <div class="cs-existing-list" id="cs-existing-core-traits">
+                    <h4>Eigene Core Traits</h4>
+                    <div class="cs-existing-items" id="cs-items-core-trait"></div>
+                </div>
+                
+                <button class="btn btn-primary cs-create-btn" id="cs-create-core-trait">Erstellen</button>
+            </div>
+
+            <!-- ===== KNOWLEDGE FRAME ===== -->
+            <div class="custom-specs-frame" id="cs-frame-knowledge">
+                <h3>Neues Wissensgebiet erstellen</h3>
+                <div class="cs-field-group">
+                    <label>Name des Wissensgebiets <span class="cs-required">*</span></label>
+                    <div class="cs-input-with-ai">
+                        <input type="text" id="cs-knowledge-name" class="form-input" placeholder="z.B. Astronomie, Psychologie..." maxlength="30">
+                    </div>
+                </div>
+                <div class="cs-field-group">
+                    <label>Beschreibung (Unterthemen)</label>
+                    <div class="cs-input-with-ai">
+                        <input type="text" id="cs-knowledge-description" class="form-input" placeholder="Kommagetrennte Unterthemen...">
+                        <button class="cs-ai-btn" data-ai-type="knowledge" data-ai-source="cs-knowledge-name" data-ai-target="cs-knowledge-description" title="KI Auto-Fill">
+                            <span class="cs-ai-icon">✨</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="cs-existing-list" id="cs-existing-knowledge">
+                    <h4>Eigene Wissensgebiete</h4>
+                    <div class="cs-existing-items" id="cs-items-knowledge"></div>
+                </div>
+                
+                <button class="btn btn-primary cs-create-btn" id="cs-create-knowledge">Erstellen</button>
+            </div>
+
+            <!-- ===== SCENARIO FRAME ===== -->
+            <div class="custom-specs-frame" id="cs-frame-scenario">
+                <h3>Neues Szenario erstellen</h3>
+                <div class="cs-field-group">
+                    <label>Szenario Key <span class="cs-required">*</span></label>
+                    <div class="cs-input-with-ai">
+                        <input type="text" id="cs-scenario-key" class="form-input" placeholder="z.B. Piratenwelt, Cyberpunk..." maxlength="30">
+                    </div>
+                </div>
+                <div class="cs-field-group">
+                    <label>Anzeigename</label>
+                    <div class="cs-input-with-ai">
+                        <input type="text" id="cs-scenario-name" class="form-input" placeholder="Vollständiger Name...">
+                    </div>
+                </div>
+                <div class="cs-field-group">
+                    <label>Beschreibung</label>
+                    <div class="cs-input-with-ai">
+                        <input type="text" id="cs-scenario-description" class="form-input" placeholder="Beschreibung des Szenarios...">
+                        <button class="cs-ai-btn cs-ai-btn-full" data-ai-type="scenario" data-ai-source="cs-scenario-key" data-ai-target="cs-scenario-full" title="KI Auto-Fill (alle Felder)">
+                            <span class="cs-ai-icon">✨</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="cs-field-group">
+                    <label>Setting-Elemente (4 Stück) <span class="cs-required">*</span></label>
+                    <input type="text" id="cs-scenario-setting-1" class="form-input cs-setting-input" placeholder="Setting 1...">
+                    <input type="text" id="cs-scenario-setting-2" class="form-input cs-setting-input" placeholder="Setting 2...">
+                    <input type="text" id="cs-scenario-setting-3" class="form-input cs-setting-input" placeholder="Setting 3...">
+                    <input type="text" id="cs-scenario-setting-4" class="form-input cs-setting-input" placeholder="Setting 4...">
+                </div>
+                
+                <div class="cs-existing-list" id="cs-existing-scenarios">
+                    <h4>Eigene Szenarien</h4>
+                    <div class="cs-existing-items" id="cs-items-scenario"></div>
+                </div>
+                
+                <button class="btn btn-primary cs-create-btn" id="cs-create-scenario">Erstellen</button>
+            </div>
+
+            <!-- ===== EXPRESSION STYLE FRAME ===== -->
+            <div class="custom-specs-frame" id="cs-frame-expression-style">
+                <h3>Neuen Schreibstil erstellen</h3>
+                <div class="cs-field-group">
+                    <label>Schreibstil Key <span class="cs-required">*</span></label>
+                    <div class="cs-input-with-ai">
+                        <input type="text" id="cs-expression-key" class="form-input" placeholder="z.B. poetisch, sarkastisch..." maxlength="30">
+                    </div>
+                </div>
+                <div class="cs-field-group">
+                    <label>Anzeigename</label>
+                    <div class="cs-input-with-ai">
+                        <input type="text" id="cs-expression-name" class="form-input" placeholder="Vollständiger Name...">
+                    </div>
+                </div>
+                <div class="cs-field-group">
+                    <label>Beschreibung</label>
+                    <div class="cs-input-with-ai">
+                        <input type="text" id="cs-expression-description" class="form-input" placeholder="Beschreibung des Stils...">
+                        <button class="cs-ai-btn cs-ai-btn-full" data-ai-type="expression_style" data-ai-source="cs-expression-key" data-ai-target="cs-expression-full" title="KI Auto-Fill (alle Felder)">
+                            <span class="cs-ai-icon">✨</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="cs-field-group">
+                    <label>Beispiel</label>
+                    <input type="text" id="cs-expression-example" class="form-input" placeholder="Beispiel-Begrüßung in diesem Stil...">
+                </div>
+                <div class="cs-field-group">
+                    <label>Merkmale (3-4 Stück)</label>
+                    <input type="text" id="cs-expression-char-1" class="form-input cs-char-input" placeholder="Merkmal 1...">
+                    <input type="text" id="cs-expression-char-2" class="form-input cs-char-input" placeholder="Merkmal 2...">
+                    <input type="text" id="cs-expression-char-3" class="form-input cs-char-input" placeholder="Merkmal 3...">
+                    <input type="text" id="cs-expression-char-4" class="form-input cs-char-input" placeholder="Merkmal 4 (optional)...">
+                </div>
+                
+                <div class="cs-existing-list" id="cs-existing-expression-styles">
+                    <h4>Eigene Schreibstile</h4>
+                    <div class="cs-existing-items" id="cs-items-expression-style"></div>
+                </div>
+                
+                <button class="btn btn-primary cs-create-btn" id="cs-create-expression-style">Erstellen</button>
+            </div>
+
+        </div>
+    </div>
+</div>

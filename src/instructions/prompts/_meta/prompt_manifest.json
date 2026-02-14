@@ -1,0 +1,544 @@
+{
+  "version": "2.0",
+  "prompts": {
+    "impersonation": {
+      "name": "Impersonation",
+      "description": "Rollenanweisung für die Persona-Verkörperung",
+      "category": "system",
+      "type": "text",
+      "target": "system_prompt",
+      "position": "system_prompt",
+      "order": 100,
+      "enabled": true,
+      "domain_file": "impersonation.json",
+      "tags": [
+        "core",
+        "identity"
+      ]
+    },
+    "system_rule": {
+      "name": "Interaktons Regel",
+      "description": "Grundregeln für das Verhalten der Persona",
+      "category": "system",
+      "type": "text",
+      "target": "system_prompt",
+      "position": "system_prompt",
+      "order": 300,
+      "enabled": true,
+      "domain_file": "system_rule.json",
+      "tags": [
+        "core",
+        "behavior"
+      ]
+    },
+    "persona_description": {
+      "name": "Persona-Beschreibung",
+      "description": "Character-Description Template",
+      "category": "persona",
+      "type": "text",
+      "target": "system_prompt",
+      "position": "system_prompt",
+      "order": 600,
+      "enabled": true,
+      "domain_file": "persona_description.json",
+      "tags": [
+        "persona",
+        "identity"
+      ]
+    },
+    "user_info": {
+      "name": "Benutzer-Info",
+      "description": "User-Profil im Prompt",
+      "category": "context",
+      "type": "text",
+      "target": "system_prompt",
+      "position": "system_prompt",
+      "order": 1000,
+      "enabled": true,
+      "domain_file": "user_info.json",
+      "tags": [
+        "context",
+        "user"
+      ]
+    },
+    "time_sense": {
+      "name": "Zeitgefühl",
+      "description": "Kontext für Datum und Uhrzeit",
+      "category": "context",
+      "type": "text",
+      "target": "system_prompt",
+      "position": "system_prompt",
+      "order": 1200,
+      "enabled": true,
+      "domain_file": "time_sense.json",
+      "tags": [
+        "context",
+        "time"
+      ]
+    },
+    "output_format": {
+      "name": "Output-Format",
+      "description": "Formatierungsregeln für Antworten",
+      "category": "system",
+      "type": "text",
+      "target": "system_prompt",
+      "position": "system_prompt",
+      "order": 1400,
+      "enabled": true,
+      "domain_file": "output_format.json",
+      "tags": [
+        "core",
+        "format"
+      ]
+    },
+    "memory_context": {
+      "name": "Memory-Kontext",
+      "description": "Erinnerungen aus vergangenen Konversationen",
+      "category": "context",
+      "type": "text",
+      "target": "message",
+      "position": "first_assistant",
+      "order": 100,
+      "enabled": true,
+      "domain_file": "memory_context.json",
+      "tags": [
+        "context",
+        "memory"
+      ]
+    },
+    "conversation_history": {
+      "name": "Konversationsverlauf",
+      "description": "Platzhalter für den Konversationsverlauf (user/assistant Messages). Enthält nur {{history}} ohne Zusatztext.",
+      "category": "context",
+      "type": "text",
+      "target": "message",
+      "position": "history",
+      "order": 200,
+      "enabled": true,
+      "domain_file": "conversation_history.json",
+      "tags": [
+        "context",
+        "history"
+      ]
+    },
+    "remember": {
+      "name": "Remember (Prefill)",
+      "description": "Letzte Assistant-Nachricht als Prefill",
+      "category": "prefill",
+      "type": "text",
+      "target": "prefill",
+      "position": "prefill",
+      "order": 300,
+      "enabled": true,
+      "domain_file": "remember.json",
+      "tags": [
+        "prefill",
+        "behavior"
+      ]
+    },
+    "afterthought_inner_dialogue": {
+      "name": "Nachgedanke – Innerer Dialog",
+      "description": "Prompt für den inneren Entscheidungsprozess",
+      "category": "afterthought",
+      "type": "text",
+      "target": "message",
+      "position": "user_message",
+      "order": 100,
+      "enabled": true,
+      "domain_file": "afterthought_inner_dialogue.json",
+      "tags": [
+        "afterthought",
+        "decision"
+      ]
+    },
+    "afterthought_followup": {
+      "name": "Nachgedanke – Followup",
+      "description": "Prompt für die Nachgedanke-Ergänzung",
+      "category": "afterthought",
+      "type": "text",
+      "target": "message",
+      "position": "user_message",
+      "order": 200,
+      "enabled": true,
+      "domain_file": "afterthought_followup.json",
+      "tags": [
+        "afterthought",
+        "followup"
+      ]
+    },
+    "afterthought_system_note": {
+      "name": "Nachgedanke – System-Hinweis",
+      "description": "Anhang zum System-Prompt bei Afterthought",
+      "category": "afterthought",
+      "type": "text",
+      "target": "system_prompt",
+      "position": "system_prompt_append",
+      "order": 800,
+      "enabled": true,
+      "domain_file": "afterthought_system_note.json",
+      "tags": [
+        "afterthought",
+        "system"
+      ]
+    },
+    "summary_impersonation": {
+      "name": "Summary – Impersonation",
+      "description": "Rollenanweisung für Summary-Erstellung",
+      "category": "summary",
+      "type": "text",
+      "target": "system_prompt",
+      "position": "system_prompt",
+      "order": 100,
+      "enabled": true,
+      "domain_file": "summary_impersonation.json",
+      "tags": [
+        "summary"
+      ]
+    },
+    "summary_system_rule": {
+      "name": "Summary – System-Regeln",
+      "description": "Regeln für Summary-Erstellung",
+      "category": "summary",
+      "type": "text",
+      "target": "system_prompt",
+      "position": "system_prompt",
+      "order": 200,
+      "enabled": true,
+      "domain_file": "summary_system_rule.json",
+      "tags": [
+        "summary"
+      ]
+    },
+    "summary_char_description": {
+      "name": "Summary – Charakter",
+      "description": "Charakter-Kontext für Summary",
+      "category": "summary",
+      "type": "text",
+      "target": "system_prompt",
+      "position": "system_prompt",
+      "order": 300,
+      "enabled": true,
+      "domain_file": "summary_char_description.json",
+      "tags": [
+        "summary",
+        "persona"
+      ]
+    },
+    "summary_persona_block": {
+      "name": "Summary – Persona-Block",
+      "description": "Aktive Persona-Beschreibung im Summary-Kontext",
+      "category": "summary",
+      "type": "text",
+      "target": "system_prompt",
+      "position": "system_prompt",
+      "order": 400,
+      "enabled": true,
+      "domain_file": "summary_persona_block.json",
+      "tags": [
+        "summary",
+        "persona"
+      ]
+    },
+    "summary_prefill_impersonation": {
+      "name": "Summary – Prefill Impersonation",
+      "description": "Prefill-Impersonation für Summary",
+      "category": "summary",
+      "type": "text",
+      "target": "prefill",
+      "position": "prefill",
+      "order": 100,
+      "enabled": true,
+      "domain_file": "summary_prefill_impersonation.json",
+      "tags": [
+        "summary",
+        "prefill"
+      ]
+    },
+    "summary_remember": {
+      "name": "Summary – Remember",
+      "description": "Remember-Prefill für Summary",
+      "category": "summary",
+      "type": "text",
+      "target": "prefill",
+      "position": "prefill",
+      "order": 200,
+      "enabled": true,
+      "domain_file": "summary_remember.json",
+      "tags": [
+        "summary",
+        "prefill"
+      ]
+    },
+    "summary_user_prompt": {
+      "name": "Summary – User-Prompt",
+      "description": "User-Prompt für Summary-Request",
+      "category": "summary",
+      "type": "text",
+      "target": "message",
+      "position": "user_message",
+      "order": 100,
+      "enabled": true,
+      "domain_file": "summary_user_prompt.json",
+      "tags": [
+        "summary"
+      ]
+    },
+    "spec_autofill_persona_type": {
+      "name": "Spec – Persona-Typ",
+      "description": "Auto-Fill Prompt für Persona-Typ Beschreibung",
+      "category": "spec_autofill",
+      "type": "text",
+      "target": "system_prompt",
+      "position": "system_prompt",
+      "order": 100,
+      "enabled": true,
+      "domain_file": "spec_autofill_persona_type.json",
+      "tags": [
+        "spec_autofill"
+      ]
+    },
+    "spec_autofill_core_trait": {
+      "name": "Spec – Kernmerkmal",
+      "description": "Auto-Fill Prompt für Kernmerkmal-Details",
+      "category": "spec_autofill",
+      "type": "text",
+      "target": "system_prompt",
+      "position": "system_prompt",
+      "order": 200,
+      "enabled": true,
+      "domain_file": "spec_autofill_core_trait.json",
+      "tags": [
+        "spec_autofill"
+      ]
+    },
+    "spec_autofill_knowledge": {
+      "name": "Spec – Wissensgebiet",
+      "description": "Auto-Fill Prompt für Wissensgebiet-Beschreibung",
+      "category": "spec_autofill",
+      "type": "text",
+      "target": "system_prompt",
+      "position": "system_prompt",
+      "order": 300,
+      "enabled": true,
+      "domain_file": "spec_autofill_knowledge.json",
+      "tags": [
+        "spec_autofill"
+      ]
+    },
+    "spec_autofill_scenario": {
+      "name": "Spec – Szenario",
+      "description": "Auto-Fill Prompt für Szenario-Details",
+      "category": "spec_autofill",
+      "type": "text",
+      "target": "system_prompt",
+      "position": "system_prompt",
+      "order": 400,
+      "enabled": true,
+      "domain_file": "spec_autofill_scenario.json",
+      "tags": [
+        "spec_autofill"
+      ]
+    },
+    "spec_autofill_expression_style": {
+      "name": "Spec – Ausdrucksstil",
+      "description": "Auto-Fill Prompt für Ausdrucksstil-Details",
+      "category": "spec_autofill",
+      "type": "text",
+      "target": "system_prompt",
+      "position": "system_prompt",
+      "order": 500,
+      "enabled": true,
+      "domain_file": "spec_autofill_expression_style.json",
+      "tags": [
+        "spec_autofill"
+      ]
+    },
+    "title_generation": {
+      "name": "Session-Titel Generierung",
+      "description": "Prompt für die automatische Session-Titel-Generierung",
+      "category": "utility",
+      "type": "text",
+      "target": "message",
+      "position": "user_message",
+      "order": 100,
+      "enabled": true,
+      "domain_file": "title_generation.json",
+      "tags": [
+        "utility",
+        "title"
+      ]
+    },
+    "background_autofill": {
+      "name": "Hintergrund-Autofill",
+      "description": "Prompt für die KI-gestützte Generierung von Persona-Hintergrundgeschichten",
+      "category": "utility",
+      "type": "text",
+      "target": "message",
+      "position": "user_message",
+      "order": 200,
+      "enabled": true,
+      "domain_file": "background_autofill.json",
+      "tags": [
+        "utility",
+        "autofill",
+        "background"
+      ]
+    },
+    "persona_integrity_shield": {
+      "name": "Persona Integrity Shield",
+      "description": "Hardcore-Schutz gegen Prompt-Extraction, Jailbreaks und Rollenbruch",
+      "category": "system",
+      "type": "text",
+      "target": "system_prompt",
+      "position": "system_prompt",
+      "order": 200,
+      "enabled": true,
+      "domain_file": "persona_integrity_shield.json",
+      "tags": [
+        "core",
+        "security",
+        "identity"
+      ]
+    },
+    "conversation_dynamics": {
+      "name": "Gesprächsdynamik",
+      "description": "Kontrolle über Gesprächsrhythmus, -tiefe und Initiative",
+      "category": "system",
+      "type": "text",
+      "target": "system_prompt",
+      "position": "system_prompt",
+      "order": 400,
+      "enabled": true,
+      "domain_file": "conversation_dynamics.json",
+      "tags": [
+        "behavior",
+        "pacing"
+      ]
+    },
+    "topic_transition_guard": {
+      "name": "Themenwechsel-Schutz",
+      "description": "Verhindert dass abrupte Themenwechsel als selbstverständlich behandelt werden",
+      "category": "system",
+      "type": "text",
+      "target": "system_prompt",
+      "position": "system_prompt",
+      "order": 500,
+      "enabled": true,
+      "domain_file": "topic_transition_guard.json",
+      "tags": [
+        "behavior",
+        "continuity",
+        "anti-ai"
+      ]
+    },
+    "world_consistency": {
+      "name": "Welt-Konsistenz",
+      "description": "Unmögliche User-Aktionen werden durch die Weltlogik der Persona geprüft",
+      "category": "system",
+      "type": "text",
+      "target": "system_prompt",
+      "position": "system_prompt",
+      "order": 600,
+      "enabled": true,
+      "domain_file": "world_consistency.json",
+      "tags": [
+        "behavior",
+        "consistency",
+        "anti-ai"
+      ]
+    },
+    "expression_style_detail": {
+      "name": "Ausdrucksstil-Detail",
+      "description": "Detaillierte Sprach- und Ausdrucksstil-Beschreibung",
+      "category": "persona",
+      "type": "text",
+      "target": "system_prompt",
+      "position": "system_prompt",
+      "order": 700,
+      "enabled": true,
+      "domain_file": "expression_style_detail.json",
+      "tags": [
+        "persona",
+        "style",
+        "expression"
+      ]
+    },
+    "emotional_state": {
+      "name": "Emotionaler Zustand",
+      "description": "Emotionales Tracking und Stimmungskontinuität",
+      "category": "context",
+      "type": "text",
+      "target": "system_prompt",
+      "position": "system_prompt",
+      "order": 900,
+      "enabled": true,
+      "domain_file": "emotional_state.json",
+      "tags": [
+        "persona",
+        "emotion",
+        "continuity"
+      ]
+    },
+    "relationship_tracking": {
+      "name": "Beziehungs-Tracking",
+      "description": "Beziehungsebene und Vertrauensentwicklung",
+      "category": "context",
+      "type": "text",
+      "target": "system_prompt",
+      "position": "system_prompt",
+      "order": 1100,
+      "enabled": true,
+      "domain_file": "relationship_tracking.json",
+      "tags": [
+        "context",
+        "relationship",
+        "continuity"
+      ]
+    },
+    "response_style_control": {
+      "name": "Antwort-Stil",
+      "description": "Feingranulare Antwortlängen- und Stilkontrolle",
+      "category": "system",
+      "type": "text",
+      "target": "system_prompt",
+      "position": "system_prompt",
+      "order": 1300,
+      "enabled": true,
+      "domain_file": "response_style_control.json",
+      "tags": [
+        "format",
+        "style"
+      ]
+    },
+    "topic_boundaries": {
+      "name": "Themen-Handling",
+      "description": "In-Character Reaktionen auf heikle und schwierige Themen",
+      "category": "system",
+      "type": "text",
+      "target": "system_prompt",
+      "position": "system_prompt",
+      "order": 1500,
+      "enabled": true,
+      "domain_file": "topic_boundaries.json",
+      "tags": [
+        "behavior",
+        "boundaries"
+      ]
+    },
+    "continuity_guard": {
+      "name": "Kontinuitäts-Schutz",
+      "description": "Konsistenz-Sicherung über den gesamten Chatverlauf",
+      "category": "system",
+      "type": "text",
+      "target": "system_prompt",
+      "position": "system_prompt",
+      "order": 1600,
+      "enabled": true,
+      "domain_file": "continuity_guard.json",
+      "tags": [
+        "core",
+        "continuity"
+      ]
+    }
+  }
+}

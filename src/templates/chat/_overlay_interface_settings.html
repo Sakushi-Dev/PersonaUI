@@ -1,0 +1,132 @@
+<!-- Interface Settings Overlay -->
+<div id="interface-settings-overlay" class="overlay hidden">
+    <div class="overlay-content">
+        <div class="overlay-header">
+            <h2>Interface-Einstellungen</h2>
+            <button class="close-btn" id="close-interface-settings">&times;</button>
+        </div>
+        
+        <!-- Fixed Preview at Top -->
+        <div class="settings-preview-container">
+            <div class="preview-background" id="preview-background">
+                <div class="preview-blob preview-blob-1" id="preview-blob-1"></div>
+                <div class="preview-blob preview-blob-2" id="preview-blob-2"></div>
+                <div class="preview-bubble" id="preview-bubble">
+                    Dies ist eine Vorschau der Chat-Nachrichten. <span class="preview-nonverbal">Nonverbaler Text sieht so aus.</span> Normale Nachricht geht weiter.
+                </div>
+            </div>
+        </div>
+        
+        <div class="overlay-body">
+            <div class="settings-form">
+                <!-- Theme Toggle -->
+                <div class="form-group">
+                    <label>Design-Modus:</label>
+                    <div class="toggle-row">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="dark-mode-toggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span id="dark-mode-label">Hell</span>
+                    </div>
+                    <small class="form-hint">Zwischen hellem und dunklem Design wechseln</small>
+                </div>
+
+                <!-- Dynamic Background Toggle -->
+                <div class="form-group">
+                    <label>Dynamischer Hintergrund:</label>
+                    <div class="toggle-row">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="dynamic-bg-toggle" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span id="dynamic-bg-label">Aktiv</span>
+                    </div>
+                    <small class="form-hint">Animierte Farbverläufe im Hintergrund</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="background-color">Hintergrundfarbe:</label>
+                    <div class="color-picker-row">
+                        <input type="color" id="background-color" name="background-color" 
+                               class="form-input color-picker-input" value="#ffffff">
+                        <input type="text" id="background-color-text" class="form-input color-text-input" 
+                               placeholder="#ffffff" value="#ffffff">
+                    </div>
+                    <small class="form-hint">Basis-Hintergrundfarbe hinter den Verlaufsfarben</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="color-gradient1">Verlaufsfarbe 1:</label>
+                    <div class="color-picker-row">
+                        <input type="color" id="color-gradient1" name="color-gradient1" 
+                               class="form-input color-picker-input" value="#89CFF0">
+                        <input type="text" id="color-gradient1-text" class="form-input color-text-input" 
+                               placeholder="#89CFF0" value="#89CFF0">
+                    </div>
+                    <small class="form-hint">Erste Verlaufsfarbe für den dynamischen Hintergrund</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="color-2">Verlaufsfarbe 2:</label>
+                    <div class="color-picker-row">
+                        <input type="color" id="color-2" name="color-2" 
+                               class="form-input color-picker-input" value="#a8d5ff">
+                        <input type="text" id="color-2-text" class="form-input color-text-input" 
+                               placeholder="#a8d5ff" value="#a8d5ff">
+                    </div>
+                    <small class="form-hint">Zweite Farbe für den dynamischen Hintergrund</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="nonverbal-color">Nonverbale Text-Farbe:</label>
+                    <div class="color-picker-row">
+                        <input type="color" id="nonverbal-color" name="nonverbal-color" 
+                               class="form-input color-picker-input" value="#e4ba00">
+                        <input type="text" id="nonverbal-color-text" class="form-input color-text-input" 
+                               placeholder="#e4ba00" value="#e4ba00">
+                    </div>
+                    <small class="form-hint">Farbe für Text zwischen Sternchen (*nonverbal*)</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="bubble-font-size">Chat-Nachricht Schriftgröße: <span id="font-size-display">18px</span></label>
+                    <div class="color-picker-row">
+                        <input type="range" id="bubble-font-size" name="bubble-font-size" 
+                               class="font-size-slider" min="14" max="28" step="1" value="18">
+                        <input type="number" id="bubble-font-size-number" class="form-input font-size-number-input" 
+                               min="14" max="28" value="18">
+                    </div>
+                    <small class="form-hint">Passe die Schriftgröße der Chat-Nachrichten an (14-28px)</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>Chat-Nachricht Schriftart:</label>
+                    <div class="font-family-options">
+                        <label class="font-option">
+                            <input type="radio" name="bubble-font-family" value="ubuntu" checked>
+                            <span class="font-preview" style="font-family: 'Ubuntu', 'Roboto', 'Segoe UI', system-ui, sans-serif;">Ubuntu (Standard)</span>
+                        </label>
+                        <label class="font-option">
+                            <input type="radio" name="bubble-font-family" value="comic">
+                            <span class="font-preview" style="font-family: 'Comic Sans MS', 'Comic Sans', cursive;">Comic Sans</span>
+                        </label>
+                        <label class="font-option">
+                            <input type="radio" name="bubble-font-family" value="times">
+                            <span class="font-preview" style="font-family: 'Times New Roman', Times, serif;">Times New Roman</span>
+                        </label>
+                        <label class="font-option">
+                            <input type="radio" name="bubble-font-family" value="courier">
+                            <span class="font-preview" style="font-family: 'Courier New', Courier, monospace;">Courier New</span>
+                        </label>
+                    </div>
+                    <small class="form-hint">Wähle die Schriftart für Chat-Nachrichten</small>
+                </div>
+            </div>
+        </div>
+        <div class="overlay-footer">
+            <button class="btn btn-secondary" id="reset-interface-btn">Zurücksetzen</button>
+            <button class="btn btn-primary" id="save-interface-btn">Speichern</button>
+        </div>
+    </div>
+</div>

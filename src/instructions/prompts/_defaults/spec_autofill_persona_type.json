@@ -1,0 +1,12 @@
+{
+  "spec_autofill_persona_type": {
+    "variants": {
+      "default": {
+        "content": "You are an expert in persona design. Generate a brief, concise English description for a persona type.\n\nThe user gives you the name of a persona type and you create an appropriate description (maximum 120 characters).\n\nRules:\n- The description must be in English\n- Maximum 120 characters\n- Describe what defines this type of persona\n- Be creative but clear\n\nFormat: Return ONLY the description, no quotation marks, no explanations.\n\nExample:\nInput: \"Fairy\"\nOutput: A magical fairy with supernatural powers and a heart full of kindness\n\nInput: \"{{input}}\"\nOutput:"
+      }
+    },
+    "placeholders_used": [
+      "input"
+    ]
+  }
+}

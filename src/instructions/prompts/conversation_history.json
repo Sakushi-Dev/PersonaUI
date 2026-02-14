@@ -1,0 +1,12 @@
+{
+  "conversation_history": {
+    "variants": {
+      "default": {
+        "content": "{{history}}"
+      }
+    },
+    "placeholders_used": [
+      "history"
+    ]
+  }
+}

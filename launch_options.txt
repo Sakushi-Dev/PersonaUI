@@ -1,0 +1,16 @@
+# ══════════════════════════════════════════════════════════════════════
+#  PersonaUI – Launch Options
+# ══════════════════════════════════════════════════════════════════════
+#
+#  Hier können Startoptionen für PersonaUI eingetragen werden.
+#  Eine Option pro Zeile. Zeilen mit # sind Kommentare.
+#  Leere Zeilen werden ignoriert.
+#
+#  Verfügbare Optionen:
+#
+#    # --no-gui       Startet ohne PyWebView-Fenster (reiner Browser-Modus).
+#                   Die App ist dann unter http://localhost:PORT erreichbar.
+#
+# ══════════════════════════════════════════════════════════════════════
+
+# --no-gui

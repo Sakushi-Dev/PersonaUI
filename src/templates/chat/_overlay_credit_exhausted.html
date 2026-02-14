@@ -1,0 +1,29 @@
+<!-- Credit Balance Exhausted Overlay -->
+<div id="credit-exhausted-overlay" class="overlay hidden">
+    <div class="overlay-content overlay-content-sm">
+        <div class="overlay-header">
+            <h2>💳 API-Guthaben erschöpft</h2>
+            <button class="close-btn" id="close-credit-warning">&times;</button>
+        </div>
+        <div class="overlay-body">
+            <p class="overlay-text-highlight">
+                Dein Anthropic API-Guthaben ist aufgebraucht. Es können derzeit keine Nachrichten verarbeitet werden.
+            </p>
+            <p class="overlay-text-block">
+                Um den Chat weiter nutzen zu können, musst du dein Guthaben aufladen:
+            </p>
+            <ol class="overlay-list">
+                <li>Melde dich bei deinem <a href="https://console.anthropic.com/settings/billing" target="_blank" rel="noopener" class="overlay-link">Anthropic Dashboard</a> an</li>
+                <li>Navigiere zu <strong>Plans &amp; Billing</strong></li>
+                <li>Lade dein Guthaben auf oder upgrade deinen Plan</li>
+            </ol>
+            <p class="overlay-text-muted">
+                Nach dem Aufladen kannst du den Chat sofort wieder verwenden.
+            </p>
+        </div>
+        <div class="overlay-footer">
+            <a href="https://console.anthropic.com/settings/billing" target="_blank" rel="noopener" class="btn btn-primary">Guthaben aufladen</a>
+            <button class="btn btn-secondary" id="close-credit-warning-btn">Schließen</button>
+        </div>
+    </div>
+</div>

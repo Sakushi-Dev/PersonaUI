@@ -1,0 +1,46 @@
+<!-- Sidebar für Chat-Historien -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <button class="sidebar-back-btn hidden" id="sidebar-back-btn" title="Zurück zur Persona-Übersicht">
+            <span class="back-icon">◀</span>
+        </button>
+        <h3 id="sidebar-title">Chats</h3>
+        <button class="sidebar-toggle" id="sidebar-toggle" title="Sidebar ausblenden">
+            <span class="toggle-icon">◀</span>
+        </button>
+    </div>
+    
+    <div class="sidebar-content">
+        <!-- Persona-Liste (Kontakte-Ansicht) -->
+        <div id="sidebar-persona-view">
+            <div class="sidebar-persona-list" id="sidebar-persona-list">
+                <!-- Wird dynamisch per JS befüllt -->
+            </div>
+        </div>
+        
+        <!-- Sessions-Liste (Chat-Verlauf einer Persona) -->
+        <div id="sidebar-sessions-view" class="hidden">
+            <button class="new-chat-btn" id="new-chat-btn">
+                <span class="new-chat-icon">+</span>
+                <span>Neuer Chat</span>
+            </button>
+            
+            <div class="sessions-list" id="sessions-list">
+                <!-- Wird dynamisch per JS befüllt -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sidebar Edge Activation Zone -->
+<div class="sidebar-edge-zone" id="sidebar-edge-zone">
+    <div class="edge-glow" id="edge-glow"></div>
+    <div class="edge-chevrons hidden" id="edge-chevrons">
+        <div class="edge-chevron">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="11 17 6 12 11 7"/>
+                <polyline points="18 17 13 12 18 7"/>
+            </svg>
+        </div>
+    </div>
+</div>

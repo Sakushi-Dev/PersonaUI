@@ -1,0 +1,26 @@
+<!-- API Key Missing Warning Overlay -->
+<div id="api-key-warning-overlay" class="overlay hidden">
+    <div class="overlay-content overlay-content-sm">
+        <div class="overlay-header">
+            <h2>⚠️ Kein API-Key konfiguriert</h2>
+            <button class="close-btn" id="close-api-warning">&times;</button>
+        </div>
+        <div class="overlay-body">
+            <p class="overlay-text-block">
+                Um den Chat nutzen zu können, benötigen Sie einen gültigen Anthropic API-Key.
+            </p>
+            <p class="overlay-text-block">
+                Bitte konfigurieren Sie Ihren API-Key in den Einstellungen:
+            </p>
+            <ol class="overlay-list">
+                <li>Klicken Sie auf das Menü-Symbol (☰) oben rechts</li>
+                <li>Wählen Sie "Anthropic API-Key"</li>
+                <li>Geben Sie Ihren API-Key ein und speichern Sie</li>
+            </ol>
+        </div>
+        <div class="overlay-footer">
+            <button class="btn btn-primary" id="open-api-settings-btn">API-Key einrichten</button>
+            <button class="btn btn-secondary" id="close-api-warning-btn">Schließen</button>
+        </div>
+    </div>
+</div>

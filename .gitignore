@@ -1,0 +1,68 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual Environment
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# === RUNTIME-GENERIERTE DATEIEN ===
+
+# Environment
+.env
+
+# Logs
+*.log
+src/logs/
+
+# Database
+*.db
+*.db.backup
+*.sqlite
+*.sqlite3
+
+# Benutzer-Einstellungen (nur defaults.json ist versioniert)
+src/settings/user_settings.json
+src/settings/server_settings.json
+src/settings/user_profile.json
+src/settings/window_settings.json
+
+# Benutzer-erstellte Personas
+src/instructions/created_personas/
+
+# Aktive Persona-Config (wird bei jeder Aktivierung überschrieben)
+src/instructions/personas/active/persona_config.json
+
+# User-Manifest (benutzerdefinierte Prompts, darf nicht überschrieben werden)
+src/instructions/prompts/_meta/user_manifest.json
+src/instructions/prompts/_meta/user_placeholder_registry.json
+src/instructions/prompts/_meta/_backups/
+
+# Custom Persona-Specs
+src/instructions/personas/spec/custom_spec/custom_spec.json
+
+# Benutzer-Uploads
+src/static/images/custom/*
+!src/static/images/custom/.gitkeep
+
+# Temporäre Dateien
+*.tmp
+*.temp
+src/restart_server.bat
+
+# Lokale Status-Dateien (pro Installation)
+src/settings/onboarding.json
+src/settings/update_state.json
+
+# pytest_cache
+.pytest_cache/

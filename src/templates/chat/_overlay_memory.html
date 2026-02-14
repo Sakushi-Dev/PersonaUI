@@ -1,0 +1,75 @@
+<!-- Memory Creation Overlay -->
+<div id="memory-creation-overlay" class="overlay memory-creation-overlay hidden">
+    <div class="overlay-content overlay-content-md">
+        <!-- Loading State -->
+        <div id="memory-loading-state" class="memory-state">
+            <div class="memory-loading-spinner">
+                <div class="spinner-ring"></div>
+                <div class="spinner-ring"></div>
+                <div class="spinner-ring"></div>
+            </div>
+            <h3>Erinnerung wird erstellt...</h3>
+            <p>Bitte warten Sie einen Moment</p>
+        </div>
+        
+        <!-- Preview State -->
+        <div id="memory-preview-state" class="memory-state hidden">
+            <div class="overlay-header">
+                <h2>💾 Neue Erinnerung</h2>
+                <button class="close-btn" id="close-memory-creation">&times;</button>
+            </div>
+            <div class="overlay-body">
+                <p class="overlay-text-muted overlay-text-block">
+                    Überprüfen Sie die erstellte Erinnerung und bearbeiten Sie sie bei Bedarf:
+                </p>
+                <textarea id="memory-preview-text" class="memory-preview-textarea" rows="8" placeholder="Erinnerungstext..."></textarea>
+            </div>
+            <div class="overlay-footer">
+                <button class="btn btn-secondary" id="memory-cancel-btn">Abbrechen</button>
+                <button class="btn btn-secondary" id="memory-retry-btn">Wiederholen</button>
+                <button class="btn btn-primary" id="memory-save-btn">Speichern</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Memory Settings Overlay -->
+<div id="memory-overlay" class="overlay hidden">
+    <div class="overlay-content">
+        <div class="overlay-header">
+            <h2>💾 Erinnerungen verwalten</h2>
+            <button class="close-btn" id="close-memory-overlay">&times;</button>
+        </div>
+        <div class="overlay-body">
+            <div class="memory-controls">
+                <div class="control-group">
+                    <label class="switch-label">
+                        <span>Erinnerungen aktivieren</span>
+                        <label class="switch">
+                            <input type="checkbox" id="memories-enabled-toggle" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </label>
+                    <p class="control-description">
+                        Wenn aktiviert, werden Erinnerungen aus früheren Chats bei neuen Sessions eingebunden.
+                    </p>
+                </div>
+            </div>
+            
+            <hr class="overlay-divider">
+            
+            <div class="memories-list-section">
+                <div class="memories-header">
+                    <h3>Gespeicherte Erinnerungen</h3>
+                    <span class="memory-counter" id="memory-counter">0/30</span>
+                </div>
+                <div id="memories-list" class="memories-list">
+                    <!-- Memories werden hier dynamisch eingefügt -->
+                    <div class="no-memories">
+                        Noch keine Erinnerungen vorhanden. Erstelle eine Erinnerung nach mindestens 3 Chat-Nachrichten.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
