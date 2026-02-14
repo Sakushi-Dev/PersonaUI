@@ -15,6 +15,7 @@
   <img src="https://img.shields.io/badge/desktop-PyWebView-green?style=flat-square" alt="PyWebView">
   <img src="https://img.shields.io/badge/frontend-Vanilla_JS-yellow?style=flat-square&logo=javascript&logoColor=white" alt="Vanilla JS">
   <img src="https://img.shields.io/badge/tests-162_passed-brightgreen?style=flat-square" alt="Tests">
+  <img src="https://img.shields.io/badge/license-AGPL--3.0-red?style=flat-square" alt="AGPL-3.0">
 </p>
 
 ---
@@ -235,6 +236,8 @@ Whether it's bug reports, feature ideas, code contributions, or just feedback â€
 ---
 
 ## License
+
+This project is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**.
 
 See [LICENSE](LICENSE) for details.
 
