@@ -14,10 +14,15 @@ from routes.settings import settings_bp
 from routes.custom_specs import custom_specs_bp
 from routes.user_profile import user_profile_bp
 from routes.onboarding import onboarding_bp
+from routes.react_frontend import react_bp, has_react_build
 
 
 def register_routes(app):
     """Registriert alle Route-Blueprints bei der Flask-App"""
+    # React-Frontend Blueprint (Assets aus frontend/dist/)
+    if has_react_build():
+        app.register_blueprint(react_bp)
+
     app.register_blueprint(access_bp)  # Access-Control muss zuerst registriert werden
     app.register_blueprint(onboarding_bp)  # Onboarding vor main, damit /onboarding erreichbar ist
     app.register_blueprint(main_bp)
