@@ -157,7 +157,7 @@ if __name__ == '__main__':
                 try:
                     import clr
                     clr.AddReference('System.Drawing')
-                    from System.Drawing import Icon as WinIcon
+                    from System.Drawing import Icon as WinIcon #type: ignore
 
                     from webview.platforms.winforms import BrowserView
                     _orig_init = BrowserView.BrowserForm.__init__
