@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="de" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PersonaUI</title>
+    <!-- FOUC prevention: apply dark mode before React mounts -->
+    <script>
+      try {
+        var dm = localStorage.getItem('darkMode');
+        if (dm && JSON.parse(dm) === true) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      } catch(e) {}
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
