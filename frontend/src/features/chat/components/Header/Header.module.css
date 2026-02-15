@@ -1,0 +1,338 @@
+/* ── Chat Header ── */
+.header {
+  position: relative;
+  z-index: var(--z-header);
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 10.5px 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+  /* Isolate header fonts from bubble settings */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+}
+
+:global(body.dark-mode) .header {
+  background: rgba(17, 17, 22, 0.8);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.headerContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  position: relative;
+}
+
+/* ── Left: Character Info ── */
+.left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 1;
+}
+
+.characterInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.characterName {
+  font-size: 18px;
+  font-weight: 600;
+  color: #222;
+  margin: 0;
+}
+
+:global(body.dark-mode) .characterName {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* ── Center: Logo ── */
+.center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 0;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: bold;
+  background: linear-gradient(135deg, #000 0%, #000 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 2px;
+  white-space: nowrap;
+  filter: drop-shadow(0 2px 10px rgba(74, 99, 207, 0.3));
+}
+
+:global(body.dark-mode) .logo {
+  background: linear-gradient(135deg, #fff 0%, #ccc 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+/* ── Right: Header Actions ── */
+.right {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  z-index: 1;
+}
+
+/* ── Memory Button ── */
+.memoryBtn {
+  background: rgba(100, 149, 237, 0.15);
+  border: 1px solid rgba(100, 149, 237, 0.35);
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(50, 90, 180, 1);
+}
+
+.memoryBtn:hover:not(.memoryDisabled) {
+  background: rgba(100, 149, 237, 0.25);
+  border-color: rgba(100, 149, 237, 0.5);
+}
+
+.memoryDisabled {
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.3);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.memoryWarning {
+  background: rgba(255, 180, 0, 0.2);
+  border-color: rgba(255, 180, 0, 0.5);
+  color: rgba(180, 120, 0, 1);
+  animation: memoryContextPulse 2.5s ease-in-out infinite;
+}
+
+.memoryCritical {
+  background: rgba(255, 60, 60, 0.2);
+  border-color: rgba(255, 60, 60, 0.5);
+  color: rgba(200, 40, 40, 1);
+  animation: memoryContextCriticalPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes memoryContextPulse {
+  0%, 100% { transform: scale(1); box-shadow: none; }
+  50% { transform: scale(1.03); box-shadow: 0 0 8px rgba(255, 180, 0, 0.3); }
+}
+
+@keyframes memoryContextCriticalPulse {
+  0%, 100% { transform: scale(1); box-shadow: none; }
+  50% { transform: scale(1.05); box-shadow: 0 0 12px rgba(255, 60, 60, 0.4); }
+}
+
+:global(body.dark-mode) .memoryBtn {
+  background: rgba(100, 149, 237, 0.2);
+  border-color: rgba(100, 149, 237, 0.4);
+  color: rgba(130, 170, 255, 1);
+}
+
+:global(body.dark-mode) .memoryBtn:hover:not(.memoryDisabled) {
+  background: rgba(100, 149, 237, 0.3);
+  border-color: rgba(100, 149, 237, 0.6);
+}
+
+:global(body.dark-mode) .memoryDisabled {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.25);
+}
+
+:global(body.dark-mode) .memoryWarning {
+  background: rgba(255, 180, 0, 0.15);
+  border-color: rgba(255, 180, 0, 0.4);
+  color: rgba(255, 200, 80, 1);
+}
+
+:global(body.dark-mode) .memoryCritical {
+  background: rgba(255, 60, 60, 0.15);
+  border-color: rgba(255, 60, 60, 0.4);
+  color: rgba(255, 100, 100, 1);
+}
+
+/* ── Sound Toggle Button ── */
+.soundToggle {
+  background: rgba(100, 149, 237, 0.15);
+  border: 1px solid rgba(100, 149, 237, 0.35);
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(50, 90, 180, 1);
+}
+
+.soundToggle:hover {
+  background: rgba(100, 149, 237, 0.25);
+  border-color: rgba(100, 149, 237, 0.5);
+}
+
+.soundMuted {
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.35);
+}
+
+:global(body.dark-mode) .soundToggle {
+  background: rgba(100, 149, 237, 0.2);
+  border-color: rgba(100, 149, 237, 0.4);
+  color: rgba(130, 170, 255, 1);
+}
+
+:global(body.dark-mode) .soundToggle:hover {
+  background: rgba(100, 149, 237, 0.3);
+  border-color: rgba(100, 149, 237, 0.6);
+}
+
+:global(body.dark-mode) .soundMuted {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* ── QR Code Button ── */
+.qrCodeBtn {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(0, 0, 0, 0.6);
+  height: 34px;
+}
+
+.qrCodeBtn:hover {
+  background: rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 0, 0, 0.2);
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.qrCodeBtn svg {
+  width: 24px;
+  height: 24px;
+}
+
+:global(body.dark-mode) .qrCodeBtn {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+:global(body.dark-mode) .qrCodeBtn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* ── API Status Indicator ── */
+.apiStatus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  cursor: help;
+}
+
+.statusDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #888;
+  box-shadow: 0 0 8px rgba(136, 136, 136, 0.6);
+  transition: all 0.3s ease;
+  display: block;
+}
+
+.apiConnected .statusDot {
+  background-color: #00ff00;
+  box-shadow: 0 0 12px rgba(0, 255, 0, 0.8);
+}
+
+.apiDisconnected .statusDot {
+  background-color: #ff0000;
+  box-shadow: 0 0 12px rgba(255, 0, 0, 0.8);
+}
+
+/* ── Dropdown Toggle (hamburger ☰) ── */
+.dropdownToggle {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+  color: rgba(0, 0, 0, 0.6);
+  opacity: 0.8;
+}
+
+.dropdownToggle:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+  color: rgba(0, 0, 0, 0.85);
+  opacity: 1;
+}
+
+:global(body.dark-mode) .dropdownToggle {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+:global(body.dark-mode) .dropdownToggle:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* ── Responsive (Mobile ≤768px) ── */
+@media (max-width: 768px) {
+  .header {
+    padding: 8px 12px;
+  }
+
+  .headerContent {
+    padding: 0 8px;
+  }
+
+  .center {
+    position: static;
+    transform: none;
+    order: -1;
+  }
+
+  .logo {
+    font-size: 16px;
+  }
+
+  .characterName {
+    font-size: 16px;
+  }
+
+  .qrCodeBtn {
+    display: none !important;
+  }
+}

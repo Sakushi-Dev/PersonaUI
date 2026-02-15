@@ -1,0 +1,20 @@
+.closeButton {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--overlay-close-color);
+  font-size: 24px;
+  cursor: pointer;
+  border-radius: var(--border-radius-full);
+  transition: all var(--transition-fast);
+  line-height: 1;
+}
+
+.closeButton:hover {
+  background: var(--overlay-close-hover-bg);
+  color: var(--overlay-close-hover-color);
+}

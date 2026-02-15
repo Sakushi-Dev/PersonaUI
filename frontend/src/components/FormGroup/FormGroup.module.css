@@ -1,0 +1,64 @@
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--overlay-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.counter {
+  font-size: 12px;
+  color: var(--overlay-text-muted);
+}
+
+.counterOver {
+  color: var(--color-danger);
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--overlay-hint-color);
+  margin: 0;
+}
+
+/* Shared input styles */
+.group input[type="text"],
+.group input[type="email"],
+.group input[type="password"],
+.group input[type="number"],
+.group textarea,
+.group select {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--overlay-input-bg);
+  border: 1px solid var(--overlay-input-border);
+  border-radius: var(--border-radius-sm);
+  color: var(--overlay-input-text);
+  font-size: 14px;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  outline: none;
+}
+
+.group input:focus,
+.group textarea:focus,
+.group select:focus {
+  border-color: var(--overlay-input-focus-border);
+  box-shadow: var(--overlay-input-focus-shadow);
+}
+
+.group textarea {
+  resize: vertical;
+  min-height: 80px;
+}

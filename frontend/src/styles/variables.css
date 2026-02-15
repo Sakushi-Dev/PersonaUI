@@ -1,0 +1,61 @@
+/* ── CSS Custom Properties (Design Tokens) ── */
+
+:root {
+  /* Border Radius */
+  --border-radius-xs: 4px;
+  --border-radius-sm: 8px;
+  --border-radius-md: 10px;
+  --border-radius-lg: 16px;
+  --border-radius-xl: 20px;
+  --border-radius-full: 50%;
+
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.2s ease;
+  --transition-slow: 0.3s ease;
+
+  /* Font Weights */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 20px;
+  --spacing-2xl: 24px;
+  --spacing-3xl: 32px;
+
+  /* Layout */
+  --sidebar-width: 280px;
+  --input-container-height: 100px;
+
+  /* Base Font */
+  --bubble-font-size: 18px;
+  --bubble-font-family: 'Ubuntu', 'Roboto', 'Segoe UI', system-ui, -apple-system, sans-serif;
+
+  /* Special Colors */
+  --nonverbal-color: #e4ba00;
+  --color-danger: #ef4444;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+
+  /* Background Gradient Colors (defaults, overridden by settings) */
+  --background-color: #f8f9fa;
+  --color-white: #a3baff;
+  --color-gradient1: #66cfff;
+  --color-sky: #fd91ee;
+
+  /* Z-Index Scale */
+  --z-background: -1;
+  --z-default: 1;
+  --z-sidebar: 250;
+  --z-header: 200;
+  --z-dropdown: 300;
+  --z-overlay-backdrop: 900;
+  --z-overlay: 1000;
+  --z-toast: 1100;
+}

@@ -1,0 +1,40 @@
+/* ── StepIndicator ── */
+
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px 0;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+}
+
+.dot:disabled {
+  cursor: default;
+}
+
+.active {
+  background: #6366f1;
+  transform: scale(1.3);
+}
+
+.completed {
+  background: rgba(99, 102, 241, 0.4);
+}
+
+:root[data-theme="dark"] .dot {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+:root[data-theme="dark"] .completed {
+  background: rgba(99, 102, 241, 0.5);
+}

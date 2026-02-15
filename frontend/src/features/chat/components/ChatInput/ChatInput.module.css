@@ -1,0 +1,134 @@
+/* ── ChatInput ── */
+
+.container {
+  padding: 8px 10px;
+  background-color: transparent;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-fixed, 100);
+  pointer-events: none;
+}
+
+.wrapper {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  max-width: 1200px;
+  margin: 0 auto;
+  pointer-events: auto;
+}
+
+.input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  color: #1a1a1a;
+  height: 42px;
+  min-height: 42px;
+  max-height: 150px;
+  font-size: 18px;
+  font-family: inherit;
+  resize: none;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+  scrollbar-width: thin;
+}
+
+.input:focus {
+  border-color: rgba(0, 0, 0, 0.25);
+}
+
+.input::placeholder {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+.input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sendBtn {
+  width: 45px;
+  height: 45px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  opacity: 0.6;
+  color: #1a1a1a;
+  transition: opacity 0.2s, background 0.2s, transform 0.15s;
+}
+
+.sendBtn:hover:not(:disabled) {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.sendBtn:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
+.sendBtn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.cancel {
+  opacity: 0.8;
+  color: var(--color-danger, #ef4444);
+}
+
+.cancel:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* ── Dark Mode ── */
+
+:root[data-theme="dark"] .input {
+  background: rgba(20, 20, 30, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+:root[data-theme="dark"] .input:focus {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+:root[data-theme="dark"] .input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+:root[data-theme="dark"] .sendBtn {
+  color: white;
+}
+
+:root[data-theme="dark"] .sendBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 768px) {
+  .container {
+    padding: 6px 8px;
+  }
+
+  .input {
+    font-size: 16px;
+  }
+
+  .sendBtn {
+    width: 42px;
+    height: 42px;
+  }
+}

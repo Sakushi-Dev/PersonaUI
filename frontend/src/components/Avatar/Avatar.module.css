@@ -1,0 +1,38 @@
+.avatar {
+  position: relative;
+  border-radius: var(--border-radius-full);
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--overlay-section-bg);
+  border: 2px solid var(--overlay-border);
+}
+
+.clickable {
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.clickable:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-weight: var(--font-weight-bold);
+  color: var(--overlay-text-muted);
+  background: linear-gradient(135deg, var(--overlay-accent-light), var(--overlay-section-bg));
+}

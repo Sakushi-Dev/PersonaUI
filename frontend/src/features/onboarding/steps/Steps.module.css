@@ -1,0 +1,215 @@
+/* ── Onboarding Steps ── */
+
+.step {
+  animation: fadeIn 0.4s ease;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 6px;
+  text-align: center;
+}
+
+.stepNum {
+  font-size: 14px;
+  font-weight: 400;
+  opacity: 0.5;
+}
+
+.subtitle {
+  font-size: 15px;
+  opacity: 0.6;
+  text-align: center;
+  margin: 0 0 24px;
+  line-height: 1.5;
+}
+
+/* ── Feature Grid (Welcome) ── */
+
+.featureGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.featureCard {
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  text-align: center;
+}
+
+.featureCard h3 {
+  font-size: 15px;
+  margin: 6px 0 4px;
+}
+
+.featureCard p {
+  font-size: 13px;
+  opacity: 0.6;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.featureIcon {
+  font-size: 28px;
+}
+
+/* ── Avatar Section ── */
+
+.avatarSection {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+/* ── Form Elements ── */
+
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.8);
+  color: #1a1a1a;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input:focus {
+  border-color: rgba(0, 0, 0, 0.3);
+}
+
+.textarea {
+  composes: input;
+  resize: vertical;
+  min-height: 60px;
+}
+
+/* ── Setting Row ── */
+
+.settingRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.hint {
+  font-size: 12px;
+  opacity: 0.5;
+  margin: 4px 0 12px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.hint a {
+  color: #6366f1;
+  text-decoration: none;
+}
+
+.hint a:hover {
+  text-decoration: underline;
+}
+
+/* ── API Key Row ── */
+
+.apiKeyRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.apiKeyRow .input {
+  flex: 1;
+}
+
+/* ── Status Box ── */
+
+.statusBox {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin: 8px 0 12px;
+}
+
+.success {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+}
+
+.error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+/* ── Info Box ── */
+
+.infoBox {
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.03);
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 16px 0;
+}
+
+.infoBox p {
+  margin: 0;
+}
+
+/* ── Finish ── */
+
+.finishIcon {
+  font-size: 64px;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+/* ── Footer ── */
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.footer > :only-child {
+  margin: 0 auto;
+}
+
+/* ── Animation ── */
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Dark Mode ── */
+
+:root[data-theme="dark"] .input,
+:root[data-theme="dark"] .textarea {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+:root[data-theme="dark"] .featureCard {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+:root[data-theme="dark"] .infoBox {
+  background: rgba(255, 255, 255, 0.04);
+}
