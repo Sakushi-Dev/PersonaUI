@@ -6,7 +6,8 @@ import threading
 script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
 
-from flask import Flask, redirect, url_for, request
+from flask import Flask, jsonify, redirect, url_for, request
+from flask_cors import CORS
 from dotenv import load_dotenv
 from datetime import timedelta
 
@@ -39,6 +40,9 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'fallback-secret-key-for-development')
 app.json.sort_keys = False  # Reihenfolge der Keys beibehalten (Default -> Custom)
 
+# CORS für React-Frontend (Vite Dev-Server auf Port 5173)
+CORS(app, resources={r"/*": {"origins": ["http://localhost:5173", "http://127.0.0.1:5173"]}}, supports_credentials=True)
+
 # Session-Konfiguration
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # Session bleibt 7 Tage gültig
 app.config['SESSION_COOKIE_SECURE'] = False  # Für HTTPS auf True setzen
@@ -64,6 +68,10 @@ def check_ip_access():
     if request.endpoint in ('static', None):
         return None
     
+    # React-Frontend Assets immer erlauben (/assets/*, /vite.svg)
+    if request.endpoint and request.endpoint.startswith('react.'):
+        return None
+    
     # Access-Routes immer erlauben (Waiting-Screen, Polling, Request)
     if request.endpoint and request.endpoint.startswith('access.'):
         return None
@@ -82,16 +90,21 @@ def check_ip_access():
     if status == 'allowed':
         return None
     
-    if status == 'blocked':
-        return redirect(url_for('access.waiting_screen'))
+    # Prüfe ob die Anfrage von einem API-Client kommt (React Frontend)
+    is_api_request = (
+        request.accept_mimetypes.best == 'application/json'
+        or request.path.startswith('/api/')
+        or request.path.startswith('/chat')
+        or request.path.startswith('/afterthought')
+        or request.path.startswith('/clear_chat')
+        or request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    )
     
-    if status == 'rate_limited':
-        return redirect(url_for('access.waiting_screen'))
+    if is_api_request:
+        # JSON-Antwort für API-Clients (React Frontend)
+        return jsonify({'success': False, 'error': 'access_denied', 'status': status}), 403
     
-    if status == 'pending':
-        return redirect(url_for('access.waiting_screen'))
-    
-    # unknown → zum Wartebildschirm
+    # Redirect zum Wartebildschirm (React SPA oder Jinja Templates)
     return redirect(url_for('access.waiting_screen'))
 
 
@@ -128,9 +141,46 @@ if __name__ == '__main__':
             
             # Konsole verstecken - pywebview übernimmt die Anzeige
             hide_console_window()
+
+            # AppUserModelID setzen, damit Windows die App als eigenständig erkennt
+            # und das eigene Icon in der Taskleiste anzeigt (statt python.exe-Icon)
+            try:
+                from ctypes import windll
+                windll.shell32.SetCurrentProcessExplicitAppUserModelID('PersonaUI.App')
+            except Exception:
+                pass
+
+            def _patch_winforms_icon(ico_path):
+                """Patcht die WinForms BrowserForm-Klasse, damit das eigene Icon verwendet wird."""
+                if not os.path.isfile(ico_path):
+                    return
+                try:
+                    import clr
+                    clr.AddReference('System.Drawing')
+                    from System.Drawing import Icon as WinIcon
+
+                    from webview.platforms.winforms import BrowserView
+                    _orig_init = BrowserView.BrowserForm.__init__
+
+                    def _patched_init(self, window, cache_dir):
+                        _orig_init(self, window, cache_dir)
+                        try:
+                            self.Icon = WinIcon(ico_path)
+                        except Exception:
+                            pass
+
+                    BrowserView.BrowserForm.__init__ = _patched_init
+                except Exception:
+                    pass  # Nicht-Windows oder Import-Fehler → ignorieren
+            
             
             # Lade gespeicherte Fenstereinstellungen
             win_settings = load_window_settings()
+            
+            # Icon-Pfad (bin/assets/persona_ui.ico)
+            icon_path = os.path.join(
+                os.path.dirname(script_dir), 'bin', 'assets', 'persona_ui.ico'
+            )
             
             # 1) Splash-Fenster SOFORT öffnen - BEVOR irgendwas initialisiert wird
             window = webview.create_window(
@@ -170,8 +220,11 @@ if __name__ == '__main__':
             window.events.shown += _on_shown
             window.events.closing += _on_closing
             
+            # Custom-Icon injizieren (pywebview 6.x ignoriert icon= unter Windows)
+            _patch_winforms_icon(icon_path)
+            
             # PyWebView starten (blockiert bis Fenster zu)
-            webview.start()
+            webview.start(icon=icon_path)
             
             # Fenster geschlossen → Konsole wieder zeigen und alles beenden
             show_console_window()
