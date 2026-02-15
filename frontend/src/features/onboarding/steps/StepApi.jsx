@@ -1,11 +1,6 @@
-// ── Step: API & Chat (3/4) ──
+// ── Step: API & Chat (3/4) – Legacy 1:1 ──
 
 import { useState, useCallback } from 'react';
-import FormGroup from '../../../components/FormGroup/FormGroup';
-import Slider from '../../../components/Slider/Slider';
-import Toggle from '../../../components/Toggle/Toggle';
-import Button from '../../../components/Button/Button';
-import Spinner from '../../../components/Spinner/Spinner';
 import { testApiKey } from '../../../services/serverApi';
 import styles from './Steps.module.css';
 
@@ -13,26 +8,30 @@ export default function StepApi({ data, onChange, onNext, onBack }) {
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState(null);
   const [showWarning, setShowWarning] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const update = (field, value) => {
-    onChange({ ...data, [field]: value });
+    onChange((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleTest = useCallback(async () => {
-    if (!data.apiKey?.trim()) return;
+    if (!data.apiKey?.trim()) {
+      setTestResult({ success: false, message: 'Bitte API-Key eingeben' });
+      return;
+    }
     setTesting(true);
-    setTestResult(null);
+    setTestResult({ success: false, message: 'Teste API-Key...' });
 
     try {
       const result = await testApiKey(data.apiKey.trim());
       const valid = result.success;
       setTestResult({
         success: valid,
-        message: valid ? '✅ API-Key ist gültig!' : `❌ ${result.error || 'Ungültig'}`,
+        message: valid ? '✓ API-Key ist gültig!' : `✗ ${result.error || 'API-Key ungültig'}`,
       });
       update('apiKeyValid', valid);
     } catch (err) {
-      setTestResult({ success: false, message: `❌ ${err.message}` });
+      setTestResult({ success: false, message: '✗ Verbindungsfehler' });
       update('apiKeyValid', false);
     } finally {
       setTesting(false);
@@ -40,88 +39,149 @@ export default function StepApi({ data, onChange, onNext, onBack }) {
   }, [data.apiKey]);
 
   const handleNext = () => {
-    if (!data.apiKeyValid && data.apiKey?.trim()) {
-      setShowWarning(true);
-    } else if (!data.apiKey?.trim()) {
-      setShowWarning(true);
-    } else {
+    if (data.apiKeyValid) {
       onNext();
+    } else {
+      setShowWarning(true);
     }
   };
 
-  // Warning modal
-  if (showWarning) {
-    return (
-      <div className={styles.step}>
-        <h2 className={styles.title}>⚠️ Kein gültiger API-Key</h2>
-        <p className={styles.subtitle}>
-          Ohne API-Key kannst du PersonaUI nur eingeschränkt erkunden.
-          Die Chat-Funktion wird nicht verfügbar sein.
-        </p>
-        <div className={styles.footer}>
-          <Button variant="secondary" onClick={() => setShowWarning(false)}>Zurück</Button>
-          <Button variant="primary" onClick={() => { setShowWarning(false); onNext(); }}>
-            Trotzdem fortfahren
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        update('apiKey', text.trim());
+        update('apiKeyValid', false);
+        setTestResult(null);
+        setShowPassword(true);
+        setTimeout(() => setShowPassword(false), 1500);
+      }
+    } catch { /* Clipboard access denied */ }
+  };
 
   return (
-    <div className={styles.step}>
-      <h2 className={styles.title}>API & Chat <span className={styles.stepNum}>(3/4)</span></h2>
-      <p className={styles.subtitle}>Konfiguriere deine KI-Verbindung</p>
+    <div className={styles.card}>
+      <div className={styles.cardHeader}>
+        <span className={styles.cardStep}>3 / 4</span>
+        <h2>API &amp; Chat</h2>
+        <p className={styles.cardDesc}>Verbinde PersonaUI mit der Anthropic API.</p>
+      </div>
+      <div className={styles.cardBody}>
 
-      <Slider
-        label="Kontext-Limit"
-        value={parseInt(data.contextLimit, 10)}
-        onChange={(v) => update('contextLimit', String(Math.round(v)))}
-        min={10}
-        max={100}
-        step={5}
-        displayValue={`${data.contextLimit} Nachrichten`}
-      />
-      <p className={styles.hint}>Empfohlen: 65 (Balance zwischen Qualität und Kosten)</p>
+        {/* Kontext-Limit */}
+        <div className={styles.fieldGroup}>
+          <label className={styles.label}>Kontext-Limit: <strong>{data.contextLimit}</strong> Nachrichten</label>
+          <input
+            type="range"
+            className={styles.slider}
+            min={10}
+            max={100}
+            step={5}
+            value={parseInt(data.contextLimit, 10)}
+            onChange={(e) => update('contextLimit', e.target.value)}
+          />
+          <div className={styles.sliderLabels}>
+            <span>10</span>
+            <span className={styles.sliderRec}>Empfohlen: 65</span>
+            <span>100</span>
+          </div>
+          <span className={`${styles.hint} ${styles.hintWarning}`}>
+            ⚠️ Höhere Werte bedeuten mehr Kontext für die KI, aber auch höhere API-Kosten pro Nachricht. Die Kostenunterschiede bewegen sich im Bereich von Variationen um ca. 4 Nachkommastellen ($0.000x).
+          </span>
+        </div>
 
-      <div className={styles.settingRow}>
-        <Toggle
-          label={data.nachgedankeEnabled ? 'An' : 'Aus'}
-          checked={data.nachgedankeEnabled}
-          onChange={(v) => update('nachgedankeEnabled', v)}
-          id="ob-nachgedanke"
-        />
-        <div>
-          <span className={styles.label}>Nachgedanke (Beta)</span>
-          <p className={styles.hint}>KI kann eigenständig Nachrichten senden. Verursacht zusätzliche Kosten.</p>
+        {/* Nachgedanke */}
+        <div className={styles.fieldGroup}>
+          <label className={styles.label}>Nachgedanke <span className={styles.betaBadge}>Beta</span></label>
+          <div className={styles.modeSwitch}>
+            <span className={styles.modeLabel}>Aus</span>
+            <label className={styles.toggle}>
+              <input
+                type="checkbox"
+                checked={data.nachgedankeEnabled}
+                onChange={() => update('nachgedankeEnabled', !data.nachgedankeEnabled)}
+              />
+              <span className={styles.toggleSlider} />
+            </label>
+            <span className={styles.modeLabel}>An</span>
+          </div>
+          <div className={`${styles.infoBox} ${styles.infoBoxCompact}`}>
+            <span className={styles.infoIcon}>💭</span>
+            <span>Die Persona führt nach jeder Antwort einen inneren Dialog und entscheidet, ob sie spontan etwas ergänzen möchte. Erzeugt natürliches, spontanes Schreibverhalten mit eskalierenden Zeitintervallen. <strong>Verursacht zusätzliche API-Kosten im Hintergrund.</strong></span>
+          </div>
+        </div>
+
+        {/* API Key */}
+        <div className={styles.fieldGroup}>
+          <label className={styles.label}>API-Key</label>
+          <div className={styles.apiInputRow}>
+            <div className={styles.passwordWrapper}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className={styles.input}
+                value={data.apiKey}
+                onChange={(e) => { update('apiKey', e.target.value); update('apiKeyValid', false); setTestResult(null); }}
+                placeholder="sk-ant-api03-..."
+                style={{ paddingRight: '72px' }}
+              />
+              <button
+                className={styles.eyeBtn}
+                onClick={() => setShowPassword(!showPassword)}
+                title="Key anzeigen/verbergen"
+                type="button"
+              >
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              </button>
+              <button
+                className={`${styles.eyeBtn} ${styles.pasteBtn}`}
+                onClick={handlePaste}
+                title="Aus Zwischenablage einfügen"
+                type="button"
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+              </button>
+            </div>
+            <button className={styles.btnSecondary} onClick={handleTest} disabled={testing}>
+              Testen
+            </button>
+          </div>
+          {testResult && (
+            <div className={`${styles.apiStatus} ${testResult.success ? styles.apiSuccess : styles.apiError}`}>
+              {testResult.message}
+            </div>
+          )}
+          <div className={`${styles.infoBox} ${styles.infoBoxCompact}`}>
+            <span className={styles.infoIcon}>🔑</span>
+            <span>Du benötigst einen Anthropic API-Key. Diesen erhältst du unter <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer">console.anthropic.com</a>. Der Test-Request verursacht keine nennenswerten Kosten.</span>
+          </div>
         </div>
       </div>
+      <div className={styles.cardFooter}>
+        <button className={styles.btnGhost} onClick={onBack}>Zurück</button>
+        <button className={styles.btnPrimary} onClick={handleNext}>Weiter</button>
+      </div>
 
-      <FormGroup label="Anthropic API-Key">
-        <div className={styles.apiKeyRow}>
-          <input
-            className={styles.input}
-            type="password"
-            value={data.apiKey}
-            onChange={(e) => { update('apiKey', e.target.value); update('apiKeyValid', false); setTestResult(null); }}
-            placeholder="sk-ant-api03-..."
-          />
-          <Button variant="secondary" size="sm" onClick={handleTest} disabled={!data.apiKey?.trim() || testing}>
-            {testing ? <Spinner /> : 'Testen'}
-          </Button>
-        </div>
-      </FormGroup>
-
-      {testResult && (
-        <div className={`${styles.statusBox} ${testResult.success ? styles.success : styles.error}`}>
-          {testResult.message}
+      {/* API Key Warning Modal */}
+      {showWarning && (
+        <div className={styles.warningOverlay} onClick={(e) => { if (e.target === e.currentTarget) setShowWarning(false); }}>
+          <div className={styles.warningCard}>
+            <div className={styles.warningIcon}>⚠️</div>
+            <h3>Kein gültiger API-Key</h3>
+            <p>Ohne API-Key kannst du nicht mit deinen Personas chatten.</p>
+            <p className={styles.warningHint}>Du kannst den Key jederzeit nachträglich über das Menü unter <strong>Set API-Key</strong> eingeben.</p>
+            <div className={styles.warningActions}>
+              <button className={styles.btnGhost} onClick={() => setShowWarning(false)}>Zurück &amp; Key eingeben</button>
+              <button className={styles.btnSecondary} onClick={() => { setShowWarning(false); onNext(); }}>Trotzdem fortfahren</button>
+            </div>
+          </div>
         </div>
       )}
-
-      <div className={styles.footer}>
-        <Button variant="secondary" onClick={onBack}>Zurück</Button>
-        <Button variant="primary" onClick={handleNext}>Weiter</Button>
-      </div>
     </div>
   );
 }

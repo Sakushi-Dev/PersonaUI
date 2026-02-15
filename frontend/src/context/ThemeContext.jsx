@@ -8,7 +8,7 @@ export const ThemeContext = createContext(null);
 export function ThemeProvider({ children }) {
   const [isDark, setIsDark] = useState(() => storage.getItem('darkMode', false));
   const [colors, setColors] = useState(() => ({
-    backgroundColor_light: storage.getItem('backgroundColor_light', '#f8f9fa'),
+    backgroundColor_light: storage.getItem('backgroundColor_light', '#a3baff'),
     colorGradient1_light: storage.getItem('colorGradient1_light', '#66cfff'),
     color2_light: storage.getItem('color2_light', '#fd91ee'),
     backgroundColor_dark: storage.getItem('backgroundColor_dark', '#1a2332'),
@@ -33,7 +33,8 @@ export function ThemeProvider({ children }) {
   useEffect(() => {
     const root = document.documentElement;
     const suffix = isDark ? '_dark' : '_light';
-    root.style.setProperty('--background-color', colors[`backgroundColor${suffix}`]);
+    // --color-white = user's "Hintergrund" setting (dynamic bg container + blob1)
+    root.style.setProperty('--color-white', colors[`backgroundColor${suffix}`]);
     root.style.setProperty('--color-gradient1', colors[`colorGradient1${suffix}`]);
     root.style.setProperty('--color-sky', colors[`color2${suffix}`]);
     root.style.setProperty('--nonverbal-color', colors.nonverbalColor);

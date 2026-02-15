@@ -1,6 +1,12 @@
 /* ── Dark Mode Theme ── */
 
 :root[data-theme="dark"] {
+  /* Static page background */
+  --bg-color-1: #121220;
+  --bg-color-2: #1a1a35;
+  --bg-gradient-1: #1e1640;
+  --bg-gradient-2: #251530;
+
   /* Overlay */
   --overlay-backdrop: rgba(0, 0, 0, 0.7);
   --overlay-bg: #1c1c24;
@@ -64,7 +70,7 @@
 
   /* Page Background */
   --background-color: #1a2332;
-  --color-white: #2a3f5f;
+  --color-white: #1a2332;
   --color-gradient1: #2a3f5f;
   --color-sky: #3d4f66;
 }

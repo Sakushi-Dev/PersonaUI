@@ -2,48 +2,44 @@
 
 .page {
   min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  font-family: 'Ubuntu', 'Roboto', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+/* ── Step Container ── */
+
+.container {
+  position: relative;
+  z-index: 10;
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #e8dff5 0%, #c9b8ff 30%, #f0c6ff 70%, #b8d0ff 100%);
-  padding: 20px;
+  padding: 60px 20px 40px;
 }
 
-.container {
+.stepWrapper {
   width: 100%;
-  max-width: 600px;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
+  max-width: 640px;
+  animation: obStepIn 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.content {
-  padding: 32px;
-}
-
-/* ── Dark Mode ── */
-
-:root[data-theme="dark"] .page {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-}
-
-:root[data-theme="dark"] .container {
-  background: rgba(30, 30, 45, 0.85);
-  border-color: rgba(255, 255, 255, 0.1);
+@keyframes obStepIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* ── Responsive ── */
 
-@media (max-width: 768px) {
+@media (max-width: 680px) {
   .container {
-    border-radius: 16px;
-  }
-
-  .content {
-    padding: 24px 16px;
+    padding: 50px 12px 30px;
   }
 }

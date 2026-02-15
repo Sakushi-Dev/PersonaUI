@@ -15,7 +15,8 @@
   transition: background-color 0.5s ease;
 }
 
-/* Gradient stop when dynamic background is active (blobs handle it) */
-.page:has(> [class*="DynamicBackground"]) {
+/* Remove page background when dynamic background is active (blobs handle it) */
+.dynamicActive {
+  background-color: transparent;
   background-image: none;
 }

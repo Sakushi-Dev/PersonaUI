@@ -1,6 +1,12 @@
 /* ── Light Mode Theme ── */
 
 :root[data-theme="light"] {
+  /* Static page background */
+  --bg-color-1: #e8dff5;
+  --bg-color-2: #b8d0ff;
+  --bg-gradient-1: #c9b8ff;
+  --bg-gradient-2: #f0c6ff;
+
   /* Overlay */
   --overlay-backdrop: rgba(0, 0, 0, 0.5);
   --overlay-bg: #f5f7fa;

@@ -1,18 +1,26 @@
-/* ── ProgressBar ── */
+/* ── ProgressBar – Legacy 1:1 ── */
 
 .track {
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 4px;
   background: rgba(0, 0, 0, 0.08);
+  z-index: 100;
 }
 
 .fill {
   height: 100%;
-  background: linear-gradient(90deg, #6366f1, #a78bfa);
+  background: linear-gradient(90deg, #4f78e6, #00c6fb);
   border-radius: 0 2px 2px 0;
-  transition: width 0.4s ease;
+  transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 :root[data-theme="dark"] .track {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+:root[data-theme="dark"] .fill {
+  background: linear-gradient(90deg, #4facfe, #00f2fe);
 }

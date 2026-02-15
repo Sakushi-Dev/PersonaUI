@@ -1,0 +1,203 @@
+/* ── DynamicBackground ── */
+
+.background {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-background);
+  overflow: hidden;
+  background-color: var(--color-white);
+  transition: background-color 0.6s ease;
+}
+
+/* ── Shared blob base ── */
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  will-change: transform, border-radius;
+  transition: background 0.6s ease;
+}
+
+/* ─────────────── Deep layer — large, very blurred, slow ─────────────── */
+.blobDeep1 {
+  width: min(70vw, 800px);
+  height: min(70vw, 800px);
+  background: var(--color-gradient1);
+  opacity: 0.35;
+  filter: blur(120px);
+  top: -15%;
+  left: -10%;
+  animation: driftA 45s ease-in-out infinite;
+}
+
+.blobDeep2 {
+  width: min(60vw, 700px);
+  height: min(60vw, 700px);
+  background: var(--color-sky);
+  opacity: 0.3;
+  filter: blur(130px);
+  bottom: -10%;
+  right: -10%;
+  animation: driftB 50s ease-in-out infinite;
+  animation-delay: -18s;
+}
+
+/* ─────────────── Mid layer — medium, moderate blur ─────────────── */
+.blobMid1 {
+  width: min(40vw, 480px);
+  height: min(40vw, 480px);
+  background: var(--color-gradient1);
+  opacity: 0.4;
+  filter: blur(90px);
+  top: 30%;
+  right: 5%;
+  animation: driftC 35s ease-in-out infinite;
+  animation-delay: -8s;
+}
+
+.blobMid2 {
+  width: min(35vw, 420px);
+  height: min(35vw, 420px);
+  background: var(--color-sky);
+  opacity: 0.35;
+  filter: blur(100px);
+  bottom: 15%;
+  left: 10%;
+  animation: driftD 40s ease-in-out infinite;
+  animation-delay: -22s;
+}
+
+.blobMid3 {
+  width: min(30vw, 360px);
+  height: min(30vw, 360px);
+  background: var(--color-white);
+  opacity: 0.25;
+  filter: blur(80px);
+  top: 10%;
+  left: 40%;
+  animation: driftE 38s ease-in-out infinite;
+  animation-delay: -12s;
+}
+
+/* ─────────────── Accent — small subtle highlight ─────────────── */
+.blobAccent {
+  width: min(22vw, 260px);
+  height: min(22vw, 260px);
+  background: var(--color-gradient1);
+  opacity: 0.2;
+  filter: blur(60px);
+  top: 55%;
+  left: 55%;
+  animation: driftF 30s ease-in-out infinite;
+  animation-delay: -5s;
+}
+
+/* ─────────────── Noise grain overlay ─────────────── */
+.noise {
+  position: absolute;
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  opacity: 0.025;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+/* ─────────────── Animations — organic, varied drift ─────────────── */
+@keyframes driftA {
+  0%, 100% {
+    border-radius: 40% 60% 55% 45% / 55% 40% 60% 45%;
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    border-radius: 55% 45% 40% 60% / 45% 55% 45% 55%;
+    transform: translate(4%, 6%) scale(1.05);
+  }
+  66% {
+    border-radius: 45% 55% 60% 40% / 60% 45% 55% 40%;
+    transform: translate(-3%, -4%) scale(0.97);
+  }
+}
+
+@keyframes driftB {
+  0%, 100% {
+    border-radius: 50% 50% 45% 55% / 45% 55% 50% 50%;
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    border-radius: 60% 40% 50% 50% / 50% 45% 55% 50%;
+    transform: translate(-5%, 3%) scale(1.03);
+  }
+  66% {
+    border-radius: 45% 55% 55% 45% / 55% 50% 45% 55%;
+    transform: translate(3%, -5%) scale(0.96);
+  }
+}
+
+@keyframes driftC {
+  0%, 100% {
+    border-radius: 55% 45% 50% 50% / 50% 55% 45% 50%;
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    border-radius: 45% 55% 55% 45% / 60% 40% 55% 45%;
+    transform: translate(-3%, 5%) scale(1.04);
+  }
+  50% {
+    border-radius: 50% 50% 40% 60% / 45% 55% 50% 50%;
+    transform: translate(4%, -2%) scale(0.98);
+  }
+  75% {
+    border-radius: 55% 45% 55% 45% / 50% 50% 45% 55%;
+    transform: translate(-2%, -4%) scale(1.02);
+  }
+}
+
+@keyframes driftD {
+  0%, 100% {
+    border-radius: 48% 52% 55% 45% / 52% 48% 50% 50%;
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    border-radius: 55% 45% 48% 52% / 45% 55% 52% 48%;
+    transform: translate(5%, -3%) scale(0.97);
+  }
+  66% {
+    border-radius: 50% 50% 52% 48% / 55% 45% 48% 52%;
+    transform: translate(-4%, 4%) scale(1.04);
+  }
+}
+
+@keyframes driftE {
+  0%, 100% {
+    border-radius: 52% 48% 45% 55% / 48% 52% 55% 45%;
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    border-radius: 45% 55% 52% 48% / 55% 45% 48% 52%;
+    transform: translate(3%, 5%) scale(1.06);
+  }
+}
+
+@keyframes driftF {
+  0%, 100% {
+    border-radius: 50% 50% 50% 50% / 50% 50% 50% 50%;
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    border-radius: 55% 45% 50% 50% / 45% 55% 50% 50%;
+    transform: translate(-5%, -3%) scale(1.08);
+  }
+  66% {
+    border-radius: 45% 55% 55% 45% / 55% 45% 45% 55%;
+    transform: translate(4%, 2%) scale(0.95);
+  }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .blob {
+    animation: none !important;
+  }
+}

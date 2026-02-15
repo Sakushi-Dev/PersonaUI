@@ -1,61 +1,98 @@
-// ── Step: Interface (2/4) ──
+// ── Step: Interface (2/4) – Legacy 1:1 ──
 
-import Toggle from '../../../components/Toggle/Toggle';
-import ColorPicker from '../../../components/ColorPicker/ColorPicker';
-import Button from '../../../components/Button/Button';
+import InterfacePreview from '../../../components/InterfacePreview/InterfacePreview';
 import styles from './Steps.module.css';
 
-export default function StepInterface({ data, onChange, onNext, onBack }) {
+export default function StepInterface({ data, onChange, onDarkModeChange, onNext, onBack }) {
   const update = (field, value) => {
-    onChange({ ...data, [field]: value });
+    onChange((prev) => ({ ...prev, [field]: value }));
   };
 
-  const previewStyle = {
-    background: data.darkMode
-      ? 'linear-gradient(135deg, #1a2332, #2a3f5f)'
-      : 'linear-gradient(135deg, #e8dff5, #c9b8ff)',
-    color: data.darkMode ? '#fff' : '#1a1a1a',
-    padding: '16px',
-    borderRadius: '12px',
-    marginBottom: '20px',
-    fontSize: '16px',
-    lineHeight: '1.6',
-    transition: 'all 0.3s ease',
+  const handleDarkToggle = () => {
+    const newVal = !data.darkMode;
+    if (onDarkModeChange) {
+      onDarkModeChange(newVal);
+    } else {
+      update('darkMode', newVal);
+    }
+  };
+
+  const handleColorInput = (e) => {
+    update('nonverbalColor', e.target.value);
+  };
+
+  const handleColorText = (e) => {
+    const v = e.target.value;
+    if (/^#[0-9a-fA-F]{6}$/.test(v)) {
+      update('nonverbalColor', v);
+    }
+    // Always update the text field
+    e.target.value = v;
   };
 
   return (
-    <div className={styles.step}>
-      <h2 className={styles.title}>Interface <span className={styles.stepNum}>(2/4)</span></h2>
-      <p className={styles.subtitle}>Passe das Erscheinungsbild an</p>
-
-      {/* Preview */}
-      <div style={previewStyle}>
-        Hallo! So sieht dein Chat aus. <span style={{ color: data.nonverbalColor, fontStyle: 'italic' }}>*lächelt sanft*</span>
+    <div className={styles.card}>
+      <div className={styles.cardHeader}>
+        <span className={styles.cardStep}>2 / 4</span>
+        <h2>Interface</h2>
+        <p className={styles.cardDesc}>Passe das Aussehen an deinen Geschmack an.</p>
       </div>
+      <div className={styles.cardBody}>
 
-      <div className={styles.settingRow}>
-        <Toggle
-          label={data.darkMode ? 'Dunkel' : 'Hell'}
-          checked={data.darkMode}
-          onChange={(v) => update('darkMode', v)}
-          id="ob-dark-mode"
-        />
-        <span className={styles.label}>Darstellungsmodus</span>
+        {/* Live Preview Box */}
+        <div style={{ marginBottom: 20 }}>
+          <InterfacePreview
+            isDark={data.darkMode}
+            nonverbalColor={data.nonverbalColor}
+          />
+        </div>
+
+        {/* Dark/Light Toggle */}
+        <div className={styles.fieldGroup}>
+          <label className={styles.label}>Design-Modus</label>
+          <div className={styles.modeSwitch}>
+            <span className={styles.modeLabel}>☀️ Hell</span>
+            <label className={styles.toggle}>
+              <input
+                type="checkbox"
+                checked={data.darkMode}
+                onChange={handleDarkToggle}
+              />
+              <span className={styles.toggleSlider} />
+            </label>
+            <span className={styles.modeLabel}>🌙 Dunkel</span>
+          </div>
+        </div>
+
+        {/* Nonverbal Color */}
+        <div className={styles.fieldGroup}>
+          <label className={styles.label}>Nonverbale Text-Farbe</label>
+          <div className={styles.colorRow}>
+            <input
+              type="color"
+              className={styles.colorInput}
+              value={data.nonverbalColor}
+              onChange={handleColorInput}
+            />
+            <input
+              type="text"
+              className={`${styles.input} ${styles.colorText}`}
+              value={data.nonverbalColor}
+              onChange={handleColorText}
+              placeholder="#e4ba00"
+            />
+          </div>
+          <span className={styles.hint}>Farbe für Text zwischen Sternchen (*nonverbal*) – z.B. Aktionen, Emotionen</span>
+        </div>
+
+        <div className={styles.infoBox}>
+          <span className={styles.infoIcon}>ℹ️</span>
+          <span>Weitere Interface-Einstellungen wie Farben, Schriftart und -größe findest du später unter <strong>Einstellungen</strong>.</span>
+        </div>
       </div>
-
-      <ColorPicker
-        label="Nonverbal-Textfarbe"
-        value={data.nonverbalColor}
-        onChange={(v) => update('nonverbalColor', v)}
-      />
-
-      <div className={styles.infoBox}>
-        <p>💡 Weitere Einstellungen wie Hintergrundfarben und Schriftart findest du später in den Interface-Einstellungen.</p>
-      </div>
-
-      <div className={styles.footer}>
-        <Button variant="secondary" onClick={onBack}>Zurück</Button>
-        <Button variant="primary" onClick={onNext}>Weiter</Button>
+      <div className={styles.cardFooter}>
+        <button className={styles.btnGhost} onClick={onBack}>Zurück</button>
+        <button className={styles.btnPrimary} onClick={onNext}>Weiter</button>
       </div>
     </div>
   );

@@ -11,7 +11,7 @@ import { useAfterthought } from './hooks/useAfterthought';
 import { useSidebar } from './hooks/useSidebar';
 import { useSwipe } from './hooks/useSwipe';
 
-import DynamicBackground from './components/DynamicBackground/DynamicBackground';
+import DynamicBackground from '../../components/DynamicBackground/DynamicBackground';
 import Header from './components/Header/Header';
 import Sidebar from './components/Sidebar/Sidebar';
 import MessageList from './components/MessageList/MessageList';
@@ -75,11 +75,13 @@ function ChatPageContent() {
     const dm = get('darkMode', false);
     setIsDark(dm);
 
-    const suffix = dm ? '_dark' : '_light';
     updateColors({
-      [`backgroundColor${suffix}`]: get(`backgroundColor${suffix}`, dm ? '#1a2332' : '#a3baff'),
-      [`colorGradient1${suffix}`]: get(`colorGradient1${suffix}`, dm ? '#2a3f5f' : '#66cfff'),
-      [`color2${suffix}`]: get(`color2${suffix}`, dm ? '#3d4f66' : '#fd91ee'),
+      backgroundColor_light: get('backgroundColor_light', '#a3baff'),
+      colorGradient1_light: get('colorGradient1_light', '#66cfff'),
+      color2_light: get('color2_light', '#fd91ee'),
+      backgroundColor_dark: get('backgroundColor_dark', '#1a2332'),
+      colorGradient1_dark: get('colorGradient1_dark', '#2a3f5f'),
+      color2_dark: get('color2_dark', '#3d4f66'),
       nonverbalColor: get('nonverbalColor', '#e4ba00'),
     });
 
@@ -183,7 +185,7 @@ function ChatPageContent() {
   const dynamicBg = get('dynamicBackground', true);
 
   return (
-    <div className={styles.page} {...swipeHandlers}>
+    <div className={`${styles.page}${dynamicBg ? ` ${styles.dynamicActive}` : ''}`} {...swipeHandlers}>
       {dynamicBg && <DynamicBackground />}
 
       <Header

@@ -12,6 +12,7 @@ import Toggle from '../../components/Toggle/Toggle';
 import Slider from '../../components/Slider/Slider';
 import ColorPicker from '../../components/ColorPicker/ColorPicker';
 import Button from '../../components/Button/Button';
+import InterfacePreview from '../../components/InterfacePreview/InterfacePreview';
 import styles from './Overlays.module.css';
 
 const FONT_OPTIONS = [
@@ -23,7 +24,7 @@ const FONT_OPTIONS = [
 
 export default function InterfaceSettingsOverlay({ open, onClose }) {
   const { get, setMany } = useSettings();
-  const { isDark, setIsDark, updateColors, setFontSize: setThemeFontSize, setFontFamily: setThemeFontFamily, setDynamicBackground: setThemeDynBg } = useTheme();
+  const { isDark, setIsDark, colors, updateColors, setFontSize: setThemeFontSize, setFontFamily: setThemeFontFamily, setDynamicBackground: setThemeDynBg } = useTheme();
 
   const [darkMode, setDarkMode] = useState(false);
   const [dynamicBg, setDynamicBg] = useState(true);
@@ -49,6 +50,27 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
       setFontFamily(get('bubbleFontFamily', 'ubuntu'));
     }
   }, [open, get]);
+
+  // ── Dark mode toggle handler: swap color pickers to new mode ──
+  const handleDarkModeChange = useCallback((checked) => {
+    // Save current mode's colors to ThemeContext before switching
+    const oldSuffix = darkMode ? '_dark' : '_light';
+    updateColors({
+      [`backgroundColor${oldSuffix}`]: bgColor,
+      [`colorGradient1${oldSuffix}`]: gradient1,
+      [`color2${oldSuffix}`]: color2,
+    });
+
+    // Load new mode's colors from ThemeContext (not server settings — may be stale)
+    const newSuffix = checked ? '_dark' : '_light';
+    const defaults = checked
+      ? { bg: '#1a2332', g1: '#2a3f5f', c2: '#3d4f66' }
+      : { bg: '#a3baff', g1: '#66cfff', c2: '#fd91ee' };
+    setBgColor(colors[`backgroundColor${newSuffix}`] ?? defaults.bg);
+    setGradient1(colors[`colorGradient1${newSuffix}`] ?? defaults.g1);
+    setColor2(colors[`color2${newSuffix}`] ?? defaults.c2);
+    setDarkMode(checked);
+  }, [darkMode, bgColor, gradient1, color2, colors, updateColors]);
 
   // ── Live preview: apply changes to actual page in real-time ──
   useEffect(() => {
@@ -84,19 +106,25 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
 
   const handleSave = useCallback(() => {
     const suffix = darkMode ? '_dark' : '_light';
+    const otherSuffix = darkMode ? '_light' : '_dark';
     setMany({
       darkMode,
       dynamicBackground: dynamicBg,
       notificationSound,
+      // Current mode from pickers
       [`backgroundColor${suffix}`]: bgColor,
       [`colorGradient1${suffix}`]: gradient1,
       [`color2${suffix}`]: color2,
+      // Other mode from ThemeContext
+      [`backgroundColor${otherSuffix}`]: colors[`backgroundColor${otherSuffix}`],
+      [`colorGradient1${otherSuffix}`]: colors[`colorGradient1${otherSuffix}`],
+      [`color2${otherSuffix}`]: colors[`color2${otherSuffix}`],
       nonverbalColor,
       bubbleFontSize: String(fontSize),
       bubbleFontFamily: fontFamily,
     });
     onClose();
-  }, [darkMode, dynamicBg, notificationSound, bgColor, gradient1, color2, nonverbalColor, fontSize, fontFamily, setMany, onClose]);
+  }, [darkMode, dynamicBg, notificationSound, bgColor, gradient1, color2, colors, nonverbalColor, fontSize, fontFamily, setMany, onClose]);
 
   const handleReset = useCallback(() => {
     setDarkMode(false);
@@ -114,11 +142,21 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
     <Overlay open={open} onClose={onClose} width="520px">
       <OverlayHeader title="Interface-Einstellungen" onClose={onClose} />
       <OverlayBody>
+        <div style={{ marginBottom: 16 }}>
+          <InterfacePreview
+            isDark={darkMode}
+            nonverbalColor={nonverbalColor}
+            bgColor={bgColor}
+            gradient1={gradient1}
+            gradient2={color2}
+          />
+        </div>
+
         <div className={styles.settingRow}>
           <Toggle
             label={darkMode ? 'Dunkel' : 'Hell'}
             checked={darkMode}
-            onChange={setDarkMode}
+            onChange={handleDarkModeChange}
             id="dark-mode"
           />
         </div>

@@ -1,7 +1,10 @@
 // ── OnboardingPage ──
 // 5-step wizard: Welcome → Profile → Interface → API → Finish
+// 1:1 match with legacy onboarding
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { useTheme } from '../../hooks/useTheme';
+import DynamicBackground from '../../components/DynamicBackground/DynamicBackground';
 import StepWelcome from './steps/StepWelcome';
 import StepProfile from './steps/StepProfile';
 import StepInterface from './steps/StepInterface';
@@ -21,14 +24,21 @@ const TOTAL_STEPS = 5;
 export default function OnboardingPage() {
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
+  const { setIsDark, setDynamicBackground } = useTheme();
+
+  // Ensure dynamic background is visible during onboarding
+  useEffect(() => {
+    setDynamicBackground(true);
+  }, [setDynamicBackground]);
 
   // Collected data across steps
   const [profileData, setProfileData] = useState({
     user_name: '',
     user_avatar: null,
     user_avatar_type: null,
-    user_type: '',
-    user_gender: '',
+    user_type: null,
+    user_type_description: null,
+    user_gender: null,
     user_interested_in: [],
     user_info: '',
   });
@@ -45,16 +55,24 @@ export default function OnboardingPage() {
     apiKeyValid: false,
   });
 
+  const goTo = useCallback((s) => {
+    if (s >= 0 && s < TOTAL_STEPS) setStep(s);
+  }, []);
+
   const handleNext = () => setStep((s) => Math.min(s + 1, TOTAL_STEPS - 1));
   const handleBack = () => setStep((s) => Math.max(s - 1, 0));
+
+  // Dark mode toggle handler — applies immediately via ThemeContext
+  const handleDarkModeChange = useCallback((checked) => {
+    setIsDark(checked);
+    setInterfaceData((prev) => ({ ...prev, darkMode: checked }));
+  }, [setIsDark]);
 
   const handleFinish = useCallback(async () => {
     setSaving(true);
     try {
-      // Save profile
       await updateUserProfile(profileData);
 
-      // Save settings
       await updateSettings({
         darkMode: interfaceData.darkMode,
         nonverbalColor: interfaceData.nonverbalColor,
@@ -62,18 +80,12 @@ export default function OnboardingPage() {
         nachgedankeEnabled: apiData.nachgedankeEnabled,
       });
 
-      // Save API key if provided
       if (apiData.apiKey) {
         await saveApiKey(apiData.apiKey);
       }
 
-      // Mark onboarding complete
       await completeOnboarding();
-
-      // Store dark mode locally
       storage.setItem('darkMode', interfaceData.darkMode);
-
-      // Full page reload to re-initialize all contexts with fresh data
       window.location.href = '/';
     } catch (err) {
       console.error('Onboarding finish failed:', err);
@@ -86,14 +98,23 @@ export default function OnboardingPage() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.container}>
-        <ProgressBar progress={progress} />
-        <StepIndicator current={step} total={TOTAL_STEPS} onGoTo={(s) => s <= step && setStep(s)} />
+      {/* Use existing DynamicBackground component */}
+      <DynamicBackground />
 
-        <div className={styles.content}>
-          {step === 0 && (
-            <StepWelcome onNext={handleNext} />
-          )}
+      {/* Fixed Progress Bar */}
+      <ProgressBar progress={progress} />
+
+      {/* Fixed Step Indicators */}
+      <StepIndicator
+        current={step}
+        total={TOTAL_STEPS}
+        onGoTo={(s) => s <= step + 1 && goTo(s)}
+      />
+
+      {/* Step Container */}
+      <div className={styles.container}>
+        <div className={styles.stepWrapper} key={step}>
+          {step === 0 && <StepWelcome onNext={handleNext} />}
           {step === 1 && (
             <StepProfile
               data={profileData}
@@ -106,6 +127,7 @@ export default function OnboardingPage() {
             <StepInterface
               data={interfaceData}
               onChange={setInterfaceData}
+              onDarkModeChange={handleDarkModeChange}
               onNext={handleNext}
               onBack={handleBack}
             />
