@@ -13,13 +13,19 @@ from utils.config import load_character, load_char_config, get_active_persona_id
 from routes.helpers import resolve_persona_id
 from routes.user_profile import get_user_profile_data
 from routes.onboarding import is_onboarding_complete
+from routes.react_frontend import has_react_build, serve_react_app
 
 main_bp = Blueprint('main', __name__)
 
 
 @main_bp.route('/')
 def index():
-    """Hauptseite mit Chat-Interface"""
+    """Hauptseite mit Chat-Interface (React SPA oder Jinja-Fallback)"""
+    # React-Build vorhanden → SPA ausliefern
+    if has_react_build():
+        return serve_react_app()
+
+    # Legacy Jinja-Fallback
     # Prüfe ob Onboarding abgeschlossen ist
     if not is_onboarding_complete():
         return redirect(url_for('onboarding.onboarding'))
