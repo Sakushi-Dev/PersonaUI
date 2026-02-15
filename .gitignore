@@ -69,6 +69,7 @@ src/settings/update_state.json
 
 # Lokale Node.js-Installation (automatisch heruntergeladen)
 bin/node/
+bin/node-*/
 
 # Frontend (React/Vite)
 frontend/node_modules/
