@@ -8,9 +8,9 @@ export function sendChatMessage(message, options = {}) {
     session_id: options.sessionId,
     persona_id: options.personaId || 'default',
     ...(options.apiModel && { api_model: options.apiModel }),
-    ...(options.apiTemperature !== undefined && { api_temperature: options.apiTemperature }),
-    ...(options.contextLimit !== undefined && { context_limit: options.contextLimit }),
-    ...(options.experimentalMode !== undefined && { experimental_mode: options.experimentalMode }),
+    ...(options.apiTemperature !== undefined && { api_temperature: parseFloat(options.apiTemperature) }),
+    ...(options.contextLimit !== undefined && { context_limit: parseInt(options.contextLimit, 10) }),
+    ...(options.experimentalMode !== undefined && { experimental_mode: !!options.experimentalMode }),
   };
 
   return apiStream('/chat_stream', body, {
@@ -28,9 +28,9 @@ export function sendAfterthought(options = {}) {
     persona_id: options.personaId || 'default',
     ...(options.innerDialogue && { inner_dialogue: options.innerDialogue }),
     ...(options.apiModel && { api_model: options.apiModel }),
-    ...(options.apiTemperature !== undefined && { api_temperature: options.apiTemperature }),
-    ...(options.contextLimit !== undefined && { context_limit: options.contextLimit }),
-    ...(options.experimentalMode !== undefined && { experimental_mode: options.experimentalMode }),
+    ...(options.apiTemperature !== undefined && { api_temperature: parseFloat(options.apiTemperature) }),
+    ...(options.contextLimit !== undefined && { context_limit: parseInt(options.contextLimit, 10) }),
+    ...(options.experimentalMode !== undefined && { experimental_mode: !!options.experimentalMode }),
   };
 
   if (options.phase === 'decision') {

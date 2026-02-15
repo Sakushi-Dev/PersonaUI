@@ -72,6 +72,10 @@ def chat_stream():
     
     # Context Limit
     context_limit = data.get('context_limit', 25)
+    try:
+        context_limit = int(context_limit)
+    except (TypeError, ValueError):
+        context_limit = 25
     context_limit = max(10, min(100, context_limit))
     
     # Konversationskontext holen (mit persona_id für richtige DB!)

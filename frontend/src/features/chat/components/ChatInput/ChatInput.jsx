@@ -22,6 +22,7 @@ export default function ChatInput({ onSend, disabled, isStreaming, onCancel, pla
 
   const handleSend = useCallback(() => {
     const trimmed = text.trim();
+    console.log('[ChatInput] handleSend called, text:', trimmed, 'disabled:', disabled);
     if (!trimmed || disabled) return;
 
     onSend(trimmed);

@@ -22,6 +22,7 @@ export function useMessages() {
   const hasMore = chatHistory.length < totalMessageCount;
 
   const sendMessage = useCallback(async (text) => {
+    console.log('[useMessages] sendMessage called, text:', text, 'sessionId:', sessionId, 'personaId:', personaId, 'isLoading:', isLoading, 'isStreaming:', isStreaming);
     if (!text.trim() || isLoading || isStreaming) return;
 
     setIsLoading(true);

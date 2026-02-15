@@ -6,8 +6,9 @@
   padding: 15px;
   padding-top: 70px;
   padding-bottom: 120px;
+  margin-bottom: 12px;
   scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
 .container::-webkit-scrollbar {
@@ -15,7 +16,7 @@
 }
 
 .container::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 3px;
 }
 
@@ -33,58 +34,96 @@
   display: flex;
   max-width: 1200px;
   margin: 0 auto 50px;
+  position: relative;
   animation: fadeInSlide 0.6s ease-out;
-  gap: 10px;
 }
 
 .userMessage {
-  composes: message;
+  margin-left: auto;
   flex-direction: row-reverse;
 }
 
 .botMessage {
-  composes: message;
+  margin-right: auto;
 }
 
 /* ── Avatar ── */
 
-.avatar {
+.messageAvatar {
+  top: -40px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin: 0 10px;
   flex-shrink: 0;
+  overflow: hidden;
 }
 
 /* ── Content ── */
 
-.content {
+.messageContent {
   display: flex;
   flex-direction: column;
   width: 900px;
   max-width: 85%;
+  position: relative;
 }
 
-.sender {
+/* ── Sender Row ── */
+
+.messageSenderRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.userMessage .messageSenderRow {
+  flex-direction: row-reverse;
+}
+
+.messageSender {
   font-size: 14px;
   font-weight: 600;
   color: white;
-  background: rgba(0, 0, 0, 0.4);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  background-color: rgba(0, 0, 0, 0.4);
   padding: 2px 10px;
   border-radius: 10px;
-  margin-bottom: 4px;
+  display: inline-block;
   width: fit-content;
 }
 
-.userMessage .sender {
-  margin-left: auto;
+/* ── Prompt Info Link ── */
+
+.promptInfoBtn {
+  background: rgba(0, 0, 0, 0.25);
+  border: none;
+  font-size: 11px;
+  font-weight: 500;
+  opacity: 0.7;
+  cursor: pointer;
+  padding: 2px 8px;
+  color: white;
+  border-radius: 10px;
+  transition: opacity 0.2s, background 0.2s;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.promptInfoBtn:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.35);
 }
 
 /* ── Bubble ── */
 
-.bubble {
+.messageBubble {
   position: relative;
   padding: 10px;
-  border-radius: var(--radius-xl, 18px);
+  border-radius: 18px;
   width: 100%;
   padding-bottom: 38px;
-  font-family: var(--bubble-font-family, 'Inter', sans-serif);
+  font-family: var(--bubble-font-family, 'Ubuntu', 'Roboto', 'Segoe UI', system-ui, -apple-system, sans-serif);
   font-weight: 600;
   font-size: var(--bubble-font-size, 18px);
   line-height: 1.6;
@@ -93,61 +132,55 @@
 }
 
 .userBubble {
-  composes: bubble;
   background: rgba(255, 255, 255, 0.65);
+  color: #1a1a1a;
   border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  border-top-right-radius: 4px;
   backdrop-filter: blur(25px);
   -webkit-backdrop-filter: blur(25px);
-  border-top-right-radius: 4px;
 }
 
 .botBubble {
-  composes: bubble;
   background: rgba(255, 255, 255, 0.6);
+  color: #1a1a1a;
   border: 1px solid rgb(255, 255, 255);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  border-top-left-radius: 4px;
   backdrop-filter: blur(25px);
   -webkit-backdrop-filter: blur(25px);
-  border-top-left-radius: 4px;
 }
 
 .memorized {
   border-color: rgba(0, 160, 253, 0.6) !important;
-  box-shadow: 0 0 12px rgba(0, 160, 253, 0.15);
+  border-width: 1.5px !important;
   position: relative;
 }
 
 .memorized::after {
   content: 'in-memory';
   position: absolute;
-  top: -8px;
-  right: 8px;
-  background: rgba(0, 160, 253, 0.8);
-  color: #fff;
-  font-size: 9px;
-  padding: 1px 6px;
-  border-radius: 4px;
+  bottom: 8px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
+  color: rgba(0, 160, 253, 0.6);
 }
 
 /* ── Time ── */
 
-.time {
+.messageTime {
   font-size: 11px;
+  color: rgba(0, 0, 0, 0.4);
   position: absolute;
   bottom: 10px;
-  right: 12px;
-  opacity: 0.5;
 }
 
-.userMessage .time {
-  right: 12px;
+.botMessage .messageTime {
+  left: 10px;
 }
 
-.botMessage .time {
-  left: 12px;
-  right: auto;
+.userMessage .messageTime {
+  right: 10px;
 }
 
 /* ── Streaming Cursor ── */
@@ -167,23 +200,6 @@
   51%, 100% { opacity: 0; }
 }
 
-/* ── Prompt Info Link ── */
-
-.promptInfoBtn {
-  background: none;
-  border: none;
-  font-size: 10px;
-  opacity: 0.4;
-  cursor: pointer;
-  padding: 2px 6px;
-  color: inherit;
-  transition: opacity 0.2s;
-}
-
-.promptInfoBtn:hover {
-  opacity: 0.8;
-}
-
 /* ── Prompt Info Overlay Stats ── */
 
 .promptInfo {
@@ -197,7 +213,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 8px 0;
-  border-bottom: 1px solid var(--overlay-border-color, rgba(0,0,0,0.1));
+  border-bottom: 1px solid var(--overlay-border-color, rgba(0, 0, 0, 0.1));
   font-size: 14px;
 }
 
@@ -213,49 +229,14 @@
   font-weight: 600;
 }
 
-/* ── Thinking / Afterthought ── */
+/* ── Thinking / Spinner ── */
 
-.thinkingRow {
+.thinking {
   display: flex;
-  max-width: 1200px;
-  margin: 0 auto 50px;
-  gap: 10px;
-  animation: fadeInSlide 0.6s ease-out;
-}
-
-.thinkingBubble {
-  composes: botBubble;
-  min-height: 60px;
-}
-
-.thinkingDots {
-  display: flex;
-  gap: 6px;
+  justify-content: center;
   align-items: center;
-  padding: 8px 0;
-}
-
-.thinkingDots span {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: currentColor;
-  opacity: 0.4;
-  animation: dotPulse 1.4s infinite ease-in-out;
-}
-
-.thinkingDots span:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.thinkingDots span:nth-child(3) {
-  animation-delay: 0.4s;
-}
-
-@keyframes dotPulse {
-  0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
-  40% { opacity: 1; transform: scale(1.1); }
+  padding: 20px 0;
+  animation: fadeInSlide 0.6s ease-out;
 }
 
 /* ── Welcome ── */
@@ -265,60 +246,60 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 60vh;
+  height: 100%;
   text-align: center;
+  padding: 40px;
   gap: 16px;
   animation: fadeInSlide 0.6s ease-out;
 }
 
 .welcomeTitle {
-  font-size: 28px;
-  font-weight: 700;
-  color: rgba(0, 0, 0, 0.7);
+  font-size: 1.6em;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin-bottom: 12px;
 }
 
 .welcomeText {
-  font-size: 16px;
-  opacity: 0.6;
-  max-width: 400px;
-}
-
-/* ── Scroll Anchor ── */
-
-.anchor {
-  height: 1px;
+  max-width: 500px;
+  margin-bottom: 40px;
+  color: #555566;
+  line-height: 1.6;
+  font-size: 1em;
 }
 
 /* ── Dark Mode ── */
 
 :root[data-theme="dark"] .userBubble {
   background: rgba(40, 40, 50, 0.45);
-  color: #fff;
+  color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15),
+    inset 0 1px 2px rgba(255, 255, 255, 0.1);
 }
 
 :root[data-theme="dark"] .botBubble {
   background: rgba(30, 30, 40, 0.5);
-  color: #fff;
+  color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15),
+    inset 0 1px 2px rgba(255, 255, 255, 0.1);
 }
 
-:root[data-theme="dark"] .thinkingBubble {
-  background: rgba(30, 30, 40, 0.5);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.25);
+:root[data-theme="dark"] .messageTime {
+  color: rgba(255, 255, 255, 0.6);
 }
 
-:root[data-theme="dark"] .sender {
+:root[data-theme="dark"] .messageSender {
   background: rgba(255, 255, 255, 0.15);
 }
 
 :root[data-theme="dark"] .welcomeTitle {
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 :root[data-theme="dark"] .welcomeText {
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 /* ── Fade-In Animation ── */
@@ -337,7 +318,7 @@
 /* ── Responsive ── */
 
 @media (max-width: 768px) {
-  .content {
+  .messageContent {
     max-width: 90%;
   }
 
@@ -345,7 +326,7 @@
     margin-bottom: 30px;
   }
 
-  .bubble {
+  .messageBubble {
     font-size: 16px;
   }
 }

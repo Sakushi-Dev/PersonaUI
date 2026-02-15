@@ -30,6 +30,7 @@ export default function MessageBubble({
 
   const bubbleClasses = [
     styles.messageBubble,
+    isUser ? styles.userBubble : styles.botBubble,
     isStreaming ? styles.streaming : '',
     memorized ? styles.memorized : '',
   ].filter(Boolean).join(' ');
@@ -41,32 +42,33 @@ export default function MessageBubble({
           src={avatarSrc}
           type={avatarType}
           name={avatarName}
-          size={32}
+          size={50}
         />
       </div>
       <div className={styles.messageContent}>
-        <div className={styles.messageSender}>
-          {isUser ? (profile?.user_name || 'Du') : characterName}
-        </div>
-        <div
-          className={bubbleClasses}
-          dangerouslySetInnerHTML={{ __html: formattedMessage }}
-        />
-        {isStreaming && <span className={styles.streamingCursor}>▌</span>}
-        {!isUser && !isStreaming && stats && (
-          <button
-            className={styles.promptInfoBtn}
-            onClick={() => setShowStats(true)}
-            title="Prompt Info"
-          >
-            ℹ️
-          </button>
-        )}
-        {timestamp && !isStreaming && (
-          <div className={styles.messageTime}>
-            {formatTimestamp(timestamp)}
+        <div className={styles.messageSenderRow}>
+          <div className={styles.messageSender}>
+            {isUser ? (profile?.user_name || 'Du') : characterName}
           </div>
-        )}
+          {!isUser && !isStreaming && stats && (
+            <button
+              className={styles.promptInfoBtn}
+              onClick={() => setShowStats(true)}
+              title="Token Info"
+            >
+              Token Info
+            </button>
+          )}
+        </div>
+        <div className={bubbleClasses}>
+          <span dangerouslySetInnerHTML={{ __html: formattedMessage }} />
+          {isStreaming && <span className={styles.streamingCursor}>▌</span>}
+          {timestamp && !isStreaming && (
+            <div className={styles.messageTime}>
+              {formatTimestamp(timestamp)}
+            </div>
+          )}
+        </div>
       </div>
 
       <PromptInfoOverlay

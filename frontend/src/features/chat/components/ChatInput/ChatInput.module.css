@@ -37,7 +37,13 @@
   resize: none;
   outline: none;
   transition: border-color 0.2s, background 0.2s;
-  scrollbar-width: thin;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  overflow-y: auto;
+}
+
+.input::-webkit-scrollbar {
+  display: none;
 }
 
 .input:focus {
@@ -98,6 +104,7 @@
   background: rgba(20, 20, 30, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: white;
+  caret-color: white;
 }
 
 :root[data-theme="dark"] .input:focus {
@@ -105,11 +112,12 @@
 }
 
 :root[data-theme="dark"] .input::placeholder {
-  color: rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.5);
 }
 
 :root[data-theme="dark"] .sendBtn {
   color: white;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
 }
 
 :root[data-theme="dark"] .sendBtn:hover:not(:disabled) {
