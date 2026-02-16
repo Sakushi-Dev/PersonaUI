@@ -1,4 +1,4 @@
-"""Update-Check: Prüft ob auf origin/main eine neue stabile Version verfügbar ist."""
+"""Update-Check: Checks if a new stable version is available on origin/main."""
 
 import json
 import os
@@ -54,7 +54,7 @@ def save_current_main_commit():
 
 
 def check_for_update() -> dict:
-    """Prüft ob eine neue stabile Version auf origin/main verfügbar ist.
+    """Checks if a new stable version is available on origin/main.
 
     Returns:
         dict mit:
@@ -99,7 +99,7 @@ def check_for_update() -> dict:
     if last_commit == remote_commit:
         return result  # Kein Update
 
-    # 6. Anzahl neuer Commits zählen
+    # 6. Count new commits
     count_str = _run_git('rev-list', '--count', f'{last_commit}..{remote_commit}')
     try:
         result['new_commits'] = int(count_str) if count_str else 0
