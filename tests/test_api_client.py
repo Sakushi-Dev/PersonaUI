@@ -114,7 +114,7 @@ class TestResponseCleaner:
         from utils.api_request.response_cleaner import clean_api_response
         text = 'Hier ist Code:\n```python\nprint("hello")\n```\nEnde.'
         result = clean_api_response(text)
-        # Response cleaner wandelt Code-Blöcke in HTML um
+        # Response cleaner converts code blocks to HTML
         assert 'print' in result and 'hello' in result
 
     def test_html_tags_in_text(self):
@@ -183,7 +183,7 @@ class TestApiClientRequest:
         )
         client.request(config)
 
-        # Prüfe den create()-Aufruf
+        # Check the create() call
         create_call = mock_anthropic.Anthropic.return_value.messages.create
         assert create_call.called
         call_kwargs = create_call.call_args
