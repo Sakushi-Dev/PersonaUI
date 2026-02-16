@@ -101,7 +101,7 @@ def get_fun_messages():
         ("{name}'s Empathie-Level wird hochgefahren", 1500),
     ]
 
-    # 1 zufällige Nachricht mit EINER zufälligen Persona
+    # 1 random message with ONE random persona
     name = random.choice(names)
     tmpl, dur = random.choice(templates)
     return [(tmpl.format(name=name), dur)]
@@ -126,7 +126,7 @@ def startup_sequence(window, server_mode, server_port, start_flask_fn, host):
     splash_type(window, f'> Arbeitsverzeichnis: {os.getcwd()}', 'default')
     splash_type(window, '', 'default')
 
-    # Update-Check: Prüfe origin/main auf neue stabile Version
+    # Update check: Check origin/main for new stable version
     splash_type(window, '> Prüfe auf Updates...', 'default')
     try:
         update_info = check_for_update()
