@@ -10,12 +10,12 @@ Usage:
 import os
 import sys
 
-# src/ Verzeichnis zum Python-Path hinzufügen
+# Add src/ directory to Python path
 _SRC_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _SRC_DIR not in sys.path:
     sys.path.insert(0, _SRC_DIR)
 
-# Ins src/ Verzeichnis wechseln (für relative Pfade der PromptEngine)
+# Change to src/ directory (for relative paths of PromptEngine)
 os.chdir(_SRC_DIR)
 
 

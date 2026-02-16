@@ -10,7 +10,7 @@ Damit wird der aktuelle Stand als neuer Default hinterlegt.
 
 Verwendung:
     python src/dev/prompts/merge_to_defaults.py          # Vorschau (dry-run)
-    python src/dev/prompts/merge_to_defaults.py --apply   # Tatsächlich kopieren
+    python src/dev/prompts/merge_to_defaults.py --apply   # Actually copy
 """
 
 import argparse
@@ -32,7 +32,7 @@ def collect_source_files(base: Path) -> list[Path]:
     """Sammelt alle JSON-Dateien rekursiv, außer _defaults/ selbst."""
     files: list[Path] = []
     for item in sorted(base.rglob("*.json")):
-        # Prüfen ob der Pfad in einem ausgeschlossenen Ordner liegt
+        # Check if the path is in an excluded folder
         rel = item.relative_to(base)
         if any(part in EXCLUDE_DIRS for part in rel.parts):
             continue
@@ -69,7 +69,7 @@ def merge(apply: bool = False) -> None:
         rel       = src_file.relative_to(PROMPTS_DIR)
         dest_file = DEFAULTS_DIR / rel
 
-        # Prüfen ob sich etwas geändert hat
+        # Check if anything has changed
         if dest_file.exists():
             if filecmp.cmp(src_file, dest_file, shallow=False):
                 skipped += 1
@@ -93,7 +93,7 @@ def merge(apply: bool = False) -> None:
         for def_file in sorted(DEFAULTS_DIR.rglob("*.json")):
             rel = def_file.relative_to(DEFAULTS_DIR)
             # _meta/user_manifest.json existiert nur in prompts/_meta, 
-            # nicht in _defaults – überspringen falls es dort nicht hingehört
+            # not in _defaults – skip if it doesn't belong there
             src_counterpart = PROMPTS_DIR / rel
             if not src_counterpart.exists():
                 print(f"  [ENTF. ]  {rel}  (in Quelle nicht mehr vorhanden)")

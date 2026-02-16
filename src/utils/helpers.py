@@ -13,7 +13,7 @@ def ensure_env_file():
     env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
     
     if not os.path.exists(env_path):
-        # Erstelle .env Datei mit leerem API-Key aber gültigem SECRET_KEY
+        # Create .env file with empty API key but valid SECRET_KEY
         with open(env_path, 'w', encoding='utf-8') as f:
             f.write('# Umgebungsvariablen - Automatisch generiert\n')
             f.write('ANTHROPIC_API_KEY=\n')  # Leer - muss vom Benutzer gesetzt werden
@@ -33,33 +33,33 @@ def format_message(message):
     if not message:
         return message
     
-    # Prüfe ob die Nachricht bereits HTML-Code-Blöcke enthält (schon verarbeitet)
+    # Check if the message already contains HTML code blocks (already processed)
     if '<div class="code-block">' in message:
         # Bereits verarbeitet, nur non-verbalen Text formatieren
         formatted = re.sub(r'\*(.*?)\*', r'<span class="non_verbal">\1</span>', message)
         return formatted
     
-    # Extrahiere Code-Blöcke und ersetze mit Platzhaltern
+    # Extract code blocks and replace with placeholders
     formatted, code_blocks = _extract_code_blocks(message)
     
     # Formatiere nonverbalen Text (zwischen Sternchen)
     formatted = re.sub(r'\*(.*?)\*', r'<span class="non_verbal">\1</span>', formatted)
     
-    # Ersetze Zeilenumbrüche durch <br> Tags
+    # Replace line breaks with <br> tags
     if code_blocks:
-        # Mit Code-Blöcken: Entferne nur übermäßige \n, kein <br> Ersatz
+        # With code blocks: only remove excessive \n, no <br> replacement
         formatted = formatted.strip()
     else:
-        # Keine Code-Blöcke: Standard-Formatierung mit <br>
+        # No code blocks: standard formatting with <br>
         formatted = formatted.replace('\n', '<br>')
     
-    # Füge Code-Blöcke als formatierte HTML-Frames wieder ein
+    # Re-insert code blocks as formatted HTML frames
     formatted = _insert_code_blocks_html(formatted, code_blocks)
     
     return formatted
 
 
-# ===== Interne Hilfsfunktionen für Code-Block-Verarbeitung =====
+# ===== Internal helper functions for code block processing =====
 
 def _extract_code_blocks(text: str) -> tuple:
     """
@@ -77,7 +77,7 @@ def _extract_code_blocks(text: str) -> tuple:
     def _replace_match(match):
         code_content = match.group(1)
         index = len(code_blocks)
-        # Bewahre die Zeilenumbrüche! Nur führende/nachfolgende Leerzeilen entfernen
+        # Preserve line breaks! Only remove leading/trailing empty lines
         code_content = code_content.strip('\n')
         code_blocks.append(code_content)
         return placeholder_pattern.format(index)

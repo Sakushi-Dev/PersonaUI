@@ -10,7 +10,7 @@ from typing import Dict, Any, List, Optional
 from utils.database import create_persona_db, delete_persona_db
 from utils.logger import log
 
-# Base directory für Config-Dateien (src/)
+# Base directory for config files (src/)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def get_config_path(relative_path: str) -> str:
@@ -82,7 +82,7 @@ def save_avatar_config(avatar_data: Dict[str, Any]) -> bool:
         if 'avatar_type' in avatar_data:
             config['avatar_type'] = avatar_data['avatar_type']
         
-        # avatar_crop entfernen falls vorhanden (nicht mehr benötigt)
+        # Remove avatar_crop if present (no longer needed)
         config.pop('avatar_crop', None)
         
         return save_char_config(config)
@@ -286,7 +286,7 @@ def get_available_char_options(profile_file: str = 'instructions/personas/spec/p
             except Exception:
                 pass
         
-        # Für jede Kategorie: Default-Keys zuerst, dann Custom-Keys anhängen
+        # For each category: default keys first, then append custom keys
         def ordered_keys(base_cat, custom_cat):
             base_keys = list(base_spec.get(base_cat, {}).keys())
             custom_keys = [k for k in custom_spec.get(custom_cat, {}).keys() if k not in base_keys]
@@ -374,7 +374,7 @@ def list_created_personas() -> list:
     ensure_created_personas_dir()
     personas = []
     
-    # Standard-Persona immer als erstes hinzufügen
+    # Always add standard persona first
     default_config = load_default_persona()
     active_config = load_char_config()
     
@@ -469,7 +469,7 @@ def save_created_persona(config_data: Dict[str, Any]) -> Optional[str]:
         with open(filepath, 'w', encoding='utf-8') as f:
             json.dump(save_data, f, ensure_ascii=False, indent=2)
         
-        # Erstelle die zugehörige Persona-Datenbank
+        # Create the associated persona database
         create_persona_db(persona_id)
         
         return persona_id
@@ -499,7 +499,7 @@ def update_created_persona(persona_id: str, update_data: Dict[str, Any]) -> bool
         settings = data.get('persona_settings', {})
         original_name = settings.get('name')
         
-        # Name nie überschreiben
+        # Never overwrite name
         update_data.pop('name', None)
         
         # Felder aktualisieren
@@ -523,7 +523,7 @@ def update_created_persona(persona_id: str, update_data: Dict[str, Any]) -> bool
 def delete_created_persona(persona_id: str) -> bool:
     """Löscht eine erstellte Persona anhand ihrer ID und entfernt die zugehörige DB"""
     if persona_id == "default":
-        return False  # Standard kann nicht gelöscht werden
+        return False  # Standard cannot be deleted
     
     ensure_created_personas_dir()
     filepath = os.path.join(CREATED_PERSONAS_DIR, f"{persona_id}.json")
@@ -531,7 +531,7 @@ def delete_created_persona(persona_id: str) -> bool:
     try:
         if os.path.exists(filepath):
             os.remove(filepath)
-            # Lösche die zugehörige Persona-Datenbank
+            # Delete the associated persona database
             delete_persona_db(persona_id)
             return True
         return False
@@ -726,7 +726,7 @@ def _build_character_description_impl(
         
         comms = '\n'.join(comms_parts) if comms_parts else ''
         
-        # === SCENARIO (nur für nicht-KI Personas) ===
+        # === SCENARIO (only for non-AI personas) ===
         scenario_text = ''
         if persona_type != 'KI':
             selected_scenarios = config.get('scenarios', [])
@@ -764,7 +764,7 @@ def _build_character_description_impl(
         behavior = ''
         voice = ''
         
-        # Kombiniere alles für desc
+        # Combine everything for desc
         desc_parts = [identity]
         if core:
             desc_parts.append(core)

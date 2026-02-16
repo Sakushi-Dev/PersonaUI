@@ -2,7 +2,7 @@
 Bereinigung von API-Antworten: Code-Block-Extraktion, Formatierung.
 Wird als Post-Processing nach jedem API-Response aufgerufen.
 
-Verschoben aus utils/helpers.py – gehört logisch zur API-Schicht.
+Moved from utils/helpers.py – logically belongs to API layer.
 """
 
 import re
@@ -27,7 +27,7 @@ def clean_api_response(response):
     if not response:
         return response
     
-    # Extrahiere Code-Blöcke und ersetze mit Platzhaltern
+    # Extract code blocks and replace with placeholders
     cleaned, code_blocks = _extract_code_blocks(response)
     
     # Entferne alle \n und \n\n aus dem normalen Text
@@ -36,7 +36,7 @@ def clean_api_response(response):
     # Entferne "---" am Anfang (nach Whitespace-Bereinigung)
     cleaned = re.sub(r'^\s*---\s*', '', cleaned)
     
-    # Füge Code-Blöcke als formatierte HTML-Frames wieder ein
+    # Re-insert code blocks as formatted HTML frames
     cleaned = _insert_code_blocks_html(cleaned, code_blocks)
     
     return cleaned.strip()
@@ -58,7 +58,7 @@ def _extract_code_blocks(text: str) -> tuple:
     def _replace_match(match):
         code_content = match.group(1)
         index = len(code_blocks)
-        # Bewahre die Zeilenumbrüche! Nur führende/nachfolgende Leerzeilen entfernen
+        # Preserve line breaks! Only remove leading/trailing empty lines
         code_content = code_content.strip('\n')
         code_blocks.append(code_content)
         return placeholder_pattern.format(index)

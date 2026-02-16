@@ -122,7 +122,7 @@ class ChatPromptBuilder(PromptBase):
         if profile_user_name and profile_user_name != 'User':
             user_name = profile_user_name
 
-        # Hole vollständigen Zeit-Kontext
+        # Get complete time context
         from ..time_context import get_time_context
         time_ctx = get_time_context(ip_address)
 
@@ -211,7 +211,7 @@ class ChatPromptBuilder(PromptBase):
         Returns:
             Der vollständige System Prompt
         """
-        # Engine-Delegation: PromptEngine hat Vorrang über Legacy-.txt-Pfad
+        # Engine delegation: PromptEngine takes precedence over legacy .txt path
         if self._engine and hasattr(self._engine, 'build_system_prompt'):
             try:
                 variant = 'experimental' if experimental_mode else 'default'
@@ -231,7 +231,7 @@ class ChatPromptBuilder(PromptBase):
         # Baue Core Prompt
         core_dict = self.build_core_prompt(char_name, language, user_name, ip_address, experimental_mode)
 
-        # User-Name könnte im core_prompt aktualisiert worden sein
+        # User name could have been updated in core_prompt
         profile_user_name = self.get_user_name()
         if profile_user_name and profile_user_name != 'User':
             user_name = profile_user_name
@@ -257,7 +257,7 @@ class ChatPromptBuilder(PromptBase):
         if user_info:
             parts.append(user_info)
 
-        # Memory wird später in services/chat_service eingefügt
+        # Memory will be inserted later in services/chat_service
 
         if core_dict['time_sense']:
             parts.append(core_dict['time_sense'])

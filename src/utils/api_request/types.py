@@ -16,8 +16,8 @@ class RequestConfig:
     model: Optional[str] = None           # None → Default aus settings
     max_tokens: int = 500
     temperature: float = 0.7
-    stream: bool = False                  # True nur für Chat + Afterthought-Followup
-    prefill: Optional[str] = None         # Wird als letzte assistant-message angehängt
+    stream: bool = False                  # True only for chat + afterthought followup
+    prefill: Optional[str] = None         # Appended as last assistant message
     request_type: str = 'generic'         # 'chat', 'afterthought_decision', 'afterthought_followup',
                                           # 'memory_summary', 'spec_autofill', 'session_title', 'test'
 

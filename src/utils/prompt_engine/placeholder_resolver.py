@@ -26,7 +26,7 @@ class PlaceholderResolver:
         """
         Args:
             registry_data: Dict mit 'version' und 'placeholders' (merged registry)
-            instructions_dir: Pfad zum instructions/ Verzeichnis (für Datenquellen)
+            instructions_dir: Path to instructions/ directory (for data sources)
         """
         self._registry = registry_data.get('placeholders', {})
         self._instructions_dir = instructions_dir

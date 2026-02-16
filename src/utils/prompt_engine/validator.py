@@ -14,7 +14,7 @@ from typing import Dict, Any, List
 from ..logger import log
 
 
-# Gültige Werte für Manifest-Felder
+# Valid values for manifest fields
 VALID_CATEGORIES = {'system', 'persona', 'context', 'prefill', 'dialog_injection', 'afterthought', 'summary', 'spec_autofill', 'utility', 'custom'}
 VALID_TYPES = {'text', 'multi_turn'}
 VALID_TARGETS = {'system_prompt', 'message', 'prefill'}
@@ -47,27 +47,27 @@ class PromptValidator:
         for prompt_id, meta in prompts.items():
             prefix = f"Manifest[{prompt_id}]"
 
-            # Pflichtfelder prüfen
+            # Check required fields
             for field in ['name', 'type', 'target', 'position', 'order', 'enabled', 'domain_file']:
                 if field not in meta:
                     errors.append(f"{prefix}: Pflichtfeld '{field}' fehlt")
 
-            # Gültige Kategorie
+            # Valid category
             category = meta.get('category', '')
             if category and category not in VALID_CATEGORIES:
                 errors.append(f"{prefix}: Ungültige category '{category}' (erlaubt: {VALID_CATEGORIES})")
 
-            # Gültiger Typ
+            # Valid type
             prompt_type = meta.get('type', '')
             if prompt_type and prompt_type not in VALID_TYPES:
                 errors.append(f"{prefix}: Ungültiger type '{prompt_type}' (erlaubt: {VALID_TYPES})")
 
-            # Gültiges Target
+            # Valid target
             target = meta.get('target', '')
             if target and target not in VALID_TARGETS:
                 errors.append(f"{prefix}: Ungültiges target '{target}' (erlaubt: {VALID_TARGETS})")
 
-            # Gültige Position
+            # Valid position
             position = meta.get('position', '')
             if position and position not in VALID_POSITIONS:
                 errors.append(f"{prefix}: Ungültige position '{position}' (erlaubt: {VALID_POSITIONS})")
@@ -108,7 +108,7 @@ class PromptValidator:
                 errors.append(f"{prefix}: Keine Varianten definiert")
                 continue
 
-            # Varianten prüfen
+            # Check variants
             for variant_name, variant_data in variants.items():
                 vpfx = f"{prefix}.{variant_name}"
 
@@ -152,7 +152,7 @@ class PromptValidator:
                 # Finde alle {{key}} im Content
                 found_placeholders = set(PLACEHOLDER_PATTERN.findall(content))
 
-                # Prüfe gegen deklarierte Liste
+                # Check against declared list
                 undeclared = found_placeholders - declared_placeholders
                 if undeclared:
                     for ph in undeclared:
@@ -161,7 +161,7 @@ class PromptValidator:
                             f"wird verwendet aber nicht in placeholders_used deklariert"
                         )
 
-                # Prüfe gegen Registry
+                # Check against registry
                 unknown = found_placeholders - registry_keys
                 if unknown:
                     for ph in unknown:
@@ -209,7 +209,7 @@ class PromptValidator:
         # 1. Manifest validieren
         errors.extend(self.validate_manifest(manifest))
 
-        # 2. Cross-References prüfen
+        # 2. Check cross-references
         errors.extend(self.validate_cross_references(manifest, set(domains.keys())))
 
         # 3. Domain-Dateien validieren

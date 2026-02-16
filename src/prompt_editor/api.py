@@ -106,7 +106,7 @@ class EditorApi:
     def delete_prompt(self, prompt_id: str) -> dict:
         """Löscht einen Prompt. System-Prompts können nicht gelöscht werden."""
         try:
-            # Prüfen ob es ein System-Prompt ist (kann nur deaktiviert werden)
+            # Check if it's a system prompt (can only be disabled)
             if not self.engine._is_user_prompt(prompt_id):
                 return {"status": "error",
                         "message": "System-Prompts können nicht gelöscht werden. "
@@ -507,7 +507,7 @@ class EditorApi:
             meta = prompt_data.get('meta', {})
             content_data = prompt_data.get('content', {})
 
-            # variant_condition prüfen
+            # Check variant_condition
             variant_condition = meta.get('variant_condition')
             if variant_condition and variant_condition != variant:
                 return ''

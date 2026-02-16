@@ -31,7 +31,7 @@ class ManifestMigrator:
         self._manifest_path = os.path.join(self._meta_dir, 'prompt_manifest.json')
         # Neues User-Manifest
         self._user_manifest_path = os.path.join(self._meta_dir, 'user_manifest.json')
-        # Factory-Default als Ground-Truth für System-Prompt-IDs
+        # Factory default as ground truth for system prompt IDs
         self._defaults_manifest_path = os.path.join(
             self._prompts_dir, '_defaults', '_meta', 'prompt_manifest.json')
 
@@ -53,7 +53,7 @@ class ManifestMigrator:
         if not os.path.isfile(self._manifest_path):
             return False
 
-        # Wenn kein Default-Manifest existiert → können nicht vergleichen
+        # If no default manifest exists → cannot compare
         if not os.path.isfile(self._defaults_manifest_path):
             log.warning("Factory-Default Manifest fehlt – Migration übersprungen")
             return False
@@ -69,7 +69,7 @@ class ManifestMigrator:
                 return True
 
             # Keine User-Prompts → trotzdem User-Manifest anlegen (leeres),
-            # damit die Migration nicht erneut prüft
+            # so that migration doesn't check again
             return False
 
         except Exception as e:
@@ -134,8 +134,8 @@ class ManifestMigrator:
             log.info("User-Manifest erstellt mit %d Prompts", len(user_prompts))
 
             # 6. System-Manifest bereinigen (nur System-Prompts behalten)
-            # Wir überschreiben nicht mit dem Default, sondern behalten
-            # die aktiven Metadaten (z.B. geänderte Order-Werte)
+            # We don't overwrite with default, but keep
+            # the active metadata (e.g. changed order values)
             active_manifest['prompts'] = system_prompts
             self._write_json(self._manifest_path, active_manifest)
             log.info("System-Manifest bereinigt: %d Prompts", len(system_prompts))

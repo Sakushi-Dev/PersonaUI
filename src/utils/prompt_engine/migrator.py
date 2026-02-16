@@ -80,7 +80,7 @@ class PromptMigrator:
             key = match.group(1)
             if key in self.KNOWN_PLACEHOLDERS:
                 return '{{' + key + '}}'
-            return match.group(0)  # Unbekannt: unverändert lassen
+            return match.group(0)  # Unknown: leave unchanged
 
         return re.sub(r'\{(\w+)\}', replacer, text)
 
@@ -103,7 +103,7 @@ class PromptMigrator:
             'timestamp': datetime.now().isoformat()
         }
 
-        # Prüfe ob schon migriert
+        # Check if already migrated
         manifest_path = os.path.join(self._prompts_dir, '_meta', 'prompt_manifest.json')
         if os.path.exists(manifest_path) and os.path.exists(self._prompts_dir):
             result['warnings'].append("JSON-Dateien existieren bereits. Migration wird übersprungen.")

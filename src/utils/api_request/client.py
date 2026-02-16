@@ -188,7 +188,7 @@ class ApiClient:
                     api_input_tokens = getattr(final_message.usage, 'input_tokens', 0) or 0
                     log.info("API Usage - Input: %d, Output: %d", api_input_tokens, output_tokens)
 
-            # Bereinige die vollständige Antwort
+            # Clean the complete response
             cleaned_response = clean_api_response(full_text)
 
             yield StreamEvent('done', {

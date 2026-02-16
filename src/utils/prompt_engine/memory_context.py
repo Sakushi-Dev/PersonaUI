@@ -33,12 +33,12 @@ def format_memories_for_prompt(memories: List[Dict[str, Any]], max_memories: int
     if len(memories) > max_memories:
         memories = memories[:max_memories]
 
-    # Memory-Einträge sammeln
+    # Collect memory entries
     memory_entries = []
     for memory in memories:
         content = memory.get('content', '').strip()
         if content:
-            # Überflüssige Leerzeilen innerhalb einer Memory entfernen
+            # Remove excessive blank lines within a memory
             content = re.sub(r'\n{2,}', '\n', content)
             memory_entries.append(content)
 

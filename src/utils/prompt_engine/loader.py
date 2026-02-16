@@ -210,7 +210,7 @@ class PromptLoader:
 
             os.replace(tmp_path, filepath)
         except Exception:
-            # Aufräumen bei Fehler
+            # Cleanup on error
             if 'tmp_path' in locals() and os.path.exists(tmp_path):
                 try:
                     os.remove(tmp_path)

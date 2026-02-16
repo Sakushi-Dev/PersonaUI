@@ -145,7 +145,7 @@ def reset_sequence(window):
     # ========================================
     # [1/9] Datenbanken
     # ========================================
-    _type_bar(window, '  [1/9] Lösche Datenbanken ', 'warn', 600)
+    _type_bar(window, '  [1/9] Delete databases ', 'warn', 600)
     data_dir = os.path.join(src, 'data')
     db_count = _delete_files(os.path.join(data_dir, '*.db'))
     _delete_files(os.path.join(data_dir, '*.db.backup'))
@@ -154,7 +154,7 @@ def reset_sequence(window):
     else:
         _type(window, '        Keine Datenbanken gefunden', 'default')
 
-    # Prüfen ob .db noch da (locked?)
+    # Check if .db is still there (locked?)
     remaining = glob.glob(os.path.join(data_dir, '*.db'))
     if remaining:
         _type(window, '        WARNUNG: Einige DBs konnten nicht gelöscht werden!', 'error')
@@ -163,7 +163,7 @@ def reset_sequence(window):
     # ========================================
     # [2/9] .env
     # ========================================
-    _type_bar(window, '  [2/9] Lösche .env ', 'warn', 400)
+    _type_bar(window, '  [2/9] Delete .env ', 'warn', 400)
     env_path = os.path.join(src, '.env')
     if os.path.exists(env_path):
         try:
@@ -178,7 +178,7 @@ def reset_sequence(window):
     # ========================================
     # [3/9] Settings
     # ========================================
-    _type_bar(window, '  [3/9] Lösche Einstellungen ', 'warn', 600)
+    _type_bar(window, '  [3/9] Delete settings ', 'warn', 600)
     settings_dir = os.path.join(src, 'settings')
     for name in ['server_settings.json', 'user_settings.json', 'user_profile.json', 'window_settings.json', 'onboarding.json']:
         fp = os.path.join(settings_dir, name)
@@ -195,10 +195,10 @@ def reset_sequence(window):
     # ========================================
     # [4/9] Erstellte Personas + Custom Specs
     # ========================================
-    _type_bar(window, '  [4/9] Lösche Personas & Custom Specs ', 'warn', 700)
+    _type_bar(window, '  [4/9] Delete personas & custom specs ', 'warn', 700)
     personas_dir = os.path.join(src, 'instructions', 'created_personas')
 
-    # Persona-Namen sammeln bevor sie gelöscht werden
+    # Collect persona names before they are deleted
     persona_names = _collect_persona_names(src)
 
     p_count = _delete_files(os.path.join(personas_dir, '*.json'))
@@ -238,7 +238,7 @@ def reset_sequence(window):
     # ========================================
     # [6/9] Logs
     # ========================================
-    _type_bar(window, '  [6/9] Lösche Logs ', 'warn', 400)
+    _type_bar(window, '  [6/9] Delete logs ', 'warn', 400)
     logs_dir = os.path.join(src, 'logs')
     log_count = _delete_files(os.path.join(logs_dir, '*.log*'))
     if log_count > 0:
@@ -249,7 +249,7 @@ def reset_sequence(window):
     # ========================================
     # [7/9] Hochgeladene Avatare
     # ========================================
-    _type_bar(window, '  [7/9] Lösche hochgeladene Avatare ', 'warn', 500)
+    _type_bar(window, '  [7/9] Delete uploaded avatars ', 'warn', 500)
     custom_dir = os.path.join(src, 'static', 'images', 'custom')
     avatar_count = 0
     if os.path.isdir(custom_dir):
@@ -266,9 +266,9 @@ def reset_sequence(window):
         _type(window, '        Keine Custom Avatare gefunden', 'default')
 
     # ========================================
-    # [8/8] __pycache__ + temporäre Dateien
+    # [8/8] __pycache__ + temporary files
     # ========================================
-    _type_bar(window, '  [8/9] Lösche Cache & temporäre Dateien ', 'warn', 600)
+    _type_bar(window, '  [8/9] Delete cache & temporary files ', 'warn', 600)
     cache_count = _delete_dirs_recursive(src, '__pycache__')
     _type(window, f'        {cache_count} __pycache__ Ordner gelöscht', 'info')
 
@@ -281,9 +281,9 @@ def reset_sequence(window):
             pass
 
     # ========================================
-    # [9/9] Prompts auf Factory-Defaults zurücksetzen
+    # [9/9] Reset prompts to factory defaults
     # ========================================
-    _type_bar(window, '  [9/9] Setze Prompts auf Factory-Defaults zurück ', 'warn', 500)
+    _type_bar(window, '  [9/9] Reset prompts to factory defaults ', 'warn', 500)
     try:
         instructions_dir = os.path.join(src, 'instructions')
         from utils.prompt_engine import PromptEngine
@@ -319,7 +319,7 @@ def reset_sequence(window):
             if os.path.isdir(defaults_meta):
                 meta_dir = os.path.join(prompts_dir, '_meta')
                 os.makedirs(meta_dir, exist_ok=True)
-                # User-Manifest löschen (Full-Reset)
+                # Delete user manifest (full reset)
                 user_manifest = os.path.join(meta_dir, 'user_manifest.json')
                 if os.path.isfile(user_manifest):
                     try:
@@ -360,7 +360,7 @@ def reset_sequence(window):
     _type(window, '> API-Schlüssel und Einstellungen müssen neu eingegeben werden.', 'default')
     _type(window, '', 'default')
 
-    # Zeige "Schließen" oder "Starten" Button
+    # Show "Close" or "Start" button
     try:
         window.evaluate_js("showFinishButtons()")
     except Exception:

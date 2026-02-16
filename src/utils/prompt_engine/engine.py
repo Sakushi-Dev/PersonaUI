@@ -56,12 +56,12 @@ class PromptEngine:
         self._manifest: Dict[str, Any] = {}          # Merged View (System + User)
         self._system_manifest: Dict[str, Any] = {}   # System-Manifest (Git-tracked)
         self._user_manifest: Dict[str, Any] = {}     # User-Manifest (Gitignored)
-        self._user_prompt_ids: set = set()            # IDs die dem User-Manifest gehören
+        self._user_prompt_ids: set = set()            # IDs that belong to user manifest
         self._domains: Dict[str, Any] = {}
         self._registry: Dict[str, Any] = {}           # Merged View (System + User)
         self._system_registry: Dict[str, Any] = {}    # System-Registry (Git-tracked)
         self._user_registry: Dict[str, Any] = {}      # User-Registry (Gitignored)
-        self._user_placeholder_keys: set = set()      # Keys die der User-Registry gehören
+        self._user_placeholder_keys: set = set()      # Keys that belong to user registry
         self._resolver: Optional[PlaceholderResolver] = None
         self._load_errors: List[str] = []
 
@@ -73,7 +73,7 @@ class PromptEngine:
         with self._lock:
             self._load_errors = []
 
-            # 0. Migration prüfen (einmalig: single manifest → dual manifest)
+            # 0. Check migration (one-time: single manifest → dual manifest)
             from .manifest_migrator import ManifestMigrator
             migrator = ManifestMigrator(self._instructions_dir)
             if migrator.needs_migration():
@@ -220,14 +220,14 @@ class PromptEngine:
         for key, meta in system_phs.items():
             merged['placeholders'][key] = {**meta, '_origin': 'system'}
 
-        # User-Placeholders darüber (Override bei Kollision)
+        # User placeholders on top (override on collision)
         user_phs = self._user_registry.get('placeholders', {})
         for key, meta in user_phs.items():
             if key in merged['placeholders']:
                 log.warning("Key-Kollision: '%s' in beiden Registries – User-Version gewinnt", key)
             merged['placeholders'][key] = {**meta, '_origin': 'user'}
 
-        # Tracking-Set für Write-Routing
+        # Tracking set for write routing
         self._user_placeholder_keys = set(user_phs.keys())
 
         return merged
@@ -378,8 +378,8 @@ class PromptEngine:
         prompts = self.get_prompts_by_target('system_prompt', category_filter)
         parts: List[str] = []
 
-        # Kategorien die nur für spezifische Kontexte bestimmt sind
-        # und NICHT in reguläre Chat-Prompts gehören
+        # Categories that are only intended for specific contexts
+        # and do NOT belong in regular chat prompts
         NON_CHAT_CATEGORIES = {'summary', 'spec_autofill'}
 
         for prompt_data in prompts:
@@ -390,8 +390,8 @@ class PromptEngine:
             if position == 'system_prompt_append':
                 continue
 
-            # Wenn kein expliziter category_filter gesetzt ist,
-            # nicht-chat Kategorien ausschließen (Summary, Spec-Autofill)
+            # If no explicit category_filter is set,
+            # exclude non-chat categories (Summary, Spec-Autofill)
             if not category_filter and meta.get('category') in NON_CHAT_CATEGORIES:
                 continue
 
@@ -431,19 +431,19 @@ class PromptEngine:
         prompts = self.get_prompts_by_target('prefill')
         parts: List[str] = []
 
-        # Kategorien die nur für spezifische Kontexte bestimmt sind
-        # und NICHT in reguläre Chat-Prefills gehören
+        # Categories that are only intended for specific contexts
+        # and do NOT belong in regular chat prefills
         NON_CHAT_CATEGORIES = {'summary', 'spec_autofill'}
 
         for prompt_data in prompts:
             meta = prompt_data.get('meta', {})
 
-            # Wenn kein expliziter category_filter gesetzt ist,
-            # nicht-chat Kategorien ausschließen (Summary, Spec-Autofill)
+            # If no explicit category_filter is set,
+            # exclude non-chat categories (Summary, Spec-Autofill)
             if not category_filter and meta.get('category') in NON_CHAT_CATEGORIES:
                 continue
 
-            # Wenn category_filter gesetzt ist, nur passende Kategorien einbeziehen
+            # If category_filter is set, only include matching categories
             if category_filter and meta.get('category') != category_filter:
                 continue
 
@@ -549,7 +549,7 @@ class PromptEngine:
             if meta.get('type') != 'multi_turn':
                 continue
 
-            # variant_condition prüfen
+            # Check variant_condition
             variant_condition = meta.get('variant_condition')
             if variant_condition and variant_condition != variant:
                 continue
@@ -672,7 +672,7 @@ class PromptEngine:
         if variant_condition and variant_condition != variant:
             return ''
 
-        # Variante wählen
+        # Select variant
         variants = content_data.get('variants', {})
         variant_data = variants.get(variant) or variants.get('default')
         if not variant_data:
@@ -683,20 +683,20 @@ class PromptEngine:
         if prompt_type == 'text':
             raw_content = variant_data.get('content', '')
         elif prompt_type == 'multi_turn':
-            # Multi-turn: Wird als JSON-String zurückgegeben
-            return ''  # Multi-turn wird über get_consent_dialog() behandelt
+            # Multi-turn: Returned as JSON string
+            return ''  # Multi-turn is handled via get_consent_dialog()
         else:
             raw_content = variant_data.get('content', '')
 
         if not raw_content:
             return ''
 
-        # Placeholder auflösen
+        # Resolve placeholders
         if self._resolver:
             return self._resolver.resolve_text(raw_content, variant, runtime_vars)
         return raw_content
 
-    # ===== Mutation (für Editor) =====
+    # ===== Mutation (for Editor) =====
 
     def save_prompt(self, prompt_id: str, data: Dict[str, Any]) -> bool:
         """Speichert einen Prompt (Content + Metadata). Atomarer Write."""
@@ -775,7 +775,7 @@ class PromptEngine:
                 if not meta:
                     return False
 
-                # System-Prompts können nicht gelöscht werden (nur deaktiviert)
+                # System prompts cannot be deleted (only disabled)
                 if not self._is_user_prompt(prompt_id):
                     log.warning("System-Prompt '%s' kann nicht gelöscht werden "
                                 "(nur deaktivieren möglich)", prompt_id)
@@ -789,7 +789,7 @@ class PromptEngine:
                 self._user_prompt_ids.discard(prompt_id)
                 self._loader.save_user_manifest(self._user_manifest)
 
-                # Domain-Datei aufräumen
+                # Clean up domain file
                 domain_file = meta.get('domain_file', '')
                 if domain_file and domain_file in self._domains:
                     self._domains[domain_file].pop(prompt_id, None)
@@ -868,7 +868,7 @@ class PromptEngine:
             data: Dict mit name, description, default, category
         """
         try:
-            # Prüfen ob Key bereits existiert (in merged registry)
+            # Check if key already exists (in merged registry)
             if key in self._registry.get('placeholders', {}):
                 log.error("Placeholder '%s' existiert bereits", key)
                 return False
@@ -900,20 +900,20 @@ class PromptEngine:
             key: Placeholder-Key
         """
         try:
-            # Prüfen ob existiert (in merged registry)
+            # Check if exists (in merged registry)
             placeholders = self._registry.get('placeholders', {})
             if key not in placeholders:
                 log.error("Placeholder '%s' nicht gefunden", key)
                 return False
 
-            # Nur statische/custom Placeholder dürfen gelöscht werden
+            # Only static/custom placeholders may be deleted
             ph = placeholders[key]
             if ph.get('source') not in ('static', 'custom', 'user'):
-                log.error("Placeholder '%s' hat source='%s', nur static/custom/user können gelöscht werden",
+                log.error("Placeholder '%s' has source='%s', only static/custom/user can be deleted",
                           key, ph.get('source'))
                 return False
 
-            # Aus der richtigen Registry löschen
+            # Delete from the correct registry
             if self._is_user_placeholder(key):
                 user_placeholders = self._user_registry.get('placeholders', {})
                 if key in user_placeholders:
@@ -937,7 +937,7 @@ class PromptEngine:
 
     def validate_prompt(self, prompt_data: Dict[str, Any]) -> List[str]:
         """Validiert einen einzelnen Prompt. Gibt Liste von Fehlern zurück."""
-        # Erstelle ein Mini-Manifest/Domain für die Validierung
+        # Create a mini-manifest/domain for validation
         errors: List[str] = []
         prompt_id = prompt_data.get('id', 'unknown')
         meta = prompt_data.get('meta', {})
@@ -1101,7 +1101,7 @@ class PromptEngine:
             except Exception as e:
                 result['errors'].append(f"User-Manifest: {e}")
         else:
-            # Kein User-Manifest im ZIP → vorhandenes löschen
+            # No user manifest in ZIP → delete existing one
             if os.path.isfile(self._loader.user_manifest_path):
                 try:
                     os.remove(self._loader.user_manifest_path)
@@ -1141,7 +1141,7 @@ class PromptEngine:
         return result
 
     def _import_merge(self, zf: zipfile.ZipFile, overwrite: bool = False) -> Dict[str, Any]:
-        """Import-Modus 'merge'/'overwrite': Ergänzt fehlende, optional überschreibt bestehende."""
+        """Import mode 'merge'/'overwrite': Adds missing, optionally overwrites existing."""
         result: Dict[str, Any] = {'imported': 0, 'skipped': 0, 'errors': []}
         prompts_dir = os.path.join(self._instructions_dir, 'prompts')
 
@@ -1182,7 +1182,7 @@ class PromptEngine:
     def factory_reset(self, scope: str = 'system') -> Dict[str, Any]:
         """Setzt Prompts auf Factory-Defaults zurück.
 
-        Kopiert die Dateien aus prompts/_defaults/ zurück in den aktiven Pfad.
+        Copies the files from prompts/_defaults/ back to the active path.
 
         Args:
             scope: 'system' = nur System-Manifest (User-Prompts bleiben erhalten)
@@ -1235,7 +1235,7 @@ class PromptEngine:
                         result['errors'].append(f"_meta/{filename}: {e}")
                         log.error("Factory-Reset: _meta/%s fehlgeschlagen: %s", filename, e)
 
-            # Bei 'full'-Reset: User-Manifest löschen
+            # For 'full' reset: delete user manifest
             if scope == 'full':
                 user_manifest_path = self._loader.user_manifest_path
                 if os.path.isfile(user_manifest_path):
@@ -1271,7 +1271,7 @@ class PromptEngine:
                 log.error("Prompt '%s' nicht im Manifest", prompt_id)
                 return False
 
-            # User-Prompts haben kein Default → komplett löschen
+            # User prompts have no default → delete completely
             if self._is_user_prompt(prompt_id):
                 log.info("User-Prompt '%s' hat kein Default – wird gelöscht", prompt_id)
                 return self.delete_prompt(prompt_id)
@@ -1296,7 +1296,7 @@ class PromptEngine:
             self._loader.save_domain_file(domain_file, domain_data)
             self._domains[domain_file] = domain_data
 
-            # Auch Manifest-Metadaten auf Default zurücksetzen
+            # Also reset manifest metadata to default
             defaults_meta_path = os.path.join(
                 self._instructions_dir, 'prompts', '_defaults', '_meta', 'prompt_manifest.json')
             if os.path.exists(defaults_meta_path):
@@ -1327,12 +1327,12 @@ class PromptEngine:
         """
         result: Dict[str, Any] = {'valid': True, 'checked': 0, 'recovered': 0, 'errors': []}
 
-        # 1. System-Manifest prüfen
+        # 1. Check system manifest
         result['checked'] += 1
         if not self._validate_and_recover(self._loader.manifest_path, '_meta/prompt_manifest.json', result):
             result['valid'] = False
 
-        # 2. User-Manifest prüfen (wenn vorhanden – kein Recovery nötig da kein Default)
+        # 2. Check user manifest (if present – no recovery needed since no default)
         user_manifest_path = self._loader.user_manifest_path
         if os.path.isfile(user_manifest_path):
             result['checked'] += 1
@@ -1349,12 +1349,12 @@ class PromptEngine:
                     result['errors'].append(f"user_manifest.json: Korrupt und Löschen fehlgeschlagen: {del_err}")
                     result['valid'] = False
 
-        # 3. Registry prüfen
+        # 3. Check registry
         result['checked'] += 1
         if not self._validate_and_recover(self._loader.registry_path, '_meta/placeholder_registry.json', result):
             result['valid'] = False
 
-        # 4. Domain-Dateien prüfen (existierende + im Manifest referenzierte)
+        # 4. Check domain files (existing + referenced in manifest)
         prompts_dir = os.path.join(self._instructions_dir, 'prompts')
         domain_files_to_check: set = set()
 
@@ -1364,7 +1364,7 @@ class PromptEngine:
                 if filename.endswith('.json') and not filename.startswith('_'):
                     domain_files_to_check.add(filename)
 
-        # Dateien aus Manifest (könnten gelöscht worden sein)
+        # Files from manifest (could have been deleted)
         for prompt_info in self._manifest.get('prompts', {}).values():
             domain_file = prompt_info.get('domain_file', '')
             if domain_file:

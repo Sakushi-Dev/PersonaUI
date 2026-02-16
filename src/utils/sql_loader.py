@@ -21,7 +21,7 @@ Verwendung:
 import os
 from typing import Dict
 
-# Cache für geladene SQL-Queries
+# Cache for loaded SQL queries
 _query_cache: Dict[str, str] = {}
 _files_loaded: set = set()
 
@@ -60,7 +60,7 @@ def _load_sql_file(filename: str) -> Dict[str, str]:
                 current_name = stripped.replace('-- name:', '').strip()
                 current_lines = []
             
-            # Kommentarzeilen überspringen (aber nicht '-- name:')
+            # Skip comment lines (but not '-- name:')
             elif stripped.startswith('--') or stripped.startswith('-- ='):
                 continue
             

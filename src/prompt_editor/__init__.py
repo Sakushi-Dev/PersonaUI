@@ -25,7 +25,7 @@ def load_editor_html() -> str:
     css_path = os.path.join(_PACKAGE_DIR, 'static', 'css', 'editor.css')
     js_dir = os.path.join(_PACKAGE_DIR, 'static', 'js')
 
-    # JS-Dateien in korrekter Reihenfolge (Abhängigkeiten beachten)
+    # JS files in correct order (consider dependencies)
     js_files = [
         'utils.js',
         'prompt-list.js',
@@ -47,7 +47,7 @@ def load_editor_html() -> str:
         css = f.read()
     html = html.replace('{{EDITOR_CSS}}', css)
 
-    # JS-Dateien zusammenführen und einbetten
+    # Combine and embed JS files
     js_parts = []
     for js_file in js_files:
         js_path = os.path.join(js_dir, js_file)
