@@ -53,7 +53,7 @@ def _running_in_venv():
 
 
 # ---------------------------------------------------------------------------
-#  Schritt 1: Python-Version prüfen
+#  Step 1: Check Python version
 # ---------------------------------------------------------------------------
 
 def check_python_version():
@@ -78,7 +78,7 @@ def check_python_version():
 
 
 # ---------------------------------------------------------------------------
-#  Schritt 2: Virtuelle Umgebung prüfen / erstellen
+#  Step 2: Check / create virtual environment
 # ---------------------------------------------------------------------------
 
 def check_venv():
@@ -115,7 +115,7 @@ def check_venv():
 
 
 # ---------------------------------------------------------------------------
-#  Schritt 3: Abhängigkeiten prüfen und installieren
+#  Step 3: Check and install dependencies
 # ---------------------------------------------------------------------------
 
 def _parse_requirements():
