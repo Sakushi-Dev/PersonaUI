@@ -37,7 +37,7 @@ class TestChatStream:
             ))
 
         assert len(events) > 0
-        # Prüfe Tuple-Format
+        # Check tuple format
         for event in events:
             assert isinstance(event, tuple)
             assert len(event) == 2
