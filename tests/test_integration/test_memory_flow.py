@@ -1,6 +1,6 @@
 """
 Integration Test: Memory Create+Save E2E Flow (Mock-API).
-Testet Preview → Save Ablauf.
+Tests Preview → Save workflow.
 """
 import pytest
 from unittest.mock import patch, MagicMock
@@ -8,7 +8,7 @@ from unittest.mock import patch, MagicMock
 
 class TestMemoryFlowE2E:
     def test_preview_then_save(self, mock_api_client):
-        """Kompletter Memory-Flow: Preview → Save"""
+        """Complete memory flow: Preview → Save"""
         from utils.services.memory_service import MemoryService
         from utils.api_request.types import ApiResponse
 
@@ -47,7 +47,7 @@ class TestMemoryFlowE2E:
         assert result['memory_id'] == 1
 
     def test_custom_memory_save(self, mock_api_client):
-        """Custom Memory speichern (ohne API-Call)"""
+        """Save custom memory (without API call)"""
         from utils.services.memory_service import MemoryService
 
         service = MemoryService(mock_api_client)
@@ -63,11 +63,11 @@ class TestMemoryFlowE2E:
 
         assert result['success'] is True
         assert result['memory_id'] == 42
-        # Kein API-Call nötig
+        # No API call needed
         mock_api_client.request.assert_not_called()
 
     def test_save_with_no_messages_fails(self, mock_api_client):
-        """Save ohne Nachrichten → Fehler"""
+        """Save without messages → error"""
         from utils.services.memory_service import MemoryService
 
         service = MemoryService(mock_api_client)
