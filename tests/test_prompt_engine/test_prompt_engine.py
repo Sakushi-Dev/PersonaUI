@@ -1,12 +1,12 @@
 """
-Tests für die PromptEngine – Phase 1.
+Tests for PromptEngine – Phase 1.
 
-Testet:
-- PlaceholderResolver (alle 3 Phasen)
-- PromptLoader (laden, fehlerbehandlung)
+Tests:
+- PlaceholderResolver (all 3 phases)
+- PromptLoader (loading, error handling)
 - PromptValidator (schema, cross-references)
 - PromptEngine (build_system_prompt, build_prefill, resolve_prompt)
-- Migrator (placeholder-konvertierung)
+- Migrator (placeholder conversion)
 """
 
 import os
@@ -16,7 +16,7 @@ import tempfile
 import pytest
 from unittest.mock import patch, MagicMock
 
-# Test-Basisverzeichnis: Erstellt ein temporäres instructions/ Setup
+# Test base directory: creates a temporary instructions/ setup
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), '_prompt_engine_fixtures')
 
 
@@ -24,7 +24,7 @@ FIXTURES_DIR = os.path.join(os.path.dirname(__file__), '_prompt_engine_fixtures'
 
 @pytest.fixture
 def temp_instructions_dir(tmp_path):
-    """Erstellt ein temporäres instructions/ Verzeichnis mit allen JSON-Dateien."""
+    """Creates a temporary instructions/ directory with all JSON files."""
     instructions_dir = tmp_path / 'instructions'
     instructions_dir.mkdir()
     prompts_dir = instructions_dir / 'prompts'
@@ -128,12 +128,12 @@ def temp_instructions_dir(tmp_path):
         json.dumps(manifest, ensure_ascii=False, indent=2), encoding='utf-8'
     )
 
-    # Placeholder Registry
+    # Placeholder registry
     registry = {
         "version": "2.0",
         "placeholders": {
             "char_name": {
-                "name": "Persona-Name",
+                "name": "Persona name",
                 "source": "persona_config",
                 "source_path": "persona_settings.name",
                 "type": "string",
@@ -275,7 +275,7 @@ def temp_instructions_dir(tmp_path):
         json.dumps(afterthought_domain, ensure_ascii=False, indent=2), encoding='utf-8'
     )
 
-    # Persona Config für Static-Resolution
+    # Persona config (for static resolution)
     personas_dir = instructions_dir / 'personas' / 'active'
     personas_dir.mkdir(parents=True)
     persona_config = {
@@ -294,8 +294,8 @@ def temp_instructions_dir(tmp_path):
         json.dumps(persona_config, ensure_ascii=False, indent=2), encoding='utf-8'
     )
 
-    # user_profile.json (für user_name Resolution)
-    # Der Resolver sucht relativ zu instructions_dir parent
+    # user_profile.json (for user_name resolution)
+    # The resolver looks relative to instructions_dir parent
     settings_dir = tmp_path / 'settings'
     settings_dir.mkdir(parents=True, exist_ok=True)
     user_profile = {
@@ -313,10 +313,10 @@ def temp_instructions_dir(tmp_path):
 # ===== PlaceholderResolver Tests =====
 
 class TestPlaceholderResolver:
-    """Tests für den PlaceholderResolver."""
+    """Tests for PlaceholderResolver."""
 
     def _create_resolver(self, temp_instructions_dir):
-        """Helper: Erstellt PlaceholderResolver mit geladener Registry."""
+        """Helper: Creates PlaceholderResolver with loaded registry."""
         from src.utils.prompt_engine.placeholder_resolver import PlaceholderResolver
         
         registry_path = os.path.join(temp_instructions_dir, 'prompts', '_meta', 'placeholder_registry.json')
@@ -326,7 +326,7 @@ class TestPlaceholderResolver:
         return PlaceholderResolver(registry_data, temp_instructions_dir)
 
     def test_resolve_simple_placeholder(self, temp_instructions_dir):
-        """Einfacher Placeholder wird aufgelöst."""
+        """Simple placeholder is resolved."""
         resolver = self._create_resolver(temp_instructions_dir)
 
         result = resolver.resolve_text(
@@ -340,7 +340,7 @@ class TestPlaceholderResolver:
         assert '{{language}}' not in result
 
     def test_unknown_placeholder_stays(self, temp_instructions_dir):
-        """Unbekannte Placeholder bleiben als {{key}} stehen."""
+        """Unknown placeholders remain as {{key}}."""
         resolver = self._create_resolver(temp_instructions_dir)
 
         result = resolver.resolve_text("Wert: {{unknown_key}}")
@@ -350,12 +350,12 @@ class TestPlaceholderResolver:
         """Static-Werte werden gecached."""
         resolver = self._create_resolver(temp_instructions_dir)
 
-        # Erster Aufruf: Cache leer
+        # First call: cache empty
         assert resolver._static_cache == {}
 
         resolver.resolve_text("{{char_name}}")
 
-        # Cache sollte jetzt gefüllt sein
+        # Cache should now be populated
         assert 'char_name' in resolver._static_cache
         assert resolver._static_cache['char_name'] == 'TestPersona'
 
