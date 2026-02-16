@@ -2,7 +2,7 @@
 import sys
 import threading
 
-# WICHTIG: Wechsle ins src Verzeichnis für korrekte Pfade
+# IMPORTANT: Change to src directory for correct paths
 script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
 
@@ -40,8 +40,8 @@ app.secret_key = os.environ.get('SECRET_KEY', 'fallback-secret-key-for-developme
 app.json.sort_keys = False  # Reihenfolge der Keys beibehalten (Default -> Custom)
 
 # Session-Konfiguration
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # Session bleibt 7 Tage gültig
-app.config['SESSION_COOKIE_SECURE'] = False  # Für HTTPS auf True setzen
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # Session remains valid for 7 days
+app.config['SESSION_COOKIE_SECURE'] = False  # Set to True for HTTPS
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # Schutz vor XSS
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # CSRF-Schutz
 
@@ -72,7 +72,7 @@ def check_ip_access():
     if request.endpoint and request.endpoint.startswith('onboarding.'):
         return None
     
-    # API-Endpunkte für Access-Kontrolle immer erlauben
+    # API endpoints for access control always allowed
     if request.path.startswith('/api/access/'):
         return None
     
@@ -101,7 +101,7 @@ def start_flask_server(host, port):
 
 
 if __name__ == '__main__':
-    # Settings nur für Port vorladen (damit pywebview weiß welchen Port es braucht)
+    # Settings only preloaded for port (so pywebview knows which port it needs)
     import json
     settings_path = os.path.join(os.path.dirname(__file__), 'settings', 'server_settings.json')
     server_mode = 'local'
@@ -118,7 +118,7 @@ if __name__ == '__main__':
     
     host = '0.0.0.0' if server_mode == 'listen' else '127.0.0.1'
     
-    # Prüfe ob PyWebView genutzt werden soll (--no-gui deaktiviert es)
+    # Check if PyWebView should be used (--no-gui disables it)
     use_webview = '--no-gui' not in sys.argv
     
     if use_webview:
@@ -126,13 +126,13 @@ if __name__ == '__main__':
             import webview
             from utils.window_settings import load_window_settings, save_window_settings
             
-            # Konsole verstecken - pywebview übernimmt die Anzeige
+            # Hide console - pywebview takes over the display
             hide_console_window()
             
             # Lade gespeicherte Fenstereinstellungen
             win_settings = load_window_settings()
             
-            # 1) Splash-Fenster SOFORT öffnen - BEVOR irgendwas initialisiert wird
+            # 1) Open splash window IMMEDIATELY - BEFORE anything is initialized
             window = webview.create_window(
                 'PersonaUI',
                 html=load_splash_html(),
@@ -156,7 +156,7 @@ if __name__ == '__main__':
                 boot_thread.start()
             
             def _on_closing():
-                """Speichert Fensterposition/-größe beim Schließen"""
+                """Saves window position/size when closing"""
                 try:
                     save_window_settings(
                         width=window.width,
