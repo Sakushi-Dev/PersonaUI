@@ -1,13 +1,13 @@
 """
 Integration Test: Afterthought E2E Flow (Mock-API).
-Testet Decision → Followup Ablauf.
+Tests decision → followup workflow.
 """
 import pytest
 from unittest.mock import patch, MagicMock
 
 
 def _make_chat_service(mock_api_client, mock_engine):
-    """Erstellt einen ChatService mit gemocktem API-Client und Engine."""
+    """Creates a ChatService with mocked API client and engine."""
     from utils.services.chat_service import ChatService
     with patch('utils.services.chat_service.ChatService.__init__', lambda self, api_client: None):
         service = ChatService.__new__(ChatService)
@@ -18,12 +18,12 @@ def _make_chat_service(mock_api_client, mock_engine):
 
 class TestAfterthoughtFlowE2E:
     def test_decision_then_followup(self, mock_api_client, test_character_data, sample_conversation, mock_engine):
-        """Kompletter Afterthought-Ablauf: Decision=Ja → Followup-Stream"""
+        """Complete afterthought workflow: Decision=Yes → Followup stream"""
         from utils.api_request.types import ApiResponse, StreamEvent
 
         service = _make_chat_service(mock_api_client, mock_engine)
 
-        # Step 1: Decision (letzes Wort = "Ja")
+        # Step 1: Decision (last word = "Ja")
         mock_api_client.request.return_value = ApiResponse(
             success=True,
             content='Ich möchte noch etwas sagen über Katzen. Ja',
@@ -39,7 +39,7 @@ class TestAfterthoughtFlowE2E:
         assert decision['decision'] is True
         assert len(decision['inner_dialogue']) > 0
 
-        # Step 2: Followup (Stream mit dem inneren Dialog)
+        # Step 2: Followup (stream with inner dialogue)
         mock_api_client.stream.return_value = iter([
             StreamEvent('chunk', 'Übrigens, '),
             StreamEvent('chunk', 'magst du Katzen?'),
@@ -63,7 +63,7 @@ class TestAfterthoughtFlowE2E:
         assert len(dones) == 1
 
     def test_decision_no_skips_followup(self, mock_api_client, test_character_data, sample_conversation, mock_engine):
-        """Decision=Nein → kein Followup nötig"""
+        """Decision=No → no followup needed"""
         from utils.api_request.types import ApiResponse
 
         service = _make_chat_service(mock_api_client, mock_engine)
