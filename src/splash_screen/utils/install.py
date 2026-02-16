@@ -24,7 +24,7 @@ MIN_PYTHON_MINOR = 10
 # ---------------------------------------------------------------------------
 
 def _get_project_root():
-    """Gibt das Projekt-Root (PersonaUI/) zurück."""
+    """Returns the project root (PersonaUI/) directory."""
     # src/splash_screen/utils/install.py → 3x hoch = src/, 4x = PersonaUI/
     return os.path.dirname(
         os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -150,7 +150,7 @@ def _check_package_installed(pkg_name):
     beim Import Side-Effects oder Environment-Checks ausführen (z.B. `pywebview`),
     was die reine Installationsprüfung fälschlich fehlschlagen lassen kann.
     """
-    # Häufige Mappings: Paketname → Importname
+    # Common mappings: Package name → Import name
     import_mappings = {
         'python-dotenv': 'dotenv',
         'pillow': 'PIL',
