@@ -1,11 +1,11 @@
 """
-Tests für Phase 5 – Export, Import, Factory Reset, Integrity.
+Tests for Phase 5 – Export, Import, Factory Reset, Integrity.
 
-Testet:
-- export_prompt_set (ZIP-Export)
+Tests:
+- export_prompt_set (ZIP export)
 - import_prompt_set (Replace, Merge, Overwrite)
-- factory_reset (Wiederherstellung aus _defaults)
-- validate_integrity (Korruptionserkennung + Recovery)
+- factory_reset (restoration from _defaults)
+- validate_integrity (corruption detection + recovery)
 """
 
 import os
@@ -18,7 +18,7 @@ import pytest
 
 @pytest.fixture
 def engine_dir(tmp_path):
-    """Erstellt ein temporäres instructions/ Setup mit _defaults/ für Tests."""
+    """Creates a temporary instructions/ setup with _defaults/ for tests."""
     instructions_dir = tmp_path / 'instructions'
     instructions_dir.mkdir()
     prompts_dir = instructions_dir / 'prompts'
@@ -90,7 +90,7 @@ def engine_dir(tmp_path):
         shutil.copy2(str(src), str(defaults_meta_dir / filename))
     shutil.copy2(str(prompts_dir / 'test.json'), str(defaults_dir / 'test.json'))
 
-    # Persona Config (für Resolver)
+    # Persona config (for resolver)
     personas_dir = instructions_dir / 'personas' / 'active'
     personas_dir.mkdir(parents=True)
     persona_config = {
@@ -101,7 +101,7 @@ def engine_dir(tmp_path):
         json.dumps(persona_config, ensure_ascii=False, indent=2), encoding='utf-8'
     )
 
-    # Settings (für user_name)
+    # Settings (for user_name)
     settings_dir = tmp_path / 'settings'
     settings_dir.mkdir(parents=True, exist_ok=True)
     (settings_dir / 'user_profile.json').write_text(
@@ -113,7 +113,7 @@ def engine_dir(tmp_path):
 
 
 def _make_engine(instructions_dir):
-    """Erstellt eine PromptEngine ohne echte compute-functions."""
+    """Creates a PromptEngine without real compute functions."""
     from src.utils.prompt_engine import PromptEngine
     engine = PromptEngine(instructions_dir)
     if engine._resolver:
@@ -124,10 +124,10 @@ def _make_engine(instructions_dir):
 # ===== Export Tests =====
 
 class TestExportPromptSet:
-    """Tests für export_prompt_set()."""
+    """Tests for export_prompt_set()."""
 
     def test_export_creates_zip(self, engine_dir, tmp_path):
-        """Export erstellt eine ZIP-Datei."""
+        """Export creates a ZIP file."""
         engine = _make_engine(engine_dir)
         output = str(tmp_path / 'export' / 'test_export.zip')
 
@@ -136,7 +136,7 @@ class TestExportPromptSet:
         assert result == output
 
     def test_export_zip_contents(self, engine_dir, tmp_path):
-        """ZIP enthält Manifest, Registry, Domain-Dateien und Metadata."""
+        """ZIP contains manifest, registry, domain files and metadata."""
         engine = _make_engine(engine_dir)
         output = str(tmp_path / 'export.zip')
         engine.export_prompt_set(output)
@@ -149,7 +149,7 @@ class TestExportPromptSet:
             assert 'metadata.json' in names
 
     def test_export_metadata_content(self, engine_dir, tmp_path):
-        """Metadata enthält erwartete Felder."""
+        """Metadata contains expected fields."""
         engine = _make_engine(engine_dir)
         output = str(tmp_path / 'export.zip')
         engine.export_prompt_set(output)
@@ -162,7 +162,7 @@ class TestExportPromptSet:
             assert 'test.json' in metadata['domain_files']
 
     def test_export_excludes_defaults(self, engine_dir, tmp_path):
-        """_defaults/ wird nicht mit exportiert."""
+        """_defaults/ is not exported."""
         engine = _make_engine(engine_dir)
         output = str(tmp_path / 'export.zip')
         engine.export_prompt_set(output)
@@ -175,10 +175,10 @@ class TestExportPromptSet:
 # ===== Import Tests =====
 
 class TestImportPromptSet:
-    """Tests für import_prompt_set()."""
+    """Tests for import_prompt_set()."""
 
     def _create_import_zip(self, tmp_path, domain_content="Imported content."):
-        """Erstellt ein Import-ZIP."""
+        """Creates an import ZIP."""
         zip_path = str(tmp_path / 'import.zip')
         manifest = {
             "version": "3.0",
@@ -225,7 +225,7 @@ class TestImportPromptSet:
         return zip_path
 
     def test_import_replace(self, engine_dir, tmp_path):
-        """Import-Modus 'replace' ersetzt alles."""
+        """Import mode 'replace' replaces everything."""
         engine = _make_engine(engine_dir)
         zip_path = self._create_import_zip(tmp_path)
 
@@ -233,23 +233,23 @@ class TestImportPromptSet:
         assert result['imported'] >= 2  # manifest + domain
         assert len(result['errors']) == 0
 
-        # Manifest Version sollte jetzt 3.0 sein
+        # Manifest version should now be 3.0
         manifest = engine._loader.load_manifest()
         assert manifest['version'] == '3.0'
 
     def test_import_merge_skips_existing(self, engine_dir, tmp_path):
-        """Import-Modus 'merge' überspringt bestehende Dateien."""
+        """Import mode 'merge' skips existing files."""
         engine = _make_engine(engine_dir)
         zip_path = self._create_import_zip(tmp_path)
 
         result = engine.import_prompt_set(zip_path, merge_mode='merge')
-        assert result['skipped'] >= 1  # manifest + test.json existieren
-        # new.json sollte importiert worden sein
+        assert result['skipped'] >= 1  # manifest + test.json exist
+        # new.json should have been imported
         new_path = os.path.join(engine_dir, 'prompts', 'new.json')
         assert os.path.exists(new_path)
 
     def test_import_overwrite_replaces_existing(self, engine_dir, tmp_path):
-        """Import-Modus 'overwrite' überschreibt bestehende Dateien."""
+        """Import mode 'overwrite' overwrites existing files."""
         engine = _make_engine(engine_dir)
         zip_path = self._create_import_zip(tmp_path, domain_content="Overwritten!")
 
@@ -258,7 +258,7 @@ class TestImportPromptSet:
         assert result['skipped'] == 0
 
     def test_import_invalid_mode_raises(self, engine_dir, tmp_path):
-        """Ungültiger merge_mode wirft ValueError."""
+        """Invalid merge_mode raises ValueError."""
         engine = _make_engine(engine_dir)
         zip_path = self._create_import_zip(tmp_path)
 
@@ -266,14 +266,14 @@ class TestImportPromptSet:
             engine.import_prompt_set(zip_path, merge_mode='invalid')
 
     def test_import_missing_zip_raises(self, engine_dir):
-        """Fehlende ZIP-Datei wirft FileNotFoundError."""
+        """Missing ZIP file raises FileNotFoundError."""
         engine = _make_engine(engine_dir)
 
         with pytest.raises(FileNotFoundError):
             engine.import_prompt_set('/nonexistent/file.zip')
 
     def test_import_invalid_zip_returns_error(self, engine_dir, tmp_path):
-        """Ungültige ZIP-Datei gibt Fehler zurück."""
+        """Invalid ZIP file returns error."""
         bad_path = str(tmp_path / 'bad.zip')
         with open(bad_path, 'w') as f:
             f.write("not a zip file")
@@ -283,7 +283,7 @@ class TestImportPromptSet:
         assert len(result['errors']) > 0
 
     def test_import_zip_without_manifest_returns_error(self, engine_dir, tmp_path):
-        """ZIP ohne Manifest gibt Fehler zurück."""
+        """ZIP without manifest returns error."""
         zip_path = str(tmp_path / 'no_manifest.zip')
         with zipfile.ZipFile(zip_path, 'w') as zf:
             zf.writestr('prompts/test.json', '{}')
@@ -294,14 +294,14 @@ class TestImportPromptSet:
         assert 'manifest' in result['errors'][0].lower()
 
     def test_roundtrip_export_import(self, engine_dir, tmp_path):
-        """Export → Import roundtrip erhält Daten."""
+        """Export → Import roundtrip preserves data."""
         engine = _make_engine(engine_dir)
 
         # Export
         export_path = str(tmp_path / 'roundtrip.zip')
         engine.export_prompt_set(export_path)
 
-        # Domain-Datei modifizieren
+        # Modify domain file
         prompts_dir = os.path.join(engine_dir, 'prompts')
         modified = {"test_prompt": {"variants": {"default": {"content": "Modified!"}}, "placeholders_used": []}}
         with open(os.path.join(prompts_dir, 'test.json'), 'w', encoding='utf-8') as f:
@@ -311,7 +311,7 @@ class TestImportPromptSet:
         result = engine.import_prompt_set(export_path, merge_mode='replace')
         assert len(result['errors']) == 0
 
-        # Prüfen: Original wiederhergestellt
+        # Check: original restored
         domain = engine._loader.load_domain_file('test.json')
         assert domain['test_prompt']['variants']['default']['content'] == 'Original content.'
 
@@ -319,13 +319,13 @@ class TestImportPromptSet:
 # ===== Factory Reset Tests =====
 
 class TestFactoryReset:
-    """Tests für factory_reset()."""
+    """Tests for factory_reset()."""
 
     def test_factory_reset_restores_files(self, engine_dir):
-        """Factory Reset stellt Dateien aus _defaults/ wieder her."""
+        """Factory reset restores files from _defaults/."""
         engine = _make_engine(engine_dir)
 
-        # Domain-Datei modifizieren
+        # Modify domain file
         prompts_dir = os.path.join(engine_dir, 'prompts')
         modified = {"test_prompt": {"variants": {"default": {"content": "Modified!"}}, "placeholders_used": []}}
         with open(os.path.join(prompts_dir, 'test.json'), 'w', encoding='utf-8') as f:
@@ -336,15 +336,15 @@ class TestFactoryReset:
         assert result['restored'] >= 1
         assert len(result['errors']) == 0
 
-        # Prüfen: Original wiederhergestellt
+        # Check: original restored
         domain = engine._loader.load_domain_file('test.json')
         assert domain['test_prompt']['variants']['default']['content'] == 'Original content.'
 
     def test_factory_reset_restores_manifest(self, engine_dir):
-        """Factory Reset stellt auch Manifest wieder her."""
+        """Factory reset also restores manifest."""
         engine = _make_engine(engine_dir)
 
-        # Manifest modifizieren
+        # Modify manifest
         manifest = engine._loader.load_manifest()
         manifest['version'] = '999.0'
         engine._loader.save_manifest(manifest)
@@ -352,12 +352,12 @@ class TestFactoryReset:
         result = engine.factory_reset()
         assert result['restored'] >= 1
 
-        # Manifest sollte wieder original sein
+        # Manifest should be restored to original
         manifest = engine._loader.load_manifest()
         assert manifest['version'] == '2.0'
 
     def test_factory_reset_no_defaults_dir(self, tmp_path):
-        """Factory Reset ohne _defaults/ Verzeichnis gibt Fehler."""
+        """Factory reset without _defaults/ directory returns error."""
         instructions_dir = tmp_path / 'instructions'
         instructions_dir.mkdir()
         prompts_dir = instructions_dir / 'prompts'
@@ -384,10 +384,10 @@ class TestFactoryReset:
 # ===== Validate Integrity Tests =====
 
 class TestValidateIntegrity:
-    """Tests für validate_integrity()."""
+    """Tests for validate_integrity()."""
 
     def test_all_valid(self, engine_dir):
-        """Alle Dateien valide → valid=True."""
+        """All files valid → valid=True."""
         engine = _make_engine(engine_dir)
         result = engine.validate_integrity()
 
@@ -397,11 +397,11 @@ class TestValidateIntegrity:
         assert len(result['errors']) == 0
 
     def test_corrupt_file_recovery_from_defaults(self, engine_dir):
-        """Korrupte Datei wird aus _defaults/ wiederhergestellt."""
+        """Corrupted file is restored from _defaults/."""
         prompts_dir = os.path.join(engine_dir, 'prompts')
         domain_path = os.path.join(prompts_dir, 'test.json')
 
-        # Datei korrumpieren (kein .bak vorhanden)
+        # Corrupt file (no .bak available)
         with open(domain_path, 'w') as f:
             f.write("NOT VALID JSON!!!")
 
@@ -411,11 +411,11 @@ class TestValidateIntegrity:
         assert result['recovered'] >= 1
 
     def test_missing_file_recovery_from_defaults(self, engine_dir):
-        """Fehlende Domain-Datei wird aus _defaults/ wiederhergestellt."""
+        """Missing domain file is restored from _defaults/."""
         prompts_dir = os.path.join(engine_dir, 'prompts')
         domain_path = os.path.join(prompts_dir, 'test.json')
 
-        # Datei löschen
+        # Delete file
         os.remove(domain_path)
 
         engine = _make_engine(engine_dir)
@@ -425,13 +425,13 @@ class TestValidateIntegrity:
         assert os.path.exists(domain_path)
 
     def test_unrecoverable_corruption(self, tmp_path):
-        """Nicht-wiederherstellbare Korruption → valid=False."""
+        """Unrecoverable corruption → valid=False."""
         instructions_dir = tmp_path / 'instructions'
         instructions_dir.mkdir()
         prompts_dir = instructions_dir / 'prompts'
         prompts_dir.mkdir()
 
-        # Korruptes Manifest (ohne _defaults und ohne .bak)
+        # Corrupted manifest (without _defaults and without .bak)
         meta_dir = prompts_dir / '_meta'
         meta_dir.mkdir()
         (meta_dir / 'prompt_manifest.json').write_text("{CORRUPT", encoding='utf-8')
