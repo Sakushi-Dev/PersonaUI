@@ -8,7 +8,7 @@ export const ThemeContext = createContext(null);
 export function ThemeProvider({ children }) {
   const [isDark, setIsDark] = useState(() => storage.getItem('darkMode', false));
   const [colors, setColors] = useState(() => ({
-    backgroundColor_light: storage.getItem('backgroundColor_light', '#a3baff'),
+    backgroundColor_light: storage.getItem('backgroundColor_light', '#d7dce4'),
     colorGradient1_light: storage.getItem('colorGradient1_light', '#66cfff'),
     color2_light: storage.getItem('color2_light', '#fd91ee'),
     backgroundColor_dark: storage.getItem('backgroundColor_dark', '#1a2332'),

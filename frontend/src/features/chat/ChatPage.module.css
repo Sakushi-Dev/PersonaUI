@@ -7,16 +7,5 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background-color: var(--bg-color-1, #e8dff5);
-  background-image:
-    radial-gradient(ellipse at 20% 50%, var(--bg-gradient-1, #c9b8ff) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, var(--bg-gradient-2, #f0c6ff) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 80%, var(--bg-color-2, #b8d0ff) 0%, transparent 50%);
-  transition: background-color 0.5s ease;
-}
-
-/* Remove page background when dynamic background is active (blobs handle it) */
-.dynamicActive {
   background-color: transparent;
-  background-image: none;
 }

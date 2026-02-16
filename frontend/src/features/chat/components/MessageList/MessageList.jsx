@@ -1,4 +1,7 @@
 // ── MessageList Component ──
+// Streaming messages live inside chatHistory (marked with _streaming: true).
+// This means the same React element is used for both streaming and final state,
+// preventing bubble recreation when the stream completes.
 
 import { useRef, useEffect, useCallback } from 'react';
 import { useSession } from '../../../../hooks/useSession';
@@ -10,9 +13,7 @@ import styles from './MessageList.module.css';
 
 export default function MessageList({
   isStreaming,
-  streamingText,
   afterthoughtStreaming,
-  afterthoughtText,
   hasMore,
   onLoadMore,
   onNewChat,
@@ -30,10 +31,11 @@ export default function MessageList({
     }
   }, []);
 
-  // Scroll to bottom on new messages
+  // Scroll to bottom on new messages or streaming content updates
+  const lastMessage = chatHistory[chatHistory.length - 1];
   useEffect(() => {
     scrollToBottom();
-  }, [chatHistory.length, streamingText, afterthoughtText, scrollToBottom]);
+  }, [chatHistory.length, lastMessage?.message, scrollToBottom]);
 
   // Track if user has scrolled up
   const handleScroll = () => {
@@ -60,43 +62,34 @@ export default function MessageList({
         <>
           {hasMore && <LoadMoreButton onClick={onLoadMore} />}
 
-          {chatHistory.map((msg, index) => (
-            <MessageBubble
-              key={`${msg.timestamp}-${index}`}
-              message={msg.message}
-              isUser={msg.is_user}
-              characterName={msg.character_name}
-              timestamp={msg.timestamp}
-              stats={msg.stats}
-              memorized={!!msg.memorized}
-              characterAvatar={character?.avatar}
-              characterAvatarType={character?.avatar_type}
-            />
-          ))}
+          {chatHistory.map((msg, index) => {
+            // Streaming placeholder with no text yet → show spinner
+            if (msg._streaming && !msg.message) {
+              return (
+                <div key={`${msg.timestamp}-${index}`} className={styles.thinking}>
+                  <Spinner />
+                </div>
+              );
+            }
 
-          {isStreaming && streamingText && (
-            <MessageBubble
-              message={streamingText}
-              isUser={false}
-              characterName={character?.char_name}
-              isStreaming
-              characterAvatar={character?.avatar}
-              characterAvatarType={character?.avatar_type}
-            />
-          )}
+            return (
+              <MessageBubble
+                key={`${msg.timestamp}-${index}`}
+                message={msg.message}
+                isUser={msg.is_user}
+                characterName={msg.character_name}
+                timestamp={msg.timestamp}
+                stats={msg.stats}
+                memorized={!!msg.memorized}
+                isStreaming={!!msg._streaming}
+                characterAvatar={character?.avatar}
+                characterAvatarType={character?.avatar_type}
+              />
+            );
+          })}
 
-          {afterthoughtStreaming && afterthoughtText && (
-            <MessageBubble
-              message={afterthoughtText}
-              isUser={false}
-              characterName={character?.char_name}
-              isStreaming
-              characterAvatar={character?.avatar}
-              characterAvatarType={character?.avatar_type}
-            />
-          )}
-
-          {(isStreaming || afterthoughtStreaming) && !streamingText && !afterthoughtText && (
+          {/* Afterthought decision phase spinner (before streaming placeholder is added) */}
+          {afterthoughtStreaming && !chatHistory.some(m => m._streaming) && (
             <div className={styles.thinking}>
               <Spinner />
             </div>

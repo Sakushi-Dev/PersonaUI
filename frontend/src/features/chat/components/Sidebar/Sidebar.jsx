@@ -1,6 +1,7 @@
 // ── Sidebar Component ──
 // Matches legacy _sidebar.html + SessionManager.js layout
 
+import { createPortal } from 'react-dom';
 import { useSession } from '../../../../hooks/useSession';
 import PersonaList from './PersonaList';
 import SessionList from './SessionList';
@@ -19,7 +20,7 @@ export default function Sidebar({
 
   const selectedPersona = personas.find((p) => p.id === selectedPersonaId);
 
-  return (
+  return createPortal(
     <>
       {isOpen && <div className={styles.backdrop} onClick={onClose} />}
       <aside className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}>
@@ -54,6 +55,7 @@ export default function Sidebar({
           )}
         </div>
       </aside>
-    </>
+    </>,
+    document.body
   );
 }

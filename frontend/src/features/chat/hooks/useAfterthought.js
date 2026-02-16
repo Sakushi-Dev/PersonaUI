@@ -6,14 +6,14 @@ import { useSettings } from '../../../hooks/useSettings';
 import { sendAfterthought } from '../../../services/chatApi';
 import { AFTERTHOUGHT_INTERVALS } from '../../../utils/constants';
 import { playNotificationSound } from '../../../utils/audioUtils';
+import { formatMessage } from '../../../utils/formatMessage';
 
 export function useAfterthought() {
-  const { sessionId, personaId, addMessage } = useSession();
+  const { sessionId, personaId, character, addMessage, updateLastMessage, removeLastMessage } = useSession();
   const { get } = useSettings();
 
   const [isThinking, setIsThinking] = useState(false);
   const [timer, setTimer] = useState(null);
-  const [streamingText, setStreamingText] = useState('');
 
   const stageRef = useRef(0);
   const timerRef = useRef(null);
@@ -56,9 +56,16 @@ export function useAfterthought() {
         return;
       }
 
-      // Followup phase (streaming)
+      // Followup phase (streaming) — add placeholder to chatHistory
       let rawText = '';
-      setStreamingText('');
+
+      addMessage({
+        message: '',
+        is_user: false,
+        character_name: character?.char_name,
+        _streaming: true,
+        timestamp: new Date().toISOString(),
+      });
 
       sendAfterthought({
         sessionId,
@@ -72,20 +79,19 @@ export function useAfterthought() {
         experimentalMode: get('experimentalMode'),
         onChunk: (chunk) => {
           rawText += chunk;
-          setStreamingText(rawText);
+          updateLastMessage({ message: formatMessage(rawText) });
         },
         onDone: (data) => {
           setIsThinking(false);
-          setStreamingText('');
 
-          const botMessage = {
+          // Finalize the streaming message in-place
+          updateLastMessage({
             message: data.response,
-            is_user: false,
+            _streaming: false,
             character_name: data.character_name,
             timestamp: new Date().toISOString(),
             stats: data.stats,
-          };
-          addMessage(botMessage);
+          });
 
           // Play notification sound if enabled
           if (get('notificationSound', false)) {
@@ -99,7 +105,7 @@ export function useAfterthought() {
         },
         onError: () => {
           setIsThinking(false);
-          setStreamingText('');
+          removeLastMessage(); // Remove the streaming placeholder
           stageRef.current = Math.min(stageRef.current + 1, AFTERTHOUGHT_INTERVALS.length - 1);
           scheduleNext();
         },
@@ -108,7 +114,7 @@ export function useAfterthought() {
       setIsThinking(false);
       scheduleNext();
     }
-  }, [sessionId, personaId, isThinking, addMessage, get]);
+  }, [sessionId, personaId, isThinking, character, addMessage, updateLastMessage, removeLastMessage, get]);
 
   const scheduleNext = useCallback(() => {
     if (!activeRef.current || !enabled) return;
@@ -151,7 +157,6 @@ export function useAfterthought() {
   return {
     isThinking,
     timer,
-    streamingText,
     startTimer,
     stopTimer,
     executeCheck,

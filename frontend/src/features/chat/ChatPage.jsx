@@ -12,6 +12,7 @@ import { useSidebar } from './hooks/useSidebar';
 import { useSwipe } from './hooks/useSwipe';
 
 import DynamicBackground from '../../components/DynamicBackground/DynamicBackground';
+import StaticBackground from '../../components/StaticBackground/StaticBackground';
 import Header from './components/Header/Header';
 import Sidebar from './components/Sidebar/Sidebar';
 import MessageList from './components/MessageList/MessageList';
@@ -76,7 +77,7 @@ function ChatPageContent() {
     setIsDark(dm);
 
     updateColors({
-      backgroundColor_light: get('backgroundColor_light', '#a3baff'),
+      backgroundColor_light: get('backgroundColor_light', '#d7dce4'),
       colorGradient1_light: get('colorGradient1_light', '#66cfff'),
       color2_light: get('color2_light', '#fd91ee'),
       backgroundColor_dark: get('backgroundColor_dark', '#1a2332'),
@@ -95,7 +96,6 @@ function ChatPageContent() {
   const {
     isLoading,
     isStreaming,
-    streamingText,
     streamingStats,
     error,
     hasMore,
@@ -106,7 +106,6 @@ function ChatPageContent() {
 
   const {
     isThinking: afterthoughtThinking,
-    streamingText: afterthoughtText,
     startTimer: startAfterthought,
     stopTimer: stopAfterthought,
   } = useAfterthought();
@@ -185,8 +184,8 @@ function ChatPageContent() {
   const dynamicBg = get('dynamicBackground', true);
 
   return (
-    <div className={`${styles.page}${dynamicBg ? ` ${styles.dynamicActive}` : ''}`} {...swipeHandlers}>
-      {dynamicBg && <DynamicBackground />}
+    <div className={styles.page} {...swipeHandlers}>
+      {dynamicBg ? <DynamicBackground /> : <StaticBackground />}
 
       <Header
         onToggleSidebar={sidebar.toggle}
@@ -213,9 +212,7 @@ function ChatPageContent() {
 
       <MessageList
         isStreaming={isStreaming}
-        streamingText={streamingText}
         afterthoughtStreaming={afterthoughtThinking}
-        afterthoughtText={afterthoughtText}
         hasMore={hasMore}
         onLoadMore={loadMore}
         onNewChat={handleNewChat}

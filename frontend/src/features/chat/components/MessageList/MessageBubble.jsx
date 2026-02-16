@@ -26,7 +26,8 @@ export default function MessageBubble({
   const avatarType = isUser ? profile?.user_avatar_type : characterAvatarType;
   const avatarName = isUser ? (profile?.user_name || 'Du') : characterName;
 
-  const formattedMessage = formatMessage(message);
+  // Streaming text is already formatted by the hook — skip double-formatting
+  const formattedMessage = isStreaming ? message : formatMessage(message);
 
   const bubbleClasses = [
     styles.messageBubble,

@@ -14,8 +14,8 @@ html {
 }
 
 body {
-  font-family: var(--bubble-font-family);
-  font-size: var(--bubble-font-size);
+  font-family: 'Ubuntu', 'Roboto', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-size: 16px;
   line-height: 1.5;
   color: var(--overlay-text);
   background-color: var(--background-color);

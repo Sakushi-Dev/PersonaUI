@@ -238,6 +238,25 @@ export function SessionProvider({ children }) {
     setTotalMessageCount((prev) => prev + 1);
   }, []);
 
+  // Update the last message in chat history (for streaming in-place)
+  const updateLastMessage = useCallback((updater) => {
+    setChatHistory((prev) => {
+      if (prev.length === 0) return prev;
+      const updated = [...prev];
+      const current = updated[updated.length - 1];
+      updated[updated.length - 1] = typeof updater === 'function'
+        ? updater(current)
+        : { ...current, ...updater };
+      return updated;
+    });
+  }, []);
+
+  // Remove the last message (for canceling/error during streaming)
+  const removeLastMessage = useCallback(() => {
+    setChatHistory((prev) => prev.slice(0, -1));
+    setTotalMessageCount((prev) => Math.max(0, prev - 1));
+  }, []);
+
   // Prepend older messages (load more)
   const prependMessages = useCallback((messages) => {
     setChatHistory((prev) => [...messages, ...prev]);
@@ -263,6 +282,8 @@ export function SessionProvider({ children }) {
     deleteSession,
     loadPersonas,
     addMessage,
+    updateLastMessage,
+    removeLastMessage,
     prependMessages,
     reinitialize,
   };

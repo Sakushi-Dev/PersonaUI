@@ -24,7 +24,10 @@ const FONT_OPTIONS = [
 
 export default function InterfaceSettingsOverlay({ open, onClose }) {
   const { get, setMany } = useSettings();
-  const { isDark, setIsDark, colors, updateColors, setFontSize: setThemeFontSize, setFontFamily: setThemeFontFamily, setDynamicBackground: setThemeDynBg } = useTheme();
+  const { isDark: themeIsDark, colors: themeColors, setIsDark, updateColors, setFontSize: setThemeFontSize, setFontFamily: setThemeFontFamily, setDynamicBackground: setThemeDynBg } = useTheme();
+
+  // Snapshot of ThemeContext state when overlay opens, for rollback on close
+  const [snapshot, setSnapshot] = useState(null);
 
   const [darkMode, setDarkMode] = useState(false);
   const [dynamicBg, setDynamicBg] = useState(true);
@@ -38,99 +41,87 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
 
   useEffect(() => {
     if (open) {
+      // Take snapshot for rollback
+      setSnapshot({ isDark: themeIsDark, colors: { ...themeColors } });
+
       const dm = get('darkMode', false);
       setDarkMode(dm);
       setDynamicBg(get('dynamicBackground', true));
       setNotificationSound(get('notificationSound', false));
-      setBgColor(dm ? get('backgroundColor_dark', '#1a2332') : get('backgroundColor_light', '#a3baff'));
+      setBgColor(dm ? get('backgroundColor_dark', '#1a2332') : get('backgroundColor_light', '#d7dce4'));
       setGradient1(dm ? get('colorGradient1_dark', '#2a3f5f') : get('colorGradient1_light', '#66cfff'));
       setColor2(dm ? get('color2_dark', '#3d4f66') : get('color2_light', '#fd91ee'));
       setNonverbalColor(get('nonverbalColor', '#e4ba00'));
       setFontSize(parseInt(get('bubbleFontSize', '18'), 10));
       setFontFamily(get('bubbleFontFamily', 'ubuntu'));
     }
-  }, [open, get]);
+  }, [open, get, themeIsDark, themeColors]);
 
   // ── Dark mode toggle handler: swap color pickers to new mode ──
   const handleDarkModeChange = useCallback((checked) => {
-    // Save current mode's colors to ThemeContext before switching
-    const oldSuffix = darkMode ? '_dark' : '_light';
-    updateColors({
-      [`backgroundColor${oldSuffix}`]: bgColor,
-      [`colorGradient1${oldSuffix}`]: gradient1,
-      [`color2${oldSuffix}`]: color2,
-    });
-
-    // Load new mode's colors from ThemeContext (not server settings — may be stale)
+    // Store current mode's colors locally before switching
     const newSuffix = checked ? '_dark' : '_light';
     const defaults = checked
       ? { bg: '#1a2332', g1: '#2a3f5f', c2: '#3d4f66' }
-      : { bg: '#a3baff', g1: '#66cfff', c2: '#fd91ee' };
-    setBgColor(colors[`backgroundColor${newSuffix}`] ?? defaults.bg);
-    setGradient1(colors[`colorGradient1${newSuffix}`] ?? defaults.g1);
-    setColor2(colors[`color2${newSuffix}`] ?? defaults.c2);
+      : { bg: '#d7dce4', g1: '#66cfff', c2: '#fd91ee' };
+
+    // Load colors for the new mode from saved settings
+    setBgColor(get(`backgroundColor${newSuffix}`, defaults.bg));
+    setGradient1(get(`colorGradient1${newSuffix}`, defaults.g1));
+    setColor2(get(`color2${newSuffix}`, defaults.c2));
     setDarkMode(checked);
-  }, [darkMode, bgColor, gradient1, color2, colors, updateColors]);
+  }, [get]);
 
-  // ── Live preview: apply changes to actual page in real-time ──
-  useEffect(() => {
-    if (!open) return;
-    setIsDark(darkMode);
-  }, [darkMode, open, setIsDark]);
-
-  useEffect(() => {
-    if (!open) return;
-    const suffix = darkMode ? '_dark' : '_light';
-    updateColors({
-      [`backgroundColor${suffix}`]: bgColor,
-      [`colorGradient1${suffix}`]: gradient1,
-      [`color2${suffix}`]: color2,
-      nonverbalColor,
-    });
-  }, [bgColor, gradient1, color2, nonverbalColor, darkMode, open, updateColors]);
-
-  useEffect(() => {
-    if (!open) return;
-    setThemeFontSize(fontSize);
-  }, [fontSize, open, setThemeFontSize]);
-
-  useEffect(() => {
-    if (!open) return;
-    setThemeFontFamily(fontFamily);
-  }, [fontFamily, open, setThemeFontFamily]);
-
-  useEffect(() => {
-    if (!open) return;
-    setThemeDynBg(dynamicBg);
-  }, [dynamicBg, open, setThemeDynBg]);
+  // ── No live preview to chat — only InterfacePreview shows changes via props ──
 
   const handleSave = useCallback(() => {
     const suffix = darkMode ? '_dark' : '_light';
     const otherSuffix = darkMode ? '_light' : '_dark';
+
+    // Persist to server settings
     setMany({
       darkMode,
       dynamicBackground: dynamicBg,
       notificationSound,
-      // Current mode from pickers
       [`backgroundColor${suffix}`]: bgColor,
       [`colorGradient1${suffix}`]: gradient1,
       [`color2${suffix}`]: color2,
-      // Other mode from ThemeContext
-      [`backgroundColor${otherSuffix}`]: colors[`backgroundColor${otherSuffix}`],
-      [`colorGradient1${otherSuffix}`]: colors[`colorGradient1${otherSuffix}`],
-      [`color2${otherSuffix}`]: colors[`color2${otherSuffix}`],
+      [`backgroundColor${otherSuffix}`]: get(`backgroundColor${otherSuffix}`),
+      [`colorGradient1${otherSuffix}`]: get(`colorGradient1${otherSuffix}`),
+      [`color2${otherSuffix}`]: get(`color2${otherSuffix}`),
       nonverbalColor,
       bubbleFontSize: String(fontSize),
       bubbleFontFamily: fontFamily,
     });
+
+    // Apply to ThemeContext (this updates the actual chat UI)
+    setIsDark(darkMode);
+    updateColors({
+      [`backgroundColor${suffix}`]: bgColor,
+      [`colorGradient1${suffix}`]: gradient1,
+      [`color2${suffix}`]: color2,
+      nonverbalColor,
+    });
+    setThemeFontSize(fontSize);
+    setThemeFontFamily(fontFamily);
+    setThemeDynBg(dynamicBg);
+
+    setSnapshot(null);
     onClose();
-  }, [darkMode, dynamicBg, notificationSound, bgColor, gradient1, color2, colors, nonverbalColor, fontSize, fontFamily, setMany, onClose]);
+  }, [darkMode, dynamicBg, notificationSound, bgColor, gradient1, color2, nonverbalColor, fontSize, fontFamily, get, setMany, setIsDark, updateColors, setThemeFontSize, setThemeFontFamily, setThemeDynBg, onClose]);
+
+  // ── Close without saving: rollback ThemeContext to snapshot ──
+  const handleClose = useCallback(() => {
+    // No rollback needed — we never touched ThemeContext during editing
+    setSnapshot(null);
+    onClose();
+  }, [onClose]);
 
   const handleReset = useCallback(() => {
     setDarkMode(false);
     setDynamicBg(true);
     setNotificationSound(false);
-    setBgColor('#a3baff');
+    setBgColor('#d7dce4');
     setGradient1('#66cfff');
     setColor2('#fd91ee');
     setNonverbalColor('#e4ba00');
@@ -139,8 +130,8 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
   }, []);
 
   return (
-    <Overlay open={open} onClose={onClose} width="520px">
-      <OverlayHeader title="Interface-Einstellungen" onClose={onClose} />
+    <Overlay open={open} onClose={handleClose} width="520px">
+      <OverlayHeader title="Interface-Einstellungen" onClose={handleClose} />
       <OverlayBody>
         <div style={{ marginBottom: 16 }}>
           <InterfacePreview
@@ -149,6 +140,9 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
             bgColor={bgColor}
             gradient1={gradient1}
             gradient2={color2}
+            dynamicBg={dynamicBg}
+            fontSize={fontSize}
+            fontFamily={fontFamily}
           />
         </div>
 

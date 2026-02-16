@@ -1,4 +1,8 @@
 // ── useMessages Hook ──
+// Streaming messages are added to chatHistory as placeholders (_streaming: true)
+// and updated in-place via updateLastMessage. This avoids bubble recreation
+// when the stream completes — the same React element transitions from
+// streaming to final state without unmounting/remounting.
 
 import { useState, useCallback, useRef } from 'react';
 import { useSession } from '../../../hooks/useSession';
@@ -6,18 +10,17 @@ import { useSettings } from '../../../hooks/useSettings';
 import { sendChatMessage } from '../../../services/chatApi';
 import { loadMoreMessages } from '../../../services/sessionApi';
 import { playNotificationSound } from '../../../utils/audioUtils';
+import { formatMessage } from '../../../utils/formatMessage';
 
 export function useMessages() {
-  const { sessionId, personaId, addMessage, prependMessages, chatHistory, totalMessageCount } = useSession();
+  const { sessionId, personaId, character, addMessage, updateLastMessage, removeLastMessage, prependMessages, chatHistory, totalMessageCount } = useSession();
   const { get } = useSettings();
 
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [streamingText, setStreamingText] = useState('');
   const [streamingStats, setStreamingStats] = useState(null);
   const [error, setError] = useState(null);
   const abortRef = useRef(null);
-  const loadedCount = useRef(0);
 
   const hasMore = chatHistory.length < totalMessageCount;
 
@@ -27,7 +30,6 @@ export function useMessages() {
 
     setIsLoading(true);
     setIsStreaming(true);
-    setStreamingText('');
     setError(null);
 
     // Add user message immediately
@@ -38,6 +40,15 @@ export function useMessages() {
       timestamp: new Date().toISOString(),
     };
     addMessage(userMessage);
+
+    // Add streaming placeholder for bot response (same element will be updated in-place)
+    addMessage({
+      message: '',
+      is_user: false,
+      character_name: character?.char_name,
+      _streaming: true,
+      timestamp: new Date().toISOString(),
+    });
 
     let rawText = '';
 
@@ -50,22 +61,21 @@ export function useMessages() {
       experimentalMode: get('experimentalMode'),
       onChunk: (chunk) => {
         rawText += chunk;
-        setStreamingText(rawText);
+        updateLastMessage({ message: formatMessage(rawText) });
       },
       onDone: (data) => {
         setIsStreaming(false);
         setIsLoading(false);
-        setStreamingText('');
         setStreamingStats(data.stats || null);
 
-        const botMessage = {
+        // Finalize the streaming message — same element, no recreation
+        updateLastMessage({
           message: data.response,
-          is_user: false,
+          _streaming: false,
           character_name: data.character_name,
           timestamp: new Date().toISOString(),
           stats: data.stats,
-        };
-        addMessage(botMessage);
+        });
 
         // Play notification sound if enabled
         if (get('notificationSound', false)) {
@@ -75,18 +85,18 @@ export function useMessages() {
       onError: (err) => {
         setIsStreaming(false);
         setIsLoading(false);
-        setStreamingText('');
+        removeLastMessage(); // Remove the streaming placeholder
         setError(err);
       },
     });
-  }, [sessionId, personaId, isLoading, isStreaming, addMessage, get]);
+  }, [sessionId, personaId, isLoading, isStreaming, character, addMessage, updateLastMessage, removeLastMessage, get]);
 
   const cancelStream = useCallback(() => {
     abortRef.current?.abort();
     setIsStreaming(false);
     setIsLoading(false);
-    setStreamingText('');
-  }, []);
+    removeLastMessage(); // Remove the streaming placeholder
+  }, [removeLastMessage]);
 
   const loadMore = useCallback(async () => {
     if (!hasMore || isLoading) return;
@@ -104,7 +114,6 @@ export function useMessages() {
   return {
     isLoading,
     isStreaming,
-    streamingText,
     streamingStats,
     error,
     hasMore,

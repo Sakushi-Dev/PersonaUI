@@ -7,13 +7,13 @@
   bottom: 0;
   width: var(--sidebar-width);
   max-width: 320px;
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-right: 1px solid rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
-  z-index: var(--z-sidebar);
+  z-index: 260;
   transform: translateX(-100%);
   transition: transform 0.3s ease, opacity 0.2s ease;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -28,11 +28,11 @@
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.3);
-  z-index: calc(var(--z-sidebar) - 1);
+  z-index: 248;
 }
 
 :global(body.dark-mode) .sidebar {
-  background: rgba(20, 20, 25, 0.65);
+  background: rgba(20, 20, 25, 0.92);
   border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
 
