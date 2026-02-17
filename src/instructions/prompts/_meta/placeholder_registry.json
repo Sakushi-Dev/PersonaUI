@@ -27,7 +27,7 @@
       "source": "persona_config",
       "source_path": "persona_settings.gender",
       "type": "string",
-      "default": "divers",
+      "default": "diverse",
       "category": "persona",
       "resolve_phase": "static"
     },
@@ -37,7 +37,7 @@
       "source": "persona_config",
       "source_path": "persona_settings.persona",
       "type": "string",
-      "default": "KI",
+      "default": "AI",
       "category": "persona",
       "resolve_phase": "static"
     },
@@ -127,7 +127,7 @@
       "source": "user_profile",
       "source_path": "user_type",
       "type": "string",
-      "default": "Nicht angegeben",
+      "default": "Not specified",
       "category": "user",
       "resolve_phase": "static"
     },
@@ -137,7 +137,7 @@
       "source": "user_profile",
       "source_path": "user_type_description",
       "type": "string",
-      "default": "Keine Beschreibung",
+      "default": "No description",
       "category": "user",
       "resolve_phase": "static"
     },
@@ -147,7 +147,7 @@
       "source": "user_profile",
       "source_path": "user_gender",
       "type": "string",
-      "default": "Nicht angegeben",
+      "default": "Not specified",
       "category": "user",
       "resolve_phase": "static"
     },
@@ -157,7 +157,7 @@
       "source": "user_profile",
       "source_path": "user_interested_in",
       "type": "list",
-      "default": "Nicht angegeben",
+      "default": "Not specified",
       "category": "user",
       "resolve_phase": "static"
     },
@@ -167,7 +167,7 @@
       "source": "user_profile",
       "source_path": "user_info",
       "type": "string",
-      "default": "Keine Angaben",
+      "default": "No information",
       "category": "user",
       "resolve_phase": "static"
     },

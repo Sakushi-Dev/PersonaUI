@@ -3,7 +3,7 @@
   "prompts": {
     "impersonation": {
       "name": "Impersonation",
-      "description": "Rollenanweisung für die Persona-Verkörperung",
+      "description": "Role instruction for persona embodiment",
       "category": "system",
       "type": "text",
       "target": "system_prompt",
@@ -17,8 +17,8 @@
       ]
     },
     "system_rule": {
-      "name": "Interaktons Regel",
-      "description": "Grundregeln für das Verhalten der Persona",
+      "name": "Interaction Rule",
+      "description": "Basic rules for persona behavior",
       "category": "system",
       "type": "text",
       "target": "system_prompt",
@@ -32,8 +32,8 @@
       ]
     },
     "persona_description": {
-      "name": "Persona-Beschreibung",
-      "description": "Character-Description Template",
+      "name": "Persona Description",
+      "description": "Character description template",
       "category": "persona",
       "type": "text",
       "target": "system_prompt",
@@ -47,8 +47,8 @@
       ]
     },
     "user_info": {
-      "name": "Benutzer-Info",
-      "description": "User-Profil im Prompt",
+      "name": "User Info",
+      "description": "User profile in prompt",
       "category": "context",
       "type": "text",
       "target": "system_prompt",
@@ -62,8 +62,8 @@
       ]
     },
     "time_sense": {
-      "name": "Zeitgefühl",
-      "description": "Kontext für Datum und Uhrzeit",
+      "name": "Time Sense",
+      "description": "Context for date and time",
       "category": "context",
       "type": "text",
       "target": "system_prompt",
@@ -77,8 +77,8 @@
       ]
     },
     "output_format": {
-      "name": "Output-Format",
-      "description": "Formatierungsregeln für Antworten",
+      "name": "Output Format",
+      "description": "Formatting rules for responses",
       "category": "system",
       "type": "text",
       "target": "system_prompt",
@@ -92,8 +92,8 @@
       ]
     },
     "memory_context": {
-      "name": "Memory-Kontext",
-      "description": "Erinnerungen aus vergangenen Konversationen",
+      "name": "Memory Context",
+      "description": "Memories from past conversations",
       "category": "context",
       "type": "text",
       "target": "message",
@@ -107,8 +107,8 @@
       ]
     },
     "conversation_history": {
-      "name": "Konversationsverlauf",
-      "description": "Platzhalter für den Konversationsverlauf (user/assistant Messages). Enthält nur {{history}} ohne Zusatztext.",
+      "name": "Conversation History",
+      "description": "Placeholder for conversation history (user/assistant messages). Contains only {{history}} without additional text.",
       "category": "context",
       "type": "text",
       "target": "message",
@@ -123,7 +123,7 @@
     },
     "remember": {
       "name": "Remember (Prefill)",
-      "description": "Letzte Assistant-Nachricht als Prefill",
+      "description": "Last assistant message as prefill",
       "category": "prefill",
       "type": "text",
       "target": "prefill",
@@ -137,8 +137,8 @@
       ]
     },
     "afterthought_inner_dialogue": {
-      "name": "Nachgedanke – Innerer Dialog",
-      "description": "Prompt für den inneren Entscheidungsprozess",
+      "name": "Afterthought – Inner Dialogue",
+      "description": "Prompt for the inner decision process",
       "category": "afterthought",
       "type": "text",
       "target": "message",
@@ -152,8 +152,8 @@
       ]
     },
     "afterthought_followup": {
-      "name": "Nachgedanke – Followup",
-      "description": "Prompt für die Nachgedanke-Ergänzung",
+      "name": "Afterthought – Followup",
+      "description": "Prompt for afterthought extension",
       "category": "afterthought",
       "type": "text",
       "target": "message",
@@ -167,8 +167,8 @@
       ]
     },
     "afterthought_system_note": {
-      "name": "Nachgedanke – System-Hinweis",
-      "description": "Anhang zum System-Prompt bei Afterthought",
+      "name": "Afterthought – System Note",
+      "description": "System prompt appendix for afterthought",
       "category": "afterthought",
       "type": "text",
       "target": "system_prompt",
@@ -183,7 +183,7 @@
     },
     "summary_impersonation": {
       "name": "Summary – Impersonation",
-      "description": "Rollenanweisung für Summary-Erstellung",
+      "description": "Role instruction for summary creation",
       "category": "summary",
       "type": "text",
       "target": "system_prompt",
@@ -196,8 +196,8 @@
       ]
     },
     "summary_system_rule": {
-      "name": "Summary – System-Regeln",
-      "description": "Regeln für Summary-Erstellung",
+      "name": "Summary – System Rules",
+      "description": "Rules for summary creation",
       "category": "summary",
       "type": "text",
       "target": "system_prompt",
@@ -210,8 +210,8 @@
       ]
     },
     "summary_char_description": {
-      "name": "Summary – Charakter",
-      "description": "Charakter-Kontext für Summary",
+      "name": "Summary – Character",
+      "description": "Character context for summary",
       "category": "summary",
       "type": "text",
       "target": "system_prompt",
@@ -225,8 +225,8 @@
       ]
     },
     "summary_persona_block": {
-      "name": "Summary – Persona-Block",
-      "description": "Aktive Persona-Beschreibung im Summary-Kontext",
+      "name": "Summary – Persona Block",
+      "description": "Active persona description in summary context",
       "category": "summary",
       "type": "text",
       "target": "system_prompt",
@@ -241,7 +241,7 @@
     },
     "summary_prefill_impersonation": {
       "name": "Summary – Prefill Impersonation",
-      "description": "Prefill-Impersonation für Summary",
+      "description": "Prefill impersonation for summary",
       "category": "summary",
       "type": "text",
       "target": "prefill",
@@ -256,7 +256,7 @@
     },
     "summary_remember": {
       "name": "Summary – Remember",
-      "description": "Remember-Prefill für Summary",
+      "description": "Remember prefill for summary",
       "category": "summary",
       "type": "text",
       "target": "prefill",
@@ -270,8 +270,8 @@
       ]
     },
     "summary_user_prompt": {
-      "name": "Summary – User-Prompt",
-      "description": "User-Prompt für Summary-Request",
+      "name": "Summary – User Prompt",
+      "description": "User prompt for summary request",
       "category": "summary",
       "type": "text",
       "target": "message",
@@ -284,8 +284,8 @@
       ]
     },
     "spec_autofill_persona_type": {
-      "name": "Spec – Persona-Typ",
-      "description": "Auto-Fill Prompt für Persona-Typ Beschreibung",
+      "name": "Spec – Persona Type",
+      "description": "Auto-fill prompt for persona type description",
       "category": "spec_autofill",
       "type": "text",
       "target": "system_prompt",
@@ -298,8 +298,8 @@
       ]
     },
     "spec_autofill_core_trait": {
-      "name": "Spec – Kernmerkmal",
-      "description": "Auto-Fill Prompt für Kernmerkmal-Details",
+      "name": "Spec – Core Trait",
+      "description": "Auto-fill prompt for core trait details",
       "category": "spec_autofill",
       "type": "text",
       "target": "system_prompt",
@@ -312,8 +312,8 @@
       ]
     },
     "spec_autofill_knowledge": {
-      "name": "Spec – Wissensgebiet",
-      "description": "Auto-Fill Prompt für Wissensgebiet-Beschreibung",
+      "name": "Spec – Knowledge",
+      "description": "Auto-fill prompt for knowledge area description",
       "category": "spec_autofill",
       "type": "text",
       "target": "system_prompt",
@@ -326,8 +326,8 @@
       ]
     },
     "spec_autofill_scenario": {
-      "name": "Spec – Szenario",
-      "description": "Auto-Fill Prompt für Szenario-Details",
+      "name": "Spec – Scenario",
+      "description": "Auto-fill prompt for scenario details",
       "category": "spec_autofill",
       "type": "text",
       "target": "system_prompt",
@@ -340,8 +340,8 @@
       ]
     },
     "spec_autofill_expression_style": {
-      "name": "Spec – Ausdrucksstil",
-      "description": "Auto-Fill Prompt für Ausdrucksstil-Details",
+      "name": "Spec – Expression Style",
+      "description": "Auto-fill prompt for expression style details",
       "category": "spec_autofill",
       "type": "text",
       "target": "system_prompt",
@@ -354,8 +354,8 @@
       ]
     },
     "title_generation": {
-      "name": "Session-Titel Generierung",
-      "description": "Prompt für die automatische Session-Titel-Generierung",
+      "name": "Session Title Generation",
+      "description": "Prompt for automatic session title generation",
       "category": "utility",
       "type": "text",
       "target": "message",
@@ -369,8 +369,8 @@
       ]
     },
     "background_autofill": {
-      "name": "Hintergrund-Autofill",
-      "description": "Prompt für die KI-gestützte Generierung von Persona-Hintergrundgeschichten",
+      "name": "Background Autofill",
+      "description": "Prompt for AI-assisted generation of persona background stories",
       "category": "utility",
       "type": "text",
       "target": "message",
@@ -386,7 +386,7 @@
     },
     "persona_integrity_shield": {
       "name": "Persona Integrity Shield",
-      "description": "Hardcore-Schutz gegen Prompt-Extraction, Jailbreaks und Rollenbruch",
+      "description": "Hardcore protection against prompt extraction, jailbreaks and role breaking",
       "category": "system",
       "type": "text",
       "target": "system_prompt",
@@ -401,8 +401,8 @@
       ]
     },
     "conversation_dynamics": {
-      "name": "Gesprächsdynamik",
-      "description": "Kontrolle über Gesprächsrhythmus, -tiefe und Initiative",
+      "name": "Conversation Dynamics",
+      "description": "Control over conversation rhythm, depth and initiative",
       "category": "system",
       "type": "text",
       "target": "system_prompt",
@@ -416,8 +416,8 @@
       ]
     },
     "topic_transition_guard": {
-      "name": "Themenwechsel-Schutz",
-      "description": "Verhindert dass abrupte Themenwechsel als selbstverständlich behandelt werden",
+      "name": "Topic Transition Guard",
+      "description": "Prevents abrupt topic changes from being treated as natural",
       "category": "system",
       "type": "text",
       "target": "system_prompt",
@@ -432,8 +432,8 @@
       ]
     },
     "world_consistency": {
-      "name": "Welt-Konsistenz",
-      "description": "Unmögliche User-Aktionen werden durch die Weltlogik der Persona geprüft",
+      "name": "World Consistency",
+      "description": "Impossible user actions are checked through the persona's world logic",
       "category": "system",
       "type": "text",
       "target": "system_prompt",
@@ -448,8 +448,8 @@
       ]
     },
     "expression_style_detail": {
-      "name": "Ausdrucksstil-Detail",
-      "description": "Detaillierte Sprach- und Ausdrucksstil-Beschreibung",
+      "name": "Expression Style Detail",
+      "description": "Detailed language and expression style description",
       "category": "persona",
       "type": "text",
       "target": "system_prompt",
@@ -464,8 +464,8 @@
       ]
     },
     "emotional_state": {
-      "name": "Emotionaler Zustand",
-      "description": "Emotionales Tracking und Stimmungskontinuität",
+      "name": "Emotional State",
+      "description": "Emotional tracking and mood continuity",
       "category": "context",
       "type": "text",
       "target": "system_prompt",
@@ -480,8 +480,8 @@
       ]
     },
     "relationship_tracking": {
-      "name": "Beziehungs-Tracking",
-      "description": "Beziehungsebene und Vertrauensentwicklung",
+      "name": "Relationship Tracking",
+      "description": "Relationship level and trust development",
       "category": "context",
       "type": "text",
       "target": "system_prompt",
@@ -496,8 +496,8 @@
       ]
     },
     "response_style_control": {
-      "name": "Antwort-Stil",
-      "description": "Feingranulare Antwortlängen- und Stilkontrolle",
+      "name": "Response Style",
+      "description": "Fine-grained response length and style control",
       "category": "system",
       "type": "text",
       "target": "system_prompt",
@@ -511,8 +511,8 @@
       ]
     },
     "topic_boundaries": {
-      "name": "Themen-Handling",
-      "description": "In-Character Reaktionen auf heikle und schwierige Themen",
+      "name": "Topic Handling",
+      "description": "In-character reactions to sensitive and difficult topics",
       "category": "system",
       "type": "text",
       "target": "system_prompt",
@@ -526,8 +526,8 @@
       ]
     },
     "continuity_guard": {
-      "name": "Kontinuitäts-Schutz",
-      "description": "Konsistenz-Sicherung über den gesamten Chatverlauf",
+      "name": "Continuity Guard",
+      "description": "Consistency assurance throughout the entire chat history",
       "category": "system",
       "type": "text",
       "target": "system_prompt",

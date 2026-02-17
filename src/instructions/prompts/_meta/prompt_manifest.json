@@ -386,7 +386,7 @@
     },
     "persona_integrity_shield": {
       "name": "Persona Integrity Shield",
-      "description": "Hardcore-Schutz gegen Prompt-Extraction, Jailbreaks und Rollenbruch",
+      "description": "Hardcore protection against prompt extraction, jailbreaks and role breaking",
       "category": "system",
       "type": "text",
       "target": "system_prompt",
