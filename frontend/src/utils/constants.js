@@ -18,6 +18,16 @@ export function resolveFontFamily(key) {
   return FONT_FAMILY_MAP[key] || FONT_FAMILY_MAP.ubuntu;
 }
 
+// Per-font size offset in px (some fonts render much larger/smaller)
+export const FONT_SIZE_OFFSET = {
+  pixel: -7,
+};
+
+/** Get the effective font size adjusted for the given font key. */
+export function adjustedFontSize(basePx, fontKey) {
+  return basePx + (FONT_SIZE_OFFSET[fontKey] || 0);
+}
+
 // ── HSL → Hex conversion ──
 function hslToHex(h, s, l) {
   h = ((h % 360) + 360) % 360;

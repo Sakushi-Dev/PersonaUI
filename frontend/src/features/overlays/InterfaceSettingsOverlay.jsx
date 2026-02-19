@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSettings } from '../../hooks/useSettings';
 import { useTheme } from '../../hooks/useTheme';
-import { resolveFontFamily, hueToColors, DEFAULT_HUE, NONVERBAL_PRESETS } from '../../utils/constants';
+import { resolveFontFamily, adjustedFontSize, hueToColors, DEFAULT_HUE, NONVERBAL_PRESETS } from '../../utils/constants';
 import Overlay from '../../components/Overlay/Overlay';
 import OverlayHeader from '../../components/Overlay/OverlayHeader';
 import OverlayBody from '../../components/Overlay/OverlayBody';
@@ -32,6 +32,7 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
     updateColors,
     setFontSize: setThemeFontSize,
     setFontFamily: setThemeFontFamily,
+    setFontKey: setThemeFontKey,
     setDynamicBackground: setThemeDynBg,
   } = useTheme();
 
@@ -97,10 +98,11 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
     });
     setThemeFontSize(fontSize);
     setThemeFontFamily(resolveFontFamily(fontFamily));
+    setThemeFontKey(fontFamily);
     setThemeDynBg(dynamicBg);
 
     onClose();
-  }, [darkMode, dynamicBg, notificationSound, colorHue, nonverbalColor, fontSize, fontFamily, setMany, setIsDark, updateColors, setThemeFontSize, setThemeFontFamily, setThemeDynBg, onClose]);
+  }, [darkMode, dynamicBg, notificationSound, colorHue, nonverbalColor, fontSize, fontFamily, setMany, setIsDark, updateColors, setThemeFontSize, setThemeFontFamily, setThemeFontKey, setThemeDynBg, onClose]);
 
   // ── Close without saving ──
   const handleClose = useCallback(() => {
@@ -144,6 +146,7 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
     });
     setThemeFontSize(18);
     setThemeFontFamily(resolveFontFamily('ubuntu'));
+    setThemeFontKey('ubuntu');
     setThemeDynBg(true);
 
     setDarkMode(false);
@@ -153,7 +156,7 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
     setNonverbalColor('#e4ba00');
     setFontSize(18);
     setFontFamily('ubuntu');
-  }, [setMany, setIsDark, updateColors, setThemeFontSize, setThemeFontFamily, setThemeDynBg]);
+  }, [setMany, setIsDark, updateColors, setThemeFontSize, setThemeFontFamily, setThemeFontKey, setThemeDynBg]);
 
   return (
     <Overlay open={open} onClose={handleClose} width="540px">
@@ -169,7 +172,7 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
             gradient1={derivedColors.g1}
             gradient2={derivedColors.c2}
             dynamicBg={dynamicBg}
-            fontSize={fontSize}
+            fontSize={adjustedFontSize(fontSize, fontFamily)}
             fontFamily={fontFamily}
           />
         </div>

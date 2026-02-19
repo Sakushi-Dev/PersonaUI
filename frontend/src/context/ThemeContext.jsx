@@ -2,7 +2,7 @@
 
 import { createContext, useState, useEffect, useCallback } from 'react';
 import * as storage from '../utils/storage';
-import { resolveFontFamily } from '../utils/constants';
+import { resolveFontFamily, adjustedFontSize } from '../utils/constants';
 
 export const ThemeContext = createContext(null);
 
@@ -17,9 +17,10 @@ export function ThemeProvider({ children }) {
     color2_dark: storage.getItem('color2_dark', '#3d4f66'),
     nonverbalColor: storage.getItem('nonverbalColor', '#e4ba00'),
   }));
+  const [fontKey, setFontKey] = useState(() => storage.getItem('bubbleFontFamily', 'ubuntu'));
   const [fontSize, setFontSize] = useState(() => storage.getItem('bubbleFontSize', 18));
   const [fontFamily, setFontFamily] = useState(() =>
-    resolveFontFamily(storage.getItem('bubbleFontFamily', 'ubuntu'))
+    resolveFontFamily(fontKey)
   );
   const [dynamicBackground, setDynamicBackground] = useState(() => storage.getItem('dynamicBackground', true));
 
@@ -39,9 +40,9 @@ export function ThemeProvider({ children }) {
     root.style.setProperty('--color-gradient1', colors[`colorGradient1${suffix}`]);
     root.style.setProperty('--color-sky', colors[`color2${suffix}`]);
     root.style.setProperty('--nonverbal-color', colors.nonverbalColor);
-    root.style.setProperty('--bubble-font-size', `${fontSize}px`);
+    root.style.setProperty('--bubble-font-size', `${adjustedFontSize(fontSize, fontKey)}px`);
     root.style.setProperty('--bubble-font-family', fontFamily);
-  }, [isDark, colors, fontSize, fontFamily]);
+  }, [isDark, colors, fontSize, fontFamily, fontKey]);
 
   const toggleDark = useCallback(() => setIsDark((prev) => !prev), []);
 
@@ -61,6 +62,8 @@ export function ThemeProvider({ children }) {
     updateColors,
     fontSize,
     setFontSize,
+    fontKey,
+    setFontKey,
     fontFamily,
     setFontFamily,
     dynamicBackground,
