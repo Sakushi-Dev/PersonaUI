@@ -284,6 +284,96 @@ def get_user_message_count_since_marker(session_id: int, persona_id: str = 'defa
     return count
 
 
+def get_last_message(session_id: int, persona_id: str = 'default') -> Optional[Dict[str, Any]]:
+    """
+    Gets the last message of a session.
+    
+    Args:
+        session_id: Session ID
+        persona_id: Persona ID
+        
+    Returns:
+        Message dict or None
+    """
+    conn = get_db_connection(persona_id)
+    cursor = conn.cursor()
+    cursor.execute(sql('chat.get_last_message'), (session_id,))
+    row = cursor.fetchone()
+    conn.close()
+    if not row:
+        return None
+    return {
+        'id': row[0],
+        'message': row[1],
+        'is_user': bool(row[2]),
+        'timestamp': row[3],
+        'character_name': row[4]
+    }
+
+
+def delete_last_message(session_id: int, persona_id: str = 'default') -> Optional[Dict[str, Any]]:
+    """
+    Deletes the last message of a session and returns its info.
+    
+    Args:
+        session_id: Session ID
+        persona_id: Persona ID
+        
+    Returns:
+        Deleted message dict or None if no message found
+    """
+    conn = get_db_connection(persona_id)
+    cursor = conn.cursor()
+    
+    # Get the message first
+    cursor.execute(sql('chat.get_last_message'), (session_id,))
+    row = cursor.fetchone()
+    if not row:
+        conn.close()
+        return None
+    
+    deleted = {
+        'id': row[0],
+        'message': row[1],
+        'is_user': bool(row[2]),
+        'timestamp': row[3],
+        'character_name': row[4]
+    }
+    
+    # Delete it
+    cursor.execute(sql('chat.delete_last_message'), (session_id,))
+    conn.commit()
+    conn.close()
+    
+    log.info("Letzte Nachricht gelöscht: session=%s, msg_id=%s, is_user=%s",
+             session_id, deleted['id'], deleted['is_user'])
+    return deleted
+
+
+def update_last_message_text(session_id: int, new_text: str, persona_id: str = 'default') -> bool:
+    """
+    Updates the text of the last message in a session.
+    
+    Args:
+        session_id: Session ID
+        new_text: New message text
+        persona_id: Persona ID
+        
+    Returns:
+        True if a message was updated, False otherwise
+    """
+    conn = get_db_connection(persona_id)
+    cursor = conn.cursor()
+    cursor.execute(sql('chat.update_last_message_text'), (new_text, session_id))
+    affected = cursor.rowcount
+    conn.commit()
+    conn.close()
+    
+    if affected > 0:
+        log.info("Letzte Nachricht aktualisiert: session=%s", session_id)
+    return affected > 0
+
+
 def get_messages_since_marker(session_id: int, persona_id: str = 'default', limit: int = 100) -> Dict[str, Any]:
     """
     Gets only messages AFTER the last memory marker.

@@ -288,6 +288,141 @@
   }
 }
 
+/* ── Message Actions ── */
+
+.messageActions {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+  animation: fadeInSlide 0.3s ease-out;
+}
+
+.messageActionsUser {
+  justify-content: flex-end;
+}
+
+.actionBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.15);
+  border: none;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.55);
+  cursor: pointer;
+  padding: 3px 8px;
+  border-radius: 10px;
+  transition: opacity 0.2s, background 0.2s, color 0.2s;
+}
+
+.actionBtn:hover {
+  background: rgba(0, 0, 0, 0.25);
+  color: rgba(0, 0, 0, 0.8);
+}
+
+.actionBtn svg {
+  flex-shrink: 0;
+}
+
+/* ── Edit Mode ── */
+
+.editContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.editTextarea {
+  width: 100%;
+  min-height: 60px;
+  max-height: 300px;
+  padding: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.7);
+  color: #1a1a1a;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: 1.6;
+  resize: none;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.editTextarea:focus {
+  border-color: rgba(0, 120, 255, 0.5);
+}
+
+.editButtons {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.editSaveBtn,
+.editCancelBtn {
+  padding: 4px 14px;
+  border: none;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.editSaveBtn {
+  background: rgba(0, 120, 255, 0.8);
+  color: white;
+}
+
+.editSaveBtn:hover {
+  background: rgba(0, 120, 255, 1);
+  transform: scale(1.02);
+}
+
+.editCancelBtn {
+  background: rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.editCancelBtn:hover {
+  background: rgba(0, 0, 0, 0.18);
+}
+
+/* ── Dark Mode: Actions & Edit ── */
+
+:root[data-theme="dark"] .actionBtn {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+:root[data-theme="dark"] .actionBtn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+:root[data-theme="dark"] .editTextarea {
+  background: rgba(30, 30, 40, 0.6);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+:root[data-theme="dark"] .editTextarea:focus {
+  border-color: rgba(100, 180, 255, 0.5);
+}
+
+:root[data-theme="dark"] .editCancelBtn {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+:root[data-theme="dark"] .editCancelBtn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
 /* ── Responsive ── */
 
 @media (max-width: 768px) {

@@ -17,6 +17,10 @@ export default function MessageList({
   hasMore,
   onLoadMore,
   onNewChat,
+  onDeleteLast,
+  onEditLast,
+  onRegenerateLast,
+  onResendLast,
 }) {
   const { chatHistory, character } = useSession();
   const messagesEndRef = useRef(null);
@@ -72,6 +76,9 @@ export default function MessageList({
               );
             }
 
+            const isLast = index === chatHistory.length - 1;
+            const showActions = isLast && !msg._streaming && !isStreaming && !afterthoughtStreaming;
+
             return (
               <MessageBubble
                 key={`${msg.timestamp}-${index}`}
@@ -84,6 +91,11 @@ export default function MessageList({
                 isStreaming={!!msg._streaming}
                 characterAvatar={character?.avatar}
                 characterAvatarType={character?.avatar_type}
+                showActions={showActions}
+                onDelete={onDeleteLast}
+                onEdit={onEditLast}
+                onRegenerate={onRegenerateLast}
+                onResend={onResendLast}
               />
             );
           })}

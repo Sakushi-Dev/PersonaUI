@@ -98,3 +98,20 @@ FROM chat_messages
 WHERE session_id = ?
 ORDER BY id DESC
 LIMIT ?;
+
+-- name: get_last_message
+-- Holt die letzte Nachricht einer Session
+SELECT id, message, is_user, timestamp, character_name
+FROM chat_messages WHERE session_id = ? ORDER BY id DESC LIMIT 1;
+
+-- name: delete_last_message
+-- Löscht die letzte Nachricht einer Session
+DELETE FROM chat_messages WHERE id = (
+    SELECT id FROM chat_messages WHERE session_id = ? ORDER BY id DESC LIMIT 1
+);
+
+-- name: update_last_message_text
+-- Aktualisiert den Text der letzten Nachricht einer Session
+UPDATE chat_messages SET message = ? WHERE id = (
+    SELECT id FROM chat_messages WHERE session_id = ? ORDER BY id DESC LIMIT 1
+);

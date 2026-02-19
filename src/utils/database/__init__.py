@@ -41,7 +41,10 @@ from .chat import (
     get_total_message_count,
     get_max_message_id,
     get_user_message_count_since_marker,
-    get_messages_since_marker
+    get_messages_since_marker,
+    get_last_message,
+    delete_last_message,
+    update_last_message_text,
 )
 
 # Session functions  
@@ -97,6 +100,9 @@ __all__ = [
     'get_max_message_id',
     'get_user_message_count_since_marker',
     'get_messages_since_marker',
+    'get_last_message',
+    'delete_last_message',
+    'update_last_message_text',
     
     # Session Management
     'create_session',

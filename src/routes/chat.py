@@ -4,7 +4,10 @@ Chat Routes - Nachrichtenaustausch und Chat-Verwaltung
 from flask import Blueprint, request, Response, stream_with_context
 import json
 
-from utils.database import get_conversation_context, save_message, clear_chat_history
+from utils.database import (
+    get_conversation_context, save_message, clear_chat_history,
+    get_last_message, delete_last_message, update_last_message_text
+)
 from utils.config import load_character
 from utils.logger import log
 from utils.provider import get_chat_service, get_api_client
@@ -132,6 +135,145 @@ def clear_chat():
     """Löscht die Chat-Historie"""
     clear_chat_history()
     return success_response()
+
+
+@chat_bp.route('/chat/last_message', methods=['DELETE'])
+@handle_route_error('delete_last_message')
+def api_delete_last_message():
+    """Löscht die letzte Nachricht einer Session aus der DB."""
+    session_id = request.args.get('session_id', type=int)
+    persona_id = resolve_persona_id(session_id=session_id)
+
+    if not session_id:
+        return error_response('Session-ID fehlt')
+
+    deleted = delete_last_message(session_id, persona_id)
+    if not deleted:
+        return error_response('Keine Nachricht gefunden', 404)
+
+    return success_response(deleted_message=deleted)
+
+
+@chat_bp.route('/chat/last_message', methods=['PUT'])
+@handle_route_error('edit_last_message')
+def api_edit_last_message():
+    """Aktualisiert den Text der letzten Nachricht einer Session."""
+    data = request.get_json()
+    session_id = data.get('session_id')
+    new_message = data.get('message', '').strip()
+    persona_id = resolve_persona_id(session_id=session_id)
+
+    if not session_id:
+        return error_response('Session-ID fehlt')
+    if not new_message:
+        return error_response('Nachricht darf nicht leer sein')
+
+    updated = update_last_message_text(session_id, new_message, persona_id)
+    if not updated:
+        return error_response('Nachricht nicht gefunden', 404)
+
+    return success_response()
+
+
+@chat_bp.route('/chat/regenerate', methods=['POST'])
+@handle_route_error('regenerate')
+def api_regenerate():
+    """
+    Regeneriert die letzte Bot-Antwort.
+    1. Löscht die letzte Bot-Nachricht aus der DB
+    2. Holt den Konversationskontext (endet jetzt mit der User-Nachricht)
+    3. Streamt eine neue Bot-Antwort
+    """
+    data = request.get_json()
+    session_id = data.get('session_id')
+    api_model = data.get('api_model')
+    api_temperature = data.get('api_temperature')
+    experimental_mode = data.get('experimental_mode', False)
+    context_limit = data.get('context_limit', 25)
+
+    try:
+        context_limit = int(context_limit)
+    except (TypeError, ValueError):
+        context_limit = 25
+    context_limit = max(10, min(100, context_limit))
+
+    persona_id = resolve_persona_id(session_id=session_id)
+    user_ip = get_client_ip()
+
+    if not session_id:
+        return error_response('Session-ID fehlt')
+
+    if not get_api_client().is_ready:
+        return error_response('Kein API-Key konfiguriert', error_type='api_key_missing')
+
+    # Letzte Nachricht prüfen (muss Bot-Nachricht sein)
+    last_msg = get_last_message(session_id, persona_id)
+    if not last_msg:
+        return error_response('Keine Nachricht gefunden', 404)
+    if last_msg['is_user']:
+        return error_response('Letzte Nachricht ist keine Bot-Nachricht')
+
+    # Bot-Nachricht löschen
+    delete_last_message(session_id, persona_id)
+    log.info("Regenerate: Letzte Bot-Nachricht gelöscht (id=%s, session=%s)", last_msg['id'], session_id)
+
+    # Character- und User-Daten laden
+    character = load_character()
+    character_name = character.get('char_name', 'Assistant')
+    user_profile = get_user_profile_data()
+    user_name = user_profile.get('user_name', 'User') or 'User'
+
+    # Konversationskontext holen (endet jetzt mit der User-Nachricht)
+    conversation_history = get_conversation_context(
+        limit=context_limit, session_id=session_id, persona_id=persona_id
+    )
+
+    if not conversation_history or conversation_history[-1]['role'] != 'user':
+        return error_response('Keine User-Nachricht vor der Bot-Antwort gefunden')
+
+    # Letzte User-Nachricht extrahieren (wird als user_message an chat_stream übergeben)
+    user_message = conversation_history[-1]['content']
+    conversation_history = conversation_history[:-1]
+
+    def generate():
+        chat_service = get_chat_service()
+        try:
+            for event_type, event_data in chat_service.chat_stream(
+                user_message=user_message,
+                conversation_history=conversation_history,
+                character_data=character,
+                language='Deutsch',
+                user_name=user_name,
+                api_model=api_model,
+                api_temperature=api_temperature,
+                ip_address=user_ip,
+                experimental_mode=experimental_mode,
+                persona_id=persona_id
+            ):
+                if event_type == 'chunk':
+                    yield f"data: {json.dumps({'type': 'chunk', 'text': event_data})}\n\n"
+                elif event_type == 'done':
+                    # Neue Bot-Antwort speichern
+                    save_message(event_data['response'], False, character_name, session_id, persona_id=persona_id)
+                    yield f"data: {json.dumps({'type': 'done', 'response': event_data['response'], 'stats': event_data['stats'], 'character_name': character_name})}\n\n"
+                elif event_type == 'error':
+                    error_payload = {'type': 'error', 'error': event_data}
+                    if event_data == 'credit_balance_exhausted':
+                        error_payload['error_type'] = 'credit_balance_exhausted'
+                    yield f"data: {json.dumps(error_payload)}\n\n"
+        except Exception as e:
+            log.error("Regenerate-Stream-Fehler: %s", e)
+            yield f"data: {json.dumps({'type': 'error', 'error': str(e)})}\n\n"
+
+    return Response(
+        stream_with_context(generate()),
+        mimetype='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache',
+            'X-Accel-Buffering': 'no',
+            'Connection': 'keep-alive'
+        }
+    )
 
 
 @chat_bp.route('/afterthought', methods=['POST'])

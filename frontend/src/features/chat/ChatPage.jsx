@@ -104,6 +104,10 @@ function ChatPageContent() {
     sendMessage,
     cancelStream,
     loadMore,
+    deleteLastMsg,
+    editLastMsg,
+    regenerateLastMsg,
+    resendLastMsg,
   } = useMessages();
 
   const {
@@ -232,6 +236,10 @@ function ChatPageContent() {
         hasMore={hasMore}
         onLoadMore={loadMore}
         onNewChat={handleNewChat}
+        onDeleteLast={deleteLastMsg}
+        onEditLast={editLastMsg}
+        onRegenerateLast={regenerateLastMsg}
+        onResendLast={resendLastMsg}
       />
 
       <ChatInput
