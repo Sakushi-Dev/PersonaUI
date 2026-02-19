@@ -1,0 +1,50 @@
+// ── Built-in Slash Commands ──
+// Import this file once at app startup to register all default commands.
+
+import { register } from './slashCommandRegistry';
+
+// /reload – Reloads the browser page
+register({
+  name: 'reload',
+  description: 'Seite neu laden',
+  execute() {
+    window.location.reload();
+  },
+});
+
+// /rebuild – Starts the build_frontend.bat in a separate console window on the server
+register({
+  name: 'rebuild',
+  description: 'React-Frontend neu kompilieren (eigenes Fenster)',
+  async execute() {
+    console.log('[SlashCommand] /rebuild – starte Build-Script …');
+
+    try {
+      const res = await fetch('/api/commands/rebuild-frontend', { method: 'POST' });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || !data.success) {
+        const msg = data.error || 'Unbekannter Fehler';
+        console.error('[SlashCommand] /rebuild fehlgeschlagen:', msg);
+        alert(`Build konnte nicht gestartet werden:\n${msg}`);
+        return;
+      }
+
+      console.log('[SlashCommand] /rebuild – Build-Fenster geöffnet.');
+    } catch (err) {
+      console.error('[SlashCommand] /rebuild Netzwerk-Fehler:', err);
+    }
+  },
+});
+
+// ────────────────────────────────────────
+// Add new commands below. Example:
+//
+// register({
+//   name: 'clear',
+//   description: 'Chat-Verlauf leeren',
+//   execute({ args }) {
+//     // custom logic here
+//   },
+// });
+// ────────────────────────────────────────
