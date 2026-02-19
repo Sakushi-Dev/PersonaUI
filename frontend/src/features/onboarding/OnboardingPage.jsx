@@ -50,7 +50,7 @@ export default function OnboardingPage() {
 
   const [apiData, setApiData] = useState({
     contextLimit: '25',
-    nachgedankeEnabled: false,
+    nachgedankeMode: 'off',
     apiKey: '',
     apiKeyValid: false,
   });
@@ -77,7 +77,7 @@ export default function OnboardingPage() {
         darkMode: interfaceData.darkMode,
         nonverbalColor: interfaceData.nonverbalColor,
         contextLimit: apiData.contextLimit,
-        nachgedankeEnabled: apiData.nachgedankeEnabled,
+        nachgedankeMode: apiData.nachgedankeMode,
       });
 
       if (apiData.apiKey) {

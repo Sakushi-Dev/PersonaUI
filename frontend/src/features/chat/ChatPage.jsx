@@ -114,7 +114,7 @@ function ChatPageContent() {
 
   const {
     isThinking: afterthoughtThinking,
-    startTimer: startAfterthought,
+    onUserMessage: onAfterthoughtMessage,
     stopTimer: stopAfterthought,
   } = useAfterthought();
 
@@ -177,8 +177,8 @@ function ChatPageContent() {
   // ── Start afterthought timer after user sends message ──
   const handleSend = useCallback((text) => {
     sendMessage(text);
-    startAfterthought(true);
-  }, [sendMessage, startAfterthought]);
+    onAfterthoughtMessage();
+  }, [sendMessage, onAfterthoughtMessage]);
 
   // ── New chat ──
   const handleNewChat = useCallback(async () => {

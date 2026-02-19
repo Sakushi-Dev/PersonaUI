@@ -115,22 +115,34 @@ export default function StepApi({ data, onChange, onNext, onBack }) {
         {/* Nachgedanke */}
         <div className={styles.fieldGroup}>
           <label className={styles.label}>Nachgedanke <span className={styles.betaBadge}>Beta</span></label>
-          <div className={styles.modeSwitch}>
-            <span className={styles.modeLabel}>Aus</span>
-            <label className={styles.toggle}>
-              <input
-                type="checkbox"
-                checked={data.nachgedankeEnabled}
-                onChange={() => update('nachgedankeEnabled', !data.nachgedankeEnabled)}
-              />
-              <span className={styles.toggleSlider} />
-            </label>
-            <span className={styles.modeLabel}>An</span>
+          <div className={styles.typeGrid} style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+            {[
+              { value: 'off',    label: 'Aus' },
+              { value: 'selten', label: 'Selten' },
+              { value: 'mittel', label: 'Mittel' },
+              { value: 'hoch',   label: 'Hoch' },
+            ].map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                className={`${styles.typeChip} ${data.nachgedankeMode === opt.value ? styles.chipActive : ''}`}
+                onClick={() => update('nachgedankeMode', opt.value)}
+              >
+                {opt.label}
+              </button>
+            ))}
           </div>
-          <div className={`${styles.infoBox} ${styles.infoBoxCompact}`}>
-            <span className={styles.infoIcon}>💭</span>
-            <span>Die Persona führt nach jeder Antwort einen inneren Dialog und entscheidet, ob sie spontan etwas ergänzen möchte. Erzeugt natürliches, spontanes Schreibverhalten mit eskalierenden Zeitintervallen. <strong>Verursacht zusätzliche API-Kosten im Hintergrund.</strong></span>
-          </div>
+          {data.nachgedankeMode !== 'off' && (
+            <div className={`${styles.infoBox} ${styles.infoBoxCompact}`}>
+              <span className={styles.infoIcon}>💭</span>
+              <span>
+                {data.nachgedankeMode === 'selten' && 'Jede 3. Nachricht löst einen inneren Dialog aus.'}
+                {data.nachgedankeMode === 'mittel' && 'Jede 2. Nachricht löst einen inneren Dialog aus.'}
+                {data.nachgedankeMode === 'hoch' && 'Jede Nachricht löst einen inneren Dialog aus.'}
+                {' '}<strong>Verursacht zusätzliche API-Kosten im Hintergrund.</strong>
+              </span>
+            </div>
+          )}
         </div>
 
         {/* API Key */}

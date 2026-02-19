@@ -7,6 +7,7 @@ import Overlay from '../../components/Overlay/Overlay';
 import OverlayHeader from '../../components/Overlay/OverlayHeader';
 import OverlayBody from '../../components/Overlay/OverlayBody';
 import OverlayFooter from '../../components/Overlay/OverlayFooter';
+import FormGroup from '../../components/FormGroup/FormGroup';
 import Toggle from '../../components/Toggle/Toggle';
 import Slider from '../../components/Slider/Slider';
 import Button from '../../components/Button/Button';
@@ -20,7 +21,7 @@ export default function ApiSettingsOverlay({ open, onClose }) {
   const [temperature, setTemperature] = useState(0.7);
   const [contextLimit, setContextLimit] = useState(65);
   const [experimentalMode, setExperimentalMode] = useState(false);
-  const [nachgedanke, setNachgedanke] = useState(false);
+  const [nachgedankeMode, setNachgedankeMode] = useState('off');
 
   // ── Load settings when overlay opens ──
   useEffect(() => {
@@ -29,7 +30,7 @@ export default function ApiSettingsOverlay({ open, onClose }) {
     setTemperature(parseFloat(get('apiTemperature', '0.7')));
     setContextLimit(parseInt(get('contextLimit', '65'), 10));
     setExperimentalMode(get('experimentalMode', false));
-    setNachgedanke(get('nachgedankeEnabled', false));
+    setNachgedankeMode(get('nachgedankeMode', 'off'));
   }, [open, get]);
 
   // ── Save ──
@@ -39,10 +40,10 @@ export default function ApiSettingsOverlay({ open, onClose }) {
       apiTemperature: String(temperature),
       contextLimit: String(contextLimit),
       experimentalMode,
-      nachgedankeEnabled: nachgedanke,
+      nachgedankeMode,
     });
     onClose();
-  }, [model, temperature, contextLimit, experimentalMode, nachgedanke, setMany, onClose]);
+  }, [model, temperature, contextLimit, experimentalMode, nachgedankeMode, setMany, onClose]);
 
   // ── Reset ──
   const handleReset = useCallback(() => {
@@ -50,7 +51,7 @@ export default function ApiSettingsOverlay({ open, onClose }) {
     setTemperature(0.7);
     setContextLimit(65);
     setExperimentalMode(false);
-    setNachgedanke(false);
+    setNachgedankeMode('off');
   }, []);
 
   return (
@@ -142,20 +143,34 @@ export default function ApiSettingsOverlay({ open, onClose }) {
 
             <div className={styles.ifaceDivider} />
 
-            <div className={styles.ifaceToggleRow}>
-              <div className={styles.ifaceToggleInfo}>
-                <span className={styles.ifaceToggleLabel}>Nachgedanke</span>
-                <span className={styles.ifaceToggleHint}>
-                  Innerer Dialog-System mit eskalierenden Zeitintervallen.
-                  Die KI kann von sich aus Nachrichten senden.
-                </span>
+            <FormGroup label="Nachgedanke" hint="Innerer Dialog-System — die KI kann von sich aus Nachrichten senden. Höhere Frequenz = mehr API-Kosten im Hintergrund.">
+              <div className={styles.typePills}>
+                {[
+                  { value: 'off',     label: 'Aus' },
+                  { value: 'selten',  label: 'Selten' },
+                  { value: 'mittel',  label: 'Mittel' },
+                  { value: 'hoch',    label: 'Hoch' },
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    className={`${styles.typePill} ${nachgedankeMode === opt.value ? styles.typePillActive : ''}`}
+                    onClick={() => setNachgedankeMode(opt.value)}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
               </div>
-              <Toggle
-                checked={nachgedanke}
-                onChange={setNachgedanke}
-                id="nachgedanke-toggle"
-              />
-            </div>
+              {nachgedankeMode !== 'off' && (
+                <div className={styles.typeDescBox}>
+                  <span className={styles.typeDescText}>
+                    {nachgedankeMode === 'selten' && 'Jede 3. Nachricht löst einen inneren Dialog aus.'}
+                    {nachgedankeMode === 'mittel' && 'Jede 2. Nachricht löst einen inneren Dialog aus.'}
+                    {nachgedankeMode === 'hoch' && 'Jede Nachricht löst einen inneren Dialog aus.'}
+                  </span>
+                </div>
+              )}
+            </FormGroup>
           </div>
 
           {/* Token Info */}

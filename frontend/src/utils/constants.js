@@ -91,7 +91,7 @@ export const DEFAULTS = {
   apiTemperature: 0.7,
   contextLimit: 30,
   experimentalMode: false,
-  nachgedankeEnabled: false,
+  nachgedankeMode: 'off',
   notificationSound: true,
 };
 
@@ -102,4 +102,17 @@ export const LIMITS = {
   messageLoadBatch: 30,
 };
 
-export const AFTERTHOUGHT_INTERVALS = [10000, 60000, 300000, 900000, 3600000]; // 10s, 1min, 5min, 15min, 1h
+// ── Afterthought / Nachgedanke Phase Config ──
+// Each phase: [minMs, maxMs] — a random delay is picked each time
+export const AFTERTHOUGHT_PHASES = [
+  [20_000, 45_000],   // Phase 1: 20s – 45s
+  [45_000, 60_000],  // Phase 2: 45s – 60s
+  [60_000, 120_000],  // Phase 3+: 60s – 120s (repeats)
+];
+
+// How many user messages between afterthought triggers
+export const AFTERTHOUGHT_FREQUENCY = {
+  selten: 3,  // every 3rd message
+  mittel: 2,  // every 2nd message
+  hoch:   1,  // every message
+};

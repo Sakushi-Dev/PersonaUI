@@ -16,7 +16,7 @@
     "dynamicBackground": true,
     "experimentalMode": false,
     "memoriesEnabled": true,
-    "nachgedankeEnabled": false,
+    "nachgedankeMode": "off",
     "nonverbalColor": "#e4ba00",
     "notificationSound": true
 }
