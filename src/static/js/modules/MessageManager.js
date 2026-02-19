@@ -1278,6 +1278,13 @@ export class MessageManager {
      * Führt den Nachgedanke-Check durch (innerer Dialog)
      */
     async _executeAfterthoughtCheck() {
+        // Prüfe ob Nachgedanke zwischenzeitlich deaktiviert wurde
+        if (!this.isAfterthoughtEnabled()) {
+            console.log('🤔 Nachgedanke: Deaktiviert – Timer wird gestoppt.');
+            this.stopAfterthoughtTimer();
+            return;
+        }
+        
         if (!this.afterthoughtActive || this.isLoading || this.afterthoughtStreaming) {
             // Wenn gerade eine Nachricht gesendet wird oder gestreamt wird, abbrechen
             console.log('🤔 Nachgedanke: Übersprungen (isLoading oder streaming)');

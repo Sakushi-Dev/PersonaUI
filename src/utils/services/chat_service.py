@@ -380,7 +380,7 @@ class ChatService:
             # Decision-Parsing: letztes Wort prüfen
             words = inner_dialogue.split()
             last_word = words[-1].strip('.,!?:;') if words else ''
-            decision = last_word.lower() == 'ja'
+            decision = last_word.lower() == '[afterthought_ok]'
 
             log.debug(
                 "NACHGEDANKE INNERER DIALOG (%s) | Wörter: %d | Zeichen: %d | "
@@ -389,7 +389,7 @@ class ChatService:
                 words[-1] if words else '', last_word,
                 response.stop_reason
             )
-            log.info("Nachgedanke-Entscheidung: %s", 'JA → Ergänzung' if decision else 'NEIN → Schweigen')
+            log.info("Nachgedanke-Entscheidung: %s", '[afterthought_OK] → Ergänzung' if decision else '[i_can_wait] → Schweigen')
 
             return {
                 'decision': decision,

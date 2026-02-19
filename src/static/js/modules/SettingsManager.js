@@ -1624,6 +1624,10 @@ export class SettingsManager {
         const nachgedankeToggle = document.getElementById('nachgedanke-toggle');
         if (nachgedankeToggle) {
             UserSettings.set('nachgedankeEnabled', nachgedankeToggle.checked);
+            // Timer sofort stoppen wenn deaktiviert
+            if (!nachgedankeToggle.checked && this.messageManager) {
+                this.messageManager.stopAfterthoughtTimer();
+            }
         }
         
         alert('API-Einstellungen wurden gespeichert!');

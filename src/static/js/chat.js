@@ -40,6 +40,9 @@ class ChatApp {
         // Share SessionManager with SettingsManager for sidebar refresh after persona save
         this.settings.sessionManager = this.sessions;
         
+        // Share MessageManager with SettingsManager for afterthought timer control
+        this.settings.messageManager = this.messages;
+        
         // Share MessageManager und MemoryManager mit SessionManager für Soft-Reload
         this.sessions.messageManager = this.messages;
         this.sessions.memoryManager = this.memory;
