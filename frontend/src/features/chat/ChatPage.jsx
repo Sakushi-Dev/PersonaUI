@@ -150,7 +150,7 @@ function ChatPageContent() {
   // ── Auto-open error overlays on chat errors ──
   useEffect(() => {
     if (!error) return;
-    if (error.type === 'credit_balance_exhausted') {
+    if (error.type === 'credit_balance_exhausted' || error.type === 'credit_exhausted') {
       creditExhausted.open();
     } else if (error.type === 'api_key_missing') {
       apiWarning.open();

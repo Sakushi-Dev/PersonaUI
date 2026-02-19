@@ -1,6 +1,6 @@
 // ── Step: API & Chat (3/4) – Legacy 1:1 ──
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { testApiKey } from '../../../services/serverApi';
 import styles from './Steps.module.css';
 
@@ -9,6 +9,7 @@ export default function StepApi({ data, onChange, onNext, onBack }) {
   const [testResult, setTestResult] = useState(null);
   const [showWarning, setShowWarning] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const apiInputRef = useRef(null);
 
   const update = (field, value) => {
     onChange((prev) => ({ ...prev, [field]: value }));
@@ -46,17 +47,38 @@ export default function StepApi({ data, onChange, onNext, onBack }) {
     }
   };
 
-  const handlePaste = async () => {
+  // Apply pasted text (shared logic)
+  const applyPaste = useCallback((text) => {
+    update('apiKey', text);
+    update('apiKeyValid', false);
+    setTestResult(null);
+    setShowPassword(true);
+    setTimeout(() => setShowPassword(false), 1500);
+  }, []);
+
+  // Native paste on input (Ctrl+V — no permission needed)
+  const handleNativePaste = useCallback((e) => {
+    const text = e.clipboardData?.getData('text')?.trim();
+    if (text) {
+      e.preventDefault();
+      applyPaste(text);
+    }
+  }, [applyPaste]);
+
+  // Paste button: try Clipboard API, fallback to focus + hint
+  const handlePasteClick = async () => {
     try {
       const text = await navigator.clipboard.readText();
-      if (text) {
-        update('apiKey', text.trim());
-        update('apiKeyValid', false);
-        setTestResult(null);
-        setShowPassword(true);
-        setTimeout(() => setShowPassword(false), 1500);
+      if (text?.trim()) {
+        applyPaste(text.trim());
+        return;
       }
-    } catch { /* Clipboard access denied */ }
+    } catch {
+      // Permission denied or not available
+    }
+    apiInputRef.current?.focus();
+    setTestResult({ success: false, message: 'Bitte mit Ctrl+V einfügen' });
+    setTimeout(() => setTestResult((r) => r?.message === 'Bitte mit Ctrl+V einfügen' ? null : r), 3000);
   };
 
   return (
@@ -117,10 +139,12 @@ export default function StepApi({ data, onChange, onNext, onBack }) {
           <div className={styles.apiInputRow}>
             <div className={styles.passwordWrapper}>
               <input
+                ref={apiInputRef}
                 type={showPassword ? 'text' : 'password'}
                 className={styles.input}
                 value={data.apiKey}
                 onChange={(e) => { update('apiKey', e.target.value); update('apiKeyValid', false); setTestResult(null); }}
+                onPaste={handleNativePaste}
                 placeholder="sk-ant-api03-..."
                 style={{ paddingRight: '72px' }}
               />
@@ -137,8 +161,8 @@ export default function StepApi({ data, onChange, onNext, onBack }) {
               </button>
               <button
                 className={`${styles.eyeBtn} ${styles.pasteBtn}`}
-                onClick={handlePaste}
-                title="Aus Zwischenablage einfügen"
+                onClick={handlePasteClick}
+                title="Einfügen (Ctrl+V)"
                 type="button"
               >
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

@@ -43,6 +43,42 @@
   flex: 1;
 }
 
+/* ── Password Wrapper (input with inline icons) ── */
+
+.passwordWrapper {
+  position: relative;
+}
+
+.passwordWrapper .textInput {
+  width: 100%;
+}
+
+.inlineBtn {
+  position: absolute;
+  right: 36px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--overlay-text-color, #1a1a1a);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  border-radius: 6px;
+  opacity: 0.45;
+  transition: opacity 0.2s, background 0.2s;
+}
+
+.inlineBtnPaste {
+  right: 6px;
+}
+
+.inlineBtn:hover {
+  opacity: 1;
+  background: var(--overlay-input-bg, rgba(0, 0, 0, 0.06));
+}
+
 /* ── Icon Buttons ── */
 
 .iconBtn {
@@ -201,6 +237,23 @@
 .statusArea.error {
   background: rgba(239, 68, 68, 0.1);
   color: var(--color-danger, #ef4444);
+}
+
+/* ── Status Spinner (inline loading indicator) ── */
+
+.statusSpinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: statusSpin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes statusSpin {
+  to { transform: rotate(360deg); }
 }
 
 /* ── Color Grid ── */
