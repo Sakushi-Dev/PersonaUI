@@ -3,6 +3,7 @@
 // Used in onboarding StepInterface & InterfaceSettingsOverlay.
 
 import StaticBackground from '../StaticBackground/StaticBackground';
+import { resolveFontFamily } from '../../utils/constants';
 import styles from './InterfacePreview.module.css';
 
 /**
@@ -27,13 +28,13 @@ export default function InterfacePreview({
   fontFamily,
 }) {
   // Fallback to theme defaults if no override provided
-  const bg = bgColor ?? (isDark ? '#1a2332' : '#d7dce4');
+  const bg = bgColor ?? (isDark ? '#1a2332' : '#a3baff');
   const g1 = gradient1 ?? (isDark ? '#2a3f5f' : '#66cfff');
   const g2 = gradient2 ?? (isDark ? '#3d4f66' : '#fd91ee');
 
   const bubbleStyle = {};
   if (fontSize) bubbleStyle.fontSize = `${fontSize}px`;
-  if (fontFamily) bubbleStyle.fontFamily = fontFamily;
+  if (fontFamily) bubbleStyle.fontFamily = resolveFontFamily(fontFamily);
 
   return (
     <div className={styles.previewBox}>

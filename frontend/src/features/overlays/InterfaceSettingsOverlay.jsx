@@ -1,9 +1,11 @@
 // ── InterfaceSettingsOverlay ──
 // Dark mode, colors, fonts, dynamic background, notification sound
+// Logic mirrors legacy SettingsManager: openInterfaceSettings / saveInterfaceSettings / resetInterfaceSettings
 
 import { useState, useEffect, useCallback } from 'react';
 import { useSettings } from '../../hooks/useSettings';
 import { useTheme } from '../../hooks/useTheme';
+import { resolveFontFamily, FONT_FAMILY_MAP } from '../../utils/constants';
 import Overlay from '../../components/Overlay/Overlay';
 import OverlayHeader from '../../components/Overlay/OverlayHeader';
 import OverlayBody from '../../components/Overlay/OverlayBody';
@@ -15,119 +17,163 @@ import Button from '../../components/Button/Button';
 import InterfacePreview from '../../components/InterfacePreview/InterfacePreview';
 import styles from './Overlays.module.css';
 
+// Font options – values are shorthand keys matching legacy radio values
 const FONT_OPTIONS = [
-  { value: 'ubuntu', label: 'Ubuntu' },
-  { value: 'comic sans ms', label: 'Comic Sans' },
-  { value: 'times new roman', label: 'Times New Roman' },
-  { value: 'courier new', label: 'Courier New' },
+  { value: 'ubuntu', label: 'Ubuntu (Standard)' },
+  { value: 'comic', label: 'Comic Sans' },
+  { value: 'times', label: 'Times New Roman' },
+  { value: 'courier', label: 'Courier New' },
 ];
+
+// Color defaults matching legacy resetInterfaceSettings exactly
+const DEFAULT_COLORS = {
+  light: { bg: '#a3baff', g1: '#66cfff', c2: '#fd91ee' },
+  dark:  { bg: '#1a2332', g1: '#2a3f5f', c2: '#3d4f66' },
+};
 
 export default function InterfaceSettingsOverlay({ open, onClose }) {
   const { get, setMany } = useSettings();
-  const { isDark: themeIsDark, colors: themeColors, setIsDark, updateColors, setFontSize: setThemeFontSize, setFontFamily: setThemeFontFamily, setDynamicBackground: setThemeDynBg } = useTheme();
-
-  // Snapshot of ThemeContext state when overlay opens, for rollback on close
-  const [snapshot, setSnapshot] = useState(null);
+  const {
+    setIsDark,
+    updateColors,
+    setFontSize: setThemeFontSize,
+    setFontFamily: setThemeFontFamily,
+    setDynamicBackground: setThemeDynBg,
+  } = useTheme();
 
   const [darkMode, setDarkMode] = useState(false);
   const [dynamicBg, setDynamicBg] = useState(true);
-  const [notificationSound, setNotificationSound] = useState(false);
-  const [bgColor, setBgColor] = useState('#ffffff');
-  const [gradient1, setGradient1] = useState('#89CFF0');
-  const [color2, setColor2] = useState('#a8d5ff');
+  const [notificationSound, setNotificationSound] = useState(true);
+  const [bgColor, setBgColor] = useState('#a3baff');
+  const [gradient1, setGradient1] = useState('#66cfff');
+  const [color2, setColor2] = useState('#fd91ee');
   const [nonverbalColor, setNonverbalColor] = useState('#e4ba00');
   const [fontSize, setFontSize] = useState(18);
   const [fontFamily, setFontFamily] = useState('ubuntu');
 
+  // ── Load settings when overlay opens (mirrors legacy openInterfaceSettings) ──
   useEffect(() => {
-    if (open) {
-      // Take snapshot for rollback
-      setSnapshot({ isDark: themeIsDark, colors: { ...themeColors } });
+    if (!open) return;
 
-      const dm = get('darkMode', false);
-      setDarkMode(dm);
-      setDynamicBg(get('dynamicBackground', true));
-      setNotificationSound(get('notificationSound', false));
-      setBgColor(dm ? get('backgroundColor_dark', '#1a2332') : get('backgroundColor_light', '#d7dce4'));
-      setGradient1(dm ? get('colorGradient1_dark', '#2a3f5f') : get('colorGradient1_light', '#66cfff'));
-      setColor2(dm ? get('color2_dark', '#3d4f66') : get('color2_light', '#fd91ee'));
-      setNonverbalColor(get('nonverbalColor', '#e4ba00'));
-      setFontSize(parseInt(get('bubbleFontSize', '18'), 10));
-      setFontFamily(get('bubbleFontFamily', 'ubuntu'));
-    }
-  }, [open, get, themeIsDark, themeColors]);
+    const dm = get('darkMode', false);
+    const mode = dm ? 'dark' : 'light';
+    const defs = DEFAULT_COLORS[mode];
 
-  // ── Dark mode toggle handler: swap color pickers to new mode ──
+    setDarkMode(dm);
+    setDynamicBg(get('dynamicBackground', true));
+    setNotificationSound(get('notificationSound', true));
+    setBgColor(get(`backgroundColor_${mode}`, defs.bg));
+    setGradient1(get(`colorGradient1_${mode}`, defs.g1));
+    setColor2(get(`color2_${mode}`, defs.c2));
+    setNonverbalColor(get('nonverbalColor', '#e4ba00'));
+    setFontSize(parseInt(get('bubbleFontSize', '18'), 10));
+    setFontFamily(get('bubbleFontFamily', 'ubuntu'));
+  }, [open, get]);
+
+  // ── Dark mode toggle: load colors for the new mode (mirrors legacy setupToggleSync) ──
   const handleDarkModeChange = useCallback((checked) => {
-    // Store current mode's colors locally before switching
-    const newSuffix = checked ? '_dark' : '_light';
-    const defaults = checked
-      ? { bg: '#1a2332', g1: '#2a3f5f', c2: '#3d4f66' }
-      : { bg: '#d7dce4', g1: '#66cfff', c2: '#fd91ee' };
+    const mode = checked ? 'dark' : 'light';
+    const defs = DEFAULT_COLORS[mode];
 
-    // Load colors for the new mode from saved settings
-    setBgColor(get(`backgroundColor${newSuffix}`, defaults.bg));
-    setGradient1(get(`colorGradient1${newSuffix}`, defaults.g1));
-    setColor2(get(`color2${newSuffix}`, defaults.c2));
+    setBgColor(get(`backgroundColor_${mode}`, defs.bg));
+    setGradient1(get(`colorGradient1_${mode}`, defs.g1));
+    setColor2(get(`color2_${mode}`, defs.c2));
     setDarkMode(checked);
   }, [get]);
 
-  // ── No live preview to chat — only InterfacePreview shows changes via props ──
-
+  // ── Save (mirrors legacy saveInterfaceSettings) ──
   const handleSave = useCallback(() => {
-    const suffix = darkMode ? '_dark' : '_light';
-    const otherSuffix = darkMode ? '_light' : '_dark';
+    const mode = darkMode ? 'dark' : 'light';
+    const otherMode = darkMode ? 'light' : 'dark';
 
-    // Persist to server settings
+    // Persist ALL settings to server
     setMany({
       darkMode,
       dynamicBackground: dynamicBg,
       notificationSound,
-      [`backgroundColor${suffix}`]: bgColor,
-      [`colorGradient1${suffix}`]: gradient1,
-      [`color2${suffix}`]: color2,
-      [`backgroundColor${otherSuffix}`]: get(`backgroundColor${otherSuffix}`),
-      [`colorGradient1${otherSuffix}`]: get(`colorGradient1${otherSuffix}`),
-      [`color2${otherSuffix}`]: get(`color2${otherSuffix}`),
+      [`backgroundColor_${mode}`]: bgColor,
+      [`colorGradient1_${mode}`]: gradient1,
+      [`color2_${mode}`]: color2,
+      // Preserve the other mode's colors unchanged
+      [`backgroundColor_${otherMode}`]: get(`backgroundColor_${otherMode}`),
+      [`colorGradient1_${otherMode}`]: get(`colorGradient1_${otherMode}`),
+      [`color2_${otherMode}`]: get(`color2_${otherMode}`),
       nonverbalColor,
       bubbleFontSize: String(fontSize),
       bubbleFontFamily: fontFamily,
     });
 
-    // Apply to ThemeContext (this updates the actual chat UI)
+    // Apply to ThemeContext (live UI update)
     setIsDark(darkMode);
     updateColors({
-      [`backgroundColor${suffix}`]: bgColor,
-      [`colorGradient1${suffix}`]: gradient1,
-      [`color2${suffix}`]: color2,
+      [`backgroundColor_${mode}`]: bgColor,
+      [`colorGradient1_${mode}`]: gradient1,
+      [`color2_${mode}`]: color2,
       nonverbalColor,
     });
     setThemeFontSize(fontSize);
-    setThemeFontFamily(fontFamily);
+    setThemeFontFamily(resolveFontFamily(fontFamily));
     setThemeDynBg(dynamicBg);
 
-    setSnapshot(null);
     onClose();
   }, [darkMode, dynamicBg, notificationSound, bgColor, gradient1, color2, nonverbalColor, fontSize, fontFamily, get, setMany, setIsDark, updateColors, setThemeFontSize, setThemeFontFamily, setThemeDynBg, onClose]);
 
-  // ── Close without saving: rollback ThemeContext to snapshot ──
+  // ── Close without saving ──
   const handleClose = useCallback(() => {
-    // No rollback needed — we never touched ThemeContext during editing
-    setSnapshot(null);
     onClose();
   }, [onClose]);
 
+  // ── Reset (mirrors legacy resetInterfaceSettings exactly) ──
   const handleReset = useCallback(() => {
+    if (!window.confirm('Möchtest du die Interface-Einstellungen auf die Standardwerte zurücksetzen?')) {
+      return;
+    }
+
+    const defLight = DEFAULT_COLORS.light;
+    const defDark  = DEFAULT_COLORS.dark;
+
+    // 1) Persist ALL defaults to server (both modes) — matches legacy apply* calls
+    setMany({
+      darkMode: false,
+      dynamicBackground: true,
+      notificationSound: true,
+      backgroundColor_light: defLight.bg,
+      colorGradient1_light: defLight.g1,
+      color2_light: defLight.c2,
+      backgroundColor_dark: defDark.bg,
+      colorGradient1_dark: defDark.g1,
+      color2_dark: defDark.c2,
+      nonverbalColor: '#e4ba00',
+      bubbleFontSize: '18',
+      bubbleFontFamily: 'ubuntu',
+    });
+
+    // 2) Apply defaults to ThemeContext (live UI update) — matches legacy applyCurrentModeColors etc.
+    setIsDark(false);
+    updateColors({
+      backgroundColor_light: defLight.bg,
+      colorGradient1_light: defLight.g1,
+      color2_light: defLight.c2,
+      backgroundColor_dark: defDark.bg,
+      colorGradient1_dark: defDark.g1,
+      color2_dark: defDark.c2,
+      nonverbalColor: '#e4ba00',
+    });
+    setThemeFontSize(18);
+    setThemeFontFamily(resolveFontFamily('ubuntu'));
+    setThemeDynBg(true);
+
+    // 3) Update local form state (light mode colors shown since darkMode = false)
     setDarkMode(false);
     setDynamicBg(true);
-    setNotificationSound(false);
-    setBgColor('#d7dce4');
-    setGradient1('#66cfff');
-    setColor2('#fd91ee');
+    setNotificationSound(true);
+    setBgColor(defLight.bg);
+    setGradient1(defLight.g1);
+    setColor2(defLight.c2);
     setNonverbalColor('#e4ba00');
     setFontSize(18);
     setFontFamily('ubuntu');
-  }, []);
+  }, [setMany, setIsDark, updateColors, setThemeFontSize, setThemeFontFamily, setThemeDynBg]);
 
   return (
     <Overlay open={open} onClose={handleClose} width="520px">
@@ -146,6 +192,7 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
           />
         </div>
 
+        {/* Design-Modus (legacy: dark-mode-toggle) */}
         <div className={styles.settingRow}>
           <Toggle
             label={darkMode ? 'Dunkel' : 'Hell'}
@@ -153,8 +200,10 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
             onChange={handleDarkModeChange}
             id="dark-mode"
           />
+          <span className={styles.settingLabel}>Design-Modus</span>
         </div>
 
+        {/* Dynamischer Hintergrund (legacy: dynamic-bg-toggle) */}
         <div className={styles.settingRow}>
           <Toggle
             label={dynamicBg ? 'Aktiv' : 'Inaktiv'}
@@ -165,6 +214,7 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
           <span className={styles.settingLabel}>Dynamischer Hintergrund</span>
         </div>
 
+        {/* Benachrichtigungston */}
         <div className={styles.settingRow}>
           <Toggle
             label={notificationSound ? 'An' : 'Aus'}
@@ -175,15 +225,17 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
           <span className={styles.settingLabel}>Benachrichtigungston</span>
         </div>
 
+        {/* Color pickers (legacy: background-color, color-gradient1, color-2, nonverbal-color) */}
         <div className={styles.colorGrid}>
-          <ColorPicker label="Hintergrund" value={bgColor} onChange={setBgColor} />
-          <ColorPicker label="Gradient 1" value={gradient1} onChange={setGradient1} />
-          <ColorPicker label="Gradient 2" value={color2} onChange={setColor2} />
-          <ColorPicker label="Nonverbal" value={nonverbalColor} onChange={setNonverbalColor} />
+          <ColorPicker label="Hintergrundfarbe" value={bgColor} onChange={setBgColor} />
+          <ColorPicker label="Verlaufsfarbe 1" value={gradient1} onChange={setGradient1} />
+          <ColorPicker label="Verlaufsfarbe 2" value={color2} onChange={setColor2} />
+          <ColorPicker label="Nonverbale Text-Farbe" value={nonverbalColor} onChange={setNonverbalColor} />
         </div>
 
+        {/* Font size slider (legacy: bubble-font-size, 14-28) */}
         <Slider
-          label="Schriftgröße"
+          label="Chat-Nachricht Schriftgröße"
           value={fontSize}
           onChange={(v) => setFontSize(Math.round(v))}
           min={14}
@@ -192,8 +244,9 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
           displayValue={`${fontSize}px`}
         />
 
+        {/* Font family radios (legacy: bubble-font-family) */}
         <div className={styles.fontSelector}>
-          <p className={styles.settingLabel}>Schriftart</p>
+          <p className={styles.settingLabel}>Chat-Nachricht Schriftart</p>
           <div className={styles.radioGroup}>
             {FONT_OPTIONS.map((f) => (
               <label key={f.value} className={styles.radioLabel}>
@@ -204,7 +257,7 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
                   checked={fontFamily === f.value}
                   onChange={() => setFontFamily(f.value)}
                 />
-                <span style={{ fontFamily: f.value }}>{f.label}</span>
+                <span style={{ fontFamily: resolveFontFamily(f.value) }}>{f.label}</span>
               </label>
             ))}
           </div>
