@@ -18,6 +18,7 @@ import Header from './components/Header/Header';
 import Sidebar from './components/Sidebar/Sidebar';
 import MessageList from './components/MessageList/MessageList';
 import ChatInput from './components/ChatInput/ChatInput';
+import ContextBar from './components/ChatInput/ContextBar';
 import Spinner from '../../components/Spinner/Spinner';
 import ErrorBoundary from '../../components/ErrorBoundary/ErrorBoundary';
 import AccessNotification from './components/AccessNotification/AccessNotification';
@@ -220,6 +221,10 @@ function ChatPageContent() {
         onOpenQRCode={qrCode.open}
         onOpenAccessControl={accessControl.open}
       />
+
+      <div style={{ position: 'relative', height: 0, zIndex: 50 }}>
+        <ContextBar />
+      </div>
 
       <Sidebar
         isOpen={sidebar.isOpen}
