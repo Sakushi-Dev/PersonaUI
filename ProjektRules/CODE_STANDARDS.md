@@ -350,9 +350,9 @@ frontend/src/
 │   ├── overlays/
 │   └── onboarding/
 ├── services/           # API clients, external services
-├── hooks/             # Custom React hooks
-├── utils/             # Pure utility functions
-└── styles/            # Global styles, themes
+├── hooks/              # Custom React hooks
+├── utils/              # Pure utility functions
+└── styles/             # Global styles, themes
 ```
 
 ### Backend Structure
@@ -364,8 +364,8 @@ src/
 │   ├── database/      # Database operations
 │   └── helpers.py     # General helpers
 ├── templates/         # Jinja2 templates
-├── sql/              # Database schemas
-└── tests/            # Test files mirror src structure
+├── sql/               # Database schemas
+└── tests/             # Test files mirror src structure
 ```
 
 ### Naming Rules
