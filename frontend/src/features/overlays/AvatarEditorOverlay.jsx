@@ -12,7 +12,7 @@ import Spinner from '../../components/Spinner/Spinner';
 import { getAvailableAvatars, uploadAvatar, saveAvatar, saveUserAvatar } from '../../services/avatarApi';
 import styles from './Overlays.module.css';
 
-export default function AvatarEditorOverlay({ open, onClose, personaId, target = 'persona', onSaved }) {
+export default function AvatarEditorOverlay({ open, onClose, personaId, target = 'persona', onSaved, stacked }) {
   const [avatars, setAvatars] = useState([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('gallery'); // 'gallery' | 'crop'
@@ -36,7 +36,9 @@ export default function AvatarEditorOverlay({ open, onClose, personaId, target =
     try {
       if (target === 'user') {
         await saveUserAvatar(avatar.filename, avatar.type);
-      } else {
+      } else if (target !== 'persona') {
+        // For persona creator/editor, skip server save — avatar is stored locally
+        // and included in the persona save payload
         await saveAvatar(personaId, avatar.filename, avatar.type);
       }
       onSaved?.(avatar.filename, avatar.type);
@@ -77,7 +79,8 @@ export default function AvatarEditorOverlay({ open, onClose, personaId, target =
 
       if (target === 'user') {
         await saveUserAvatar(filename, 'custom');
-      } else {
+      } else if (target !== 'persona') {
+        // For persona creator/editor, skip server save
         await saveAvatar(personaId, filename, 'custom');
       }
       onSaved?.(filename, 'custom');
@@ -90,7 +93,7 @@ export default function AvatarEditorOverlay({ open, onClose, personaId, target =
   }, [personaId, target, onSaved, onClose]);
 
   return (
-    <Overlay open={open} onClose={onClose} width="560px">
+    <Overlay open={open} onClose={onClose} width="560px" stacked={stacked}>
       <OverlayHeader
         title={view === 'crop' ? 'Avatar zuschneiden' : 'Avatar auswählen'}
         onClose={onClose}

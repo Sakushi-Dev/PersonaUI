@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import styles from './Overlay.module.css';
 
-export default function Overlay({ open, onClose, className = '', width, children }) {
+export default function Overlay({ open, onClose, className = '', width, stacked, children }) {
   const overlayRef = useRef(null);
 
   // Close on Escape key
@@ -28,7 +28,7 @@ export default function Overlay({ open, onClose, className = '', width, children
   return (
     <div
       ref={overlayRef}
-      className={styles.backdrop}
+      className={`${styles.backdrop} ${stacked ? styles.stacked : ''}`}
       onClick={handleBackdropClick}
     >
       <div

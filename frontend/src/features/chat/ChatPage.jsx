@@ -1,11 +1,12 @@
 // ── ChatPage ──
 // Main chat page composing all chat components
 
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useContext, useState, useRef } from 'react';
 import { useSession } from '../../hooks/useSession';
 import { useSettings } from '../../hooks/useSettings';
 import { useTheme } from '../../hooks/useTheme';
 import { useOverlay } from '../../hooks/useOverlay';
+import { UserContext } from '../../context/UserContext';
 import { useMessages } from './hooks/useMessages';
 import { useAfterthought } from './hooks/useAfterthought';
 import { useSidebar } from './hooks/useSidebar';
@@ -120,6 +121,9 @@ function ChatPageContent() {
 
   // ── Avatar editor target tracking ──
   const [avatarTarget, setAvatarTarget] = useState('persona');
+  const [avatarRefreshKey, setAvatarRefreshKey] = useState(0);
+  const { setAvatar: setUserAvatar } = useContext(UserContext);
+  const personaAvatarCallbackRef = useRef(null);
 
   // ── Overlay hooks (must be before callbacks that reference them) ──
   const personaSettings = useOverlay();
@@ -151,6 +155,17 @@ function ChatPageContent() {
     setAvatarTarget(target);
     avatarEditor.open();
   }, [avatarEditor]);
+
+  // ── Avatar saved callback — update UserContext + trigger profile refresh ──
+  const handleAvatarSaved = useCallback((filename, type) => {
+    if (avatarTarget === 'user') {
+      setUserAvatar(filename, type);
+      setAvatarRefreshKey((k) => k + 1);
+    } else if (avatarTarget === 'persona') {
+      // Route avatar data back to PersonaSettingsOverlay
+      personaAvatarCallbackRef.current?.(filename, type);
+    }
+  }, [avatarTarget, setUserAvatar]);
 
   // ── Start afterthought timer after user sends message ──
   const handleSend = useCallback((text) => {
@@ -232,6 +247,7 @@ function ChatPageContent() {
         onClose={personaSettings.close}
         onOpenAvatarEditor={handleOpenAvatarEditor}
         onOpenCustomSpecs={() => { personaSettings.close(); customSpecs.open(); }}
+        avatarCallbackRef={personaAvatarCallbackRef}
       />
       <InterfaceSettingsOverlay
         open={interfaceSettings.isOpen}
@@ -254,6 +270,8 @@ function ChatPageContent() {
         onClose={avatarEditor.close}
         personaId={personaId}
         target={avatarTarget}
+        onSaved={handleAvatarSaved}
+        stacked
       />
       <MemoryOverlay
         open={memory.isOpen}
@@ -267,6 +285,7 @@ function ChatPageContent() {
         open={userProfile.isOpen}
         onClose={userProfile.close}
         onOpenAvatarEditor={() => handleOpenAvatarEditor('user')}
+        avatarRefreshKey={avatarRefreshKey}
       />
       <QRCodeOverlay
         open={qrCode.isOpen}

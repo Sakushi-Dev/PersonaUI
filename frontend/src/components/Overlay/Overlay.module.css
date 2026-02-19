@@ -10,6 +10,10 @@
   padding: 20px;
 }
 
+.stacked {
+  z-index: calc(var(--z-overlay-backdrop) + 100);
+}
+
 .panel {
   background: var(--overlay-bg);
   background: var(--overlay-bg-gradient);

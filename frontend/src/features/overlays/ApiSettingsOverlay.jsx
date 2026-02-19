@@ -13,15 +13,9 @@ import Slider from '../../components/Slider/Slider';
 import Button from '../../components/Button/Button';
 import styles from './Overlays.module.css';
 
-const MODEL_OPTIONS = [
-  { value: 'claude-sonnet-4-5-20250929', label: 'Claude Sonnet 4.5 (Neueste)' },
-  { value: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4 (Mai 2025)' },
-  { value: 'claude-3-5-sonnet-latest', label: 'Claude Sonnet 3.7 (latest)' },
-  { value: 'claude-3-5-sonnet-20250220', label: 'Claude Sonnet 3.7 (Februar 2025)' },
-];
-
 export default function ApiSettingsOverlay({ open, onClose }) {
-  const { get, setMany, reset } = useSettings();
+  const { get, setMany, reset, defaults, loaded } = useSettings();
+  const modelOptions = defaults.apiModelOptions ?? [];
 
   const [model, setModel] = useState('');
   const [temperature, setTemperature] = useState(0.7);
@@ -68,10 +62,14 @@ export default function ApiSettingsOverlay({ open, onClose }) {
             className={styles.select}
             value={model}
             onChange={(e) => setModel(e.target.value)}
+            disabled={!loaded || modelOptions.length === 0}
           >
-            {MODEL_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
+            {modelOptions.length === 0
+              ? <option value="">Wird geladen…</option>
+              : modelOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))
+            }
           </select>
         </FormGroup>
 

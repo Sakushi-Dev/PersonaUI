@@ -200,34 +200,7 @@
   51%, 100% { opacity: 0; }
 }
 
-/* ── Prompt Info Overlay Stats ── */
-
-.promptInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.promptStat {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--overlay-border-color, rgba(0, 0, 0, 0.1));
-  font-size: 14px;
-}
-
-.promptStat:last-child {
-  border-bottom: none;
-}
-
-.promptStat span:first-child {
-  opacity: 0.6;
-}
-
-.promptStat span:last-child {
-  font-weight: 600;
-}
+/* ── Prompt Info Overlay Stats (moved to PromptInfoOverlay.module.css) ── */
 
 /* ── Thinking / Spinner ── */
 

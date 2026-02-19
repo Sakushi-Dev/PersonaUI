@@ -429,11 +429,256 @@
 
 .clickableAvatar {
   cursor: pointer;
-  transition: transform 0.15s;
+  transition: transform 0.15s, border-color 0.3s, box-shadow 0.3s;
 }
 
 .clickableAvatar:hover {
-  transform: scale(1.05);
+  transform: scale(1.03);
+  border-color: var(--overlay-accent, #667eea);
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+}
+
+/* ── Profile Card (Avatar + Name side by side) ── */
+
+.profileCard {
+  margin-bottom: 0;
+}
+
+.profileCardTop {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.profileAvatarWrapper {
+  flex-shrink: 0;
+}
+
+.profileNameArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.avatarActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--overlay-divider, rgba(255, 255, 255, 0.08));
+  animation: upSlideIn 0.2s ease;
+}
+
+/* ── Profile Section Divider ── */
+
+.sectionDivider {
+  height: 1px;
+  background: var(--overlay-divider, rgba(255, 255, 255, 0.08));
+  margin: 18px 0;
+}
+
+/* ── Profile Row (side-by-side FormGroups) ── */
+
+.profileRow {
+  display: flex;
+  gap: 20px;
+}
+
+.profileRowItem {
+  flex: 1;
+  min-width: 0;
+}
+
+@keyframes upSlideIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── User Type Section ── */
+
+.activeType {
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: var(--overlay-input-bg, rgba(255, 255, 255, 0.06));
+  border: 1px dashed var(--overlay-input-border, rgba(255, 255, 255, 0.12));
+  margin-bottom: 12px;
+  min-height: 48px;
+  transition: border-color 0.3s, background 0.3s;
+}
+
+.activeTypeFilled {
+  border-style: solid;
+  border-color: var(--overlay-accent, #667eea);
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.06), rgba(118, 75, 162, 0.06));
+}
+
+.activeTypeEmpty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--overlay-text-muted, rgba(255, 255, 255, 0.4));
+  font-size: 13px;
+}
+
+.activeTypeIcon {
+  font-size: 18px;
+  opacity: 0.5;
+}
+
+.activeTypeContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.activeTypeHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.activeTypeName {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--overlay-accent, #667eea);
+}
+
+.activeTypeRemove {
+  background: none;
+  border: none;
+  color: var(--overlay-text-muted, rgba(255, 255, 255, 0.4));
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  border-radius: 4px;
+  transition: color 0.2s, background 0.2s;
+}
+
+.activeTypeRemove:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.activeTypeDesc {
+  font-size: 12px;
+  color: var(--overlay-text-muted, rgba(255, 255, 255, 0.4));
+  line-height: 1.4;
+}
+
+.typeList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.typeItem {
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--overlay-tag-bg, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--overlay-tag-border, rgba(255, 255, 255, 0.06));
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.typeItem:hover {
+  background: var(--overlay-hover-bg, rgba(255, 255, 255, 0.08));
+  border-color: var(--overlay-input-border, rgba(255, 255, 255, 0.12));
+  transform: translateX(3px);
+}
+
+.typeItemActive {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.12), rgba(118, 75, 162, 0.12));
+  border-color: var(--overlay-accent, #667eea);
+}
+
+.typeItemCustom {
+  border-left: 3px solid #3b82f6;
+}
+
+.typeItemHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.typeItemName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--overlay-tag-text, rgba(255, 255, 255, 0.7));
+}
+
+.typeItemBadge {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.typeItemDesc {
+  display: block;
+  font-size: 11px;
+  color: var(--overlay-text-muted, rgba(255, 255, 255, 0.4));
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* ── Type Pills ── */
+
+.typePills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.typePill {
+  padding: 8px 16px;
+  border-radius: 20px;
+  background: var(--overlay-tag-bg, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--overlay-tag-border, rgba(255, 255, 255, 0.06));
+  color: var(--overlay-tag-text, rgba(255, 255, 255, 0.7));
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.typePill:hover {
+  background: var(--overlay-hover-bg, rgba(255, 255, 255, 0.08));
+  border-color: var(--overlay-input-border, rgba(255, 255, 255, 0.12));
+}
+
+.typePillActive {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
+  border-color: var(--overlay-accent, #667eea);
+  color: var(--overlay-accent, #667eea);
+  font-weight: 600;
+}
+
+.typePillActive:hover {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
+}
+
+.typeDescBox {
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.06), rgba(118, 75, 162, 0.06));
+  border: 1px solid var(--overlay-accent, #667eea);
+  animation: upSlideIn 0.2s ease;
+}
+
+.typeDescText {
+  font-size: 12px;
+  color: var(--overlay-text-muted, rgba(255, 255, 255, 0.5));
+  line-height: 1.5;
 }
 
 /* ── Memory List ── */
@@ -541,8 +786,499 @@
   justify-content: flex-end;
 }
 
-/* ── Persona Grid ── */
+/* ── Persona List View (Legacy Contact-List) ── */
 
+.personaListHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.personaListTitle {
+  margin: 0;
+  font-size: 20px;
+  color: var(--overlay-text-color, #1a1a1a);
+  font-weight: 600;
+}
+
+.specsBtn {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+  border: 1px solid rgba(102, 126, 234, 0.35);
+  color: #8b9cf7;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.specsBtn:hover {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.25) 0%, rgba(118, 75, 162, 0.25) 100%);
+  border-color: rgba(102, 126, 234, 0.55);
+  color: #a0b0ff;
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2);
+  transform: translateY(-1px);
+}
+
+.specsBtnIcon {
+  font-size: 16px;
+  filter: drop-shadow(0 0 4px rgba(102, 126, 234, 0.5));
+}
+
+.personaContactList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.personaContactItem {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--overlay-input-bg, rgba(255, 255, 255, 0.5));
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.personaContactItem:hover {
+  background: var(--overlay-hover-bg, rgba(0, 0, 0, 0.04));
+  border-color: var(--overlay-border-color, rgba(0, 0, 0, 0.08));
+}
+
+.personaContactAvatar {
+  width: 46px;
+  height: 46px;
+  min-width: 46px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 2px solid rgba(102, 126, 234, 0.15);
+  transition: all 0.2s ease;
+}
+
+.personaContactItem:hover .personaContactAvatar {
+  border-color: rgba(102, 126, 234, 0.35);
+}
+
+.personaContactAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.personaContactInitial {
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.personaContactInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.personaContactName {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--overlay-text-color, #1a1a1a);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.personaContactType {
+  font-size: 12px;
+  color: var(--overlay-text-muted, rgba(0, 0, 0, 0.45));
+  font-weight: 500;
+}
+
+.personaContactBadges {
+  display: flex;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.personaBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.activeBadge {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+.defaultBadge {
+  background: rgba(102, 126, 234, 0.15);
+  color: #667eea;
+}
+
+.personaContactActions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  flex-shrink: 0;
+}
+
+.personaContactItem:hover .personaContactActions {
+  opacity: 1;
+}
+
+.personaEditBtn,
+.personaDeleteBtn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--overlay-text-muted, rgba(0, 0, 0, 0.4));
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.personaEditBtn:hover {
+  background: rgba(102, 126, 234, 0.12);
+  color: #667eea;
+}
+
+.personaDeleteBtn:hover {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+}
+
+/* Add-Button Row */
+.personaAddRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+  margin-top: 8px;
+  cursor: pointer;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.personaAddRow:hover {
+  background: var(--overlay-hover-bg, rgba(0, 0, 0, 0.04));
+}
+
+.personaAddCircle {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 2px dashed rgba(102, 126, 234, 0.35);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(102, 126, 234, 0.6);
+  font-size: 22px;
+  font-weight: 300;
+  transition: all 0.25s ease;
+}
+
+.personaAddRow:hover .personaAddCircle {
+  border-color: #667eea;
+  color: #667eea;
+  background: rgba(102, 126, 234, 0.08);
+  transform: scale(1.08);
+}
+
+.personaAddLabel {
+  font-size: 13px;
+  color: var(--overlay-text-muted, rgba(0, 0, 0, 0.45));
+  font-weight: 500;
+  margin-left: 8px;
+  transition: color 0.2s ease;
+}
+
+.personaAddRow:hover .personaAddLabel {
+  color: #667eea;
+}
+
+/* ── Persona Creator View (Legacy Config Sections) ── */
+
+.personaCreatorHeader {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.personaCreatorTitle {
+  margin: 0;
+  font-size: 20px;
+  color: var(--overlay-text-color, #1a1a1a);
+  font-weight: 600;
+}
+
+.btnBack {
+  background: var(--overlay-input-bg, rgba(255, 255, 255, 0.8));
+  border: 1px solid var(--overlay-border-color, rgba(0, 0, 0, 0.12));
+  color: var(--overlay-text-color, #1a1a1a);
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.btnBack:hover {
+  background: var(--overlay-hover-bg, rgba(0, 0, 0, 0.06));
+  border-color: var(--overlay-border-color, rgba(0, 0, 0, 0.18));
+}
+
+.personaCreatorLayout {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.configSection {
+  background: var(--overlay-input-bg, rgba(255, 255, 255, 0.5));
+  border: 1px solid var(--overlay-border-color, rgba(0, 0, 0, 0.08));
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.configSectionTitle {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  color: var(--overlay-text-color, #1a1a1a);
+  font-weight: 600;
+}
+
+.configDescription {
+  font-size: 13px;
+  color: var(--overlay-text-muted, rgba(0, 0, 0, 0.45));
+  margin-bottom: 16px;
+}
+
+/* Persona Info Grid (Name / Age side-by-side, Gender full-width) */
+.personaInfoGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.personaInfoField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.personaInfoFieldFull {
+  grid-column: 1 / -1;
+}
+
+/* Creator Avatar Area */
+.creatorAvatarArea {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.creatorAvatarPreview {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--overlay-input-bg, rgba(255, 255, 255, 0.5));
+  border: 2px dashed var(--overlay-border-color, rgba(0, 0, 0, 0.15));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s;
+}
+
+.creatorAvatarPreview:hover {
+  border-color: rgba(102, 126, 234, 0.5);
+  transform: scale(1.03);
+}
+
+.avatarPlaceholderText {
+  font-size: 11px;
+  color: var(--overlay-text-muted, rgba(0, 0, 0, 0.4));
+  text-align: center;
+}
+
+/* Tags available & active areas */
+.tagsAvailable {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 10px;
+  background: var(--overlay-input-bg, rgba(255, 255, 255, 0.5));
+  border-radius: 8px;
+}
+
+.tagsActiveContainer {
+  margin-top: 12px;
+}
+
+.tagsActiveTitle {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: var(--overlay-text-color, #1a1a1a);
+  font-weight: 500;
+  opacity: 0.7;
+}
+
+.tagsActive {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 60px;
+  padding: 12px;
+  background: rgba(102, 126, 234, 0.04);
+  border: 1px dashed rgba(102, 126, 234, 0.3);
+  border-radius: 8px;
+}
+
+.tagButton {
+  padding: 8px 16px;
+  border: 1px solid var(--overlay-border-color, rgba(0, 0, 0, 0.1));
+  border-radius: 20px;
+  background: var(--overlay-input-bg, rgba(255, 255, 255, 0.5));
+  color: var(--overlay-text-color, #1a1a1a);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.tagButton:hover {
+  background: var(--overlay-hover-bg, rgba(0, 0, 0, 0.06));
+  border-color: var(--overlay-border-color, rgba(0, 0, 0, 0.18));
+  transform: translateY(-1px);
+}
+
+.tagButtonActive {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: #667eea;
+  color: #fff;
+  font-weight: 500;
+}
+
+.tagButtonActive:hover {
+  background: linear-gradient(135deg, #5a6fd6 0%, #6a4294 100%);
+  transform: translateY(-1px);
+}
+
+/* Background Section */
+.backgroundInputArea {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.backgroundFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* First Message Section */
+.firstMessageToggle {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.configHint {
+  font-size: 11px;
+  color: var(--overlay-text-muted, rgba(0, 0, 0, 0.45));
+  line-height: 1.5;
+  padding-left: 0;
+}
+
+.startMsgInputArea {
+  margin-top: 10px;
+}
+
+.startMsgFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.configHintInline {
+  font-size: 11px;
+  color: var(--overlay-text-muted, rgba(0, 0, 0, 0.45));
+  font-style: italic;
+}
+
+.charCounter {
+  font-size: 11px;
+  color: var(--overlay-text-muted, rgba(0, 0, 0, 0.45));
+  flex-shrink: 0;
+}
+
+/* Scenario slide */
+.scenarioSlide {
+  max-height: 0;
+  padding: 0;
+  margin: -20px 0 0 0;
+  opacity: 0;
+  overflow: hidden;
+  border-color: transparent;
+  transition: max-height 0.4s ease, padding 0.4s ease, opacity 0.35s ease, margin 0.4s ease, border-color 0.4s ease;
+}
+
+.scenarioVisible {
+  max-height: 600px;
+  padding: 20px;
+  margin: 0;
+  opacity: 1;
+  border-color: var(--overlay-border-color, rgba(0, 0, 0, 0.08));
+}
+
+/* Persona Creator Footer */
+.personaCreatorFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--overlay-border-color, rgba(0, 0, 0, 0.08));
+}
+
+/* Legacy-compat: keep old classes for other overlay usage */
 .personaGrid {
   display: flex;
   flex-direction: column;
@@ -729,6 +1465,89 @@
 
 :root[data-theme="dark"] .personaCard:hover {
   background: rgba(255, 255, 255, 0.05);
+}
+
+:root[data-theme="dark"] .personaContactItem {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+:root[data-theme="dark"] .personaContactItem:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme="dark"] .personaContactName,
+:root[data-theme="dark"] .personaListTitle,
+:root[data-theme="dark"] .personaCreatorTitle {
+  color: #fff;
+}
+
+:root[data-theme="dark"] .personaContactType {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+:root[data-theme="dark"] .personaEditBtn,
+:root[data-theme="dark"] .personaDeleteBtn {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+:root[data-theme="dark"] .personaAddLabel {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+:root[data-theme="dark"] .configSection {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+:root[data-theme="dark"] .configSectionTitle {
+  color: #fff;
+}
+
+:root[data-theme="dark"] .configDescription,
+:root[data-theme="dark"] .configHint,
+:root[data-theme="dark"] .configHintInline,
+:root[data-theme="dark"] .charCounter,
+:root[data-theme="dark"] .avatarPlaceholderText {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+:root[data-theme="dark"] .btnBack {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+:root[data-theme="dark"] .btnBack:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme="dark"] .tagsAvailable {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+:root[data-theme="dark"] .tagButton {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+:root[data-theme="dark"] .tagButton:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+:root[data-theme="dark"] .tagsActive {
+  background: rgba(102, 126, 234, 0.06);
+}
+
+:root[data-theme="dark"] .creatorAvatarPreview {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+:root[data-theme="dark"] .tagsActiveTitle {
+  color: rgba(255, 255, 255, 0.7);
 }
 
 :root[data-theme="dark"] .tab:hover {
