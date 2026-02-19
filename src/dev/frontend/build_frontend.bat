@@ -15,7 +15,10 @@ REM ─────────────────────────�
 
 set "SELF_DIR=%~dp0"
 
-if exist "%SELF_DIR%src\app.py" (
+REM Skript liegt in src\dev\frontend\ → 3 Ebenen hoch zum Root
+if exist "%SELF_DIR%..\..\..\frontend\package.json" (
+    set "ROOT=%SELF_DIR%..\..\..\"
+) else if exist "%SELF_DIR%src\app.py" (
     set "ROOT=%SELF_DIR%"
 ) else if exist "%SELF_DIR%..\src\app.py" (
     set "ROOT=%SELF_DIR%.."
