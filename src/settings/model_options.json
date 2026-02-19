@@ -1,0 +1,37 @@
+[
+    {
+        "value": "claude-sonnet-4-6",
+        "label": "Claude Sonnet 4.6 (Neueste)",
+        "pricingName": "Claude Sonnet 4.6",
+        "inputPrice": 3,
+        "outputPrice": 15
+    },
+    {   
+        "value": "claude-haiku-4-5",
+        "label": "Claude Haiku 4.5 (Neueste)",
+        "pricingName": "Claude Haiku 4.5",
+        "inputPrice": 1,
+        "outputPrice": 5
+    },
+    {
+        "value": "claude-sonnet-4-5-20250929",
+        "label": "Claude Sonnet 4.5 (September 2025)",
+        "pricingName": "Claude Sonnet 4.5",
+        "inputPrice": 3,
+        "outputPrice": 15
+    },
+    {
+        "value": "claude-sonnet-4-20250514",
+        "label": "Claude Sonnet 4 (Mai 2025)",
+        "pricingName": "Claude Sonnet 4",
+        "inputPrice": 3,
+        "outputPrice": 15
+    },
+    {
+        "value": "claude-3-7-sonnet-20250219",
+        "label": "Claude Sonnet 3.7 (Februar 2025)",
+        "pricingName": "Claude Sonnet 3.7",
+        "inputPrice": 3,
+        "outputPrice": 15
+    }
+]
