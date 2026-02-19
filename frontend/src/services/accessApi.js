@@ -26,8 +26,12 @@ export function denyRequest(ip) {
   return apiPost('/api/access/deny', { ip });
 }
 
-export function removeFromList(ip, listType) {
-  return apiPost('/api/access/remove', { ip, list: listType });
+export function removeFromWhitelist(ip) {
+  return apiPost('/api/access/whitelist/remove', { ip });
+}
+
+export function removeFromBlacklist(ip) {
+  return apiPost('/api/access/blacklist/remove', { ip });
 }
 
 export function toggleAccessControl(enabled) {

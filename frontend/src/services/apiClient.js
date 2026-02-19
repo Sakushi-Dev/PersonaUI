@@ -5,6 +5,17 @@ import { API_BASE_URL } from '../utils/constants';
 async function handleResponse(response) {
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
+
+    // Access denied → redirect external users to waiting page
+    if (response.status === 403 && errorData.error === 'access_denied') {
+      // Don't redirect if already on the waiting page (avoid loop)
+      if (!window.location.pathname.startsWith('/access/waiting')) {
+        window.location.href = '/access/waiting';
+        return new Promise(() => {});
+      }
+      // On waiting page: just throw so WaitingPage can handle it
+    }
+
     const error = new Error(errorData.error || `HTTP ${response.status}`);
     error.status = response.status;
     error.data = errorData;

@@ -8,35 +8,53 @@ import OverlayBody from '../../components/Overlay/OverlayBody';
 import OverlayFooter from '../../components/Overlay/OverlayFooter';
 import Button from '../../components/Button/Button';
 import Spinner from '../../components/Spinner/Spinner';
-import { getServerSettings, getQRCode, getNetworkInfo } from '../../services/serverApi';
+import { getServerSettings, getLocalIps, generateQRCode } from '../../services/serverApi';
 import styles from './Overlays.module.css';
 
 export default function QRCodeOverlay({ open, onClose, onOpenServerSettings }) {
   const [serverMode, setServerMode] = useState(null);
   const [qrImage, setQrImage] = useState(null);
-  const [ips, setIps] = useState([]);
+  const [ipEntries, setIpEntries] = useState([]);  // { ip, port, url, type }
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!open) return;
     setLoading(true);
+    setQrImage(null);
+    setIpEntries([]);
 
-    Promise.all([
-      getServerSettings(),
-      getNetworkInfo().catch(() => ({ ips: [] })),
-    ]).then(([settings, network]) => {
-      setServerMode(settings.server_mode || 'local');
-      setIps(network.ips || []);
+    getServerSettings()
+      .then(async (settings) => {
+        const mode = settings.server_mode || 'local';
+        setServerMode(mode);
 
-      if (settings.server_mode === 'public') {
-        return getQRCode().then((data) => {
-          setQrImage(data.qr_code || data.image || null);
-        }).catch(() => {});
-      }
-    }).finally(() => setLoading(false));
+        if (mode === 'listen') {
+          // Fetch IPs + port, then generate QR code (like legacy)
+          const ipData = await getLocalIps().catch(() => ({ ip_addresses: [], port: 5000 }));
+          const addresses = ipData.ip_addresses || [];
+          const port = ipData.port || 5000;
+
+          const entries = addresses.map((ip) => ({
+            ip,
+            port,
+            url: `http://${ip}:${port}`,
+            type: ip.includes(':') ? 'IPv6' : 'IPv4',
+          }));
+          setIpEntries(entries);
+
+          if (entries.length > 0) {
+            const qrData = await generateQRCode(entries[0].url).catch(() => null);
+            if (qrData?.qr_code) {
+              setQrImage(qrData.qr_code);
+            }
+          }
+        }
+      })
+      .catch(() => setServerMode('local'))
+      .finally(() => setLoading(false));
   }, [open]);
 
-  const isPublic = serverMode === 'public';
+  const isListen = serverMode === 'listen';
 
   return (
     <Overlay open={open} onClose={onClose} width="420px">
@@ -44,37 +62,50 @@ export default function QRCodeOverlay({ open, onClose, onOpenServerSettings }) {
       <OverlayBody>
         {loading ? (
           <Spinner />
-        ) : isPublic ? (
+        ) : isListen ? (
           <div className={styles.qrContent}>
             {qrImage && (
               <div className={styles.qrCode}>
-                <img src={`data:image/png;base64,${qrImage}`} alt="QR Code" />
+                <img src={qrImage} alt="QR Code" />
               </div>
             )}
             <div className={styles.ipList}>
-              <p className={styles.settingLabel}>Netzwerk-Adressen:</p>
-              {ips.map((ip, i) => (
-                <code key={i} className={styles.ipAddress}>{ip}</code>
+              <p className={styles.settingLabel}>📡 Netzwerk-Adressen:</p>
+              {ipEntries.map((entry, i) => (
+                <div key={i} className={styles.ipEntry}>
+                  <span className={styles.ipType}>{entry.type}:</span>
+                  <a
+                    href={entry.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.ipLink}
+                  >
+                    {entry.url}
+                  </a>
+                </div>
               ))}
             </div>
-            <p className={styles.hint}>
-              Dein Handy muss mit dem selben WLAN-Netzwerk verbunden sein.
-            </p>
+            <div className={styles.tipBox}>
+              <p className={styles.hint}>
+                💡 <strong>Hinweis:</strong> Dein Handy muss mit dem selben WLAN-Netzwerk verbunden sein.
+              </p>
+            </div>
           </div>
         ) : (
           <div className={styles.centeredContent}>
             <span className={styles.bigIcon}>🔒</span>
-            <p>Kein öffentlicher Zugang</p>
+            <h3>Kein öffentlicher Zugang</h3>
             <p className={styles.hint}>
-              Der Server läuft im lokalen Modus. Ändere den Server-Modus, um Netzwerkzugriff zu ermöglichen.
+              Der Server läuft aktuell im <strong>lokalen Modus</strong>.
+              Um von anderen Geräten im Netzwerk darauf zuzugreifen, aktiviere den öffentlichen Modus in den Server-Einstellungen.
             </p>
           </div>
         )}
       </OverlayBody>
       <OverlayFooter>
-        {!isPublic && !loading && (
+        {!isListen && !loading && (
           <Button variant="primary" onClick={() => { onClose(); onOpenServerSettings?.(); }}>
-            Server-Einstellungen öffnen
+            ⚙️ Server-Einstellungen öffnen
           </Button>
         )}
         <Button variant="secondary" onClick={onClose}>Schließen</Button>

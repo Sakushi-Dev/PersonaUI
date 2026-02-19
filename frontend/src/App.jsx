@@ -1,5 +1,6 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { lazy, Suspense, useState, useEffect } from 'react';
+import { AppProvider } from './context/AppProvider';
 import { getOnboardingStatus } from './services/onboardingApi';
 import Spinner from './components/Spinner/Spinner';
 
@@ -8,6 +9,25 @@ const OnboardingPage = lazy(() => import('./features/onboarding/OnboardingPage')
 const WaitingPage = lazy(() => import('./features/waiting/WaitingPage'));
 
 function App() {
+  const location = useLocation();
+
+  // Waiting page rendered early — no onboarding check, no heavy context loading
+  if (location.pathname === '/access/waiting') {
+    return (
+      <Suspense fallback={<Spinner fullScreen />}>
+        <WaitingPage />
+      </Suspense>
+    );
+  }
+
+  return (
+    <AppProvider>
+      <AppRoutes />
+    </AppProvider>
+  );
+}
+
+function AppRoutes() {
   const [onboardingDone, setOnboardingDone] = useState(null); // null = loading
 
   useEffect(() => {
@@ -28,7 +48,6 @@ function App() {
           element={onboardingDone ? <ChatPage /> : <Navigate to="/onboarding" replace />}
         />
         <Route path="/onboarding" element={<OnboardingPage />} />
-        <Route path="/access/waiting" element={<WaitingPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>

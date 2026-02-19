@@ -94,6 +94,43 @@
   line-height: 1.4;
 }
 
+/* ── Tip Box ── */
+
+.tipBox {
+  background: var(--overlay-input-bg, rgba(0, 0, 0, 0.03));
+  border: 1px solid var(--overlay-border-color, rgba(0, 0, 0, 0.08));
+  border-radius: var(--radius-md, 8px);
+  padding: 10px 14px;
+  margin-top: 12px;
+}
+
+.tipBox .hint {
+  margin: 0;
+}
+
+/* ── Restart Overlay ── */
+
+.restartOverlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 48px 24px;
+  min-height: 200px;
+}
+
+.restartIcon {
+  font-size: 48px;
+  margin-bottom: 20px;
+}
+
+.restartText {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--overlay-text-color, #1a1a1a);
+}
+
 /* ── Slider Labels ── */
 
 .sliderLabels {
@@ -326,6 +363,32 @@
   font-family: 'Courier New', monospace;
   font-size: 14px;
   padding: 4px 0;
+}
+
+.ipEntry {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+}
+
+.ipType {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.6;
+  min-width: 36px;
+}
+
+.ipLink {
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  color: var(--overlay-focus-color, #667eea);
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.ipLink:hover {
+  text-decoration: underline;
 }
 
 .centeredContent {

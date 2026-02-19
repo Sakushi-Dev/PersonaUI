@@ -20,6 +20,7 @@ import MessageList from './components/MessageList/MessageList';
 import ChatInput from './components/ChatInput/ChatInput';
 import Spinner from '../../components/Spinner/Spinner';
 import ErrorBoundary from '../../components/ErrorBoundary/ErrorBoundary';
+import AccessNotification from './components/AccessNotification/AccessNotification';
 import { resolveFontFamily } from '../../utils/constants';
 
 import {
@@ -318,6 +319,7 @@ function ChatPageContent() {
         onClose={apiWarning.close}
         onOpenApiKey={() => { apiWarning.close(); apiKey.open(); }}
       />
+      <AccessNotification />
     </div>
   );
 }

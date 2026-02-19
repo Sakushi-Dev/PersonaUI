@@ -14,7 +14,8 @@ import {
   getAccessLists,
   approveRequest,
   denyRequest,
-  removeFromList,
+  removeFromWhitelist,
+  removeFromBlacklist,
 } from '../../services/accessApi';
 import styles from './Overlays.module.css';
 
@@ -30,7 +31,9 @@ export default function AccessControlOverlay({ open, onClose }) {
         getPendingRequests(),
         getAccessLists(),
       ]);
-      setPending(pendingData.pending || []);
+      // pending is an object { ip: { timestamp, status, waiting_seconds } }
+      const pendingObj = pendingData.pending || {};
+      setPending(Object.keys(pendingObj));
       setWhitelist(listsData.whitelist || []);
       setBlacklist(listsData.blacklist || []);
     } catch {
@@ -62,12 +65,12 @@ export default function AccessControlOverlay({ open, onClose }) {
   };
 
   const handleRemoveWhitelist = async (ip) => {
-    await removeFromList(ip, 'whitelist');
+    await removeFromWhitelist(ip);
     refresh();
   };
 
   const handleRemoveBlacklist = async (ip) => {
-    await removeFromList(ip, 'blacklist');
+    await removeFromBlacklist(ip);
     refresh();
   };
 

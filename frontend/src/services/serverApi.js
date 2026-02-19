@@ -6,8 +6,8 @@ export function getServerSettings() {
   return apiGet('/api/get_server_settings');
 }
 
-export function saveAndRestartServer(serverMode, port) {
-  return apiPost('/api/save_and_restart_server', { server_mode: serverMode, port: parseInt(port, 10) || 5000 });
+export function saveAndRestartServer(serverMode) {
+  return apiPost('/api/save_and_restart_server', { server_mode: serverMode });
 }
 
 export function testApiKey(apiKey, apiModel) {
@@ -22,10 +22,10 @@ export function checkApiStatus() {
   return apiGet('/api/check_api_status');
 }
 
-export function getQRCode() {
-  return apiGet('/api/qr_code');
+export function getLocalIps() {
+  return apiGet('/api/get_local_ips');
 }
 
-export function getNetworkInfo() {
-  return apiGet('/api/network_info');
+export function generateQRCode(url) {
+  return apiPost('/api/generate_qr_code', { url });
 }
