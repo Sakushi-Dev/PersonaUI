@@ -14,10 +14,12 @@
   --overlay-border: rgba(0, 0, 0, 0.15);
   --overlay-shadow: 0 20px 60px rgba(0, 0, 0, 0.2), 0 4px 16px rgba(0, 0, 0, 0.12);
   --overlay-text: #1a1a2e;
+  --overlay-text-color: #1a1a2e;
   --overlay-text-secondary: #3a3a4a;
   --overlay-text-muted: #6a6a7a;
   --overlay-heading: #111122;
   --overlay-divider: rgba(0, 0, 0, 0.12);
+  --overlay-border-color: rgba(0, 0, 0, 0.12);
 
   /* Overlay Inputs */
   --overlay-input-bg: #ffffff;

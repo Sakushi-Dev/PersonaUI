@@ -11,6 +11,7 @@
     "color2_light": "#fd91ee",
     "colorGradient1_dark": "#2a3f5f",
     "colorGradient1_light": "#66cfff",
+    "colorHue": "220",
     "darkMode": false,
     "dynamicBackground": true,
     "experimentalMode": false,

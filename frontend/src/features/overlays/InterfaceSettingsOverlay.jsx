@@ -1,35 +1,29 @@
 // ── InterfaceSettingsOverlay ──
-// Dark mode, colors, fonts, dynamic background, notification sound
-// Logic mirrors legacy SettingsManager: openInterfaceSettings / saveInterfaceSettings / resetInterfaceSettings
+// Structured into: Preview → Darstellung → Farben → Schrift
 
 import { useState, useEffect, useCallback } from 'react';
 import { useSettings } from '../../hooks/useSettings';
 import { useTheme } from '../../hooks/useTheme';
-import { resolveFontFamily, FONT_FAMILY_MAP } from '../../utils/constants';
+import { resolveFontFamily, hueToColors, DEFAULT_HUE, NONVERBAL_PRESETS } from '../../utils/constants';
 import Overlay from '../../components/Overlay/Overlay';
 import OverlayHeader from '../../components/Overlay/OverlayHeader';
 import OverlayBody from '../../components/Overlay/OverlayBody';
 import OverlayFooter from '../../components/Overlay/OverlayFooter';
 import Toggle from '../../components/Toggle/Toggle';
 import Slider from '../../components/Slider/Slider';
-import ColorPicker from '../../components/ColorPicker/ColorPicker';
 import Button from '../../components/Button/Button';
 import InterfacePreview from '../../components/InterfacePreview/InterfacePreview';
 import styles from './Overlays.module.css';
 
-// Font options – values are shorthand keys matching legacy radio values
+// Font options with icons for visual clarity
 const FONT_OPTIONS = [
-  { value: 'ubuntu', label: 'Ubuntu (Standard)' },
-  { value: 'comic', label: 'Comic Sans' },
-  { value: 'times', label: 'Times New Roman' },
-  { value: 'courier', label: 'Courier New' },
+  { value: 'ubuntu',  label: 'Ubuntu',          desc: 'Standard', icon: 'Aa' },
+  { value: 'comic',   label: 'Comic Sans',      desc: 'Verspielt', icon: 'Aa' },
+  { value: 'times',   label: 'Times New Roman',  desc: 'Klassisch', icon: 'Aa' },
+  { value: 'courier', label: 'Courier New',      desc: 'Monospace', icon: 'Aa' },
+  { value: 'pixel',   label: 'Pixel',            desc: 'Retro', icon: 'Px' },
+  { value: 'console', label: 'Console',          desc: 'Terminal', icon: '>' },
 ];
-
-// Color defaults matching legacy resetInterfaceSettings exactly
-const DEFAULT_COLORS = {
-  light: { bg: '#a3baff', g1: '#66cfff', c2: '#fd91ee' },
-  dark:  { bg: '#1a2332', g1: '#2a3f5f', c2: '#3d4f66' },
-};
 
 export default function InterfaceSettingsOverlay({ open, onClose }) {
   const { get, setMany } = useSettings();
@@ -44,71 +38,61 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
   const [darkMode, setDarkMode] = useState(false);
   const [dynamicBg, setDynamicBg] = useState(true);
   const [notificationSound, setNotificationSound] = useState(true);
-  const [bgColor, setBgColor] = useState('#a3baff');
-  const [gradient1, setGradient1] = useState('#66cfff');
-  const [color2, setColor2] = useState('#fd91ee');
+  const [colorHue, setColorHue] = useState(DEFAULT_HUE);
   const [nonverbalColor, setNonverbalColor] = useState('#e4ba00');
   const [fontSize, setFontSize] = useState(18);
   const [fontFamily, setFontFamily] = useState('ubuntu');
 
-  // ── Load settings when overlay opens (mirrors legacy openInterfaceSettings) ──
+  // Derive colors from hue
+  const derivedColors = hueToColors(colorHue, darkMode);
+
+  // ── Load settings when overlay opens ──
   useEffect(() => {
     if (!open) return;
 
-    const dm = get('darkMode', false);
-    const mode = dm ? 'dark' : 'light';
-    const defs = DEFAULT_COLORS[mode];
-
-    setDarkMode(dm);
+    setDarkMode(get('darkMode', false));
     setDynamicBg(get('dynamicBackground', true));
     setNotificationSound(get('notificationSound', true));
-    setBgColor(get(`backgroundColor_${mode}`, defs.bg));
-    setGradient1(get(`colorGradient1_${mode}`, defs.g1));
-    setColor2(get(`color2_${mode}`, defs.c2));
+    setColorHue(parseInt(get('colorHue', String(DEFAULT_HUE)), 10));
     setNonverbalColor(get('nonverbalColor', '#e4ba00'));
     setFontSize(parseInt(get('bubbleFontSize', '18'), 10));
     setFontFamily(get('bubbleFontFamily', 'ubuntu'));
   }, [open, get]);
 
-  // ── Dark mode toggle: load colors for the new mode (mirrors legacy setupToggleSync) ──
+  // ── Dark mode toggle ──
   const handleDarkModeChange = useCallback((checked) => {
-    const mode = checked ? 'dark' : 'light';
-    const defs = DEFAULT_COLORS[mode];
-
-    setBgColor(get(`backgroundColor_${mode}`, defs.bg));
-    setGradient1(get(`colorGradient1_${mode}`, defs.g1));
-    setColor2(get(`color2_${mode}`, defs.c2));
     setDarkMode(checked);
-  }, [get]);
+  }, []);
 
-  // ── Save (mirrors legacy saveInterfaceSettings) ──
+  // ── Save ──
   const handleSave = useCallback(() => {
-    const mode = darkMode ? 'dark' : 'light';
-    const otherMode = darkMode ? 'light' : 'dark';
+    const lightColors = hueToColors(colorHue, false);
+    const darkColors = hueToColors(colorHue, true);
 
-    // Persist ALL settings to server
     setMany({
       darkMode,
       dynamicBackground: dynamicBg,
       notificationSound,
-      [`backgroundColor_${mode}`]: bgColor,
-      [`colorGradient1_${mode}`]: gradient1,
-      [`color2_${mode}`]: color2,
-      // Preserve the other mode's colors unchanged
-      [`backgroundColor_${otherMode}`]: get(`backgroundColor_${otherMode}`),
-      [`colorGradient1_${otherMode}`]: get(`colorGradient1_${otherMode}`),
-      [`color2_${otherMode}`]: get(`color2_${otherMode}`),
+      colorHue: String(colorHue),
+      backgroundColor_light: lightColors.bg,
+      colorGradient1_light: lightColors.g1,
+      color2_light: lightColors.c2,
+      backgroundColor_dark: darkColors.bg,
+      colorGradient1_dark: darkColors.g1,
+      color2_dark: darkColors.c2,
       nonverbalColor,
       bubbleFontSize: String(fontSize),
       bubbleFontFamily: fontFamily,
     });
 
-    // Apply to ThemeContext (live UI update)
     setIsDark(darkMode);
     updateColors({
-      [`backgroundColor_${mode}`]: bgColor,
-      [`colorGradient1_${mode}`]: gradient1,
-      [`color2_${mode}`]: color2,
+      backgroundColor_light: lightColors.bg,
+      colorGradient1_light: lightColors.g1,
+      color2_light: lightColors.c2,
+      backgroundColor_dark: darkColors.bg,
+      colorGradient1_dark: darkColors.g1,
+      color2_dark: darkColors.c2,
       nonverbalColor,
     });
     setThemeFontSize(fontSize);
@@ -116,152 +100,236 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
     setThemeDynBg(dynamicBg);
 
     onClose();
-  }, [darkMode, dynamicBg, notificationSound, bgColor, gradient1, color2, nonverbalColor, fontSize, fontFamily, get, setMany, setIsDark, updateColors, setThemeFontSize, setThemeFontFamily, setThemeDynBg, onClose]);
+  }, [darkMode, dynamicBg, notificationSound, colorHue, nonverbalColor, fontSize, fontFamily, setMany, setIsDark, updateColors, setThemeFontSize, setThemeFontFamily, setThemeDynBg, onClose]);
 
   // ── Close without saving ──
   const handleClose = useCallback(() => {
     onClose();
   }, [onClose]);
 
-  // ── Reset (mirrors legacy resetInterfaceSettings exactly) ──
+  // ── Reset ──
   const handleReset = useCallback(() => {
     if (!window.confirm('Möchtest du die Interface-Einstellungen auf die Standardwerte zurücksetzen?')) {
       return;
     }
 
-    const defLight = DEFAULT_COLORS.light;
-    const defDark  = DEFAULT_COLORS.dark;
+    const lightColors = hueToColors(DEFAULT_HUE, false);
+    const darkColors = hueToColors(DEFAULT_HUE, true);
 
-    // 1) Persist ALL defaults to server (both modes) — matches legacy apply* calls
     setMany({
       darkMode: false,
       dynamicBackground: true,
       notificationSound: true,
-      backgroundColor_light: defLight.bg,
-      colorGradient1_light: defLight.g1,
-      color2_light: defLight.c2,
-      backgroundColor_dark: defDark.bg,
-      colorGradient1_dark: defDark.g1,
-      color2_dark: defDark.c2,
+      colorHue: String(DEFAULT_HUE),
+      backgroundColor_light: lightColors.bg,
+      colorGradient1_light: lightColors.g1,
+      color2_light: lightColors.c2,
+      backgroundColor_dark: darkColors.bg,
+      colorGradient1_dark: darkColors.g1,
+      color2_dark: darkColors.c2,
       nonverbalColor: '#e4ba00',
       bubbleFontSize: '18',
       bubbleFontFamily: 'ubuntu',
     });
 
-    // 2) Apply defaults to ThemeContext (live UI update) — matches legacy applyCurrentModeColors etc.
     setIsDark(false);
     updateColors({
-      backgroundColor_light: defLight.bg,
-      colorGradient1_light: defLight.g1,
-      color2_light: defLight.c2,
-      backgroundColor_dark: defDark.bg,
-      colorGradient1_dark: defDark.g1,
-      color2_dark: defDark.c2,
+      backgroundColor_light: lightColors.bg,
+      colorGradient1_light: lightColors.g1,
+      color2_light: lightColors.c2,
+      backgroundColor_dark: darkColors.bg,
+      colorGradient1_dark: darkColors.g1,
+      color2_dark: darkColors.c2,
       nonverbalColor: '#e4ba00',
     });
     setThemeFontSize(18);
     setThemeFontFamily(resolveFontFamily('ubuntu'));
     setThemeDynBg(true);
 
-    // 3) Update local form state (light mode colors shown since darkMode = false)
     setDarkMode(false);
     setDynamicBg(true);
     setNotificationSound(true);
-    setBgColor(defLight.bg);
-    setGradient1(defLight.g1);
-    setColor2(defLight.c2);
+    setColorHue(DEFAULT_HUE);
     setNonverbalColor('#e4ba00');
     setFontSize(18);
     setFontFamily('ubuntu');
   }, [setMany, setIsDark, updateColors, setThemeFontSize, setThemeFontFamily, setThemeDynBg]);
 
   return (
-    <Overlay open={open} onClose={handleClose} width="520px">
+    <Overlay open={open} onClose={handleClose} width="540px">
       <OverlayHeader title="Interface-Einstellungen" onClose={handleClose} />
       <OverlayBody>
-        <div style={{ marginBottom: 16 }}>
+
+        {/* ═══ Sticky Live Preview ═══ */}
+        <div className={styles.ifacePreviewSticky}>
           <InterfacePreview
             isDark={darkMode}
             nonverbalColor={nonverbalColor}
-            bgColor={bgColor}
-            gradient1={gradient1}
-            gradient2={color2}
+            bgColor={derivedColors.bg}
+            gradient1={derivedColors.g1}
+            gradient2={derivedColors.c2}
             dynamicBg={dynamicBg}
             fontSize={fontSize}
             fontFamily={fontFamily}
           />
         </div>
 
-        {/* Design-Modus (legacy: dark-mode-toggle) */}
-        <div className={styles.settingRow}>
-          <Toggle
-            label={darkMode ? 'Dunkel' : 'Hell'}
-            checked={darkMode}
-            onChange={handleDarkModeChange}
-            id="dark-mode"
-          />
-          <span className={styles.settingLabel}>Design-Modus</span>
-        </div>
+        {/* ═══ Section: Darstellung ═══ */}
+        <div className={styles.ifaceSection}>
+          <h3 className={styles.ifaceSectionTitle}>
+            Darstellung
+          </h3>
+          <div className={styles.ifaceCard}>
+            <div className={styles.ifaceToggleRow}>
+              <div className={styles.ifaceToggleInfo}>
+                <span className={styles.ifaceToggleLabel}>Design-Modus</span>
+                <span className={styles.ifaceToggleHint}>
+                  {darkMode ? 'Dunkles Farbschema' : 'Helles Farbschema'}
+                </span>
+              </div>
+              <Toggle
+                checked={darkMode}
+                onChange={handleDarkModeChange}
+                id="dark-mode"
+              />
+            </div>
 
-        {/* Dynamischer Hintergrund (legacy: dynamic-bg-toggle) */}
-        <div className={styles.settingRow}>
-          <Toggle
-            label={dynamicBg ? 'Aktiv' : 'Inaktiv'}
-            checked={dynamicBg}
-            onChange={setDynamicBg}
-            id="dynamic-bg"
-          />
-          <span className={styles.settingLabel}>Dynamischer Hintergrund</span>
-        </div>
+            <div className={styles.ifaceDivider} />
 
-        {/* Benachrichtigungston */}
-        <div className={styles.settingRow}>
-          <Toggle
-            label={notificationSound ? 'An' : 'Aus'}
-            checked={notificationSound}
-            onChange={setNotificationSound}
-            id="notification-sound"
-          />
-          <span className={styles.settingLabel}>Benachrichtigungston</span>
-        </div>
+            <div className={styles.ifaceToggleRow}>
+              <div className={styles.ifaceToggleInfo}>
+                <span className={styles.ifaceToggleLabel}>Dynamischer Hintergrund</span>
+                <span className={styles.ifaceToggleHint}>Animierte Farbverläufe im Chat</span>
+              </div>
+              <Toggle
+                checked={dynamicBg}
+                onChange={setDynamicBg}
+                id="dynamic-bg"
+              />
+            </div>
 
-        {/* Color pickers (legacy: background-color, color-gradient1, color-2, nonverbal-color) */}
-        <div className={styles.colorGrid}>
-          <ColorPicker label="Hintergrundfarbe" value={bgColor} onChange={setBgColor} />
-          <ColorPicker label="Verlaufsfarbe 1" value={gradient1} onChange={setGradient1} />
-          <ColorPicker label="Verlaufsfarbe 2" value={color2} onChange={setColor2} />
-          <ColorPicker label="Nonverbale Text-Farbe" value={nonverbalColor} onChange={setNonverbalColor} />
-        </div>
+            <div className={styles.ifaceDivider} />
 
-        {/* Font size slider (legacy: bubble-font-size, 14-28) */}
-        <Slider
-          label="Chat-Nachricht Schriftgröße"
-          value={fontSize}
-          onChange={(v) => setFontSize(Math.round(v))}
-          min={14}
-          max={28}
-          step={1}
-          displayValue={`${fontSize}px`}
-        />
-
-        {/* Font family radios (legacy: bubble-font-family) */}
-        <div className={styles.fontSelector}>
-          <p className={styles.settingLabel}>Chat-Nachricht Schriftart</p>
-          <div className={styles.radioGroup}>
-            {FONT_OPTIONS.map((f) => (
-              <label key={f.value} className={styles.radioLabel}>
-                <input
-                  type="radio"
-                  name="font-family"
-                  value={f.value}
-                  checked={fontFamily === f.value}
-                  onChange={() => setFontFamily(f.value)}
-                />
-                <span style={{ fontFamily: resolveFontFamily(f.value) }}>{f.label}</span>
-              </label>
-            ))}
+            <div className={styles.ifaceToggleRow}>
+              <div className={styles.ifaceToggleInfo}>
+                <span className={styles.ifaceToggleLabel}>Benachrichtigungston</span>
+                <span className={styles.ifaceToggleHint}>Sound bei neuen Nachrichten</span>
+              </div>
+              <Toggle
+                checked={notificationSound}
+                onChange={setNotificationSound}
+                id="notification-sound"
+              />
+            </div>
           </div>
         </div>
+
+        {/* ═══ Section: Farben ═══ */}
+        <div className={styles.ifaceSection}>
+          <h3 className={styles.ifaceSectionTitle}>
+            Farben
+          </h3>
+          <div className={styles.ifaceCard}>
+            {/* Hue Slider */}
+            <div className={styles.ifaceFieldGroup}>
+              <div className={styles.hueLabelRow}>
+                <span className={styles.ifaceFieldLabel}>Farbschema</span>
+                <span className={styles.hueValue}>{colorHue}°</span>
+              </div>
+              <input
+                type="range"
+                className={styles.hueSlider}
+                min={0}
+                max={360}
+                step={1}
+                value={colorHue}
+                onChange={(e) => setColorHue(parseInt(e.target.value, 10))}
+              />
+              <div className={styles.huePreview}>
+                <div className={styles.hueSwatchLabeled}>
+                  <span className={styles.hueSwatch} style={{ background: derivedColors.bg }} />
+                  <span className={styles.hueSwatchLabel}>Basis</span>
+                </div>
+                <div className={styles.hueSwatchLabeled}>
+                  <span className={styles.hueSwatch} style={{ background: derivedColors.g1 }} />
+                  <span className={styles.hueSwatchLabel}>Verlauf 1</span>
+                </div>
+                <div className={styles.hueSwatchLabeled}>
+                  <span className={styles.hueSwatch} style={{ background: derivedColors.c2 }} />
+                  <span className={styles.hueSwatchLabel}>Verlauf 2</span>
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.ifaceDivider} />
+
+            {/* Nonverbal Color Presets */}
+            <div className={styles.ifaceFieldGroup}>
+              <span className={styles.ifaceFieldLabel}>Nonverbale Text-Farbe</span>
+              <span className={styles.ifaceFieldHint}>Für Text zwischen *Sternchen* – z.B. Aktionen, Emotionen</span>
+              <div className={styles.colorPresets}>
+                {NONVERBAL_PRESETS.map((preset) => (
+                  <button
+                    key={preset.value}
+                    className={`${styles.colorSwatch} ${nonverbalColor === preset.value ? styles.colorSwatchActive : ''}`}
+                    style={{ background: preset.value }}
+                    onClick={() => setNonverbalColor(preset.value)}
+                    title={preset.label}
+                    type="button"
+                  >
+                    {nonverbalColor === preset.value && <span className={styles.swatchCheck}>✓</span>}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ═══ Section: Schrift ═══ */}
+        <div className={styles.ifaceSection}>
+          <h3 className={styles.ifaceSectionTitle}>
+            Schrift
+          </h3>
+          <div className={styles.ifaceCard}>
+            {/* Font Size */}
+            <Slider
+              label="Schriftgröße"
+              value={fontSize}
+              onChange={(v) => setFontSize(Math.round(v))}
+              min={14}
+              max={28}
+              step={1}
+              displayValue={`${fontSize}px`}
+            />
+
+            <div className={styles.ifaceDivider} />
+
+            {/* Font Family Cards */}
+            <div className={styles.ifaceFieldGroup}>
+              <span className={styles.ifaceFieldLabel}>Schriftart</span>
+              <div className={styles.fontCardGrid}>
+                {FONT_OPTIONS.map((f) => (
+                  <button
+                    key={f.value}
+                    type="button"
+                    className={`${styles.fontCard} ${fontFamily === f.value ? styles.fontCardActive : ''}`}
+                    onClick={() => setFontFamily(f.value)}
+                  >
+                    <span
+                      className={styles.fontCardPreview}
+                      style={{ fontFamily: resolveFontFamily(f.value) }}
+                    >
+                      {f.icon}
+                    </span>
+                    <span className={styles.fontCardName}>{f.label}</span>
+                    <span className={styles.fontCardDesc}>{f.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
       </OverlayBody>
       <OverlayFooter>
         <Button variant="secondary" onClick={handleReset}>Zurücksetzen</Button>
