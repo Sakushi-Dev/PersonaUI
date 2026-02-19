@@ -1,45 +1,37 @@
 """
-Datenbank-Package für die Chat-Anwendung
+Database Package - Public API
 
-Per-Persona Datenbank-Architektur:
-- data/main.db       → Standard-Persona ('default')
-- data/persona_{id}.db → Erstellte Personas (z.B. persona_89c4558f.db)
+This module maintains backwards compatibility by re-exporting all functions
+that were previously in the monolithic database.py file.
 
-Jede Persona hat ihre eigene SQLite-DB mit identischem Schema.
-Beim Erstellen einer Persona wird die DB angelegt, beim Löschen entfernt.
-
-Modul-Struktur:
-- connection.py  → DB-Pfad & Verbindung (DATA_DIR, get_db_path, get_db_connection)
-- schema.py      → Schema-Init, Persona-DB Lifecycle (init_all_dbs, create/delete_persona_db)
-- migration.py   → Migrations-Framework (run_pending_migrations, MIGRATIONS Registry)
-- chat.py        → Chat-Nachrichten CRUD & Context
-- sessions.py    → Session-Management CRUD
-- memories.py    → Memory-Management CRUD & Marker
+The database has been refactored into logical modules:
+- connection: DB paths, connections, schema
+- persona: Persona DB management & migration  
+- chat: Messages, history, context
+- sessions: Session management
+- memories: Memory management
 """
 
-# === Connection ===
+# Core connection & schema functions
 from .connection import (
-    DATA_DIR,
     get_db_path,
-    get_db_connection,
+    get_db_connection, 
+    init_db_schema,
+    init_persona_db,
+    get_all_persona_ids,
+    DATA_DIR
 )
 
-# === Schema & Initialisierung ===
-from .schema import (
-    init_persona_db,
+# Persona management functions
+from .persona import (
     create_persona_db,
     delete_persona_db,
-    get_all_persona_ids,
     init_all_dbs,
     find_session_persona,
+    migrate_from_legacy_db
 )
 
-# === Migration ===
-from .migration import (
-    run_pending_migrations,
-)
-
-# === Chat History ===
+# Chat functions
 from .chat import (
     get_chat_history,
     get_message_count,
@@ -49,10 +41,10 @@ from .chat import (
     get_total_message_count,
     get_max_message_id,
     get_user_message_count_since_marker,
-    get_messages_since_marker,
+    get_messages_since_marker
 )
 
-# === Session Management ===
+# Session functions  
 from .sessions import (
     create_session,
     get_all_sessions,
@@ -61,10 +53,10 @@ from .sessions import (
     get_session,
     update_session_title,
     delete_session,
-    get_current_session_id,
+    get_current_session_id
 )
 
-# === Memory Management ===
+# Memory functions
 from .memories import (
     save_memory,
     get_all_memories,
@@ -72,31 +64,60 @@ from .memories import (
     update_memory,
     delete_memory,
     toggle_memory_status,
-    get_session_message_count,
     set_last_memory_message_id,
-    get_last_memory_message_id,
+    get_last_memory_message_id
 )
 
+# Legacy aliases for backwards compatibility
+get_session_message_count = get_message_count
+
 __all__ = [
-    # Connection
-    'DATA_DIR', 'get_db_path', 'get_db_connection',
-    # Schema
-    'init_persona_db', 'create_persona_db', 'delete_persona_db',
-    'get_all_persona_ids', 'init_all_dbs', 'find_session_persona',
-    # Migration
-    'run_pending_migrations',
-    # Chat
-    'get_chat_history', 'get_message_count', 'get_conversation_context',
-    'save_message', 'clear_chat_history', 'get_total_message_count',
-    'get_max_message_id', 'get_user_message_count_since_marker',
+    # Connection & Schema
+    'get_db_path',
+    'get_db_connection',
+    'init_db_schema', 
+    'init_persona_db',
+    'get_all_persona_ids',
+    'DATA_DIR',
+    
+    # Persona Management
+    'create_persona_db',
+    'delete_persona_db', 
+    'init_all_dbs',
+    'find_session_persona',
+    'migrate_from_legacy_db',
+    
+    # Chat Operations
+    'get_chat_history',
+    'get_message_count',
+    'get_conversation_context',
+    'save_message',
+    'clear_chat_history',
+    'get_total_message_count',
+    'get_max_message_id',
+    'get_user_message_count_since_marker',
     'get_messages_since_marker',
-    # Sessions
-    'create_session', 'get_all_sessions', 'get_persona_session_summary',
-    'get_session_persona_id', 'get_session', 'update_session_title',
-    'delete_session', 'get_current_session_id',
-    # Memories
-    'save_memory', 'get_all_memories', 'get_active_memories',
-    'update_memory', 'delete_memory', 'toggle_memory_status',
-    'get_session_message_count', 'set_last_memory_message_id',
+    
+    # Session Management
+    'create_session',
+    'get_all_sessions',
+    'get_persona_session_summary',
+    'get_session_persona_id', 
+    'get_session',
+    'update_session_title',
+    'delete_session',
+    'get_current_session_id',
+    
+    # Memory Management
+    'save_memory',
+    'get_all_memories',
+    'get_active_memories',
+    'update_memory',
+    'delete_memory',
+    'toggle_memory_status',
+    'set_last_memory_message_id',
     'get_last_memory_message_id',
+    
+    # Legacy aliases
+    'get_session_message_count'
 ]

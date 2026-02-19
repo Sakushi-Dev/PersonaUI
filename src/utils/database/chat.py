@@ -1,34 +1,37 @@
 """
-Chat-Nachrichten Operationen
+Chat Messages & History Management
 
-CRUD für Chat-Messages, Conversation-Context und History-Abfragen.
+Handles:
+- Saving and retrieving messages
+- Chat history with pagination
+- Conversation context for API
+- Message counting and statistics
 """
 
 from typing import List, Dict, Any, Optional
-
 from ..logger import log
-from ..sql_loader import sql
 from .connection import get_db_connection
+from ..sql_loader import sql
 
 
 def get_chat_history(limit: int = 30, session_id: int = None, offset: int = 0,
                      persona_id: str = 'default') -> List[Dict[str, Any]]:
     """
-    Holt die Chat-Historie aus der Datenbank
+    Retrieves chat history from the database.
     
     Args:
-        limit: Maximale Anzahl der zurückzugebenden Nachrichten (Standard: 30)
-        session_id: ID der Session (wenn None, wird die neueste Session verwendet)
-        offset: Anzahl der zu überspringenden Nachrichten (für Pagination)
-        persona_id: ID der Persona (bestimmt welche DB verwendet wird)
+        limit: Maximum number of messages to return (default: 30)
+        session_id: Session ID (if None, uses latest session)
+        offset: Number of messages to skip (for pagination)
+        persona_id: Persona ID (determines which DB to use)
         
     Returns:
-        Liste von Nachricht-Dictionaries (neueste zuerst, dann umgekehrt)
+        List of message dictionaries (newest first, then reversed)
     """
     conn = get_db_connection(persona_id)
     cursor = conn.cursor()
     
-    # Wenn keine session_id angegeben, hole die neueste Session
+    # If no session_id given, get the latest session
     if session_id is None:
         cursor.execute(sql('chat.get_latest_session_id'))
         result = cursor.fetchone()
@@ -38,28 +41,28 @@ def get_chat_history(limit: int = 30, session_id: int = None, offset: int = 0,
             conn.close()
             return []
     
-    # Hole Memory-Ranges für diese Session (nur AKTIVE Memories mit Ranges)
+    # Get memory ranges for this session (only ACTIVE memories with ranges)
     cursor.execute(sql('chat.get_memory_ranges'), (session_id,))
     memory_ranges = cursor.fetchall()
     
-    # Fallback: Wenn keine Ranges vorhanden, nutze den alten Marker
+    # Fallback: If no ranges available, use old marker
     cursor.execute(sql('chat.get_session_memory_marker'), (session_id,))
     marker_row = cursor.fetchone()
     last_memory_message_id = marker_row[0] if marker_row and marker_row[0] else None
     
-    # Hilfsfunktion: Prüfe ob eine Message-ID in einem der Memory-Ranges liegt
+    # Helper function: Check if a message ID is in any memory range
     def is_memorized(msg_id):
         if memory_ranges:
             for start_id, end_id in memory_ranges:
                 if start_id <= msg_id <= end_id:
                     return True
             return False
-        # Fallback für alte Memories ohne Ranges
+        # Fallback for old memories without ranges
         return last_memory_message_id is not None and msg_id <= last_memory_message_id
     
     cursor.execute(sql('chat.get_chat_history'), (session_id, limit, offset))
     
-    # Umkehren, damit die älteste der geladenen Nachrichten zuerst kommt
+    # Reverse so oldest of the loaded messages comes first
     messages = []
     for row in reversed(cursor.fetchall()):
         msg = {
@@ -78,14 +81,14 @@ def get_chat_history(limit: int = 30, session_id: int = None, offset: int = 0,
 
 def get_message_count(session_id: int = None, persona_id: str = 'default') -> int:
     """
-    Holt die Gesamtanzahl der Nachrichten für eine Session
+    Gets the total number of messages for a session.
     
     Args:
-        session_id: ID der Session (wenn None, wird die neueste Session verwendet)
-        persona_id: ID der Persona
+        session_id: Session ID (if None, uses latest session)
+        persona_id: Persona ID
         
     Returns:
-        Anzahl der Nachrichten
+        Number of messages
     """
     conn = get_db_connection(persona_id)
     cursor = conn.cursor()
@@ -109,15 +112,15 @@ def get_message_count(session_id: int = None, persona_id: str = 'default') -> in
 def get_conversation_context(limit: int = 10, session_id: int = None,
                              persona_id: str = 'default') -> list:
     """
-    Holt die letzten N Nachrichten für den Kontext der Claude API
+    Gets the last N messages for Claude API context.
     
     Args:
-        limit: Anzahl der letzten Nachrichten
-        session_id: ID der Session (wenn None, wird die neueste Session verwendet)
-        persona_id: ID der Persona
+        limit: Number of recent messages
+        session_id: Session ID (if None, uses latest session)
+        persona_id: Persona ID
         
     Returns:
-        Liste von Nachrichten im Claude API Format
+        List of messages in Claude API format
     """
     conn = get_db_connection(persona_id)
     cursor = conn.cursor()
@@ -143,8 +146,8 @@ def get_conversation_context(limit: int = 10, session_id: int = None,
     merged_count = 0
     for row in raw_rows:
         role = "user" if row[1] else "assistant"
-        # Aufeinanderfolgende gleiche Rollen zusammenführen (z.B. durch Afterthought)
-        # Claude API erfordert alternierende user/assistant Rollen
+        # Merge consecutive same roles (e.g. through Afterthought)
+        # Claude API requires alternating user/assistant roles
         if messages and messages[-1]['role'] == role:
             messages[-1]['content'] += "\n\n" + row[0]
             merged_count += 1
@@ -154,13 +157,13 @@ def get_conversation_context(limit: int = 10, session_id: int = None,
                 'content': row[0]
             })
     
-    # Leading assistant messages (z.B. Greeting) werden NICHT mehr entfernt,
-    # damit die KI weiß, dass sie bereits begrüßt hat.
-    # Die Claude API akzeptiert Messages die mit assistant beginnen,
-    # wenn der system-Parameter separat übergeben wird.
-    
+    # Leading assistant messages (e.g. Greeting) are NOT removed,
+    # so the AI knows it has already greeted.
+    # Claude API accepts messages that start with assistant,
+    # when the system parameter is passed separately.
+
     if merged_count > 0:
-        log.info("Context-History: %d Nachrichten zusammengeführt. Final: %d msgs",
+        log.info("Context-History: %d messages merged. Final: %d msgs",
                  merged_count, len(messages))
     else:
         log.debug("Context-History: Final %d msgs", len(messages))
@@ -172,17 +175,17 @@ def get_conversation_context(limit: int = 10, session_id: int = None,
 def save_message(message: str, is_user: bool, character_name: str = 'Assistant',
                  session_id: int = None, persona_id: str = 'default') -> int:
     """
-    Speichert eine Nachricht in der Datenbank
+    Saves a message to the database.
     
     Args:
-        message: Der Nachrichtentext
-        is_user: True wenn Nachricht vom User, False wenn vom Bot
-        character_name: Name des Charakters
-        session_id: ID der Session (wenn None, wird die neueste Session verwendet)
-        persona_id: ID der Persona
+        message: Message text
+        is_user: True if message from user, False if from bot
+        character_name: Character name
+        session_id: Session ID (if None, uses latest session)
+        persona_id: Persona ID
         
     Returns:
-        ID der eingefügten Nachricht
+        ID of inserted message
     """
     from .sessions import create_session
     
@@ -213,7 +216,7 @@ def save_message(message: str, is_user: bool, character_name: str = 'Assistant',
 
 
 def clear_chat_history(persona_id: str = 'default'):
-    """Löscht die gesamte Chat-Historie einer Persona"""
+    """Deletes all chat history for a persona."""
     conn = get_db_connection(persona_id)
     cursor = conn.cursor()
     cursor.execute(sql('chat.delete_all_messages'))
@@ -223,7 +226,7 @@ def clear_chat_history(persona_id: str = 'default'):
 
 
 def get_total_message_count(persona_id: str = 'default') -> int:
-    """Gibt die Gesamtanzahl aller Nachrichten zurück (über alle Sessions einer Persona)"""
+    """Returns total number of all messages (across all sessions of a persona)."""
     conn = get_db_connection(persona_id)
     cursor = conn.cursor()
     cursor.execute(sql('chat.get_total_message_count'))
@@ -234,14 +237,14 @@ def get_total_message_count(persona_id: str = 'default') -> int:
 
 def get_max_message_id(session_id: int, persona_id: str = 'default') -> Optional[int]:
     """
-    Holt die höchste Nachrichten-ID einer Session.
+    Gets the highest message ID of a session.
     
     Args:
-        session_id: ID der Session
-        persona_id: ID der Persona
+        session_id: Session ID
+        persona_id: Persona ID
         
     Returns:
-        Höchste Message-ID oder None
+        Highest message ID or None
     """
     conn = get_db_connection(persona_id)
     cursor = conn.cursor()
@@ -253,20 +256,20 @@ def get_max_message_id(session_id: int, persona_id: str = 'default') -> Optional
 
 def get_user_message_count_since_marker(session_id: int, persona_id: str = 'default') -> int:
     """
-    Zählt die User-Nachrichten seit dem letzten Memory-Marker.
-    Wenn kein Marker gesetzt ist, werden alle User-Nachrichten gezählt.
+    Counts user messages since the last memory marker.
+    If no marker is set, counts all user messages.
     
     Args:
-        session_id: ID der Session
-        persona_id: ID der Persona
+        session_id: Session ID
+        persona_id: Persona ID
         
     Returns:
-        Anzahl der User-Nachrichten seit Marker
+        Number of user messages since marker
     """
     conn = get_db_connection(persona_id)
     cursor = conn.cursor()
     
-    # Hole Marker
+    # Get marker
     cursor.execute(sql('chat.get_session_memory_marker'), (session_id,))
     marker_row = cursor.fetchone()
     marker = marker_row[0] if marker_row and marker_row[0] else None
@@ -283,27 +286,27 @@ def get_user_message_count_since_marker(session_id: int, persona_id: str = 'defa
 
 def get_messages_since_marker(session_id: int, persona_id: str = 'default', limit: int = 100) -> Dict[str, Any]:
     """
-    Holt nur die Nachrichten NACH dem letzten Memory-Marker.
-    Wenn kein Marker gesetzt ist, werden alle Nachrichten zurückgegeben.
-    Begrenzt auf max `limit` Nachrichten (Standard: 100).
+    Gets only messages AFTER the last memory marker.
+    If no marker is set, returns all messages.
+    Limited to max `limit` messages (default: 100).
     
     Args:
-        session_id: ID der Session
-        persona_id: ID der Persona
-        limit: Maximale Anzahl Nachrichten (Standard: 100)
+        session_id: Session ID
+        persona_id: Persona ID
+        limit: Maximum number of messages (default: 100)
         
     Returns:
-        Dict mit 'messages' (Liste), 'total' (Gesamtzahl seit Marker), 'truncated' (bool)
+        Dict with 'messages' (list), 'total' (total count since marker), 'truncated' (bool)
     """
     conn = get_db_connection(persona_id)
     cursor = conn.cursor()
     
-    # Hole Marker
+    # Get marker
     cursor.execute(sql('chat.get_session_memory_marker'), (session_id,))
     marker_row = cursor.fetchone()
     marker = marker_row[0] if marker_row and marker_row[0] else None
     
-    # Zähle Gesamtzahl seit Marker
+    # Count total since marker
     if marker:
         cursor.execute(sql('chat.get_messages_since_marker_count'), (session_id, marker))
     else:
@@ -311,13 +314,13 @@ def get_messages_since_marker(session_id: int, persona_id: str = 'default', limi
     total = cursor.fetchone()[0]
     truncated = total > limit
     
-    # Hole die letzten `limit` Nachrichten seit Marker (die neuesten, damit nichts Wichtiges fehlt)
+    # Get the last `limit` messages since marker (newest ones, so nothing important is missing)
     if marker:
         cursor.execute(sql('chat.get_messages_since_marker'), (session_id, marker, limit))
     else:
         cursor.execute(sql('chat.get_all_messages_limited'), (session_id, limit))
     
-    # Umkehren für chronologische Reihenfolge
+    # Reverse for chronological order
     messages = []
     for row in reversed(cursor.fetchall()):
         messages.append({

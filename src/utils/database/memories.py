@@ -1,31 +1,32 @@
 """
-Memory-Management Operationen
+Memory Management
 
-CRUD für Erinnerungen, Memory-Marker Verwaltung.
+Handles:
+- Saving/updating/deleting memories
+- Memory markers and ranges
+- Active memory retrieval
 """
 
 from typing import List, Dict, Any, Optional
-
 from ..logger import log
-from ..sql_loader import sql
 from .connection import get_db_connection
-from .chat import get_message_count
+from ..sql_loader import sql
 
 
 def save_memory(session_id: int, content: str, persona_id: str = 'default',
                 start_message_id: int = None, end_message_id: int = None) -> int:
     """
-    Speichert eine Memory-Zusammenfassung
+    Saves a memory summary.
     
     Args:
-        session_id: ID der Session (kann None sein)
-        content: Inhalt der Zusammenfassung
-        persona_id: ID der Persona (bestimmt welche DB verwendet wird)
-        start_message_id: Erste Nachrichten-ID die diese Memory abdeckt
-        end_message_id: Letzte Nachrichten-ID die diese Memory abdeckt
+        session_id: Session ID (can be None)
+        content: Summary content
+        persona_id: Persona ID (determines which DB to use)
+        start_message_id: First message ID that this memory covers
+        end_message_id: Last message ID that this memory covers
         
     Returns:
-        ID der gespeicherten Memory
+        ID of saved memory
     """
     conn = get_db_connection(persona_id)
     cursor = conn.cursor()
@@ -42,14 +43,14 @@ def save_memory(session_id: int, content: str, persona_id: str = 'default',
 
 def get_all_memories(active_only: bool = False, persona_id: str = None) -> List[Dict[str, Any]]:
     """
-    Holt alle Memories einer Persona
+    Gets all memories for a persona.
     
     Args:
-        active_only: Nur aktive Memories zurückgeben
-        persona_id: Persona-ID (bestimmt welche DB abgefragt wird)
+        active_only: Only return active memories
+        persona_id: Persona ID (determines which DB to query)
         
     Returns:
-        Liste von Memory-Dictionaries, sortiert nach Datum (neueste zuerst)
+        List of memory dictionaries, sorted by date (newest first)
     """
     if persona_id is None:
         persona_id = 'default'
@@ -79,28 +80,28 @@ def get_all_memories(active_only: bool = False, persona_id: str = None) -> List[
 
 def get_active_memories(persona_id: str = None) -> List[Dict[str, Any]]:
     """
-    Holt alle aktiven Memories für die Verwendung im Chat
+    Gets all active memories for use in chat.
     
     Args:
-        persona_id: Persona-ID
+        persona_id: Persona ID
         
     Returns:
-        Liste von aktiven Memory-Dictionaries
+        List of active memory dictionaries
     """
     return get_all_memories(active_only=True, persona_id=persona_id)
 
 
 def update_memory(memory_id: int, content: str, persona_id: str = 'default') -> bool:
     """
-    Aktualisiert den Inhalt einer Memory
+    Updates a memory's content.
     
     Args:
-        memory_id: ID der Memory
-        content: Neuer Inhalt
-        persona_id: ID der Persona
+        memory_id: Memory ID
+        content: New content
+        persona_id: Persona ID
         
     Returns:
-        True bei Erfolg, False bei Fehler
+        True on success, False on error
     """
     try:
         conn = get_db_connection(persona_id)
@@ -112,60 +113,60 @@ def update_memory(memory_id: int, content: str, persona_id: str = 'default') -> 
         conn.close()
         return True
     except Exception as e:
-        log.error("Fehler beim Aktualisieren der Memory: %s", e)
+        log.error("Error updating memory: %s", e)
         return False
 
 
 def delete_memory(memory_id: int, persona_id: str = 'default') -> bool:
     """
-    Löscht eine Memory und aktualisiert den Memory-Marker der zugehörigen Session.
+    Deletes a memory and updates the memory marker of the associated session.
     
     Args:
-        memory_id: ID der Memory
-        persona_id: ID der Persona
+        memory_id: Memory ID
+        persona_id: Persona ID
         
     Returns:
-        True bei Erfolg, False bei Fehler
+        True on success, False on error
     """
     try:
         conn = get_db_connection(persona_id)
         cursor = conn.cursor()
         
-        # Hole session_id der Memory bevor wir löschen
+        # Get session_id of the memory before deleting
         cursor.execute(sql('memories.get_memory_session_id'), (memory_id,))
         row = cursor.fetchone()
         session_id = row[0] if row else None
         
-        # Memory löschen
+        # Delete memory
         cursor.execute(sql('memories.delete_memory'), (memory_id,))
         
-        # Memory-Marker der Session neu berechnen basierend auf verbleibenden Memories
+        # Recalculate session memory marker based on remaining memories
         if session_id is not None:
             cursor.execute(sql('memories.get_max_end_message_id'), (session_id,))
             max_row = cursor.fetchone()
             new_marker = max_row[0] if max_row and max_row[0] else None
             
             cursor.execute(sql('memories.update_session_memory_marker'), (new_marker, session_id))
-            log.info("Memory-Marker nach Löschen neu berechnet: session=%s, new_marker=%s", session_id, new_marker)
+            log.info("Memory marker recalculated after deletion: session=%s, new_marker=%s", session_id, new_marker)
         
         conn.commit()
         conn.close()
         return True
     except Exception as e:
-        log.error("Fehler beim Löschen der Memory: %s", e)
+        log.error("Error deleting memory: %s", e)
         return False
 
 
 def toggle_memory_status(memory_id: int, persona_id: str = 'default') -> bool:
     """
-    Schaltet den Aktiv-Status einer Memory um
+    Toggles a memory's active status.
     
     Args:
-        memory_id: ID der Memory
-        persona_id: ID der Persona
+        memory_id: Memory ID
+        persona_id: Persona ID
         
     Returns:
-        True bei Erfolg, False bei Fehler
+        True on success, False on error
     """
     try:
         conn = get_db_connection(persona_id)
@@ -177,36 +178,22 @@ def toggle_memory_status(memory_id: int, persona_id: str = 'default') -> bool:
         conn.close()
         return True
     except Exception as e:
-        log.error("Fehler beim Umschalten des Memory-Status: %s", e)
+        log.error("Error toggling memory status: %s", e)
         return False
-
-
-def get_session_message_count(session_id: int = None, persona_id: str = 'default') -> int:
-    """
-    Gibt die Anzahl der Nachrichten in einer Session zurück
-    
-    Args:
-        session_id: ID der Session (wenn None, wird die neueste Session verwendet)
-        persona_id: ID der Persona
-        
-    Returns:
-        Anzahl der Nachrichten
-    """
-    return get_message_count(session_id=session_id, persona_id=persona_id)
 
 
 def set_last_memory_message_id(session_id: int, message_id: int, persona_id: str = 'default') -> bool:
     """
-    Setzt den Memory-Marker für eine Session (letzte Nachrichten-ID, bis zu der
-    eine Erinnerung erstellt wurde).
+    Sets the memory marker for a session (last message ID up to which
+    a memory was created).
     
     Args:
-        session_id: ID der Session
-        message_id: ID der letzten erfassten Nachricht
-        persona_id: ID der Persona
+        session_id: Session ID
+        message_id: ID of last captured message
+        persona_id: Persona ID
         
     Returns:
-        True bei Erfolg
+        True on success
     """
     try:
         conn = get_db_connection(persona_id)
@@ -214,23 +201,23 @@ def set_last_memory_message_id(session_id: int, message_id: int, persona_id: str
         cursor.execute(sql('memories.set_last_memory_message_id'), (message_id, session_id))
         conn.commit()
         conn.close()
-        log.info("Memory-Marker gesetzt: session=%s, last_msg_id=%s", session_id, message_id)
+        log.info("Memory marker set: session=%s, last_msg_id=%s", session_id, message_id)
         return True
     except Exception as e:
-        log.error("Fehler beim Setzen des Memory-Markers: %s", e)
+        log.error("Error setting memory marker: %s", e)
         return False
 
 
 def get_last_memory_message_id(session_id: int, persona_id: str = 'default') -> Optional[int]:
     """
-    Holt den Memory-Marker für eine Session.
+    Gets the memory marker for a session.
     
     Args:
-        session_id: ID der Session
-        persona_id: ID der Persona
+        session_id: Session ID
+        persona_id: Persona ID
         
     Returns:
-        Letzte erfasste Nachrichten-ID oder None
+        Last captured message ID or None
     """
     conn = get_db_connection(persona_id)
     cursor = conn.cursor()
