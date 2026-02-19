@@ -319,7 +319,7 @@ function ChatPageContent() {
         onClose={apiWarning.close}
         onOpenApiKey={() => { apiWarning.close(); apiKey.open(); }}
       />
-      <AccessNotification />
+      <AccessNotification polling={qrCode.isOpen} />
     </div>
   );
 }

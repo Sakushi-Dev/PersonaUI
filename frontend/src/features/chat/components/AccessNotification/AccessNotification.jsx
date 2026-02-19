@@ -1,37 +1,41 @@
 // ── AccessNotification ──
 // Floating notification bar for pending access requests (host only).
-// Polls /api/access/pending when server is in listen mode.
+// Polls /api/access/pending only while `polling` prop is true.
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getServerSettings } from '../../../../services/serverApi';
 import { getPendingRequests, approveRequest, denyRequest } from '../../../../services/accessApi';
 import styles from './AccessNotification.module.css';
 
-export default function AccessNotification() {
+export default function AccessNotification({ polling = false }) {
   const [notificationIp, setNotificationIp] = useState(null);
   const [visible, setVisible] = useState(false);
   const knownRef = useRef(new Set());
   const pollRef = useRef(null);
   const activeRef = useRef(false);
 
-  // Check server mode on mount, start polling if listen
+  // Check server mode once on mount
   useEffect(() => {
     let cancelled = false;
-
     getServerSettings()
       .then((data) => {
         if (!cancelled && data.server_mode === 'listen') {
           activeRef.current = true;
-          startPolling();
         }
       })
       .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
 
-    return () => {
-      cancelled = true;
+  // Start / stop polling based on `polling` prop
+  useEffect(() => {
+    if (polling && activeRef.current) {
+      startPolling();
+    } else {
       stopPolling();
-    };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    }
+    return () => stopPolling();
+  }, [polling]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const startPolling = useCallback(() => {
     if (pollRef.current) return;

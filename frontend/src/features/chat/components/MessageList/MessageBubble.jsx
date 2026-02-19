@@ -3,6 +3,7 @@
 import { useContext, useState, useRef, useEffect } from 'react';
 import { UserContext } from '../../../../context/UserContext';
 import Avatar from '../../../../components/Avatar/Avatar';
+import ConfirmDialog from '../../../../components/ConfirmDialog/ConfirmDialog';
 import PromptInfoOverlay from './PromptInfoOverlay';
 import { formatMessage } from '../../../../utils/formatMessage';
 import { formatTimestamp } from '../../../../utils/formatTime';
@@ -28,6 +29,7 @@ export default function MessageBubble({
   const [showStats, setShowStats] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState('');
+  const [confirmAction, setConfirmAction] = useState(null);
   const editRef = useRef(null);
 
   const avatarSrc = isUser ? profile?.user_avatar : characterAvatar;
@@ -146,7 +148,7 @@ export default function MessageBubble({
           <div className={`${styles.messageActions} ${isUser ? styles.messageActionsUser : ''}`}>
             <button
               className={styles.actionBtn}
-              onClick={onDelete}
+              onClick={() => setConfirmAction({ type: 'delete', message: 'Nachricht wirklich löschen?', handler: onDelete })}
               title="Nachricht löschen"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -167,7 +169,7 @@ export default function MessageBubble({
             {!isUser && (
               <button
                 className={styles.actionBtn}
-                onClick={onRegenerate}
+                onClick={() => setConfirmAction({ type: 'regenerate', message: 'Antwort wirklich neu generieren?', handler: onRegenerate })}
                 title="Antwort neu generieren"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -196,6 +198,13 @@ export default function MessageBubble({
         open={showStats}
         onClose={() => setShowStats(false)}
         stats={stats}
+      />
+
+      <ConfirmDialog
+        open={!!confirmAction}
+        message={confirmAction?.message || ''}
+        onConfirm={() => { confirmAction?.handler?.(); setConfirmAction(null); }}
+        onCancel={() => setConfirmAction(null)}
       />
     </div>
   );

@@ -404,6 +404,36 @@
   font-size: 48px;
 }
 
+/* ── Scanning Indicator ── */
+
+.scanningIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 0 4px;
+  opacity: 0.7;
+}
+
+.scanningDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--overlay-focus-color, #667eea);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.scanningText {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--overlay-text-secondary, #666);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; transform: scale(0.85); }
+  50%      { opacity: 1;   transform: scale(1.15); }
+}
+
 /* ── Drop Zone ── */
 
 .dropZone {

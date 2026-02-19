@@ -90,6 +90,10 @@ export default function QRCodeOverlay({ open, onClose, onOpenServerSettings }) {
                 💡 <strong>Hinweis:</strong> Dein Handy muss mit dem selben WLAN-Netzwerk verbunden sein.
               </p>
             </div>
+            <div className={styles.scanningIndicator}>
+              <span className={styles.scanningDot} />
+              <span className={styles.scanningText}>Warte auf Gerät…</span>
+            </div>
           </div>
         ) : (
           <div className={styles.centeredContent}>
