@@ -730,7 +730,7 @@
             const settingsData = {
                 darkMode: darkMode,
                 nonverbalColor: document.getElementById('ob-nonverbal-color')?.value || '#e4ba00',
-                contextLimit: document.getElementById('ob-context-limit')?.value || '25',
+                contextLimit: document.getElementById('ob-context-limit')?.value || '65',
                 nachgedankeEnabled: document.getElementById('ob-nachgedanke-toggle')?.checked || false
             };
             await fetch('/api/user-settings', {
