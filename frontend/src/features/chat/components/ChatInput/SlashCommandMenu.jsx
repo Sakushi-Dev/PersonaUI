@@ -8,6 +8,7 @@ export default function SlashCommandMenu({
   commands,       // filtered list of {name, description}
   selectedIndex,  // currently highlighted index
   onSelect,       // (cmd) => void  – called when user picks a command
+  onHover,        // (index) => void – called when mouse enters an item
   visible,        // boolean
 }) {
   const listRef = useRef(null);
@@ -34,7 +35,7 @@ export default function SlashCommandMenu({
               e.preventDefault(); // keep textarea focus
               onSelect(cmd);
             }}
-            onMouseEnter={() => {}} // hover highlight handled via CSS :hover + active class
+            onMouseEnter={() => onHover?.(i)}
           >
             <span className={styles.commandName}>/{cmd.name}</span>
             <span className={styles.commandDesc}>{cmd.description}</span>

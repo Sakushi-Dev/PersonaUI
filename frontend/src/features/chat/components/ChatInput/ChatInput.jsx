@@ -148,6 +148,7 @@ export default function ChatInput({ onSend, disabled, isStreaming, onCancel, pla
           commands={filteredCmds}
           selectedIndex={cmdSelectedIdx}
           onSelect={selectCommand}
+          onHover={setCmdSelectedIdx}
           visible={cmdMenuOpen}
         />
         <textarea
