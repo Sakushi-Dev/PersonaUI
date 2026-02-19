@@ -30,15 +30,16 @@ def clean_api_response(response):
     # Extrahiere Code-Blöcke und ersetze mit Platzhaltern
     cleaned, code_blocks = _extract_code_blocks(response)
     
-    # Entferne alle \n und \n\n aus dem normalen Text
-    cleaned = re.sub(r'\n+', ' ', cleaned)
+    
+    # \n im Text belassen – das Frontend konvertiert sie zu <br>
+    # cleaned = re.sub(r'\n+', ' ', cleaned)
     
     # Entferne "---" am Anfang (nach Whitespace-Bereinigung)
     cleaned = re.sub(r'^\s*---\s*', '', cleaned)
-    
+  
     # Füge Code-Blöcke als formatierte HTML-Frames wieder ein
     cleaned = _insert_code_blocks_html(cleaned, code_blocks)
-    
+   
     return cleaned.strip()
 
 

@@ -20,6 +20,7 @@ import MessageList from './components/MessageList/MessageList';
 import ChatInput from './components/ChatInput/ChatInput';
 import Spinner from '../../components/Spinner/Spinner';
 import ErrorBoundary from '../../components/ErrorBoundary/ErrorBoundary';
+import { resolveFontFamily } from '../../utils/constants';
 
 import {
   PersonaSettingsOverlay,
@@ -78,7 +79,7 @@ function ChatPageContent() {
     setIsDark(dm);
 
     updateColors({
-      backgroundColor_light: get('backgroundColor_light', '#d7dce4'),
+      backgroundColor_light: get('backgroundColor_light', '#a3baff'),
       colorGradient1_light: get('colorGradient1_light', '#66cfff'),
       color2_light: get('color2_light', '#fd91ee'),
       backgroundColor_dark: get('backgroundColor_dark', '#1a2332'),
@@ -88,7 +89,7 @@ function ChatPageContent() {
     });
 
     setThemeFontSize(parseInt(get('bubbleFontSize', '18'), 10));
-    setThemeFontFamily(get('bubbleFontFamily', "'Ubuntu', 'Roboto', 'Segoe UI', system-ui, -apple-system, sans-serif"));
+    setThemeFontFamily(resolveFontFamily(get('bubbleFontFamily', 'ubuntu')));
     setThemeDynBg(get('dynamicBackground', true));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // run once on mount — settings are already loaded at this point
