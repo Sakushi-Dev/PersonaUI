@@ -58,9 +58,9 @@ Ersetzung des alten SQL-basierten Memory-Systems durch ein dateibasiertes **Cort
 | 1 | [Altes Memory-System entfernen](step_01_remove_old_memory/) | SQL-Tabellen, Routes, Services, Frontend-Komponenten komplett entfernen | ⬜ |
 | 2 | [Cortex Dateistruktur](step_02_cortex_file_structure/) | Verzeichnisstruktur, CortexService, API-Endpunkte für Dateizugriff | ⬜ |
 | 3 | [File Tool & Aktivierungsstufen](step_03_file_tool_activation_tiers/) | tool_use im API-Client, Schwellen-Erkennung, Trigger-Logik | ⬜ |
-| 4 | [Cortex Prompts & Placeholders](step_04_cortex_prompts_placeholders/) | Computed Placeholders, Prompt-Templates, System-Prompt Integration | ⬜ |
+| 4 | [Cortex Prompts & Placeholders](step_04_cortex_prompts_placeholders/) | Computed Placeholders, Prompt-Templates, Engine-Integration, Prompt-Externalisierung & Editor-Kategorie `cortex` | ⬜ |
 | 5 | [Cortex Settings UI](step_05_cortex_settings_ui/) | CortexOverlay.jsx, Markdown-Editor, Schwellen-Konfiguration | ⬜ |
-| 6 | [API Integration](step_06_api_integration/) | Chat-Flow Modifikation, Tier-Erkennung, Tool-Call Ausführung | ⬜ |
+| 6 | [API Integration](step_06_api_integration/) | Chat-Flow Modifikation, Tier-Erkennung, Tool-Call Ausführung, Slash Command `/cortex` | ⬜ |
 | 7 | [Final Review](step_07_final_review/) | Logikprüfung, Abhängigkeiten, Vollständigkeitskontrolle | ⬜ |
 
 ---
@@ -82,7 +82,7 @@ Schritt 1 ──► Schritt 2 ──► Schritt 3
 
 - **Schritt 1** muss zuerst abgeschlossen sein (Clean Slate)
 - **Schritt 2 + 3** können teilweise parallel bearbeitet werden
-- **Schritt 4** braucht Schritt 2 (Dateien existieren) + Schritt 3 (Tool-Definitions)
+- **Schritt 4** braucht Schritt 2 (Dateien existieren) + Schritt 3 (Tool-Definitions). Inkl. 4D: Externalisierung der hardcodierten Cortex-Prompts in Template-Dateien + Editor-Anpassungen
 - **Schritt 5** braucht Schritt 2 (API-Endpunkte) + Schritt 4 (Settings-Keys)
-- **Schritt 6** integriert alles
+- **Schritt 6** integriert alles (inkl. Slash Command `/cortex` für manuellen Trigger)
 - **Schritt 7** ist die Abschluss-Prüfung

@@ -1,5 +1,7 @@
 # Schritt 6C: Settings Migration
 
+> **⚠️ KORREKTUR v3:** Die `cortex_settings.json` Struktur ist fundamental vereinfacht. Statt `tierThresholds: {tier1: 50, tier2: 75, tier3: 95}` enthält die Datei jetzt nur `{"enabled": true, "frequency": "medium"}`. Gültige Werte für `frequency`: `"frequent"` (50%), `"medium"` (75%), `"rare"` (95%). Die Funktionen `get_cortex_settings()`, `save_cortex_settings()` und `get_tier_thresholds()` müssen entsprechend vereinfacht werden. Die settings migration von `memoriesEnabled` → `cortexEnabled` in `user_settings.json` bleibt unverändert gültig.
+
 ## Übersicht
 
 Dieses Dokument beschreibt die **vollständige Migration** der Settings-Infrastruktur vom alten Memory-System zum neuen Cortex-System. Drei zentrale Operationen werden durchgeführt:

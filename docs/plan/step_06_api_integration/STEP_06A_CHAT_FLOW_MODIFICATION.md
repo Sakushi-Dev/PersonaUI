@@ -1,5 +1,7 @@
 # Schritt 6A: Chat-Flow Modifikation
 
+> **⚠️ KORREKTUR v3:** Tier-Modell vereinfacht. `check_and_trigger_cortex_update()` nimmt kein `context_limit` mehr, gibt kein `triggered_tier` int zurück sondern ein Dict mit `triggered`, `progress` und `frequency`. Das Done-Event enthält jetzt `cortex` statt `cortex_update`.
+
 ## Übersicht
 
 Dieser Schritt beschreibt die Integration des Cortex-Systems in den bestehenden Chat-Stream. Drei zentrale Änderungen werden durchgeführt:
@@ -153,15 +155,15 @@ Client                routes/chat.py       ChatService          CortexService   
   │                        │   │    check_and_trigger(persona_id, session_id, context_limit)                            │
   │                        │   │                │                                                                       │
   │                        │   │                │                                           ┌── get_message_count()     │
-  │                        │   │                │                                           ├── get_fired_tiers()       │
-  │                        │   │                │                                           ├── calculate_thresholds()  │
+  │                        │   │                │                                           ├── get_cycle_base()        │
+  │                        │   │                │                                           ├── calculate_threshold()   │
   │                        │   │                │                                           │                           │
-  │                        │   │                │                                           ├── [Tier erreicht?]        │
-  │                        │   │                │                                           │   JA → mark_tier_fired()  │
+  │                        │   │                │                                           ├── [Schwelle erreicht?]    │
+  │                        │   │                │                                           │   JA → set_cycle_base()   │
   │                        │   │                │                                           │        → Background-Thread│
-  │                        │   │◄── return tier ────────────────────────────────────────────│                           │
+  │                        │   │◄── return info ────────────────────────────────────────────│                           │
   │                        │   │                │                                                                       │
-  │◄── SSE: done ────────│◄──│ { response, stats, cortex_update }                                                     │
+  │◄── SSE: done ────────│◄──│ { response, stats, cortex }                                                            │
   │                        │   │                │                                                                       │
   │   (Response closed)   │                                                                                            │
   │                        │                     Background: CortexUpdateService.execute_update()                       │
@@ -183,8 +185,8 @@ Client                routes/chat.py       ChatService          CortexService   
    - h) Chunks → Client (SSE)
    - i) Beim 1. Chunk: `save_message(user)` in Persona-DB
    - j) Done: `save_message(bot)` in Persona-DB
-   - k) **NEU:** Tier-Check via `check_and_trigger_cortex_update()`
-   - l) **NEU:** `cortex_update` Info im Done-Event an Client senden
+   - k) **NEU:** Cortex-Check via `check_and_trigger_cortex_update()`
+   - l) **NEU:** `cortex` Info (Progress + Trigger-Status) im Done-Event an Client senden
 
 ---
 
@@ -268,32 +270,26 @@ def generate():
                 stream_success = True
                 done_data = event_data
 
-                # ── NEU: Tier-Check NACH save_message ────────────
-                cortex_update = None
+                # ── NEU: Cortex Trigger-Check VOR done-yield ─────
+                cortex_info = None
                 try:
-                    triggered_tier = check_and_trigger_cortex_update(
+                    cortex_info = check_and_trigger_cortex_update(
                         persona_id=persona_id,
-                        session_id=session_id,
-                        context_limit=context_limit
+                        session_id=session_id
                     )
-                    if triggered_tier is not None:
-                        cortex_update = {
-                            'tier': triggered_tier,
-                            'status': 'started'
-                        }
-                except Exception as tier_err:
-                    log.warning("Cortex Tier-Check Fehler (non-fatal): %s", tier_err)
+                except Exception as cortex_err:
+                    log.warning("Cortex check failed (non-fatal): %s", cortex_err)
                 # ─────────────────────────────────────────────────
 
-                # Done-Event mit optionalem cortex_update
+                # Done-Event mit optionalem cortex Progress
                 done_payload = {
                     'type': 'done',
                     'response': event_data['response'],
                     'stats': event_data['stats'],
                     'character_name': character_name
                 }
-                if cortex_update:
-                    done_payload['cortex_update'] = cortex_update
+                if cortex_info:
+                    done_payload['cortex'] = cortex_info
 
                 yield f"data: {json.dumps(done_payload)}\n\n"
 
@@ -315,7 +311,7 @@ In der Schritt-3B-Spezifikation stand der Tier-Check **nach** dem letzten Yield.
 
 ```
 Alt (Step 3B):   ... → yield done → tier-check → (client weiß nichts)
-Neu (Step 6A):   ... → save_message → tier-check → yield done{cortex_update} → (client informiert)
+Neu (Step 6A):   ... → save_message → cortex-check → yield done{cortex} → (client informiert)
 ```
 
 > **Hinweis:** Das eigentliche Cortex-Update (tool_use API-Call, 3–10s) läuft weiterhin im Background-Thread. Nur die **Entscheidung** ob ein Update nötig ist, wird synchron gemacht.
@@ -338,18 +334,15 @@ elif event_type == 'done':
 elif event_type == 'done':
     save_message(event_data['response'], False, character_name, session_id, persona_id=persona_id)
 
-    # Tier-Check (identisch zu chat_stream)
-    cortex_update = None
+    # Cortex Trigger-Check (identisch zu chat_stream)
+    cortex_info = None
     try:
-        triggered_tier = check_and_trigger_cortex_update(
+        cortex_info = check_and_trigger_cortex_update(
             persona_id=persona_id,
-            session_id=session_id,
-            context_limit=context_limit
+            session_id=session_id
         )
-        if triggered_tier is not None:
-            cortex_update = {'tier': triggered_tier, 'status': 'started'}
-    except Exception as tier_err:
-        log.warning("Cortex Tier-Check Fehler (non-fatal): %s", tier_err)
+    except Exception as cortex_err:
+        log.warning("Cortex check failed (non-fatal): %s", cortex_err)
 
     done_payload = {
         'type': 'done',
@@ -357,8 +350,8 @@ elif event_type == 'done':
         'stats': event_data['stats'],
         'character_name': character_name
     }
-    if cortex_update:
-        done_payload['cortex_update'] = cortex_update
+    if cortex_info:
+        done_payload['cortex'] = cortex_info
 
     yield f"data: {json.dumps(done_payload)}\n\n"
 ```

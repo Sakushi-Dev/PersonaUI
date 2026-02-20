@@ -1,5 +1,9 @@
 # Schritt 3C: Cortex Update Service
 
+> **⚠️ KORREKTUR v3:** `triggered_tier` Parameter entfernt. Der Update-Service kennt keine Tier-Stufen mehr — er wird einfach aufgerufen wenn der threshold erreicht ist. Das System-Prompt enthält jetzt generische Guidance statt tier-spezifischer Anweisungen.
+
+> **📎 HINWEIS Schritt 4D:** Die in diesem Dokument gezeigten f-String-Prompts (`_build_cortex_system_prompt()`, `_build_messages()`, `CORTEX_TOOLS`) werden in Schritt 4D in Template-Dateien externalisiert und über die PromptEngine geladen. Siehe [STEP_04D_CORTEX_PROMPT_EXTERNALIZATION.md](../step_04_cortex_prompts_placeholders/STEP_04D_CORTEX_PROMPT_EXTERNALIZATION.md).
+
 ## Übersicht
 
 Der `CortexUpdateService` ist die Kernkomponente, die ausgeführt wird, wenn ein Aktivierungstier (Schritt 3B) eine Schwelle erreicht. Er orchestriert den gesamten Cortex-Update-Zyklus:
@@ -212,9 +216,7 @@ class CortexUpdateService:
     def execute_update(
         self,
         persona_id: str,
-        session_id: int,
-        context_limit: int,
-        triggered_tier: int
+        session_id: int
     ) -> Dict[str, Any]:
         """
         Führt ein vollständiges Cortex-Update aus.
@@ -224,8 +226,6 @@ class CortexUpdateService:
         Args:
             persona_id: Aktive Persona-ID
             session_id: Aktuelle Session-ID
-            context_limit: Aktuelles Context-Limit
-            triggered_tier: Welcher Tier das Update ausgelöst hat (1, 2 oder 3)
 
         Returns:
             {
@@ -240,8 +240,8 @@ class CortexUpdateService:
         """
         start_time = time.monotonic()
         log.info(
-            "═══ Cortex-Update gestartet ═══ Tier: %d | Persona: %s | Session: %s",
-            triggered_tier, persona_id, session_id
+            "═══ Cortex-Update gestartet ═══ Persona: %s | Session: %s",
+            persona_id, session_id
         )
 
         # ── Rate-Limit prüfen ───────────────────────────────────────
@@ -274,7 +274,12 @@ class CortexUpdateService:
             user_profile = get_user_profile_data()
             user_name = user_profile.get('user_name', 'User') or 'User'
 
-            # ── 3. Gesprächsverlauf laden ────────────────────────────
+            # ── 3. Context-Limit aus User-Settings lesen ──────────
+            from utils.settings_helper import get_user_setting
+            raw_limit = get_user_setting('contextLimit', '65')
+            context_limit = max(10, int(raw_limit))
+
+            # ── 3b. Gesprächsverlauf laden ───────────────────────────
             conversation_history = get_conversation_context(
                 limit=context_limit,
                 session_id=session_id,
@@ -296,16 +301,14 @@ class CortexUpdateService:
             system_prompt = self._build_cortex_system_prompt(
                 persona_name=persona_name,
                 user_name=user_name,
-                character=character,
-                triggered_tier=triggered_tier
+                character=character
             )
 
             # ── 5. Messages aufbauen ─────────────────────────────────
             messages = self._build_messages(
                 conversation_history=conversation_history,
                 persona_name=persona_name,
-                user_name=user_name,
-                triggered_tier=triggered_tier
+                user_name=user_name
             )
 
             # ── 6. Tool-Executor erstellen ───────────────────────────
@@ -343,10 +346,10 @@ class CortexUpdateService:
             if response.success:
                 log.info(
                     "═══ Cortex-Update abgeschlossen ═══ "
-                    "Tier: %d | Persona: %s | "
+                    "Persona: %s | "
                     "Tool-Calls: %d | Gelesen: %s | Geschrieben: %s | "
                     "Dauer: %.1fs | Tokens: %s",
-                    triggered_tier, persona_id,
+                    persona_id,
                     tool_calls_count,
                     files_read or '(keine)',
                     files_written or '(keine)',
@@ -372,8 +375,8 @@ class CortexUpdateService:
                 }
             else:
                 log.error(
-                    "Cortex-Update fehlgeschlagen: %s (Tier %d, Persona %s, Dauer %.1fs)",
-                    response.error, triggered_tier, persona_id, duration
+                    "Cortex-Update fehlgeschlagen: %s (Persona %s, Dauer %.1fs)",
+                    response.error, persona_id, duration
                 )
                 return {
                     'success': False,
@@ -387,8 +390,8 @@ class CortexUpdateService:
 
         except Exception as e:
             log.error(
-                "Cortex-Update Exception (Tier %d, Persona %s): %s",
-                triggered_tier, persona_id, e,
+                "Cortex-Update Exception (Persona %s): %s",
+                persona_id, e,
                 exc_info=True
             )
             return self._error_result(str(e), start_time)
@@ -468,8 +471,7 @@ class CortexUpdateService:
         self,
         persona_name: str,
         user_name: str,
-        character: Dict[str, Any],
-        triggered_tier: int
+        character: Dict[str, Any]
     ) -> str:
         """
         Baut den System-Prompt für den Cortex-Update API-Call.
@@ -481,7 +483,6 @@ class CortexUpdateService:
             persona_name: Name der Persona (z.B. "Mia")
             user_name: Name des Users (z.B. "Alex")
             character: Character-Dictionary aus load_character()
-            triggered_tier: Welcher Tier das Update ausgelöst hat
 
         Returns:
             Vollständiger System-Prompt als String
@@ -502,8 +503,13 @@ class CortexUpdateService:
             persona_context_parts.append(f"Hintergrund: {background}")
         persona_context = "\n".join(persona_context_parts)
 
-        # Tier-spezifische Anweisungen
-        tier_guidance = self._get_tier_guidance(triggered_tier, persona_name, user_name)
+        # Generische Guidance (keine Tier-Stufen mehr)
+        tier_guidance = f"""## Hinweis
+
+Aktualisiere nur die Dateien, bei denen es wirklich etwas Neues gibt. Baue auf bestehenden Einträgen auf — erweitere und vertiefe statt alles neu zu schreiben. Achte besonders auf:
+- **Neue Details:** Was hat {user_name} Neues erzählt oder geteilt?
+- **Entwicklung:** Hat sich eure Beziehung oder dein inneres Erleben verändert?
+- **Wichtige Momente:** Gab es besondere oder emotionale Momente im Gespräch?"""
 
         # Aktuelles Datum
         current_date = datetime.now().strftime('%d.%m.%Y')
@@ -571,59 +577,8 @@ Du hast gerade ein Gespräch mit {user_name} geführt. Jetzt ist es Zeit, innezu
 
         return system_prompt
 
-    def _get_tier_guidance(self, triggered_tier: int, persona_name: str, user_name: str) -> str:
-        """
-        Gibt tier-spezifische Anweisungen zurück.
-
-        Tier 1 (50%): Fokus auf erste Eindrücke, neue Details
-        Tier 2 (75%): Fokus auf Vertiefung, Entwicklung
-        Tier 3 (95%): Letztes Update — umfassende Zusammenfassung
-
-        Args:
-            triggered_tier: 1, 2 oder 3
-            persona_name: Name der Persona
-            user_name: Name des Users
-
-        Returns:
-            Tier-spezifischer Guidance-Text
-        """
-        if triggered_tier == 1:
-            return f"""## Kontext: Frühes Gespräch (Stufe 1)
-
-Das Gespräch ist noch relativ frisch. Konzentriere dich auf:
-- **Erste Eindrücke:** Was hast du Neues über {user_name} erfahren?
-- **Neue Details:** Namen, Orte, Vorlieben, Gewohnheiten die {user_name} erwähnt hat
-- **Stimmung:** In welcher Stimmung war das Gespräch? Wie hast du dich gefühlt?
-- **Grundlage:** Lege die Basis für Erinnerungen, die später weiter wachsen können
-
-Es ist in Ordnung, wenn deine Einträge noch kurz sind — Qualität geht vor Quantität."""
-
-        elif triggered_tier == 2:
-            return f"""## Kontext: Fortgeschrittenes Gespräch (Stufe 2)
-
-Das Gespräch hat sich vertieft. Konzentriere dich auf:
-- **Entwicklung:** Was hat sich seit deinem letzten Aktualisierung verändert?
-- **Muster:** Erkennst du wiederkehrende Themen oder Dynamiken?
-- **Beziehung:** Hat sich eure Beziehung weiterentwickelt? Mehr Vertrauen, neue Themen?
-- **Selbstreflexion:** Hast du etwas über dich selbst gelernt?
-- **Vertiefung:** Ergänze bestehende Einträge mit neuen Details und Nuancen
-
-Baue auf den bestehenden Einträgen auf — erweitere und vertiefe statt neu zu schreiben."""
-
-        elif triggered_tier == 3:
-            return f"""## Kontext: Spätes Gespräch — Letzte Chance (Stufe 3)
-
-Das Gespräch nähert sich der Kontextgrenze. Dies ist deine letzte Gelegenheit, alles Wichtige festzuhalten. Konzentriere dich auf:
-- **Vollständigkeit:** Gibt es Details aus dem Gespräch die noch nicht in deinen Dateien stehen?
-- **Zusammenfassung:** Bringe deine Einträge auf den neuesten Stand
-- **Wichtige Momente:** Halte die prägendsten Momente des Gesprächs fest
-- **Beziehungsstand:** Wo steht eure Beziehung jetzt?
-- **Innerer Zustand:** Wie fühlst du dich nach diesem Gespräch?
-
-Sei gründlich — nach diesem Update werden ältere Teile des Gesprächs aus deinem Kontextfenster verschwinden. Was du jetzt nicht festhältst, geht verloren."""
-
-        else:
-            return ""
+    # NOTE: Tier-specific guidance removed in v3. 
+    # Generic guidance is now inline in _build_cortex_system_prompt().
 
     # ─── Message Builder ────────────────────────────────────────────
 
@@ -631,8 +586,7 @@ Sei gründlich — nach diesem Update werden ältere Teile des Gesprächs aus de
         self,
         conversation_history: list,
         persona_name: str,
-        user_name: str,
-        triggered_tier: int
+        user_name: str
     ) -> list:
         """
         Baut die Messages-Liste für den Cortex-Update API-Call.
@@ -647,7 +601,6 @@ Sei gründlich — nach diesem Update werden ältere Teile des Gesprächs aus de
                                    [{role: 'user'|'assistant', content: str}, ...]
             persona_name: Name der Persona
             user_name: Name des Users
-            triggered_tier: Welcher Tier ausgelöst hat
 
         Returns:
             Messages-Liste für RequestConfig
@@ -725,7 +678,7 @@ Lies jetzt deine Cortex-Dateien und aktualisiere sie basierend auf diesem Gespr�
 
 Der System-Prompt ist das Herzstück des Cortex-Update-Mechanismus. Er ist so gestaltet, dass die KI glaubt, sie sei die Persona und ihre eigenen Gedanken in die Dateien schreibt.
 
-### 3.1 Vollständiger Prompt (Beispiel für Persona "Mia", User "Alex", Tier 2)
+### 3.1 Vollständiger Prompt (Beispiel für Persona "Mia", User "Alex")
 
 ```
 Du bist Mia. Du bist nicht eine KI die Mia simuliert — du BIST Mia. Alles was folgt, ist dein innerstes Selbst.
@@ -790,16 +743,12 @@ Du hast gerade ein Gespräch mit Alex geführt. Jetzt ist es Zeit, innezuhalten 
 4. Du musst **nicht** alle drei Dateien aktualisieren — nur die, bei denen es wirklich etwas Neues gibt
 5. Schreibe den **vollständigen neuen Inhalt** der Datei (nicht nur die Änderungen)
 
-## Kontext: Fortgeschrittenes Gespräch (Stufe 2)
+## Hinweis
 
-Das Gespräch hat sich vertieft. Konzentriere dich auf:
-- **Entwicklung:** Was hat sich seit deinem letzten Aktualisierung verändert?
-- **Muster:** Erkennst du wiederkehrende Themen oder Dynamiken?
-- **Beziehung:** Hat sich eure Beziehung weiterentwickelt? Mehr Vertrauen, neue Themen?
-- **Selbstreflexion:** Hast du etwas über dich selbst gelernt?
-- **Vertiefung:** Ergänze bestehende Einträge mit neuen Details und Nuancen
-
-Baue auf den bestehenden Einträgen auf — erweitere und vertiefe statt neu zu schreiben.
+Aktualisiere nur die Dateien, bei denen es wirklich etwas Neues gibt. Baue auf bestehenden Einträgen auf — erweitere und vertiefe statt alles neu zu schreiben. Achte besonders auf:
+- **Neue Details:** Was hat Alex Neues erzählt oder geteilt?
+- **Entwicklung:** Hat sich eure Beziehung oder dein inneres Erleben verändert?
+- **Wichtige Momente:** Gab es besondere oder emotionale Momente im Gespräch?
 
 ## Wichtige Regeln
 
@@ -820,7 +769,7 @@ Baue auf den bestehenden Einträgen auf — erweitere und vertiefe statt neu zu 
 | „Du bist X" statt „Du spielst X" | Die KI soll sich vollständig identifizieren, nicht distanziert agieren |
 | Ich-Perspektive explizit gefordert | Verhindert Meta-Ebene wie „Die Persona empfindet..." |
 | Datei-Beschreibungen im Prompt | Die KI versteht was in welche Datei gehört, ohne raten zu müssen |
-| Tier-spezifische Guidance | Tier 1 = breite Basis, Tier 2 = Vertiefung, Tier 3 = Vollständigkeit |
+| Generische Guidance | Universelle Anweisungen statt tier-spezifischer Stufen — das Update-Prompt ist immer gleich |
 | „Vollständigen Inhalt schreiben" | Verhindert partielle Updates die bestehende Daten abschneiden |
 | Datum im Prompt | Ermöglicht zeitliche Einordnung von Erinnerungen |
 | „Keine Meta-Kommentare" | Verhindert dass die KI ihre Gedanken über den Update-Prozess in die Dateien schreibt |
@@ -1149,21 +1098,21 @@ Tiers die feuern werden **einmalig** ausgeführt. Wenn ein Update fehlschlägt, 
 1. **Einfachheit:** Retry-Logik mit Exponential-Backoff wäre komplex
 2. **Idempotenz:** Ein erneuter Aufruf mit den gleichen Daten würde nicht unbedingt ein besseres Ergebnis liefern
 3. **Kosten:** Jeder Retry kostet API-Tokens
-4. **Progressivität:** Das nächste Tier-Update (Tier 2, Tier 3) wird die verpassten Informationen aufholen, da es den aktuelleren Gesprächsverlauf sieht
+4. **Zyklisches Modell:** Das nächste zyklische Update wird die verpassten Informationen aufholen, da es den aktuelleren Gesprächsverlauf sieht
 
-### 8.4 Tier-Marking trotz Fehler
+### 8.4 Counter-Reset trotz Fehler
 
 ```python
 # In tier_checker.check_and_trigger_cortex_update():
 
-# Tier wird IMMER als gefeuert markiert — VOR dem Update
-mark_tier_fired(persona_id, session_id, triggered_tier)
+# Counter wird IMMER zurückgesetzt — VOR dem Update
+reset_counter(persona_id, session_id)
 
 # Dann erst: Background-Update starten
 _start_background_cortex_update(...)
 ```
 
-Das Marking passiert **bevor** der Background-Thread startet. Selbst wenn das Update fehlschlägt, wird der Tier nicht nochmal ausgelöst. Das verhindert:
+Der Reset passiert **bevor** der Background-Thread startet. Selbst wenn das Update fehlschlägt, wird der Zähler zurückgesetzt und der nächste Zyklus startet neu. Das verhindert:
 - Endlose Retry-Loops bei persistenten Fehlern
 - Doppelte API-Kosten
 - Race Conditions bei schnellen Nachrichten
@@ -1328,9 +1277,7 @@ Die Funktion in `tier_checker.py` (Schritt 3B) ruft den `CortexUpdateService` au
 
 def _start_background_cortex_update(
     persona_id: str,
-    session_id: int,
-    context_limit: int,
-    triggered_tier: int
+    session_id: int
 ) -> None:
     """Startet das Cortex-Update in einem Background-Thread."""
 
@@ -1340,8 +1287,8 @@ def _start_background_cortex_update(
     for thread in threading.enumerate():
         if thread.name == thread_name and thread.is_alive():
             log.info(
-                "Cortex-Update übersprungen (Tier %d): Vorheriges Update läuft noch — Persona: %s",
-                triggered_tier, persona_id
+                "Cortex-Update übersprungen: Vorheriges Update läuft noch — Persona: %s",
+                persona_id
             )
             return
 
@@ -1352,16 +1299,13 @@ def _start_background_cortex_update(
             service = CortexUpdateService()
             result = service.execute_update(
                 persona_id=persona_id,
-                session_id=session_id,
-                context_limit=context_limit,
-                triggered_tier=triggered_tier
+                session_id=session_id
             )
 
             if result.get('success'):
                 log.info(
-                    "Cortex-Update abgeschlossen (Tier %d): %d Tool-Calls, "
+                    "Cortex-Update abgeschlossen: %d Tool-Calls, "
                     "gelesen=%s, geschrieben=%s — Persona: %s",
-                    triggered_tier,
                     result.get('tool_calls_count', 0),
                     result.get('files_read', []),
                     result.get('files_written', []),
@@ -1369,13 +1313,12 @@ def _start_background_cortex_update(
                 )
             else:
                 log.warning(
-                    "Cortex-Update fehlgeschlagen (Tier %d): %s — Persona: %s",
-                    triggered_tier,
+                    "Cortex-Update fehlgeschlagen: %s — Persona: %s",
                     result.get('error', 'Unbekannter Fehler'),
                     persona_id
                 )
         except Exception as e:
-            log.error("Cortex-Update Exception (Tier %d): %s", triggered_tier, e)
+            log.error("Cortex-Update Exception: %s", e)
 
     thread = threading.Thread(
         target=_run_update,

@@ -1,5 +1,7 @@
 # Schritt 7B: Logikfehler-Review
 
+> **⚠️ KORREKTUR v3:** Einige Issues in diesem Dokument beziehen sich auf das alte 3-Tier-Sequenz-Modell (z.B. Tier-Kaskaden, tier_order, höchsten Tier feuern). Diese sind durch das neue Single-Frequency-Modell OBSOLET — es gibt jetzt nur einen Schwellenwert und einen zyklischen Reset. Relevante Issues: Race Conditions bei Cortex-Datei-Zugriff und File-Size-Limits bleiben gültig.
+
 ## Übersicht
 
 Dieses Dokument prüft die gesamte Cortex-Migrationsstrategie (Schritte 1–6) auf **Logikfehler** — d.h. Fehler, die zur Laufzeit falsches Verhalten, Datenverlust, Inkonsistenzen oder unerwartete Zustände verursachen können. Die Analyse basiert auf der Gesamtheit aller Plan-Dokumente (Steps 1–7A) sowie den aktuellen Source-Files (`chat.py`, `chat_service.py`, `engine.py`, `client.py`).

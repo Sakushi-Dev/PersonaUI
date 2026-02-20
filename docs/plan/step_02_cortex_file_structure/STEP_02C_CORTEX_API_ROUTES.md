@@ -1,5 +1,7 @@
 # Schritt 2C: Cortex API Routes
 
+> **⚠️ KORREKTUR v3:** Die Settings-Struktur in diesem Dokument enthält noch das alte Tier-Format (`tiers: {tier1: {...}, tier2: {...}, tier3: {...}}`). Die KORREKTE Struktur von `cortex_settings.json` ist jetzt: `{"enabled": true, "frequency": "medium"}`. Die `/api/cortex/settings` Endpoints müssen entsprechend vereinfacht werden. Die Datei-Endpoints (GET/PUT/POST für cortex files) bleiben unverändert.
+
 ## Übersicht
 
 Das Cortex-System benötigt REST-Endpunkte, damit das Frontend (`CortexOverlay.jsx`) die drei Cortex-Dateien (`memory.md`, `soul.md`, `relationship.md`) lesen, bearbeiten und zurücksetzen kann. Zusätzlich braucht die UI Zugriff auf die Cortex-Einstellungen (Aktivierungsstufen, Ein/Aus-Schalter).

@@ -1,5 +1,7 @@
 # Schritt 7C: Finale Implementierungsreihenfolge
 
+> **⚠️ KORREKTUR v3:** Tier-spezifische Implementierungsdetails in diesem Dokument (z.B. `_fired_tiers`, Tier-Kaskaden-Checks, Tier-Schwellwerte in cortex_settings.json) sind durch das v3 Single-Frequency-Modell vereinfacht. Die Phasen-Reihenfolge und Datei-Erstellungsschritte bleiben konzeptionell korrekt, aber die konkreten Inhalte der tier_tracker.py und tier_checker.py Module haben sich geändert (siehe aktualisierte Schritte 3B, 3C).
+
 ## Übersicht
 
 Dieses Dokument definiert die **verbindliche Implementierungsreihenfolge** für die Cortex-Migration. Es basiert auf:

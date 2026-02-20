@@ -1,18 +1,43 @@
 # Schritt 3B: Aktivierungsstufen-Logik
 
+> **⚠️ KORREKTUR v3:** Tier-Modell grundlegend geändert. Die 3 Stufen sind **keine sequentiellen Trigger**, sondern **3 auswählbare Frequenz-Optionen**. Der User wählt EINE Frequenz. Nach jedem Trigger wird der Zähler auf 0 zurückgesetzt.
+
 ## Übersicht
 
-Das Cortex-System aktualisiert seine Dateien (`memory.md`, `soul.md`, `relationship.md`) nicht bei jeder Nachricht, sondern an definierten **Schwellenwerten** innerhalb einer Konversation. Diese Schwellen werden als Prozentsätze des `contextLimit` berechnet — der maximalen Anzahl von Nachrichten, die im Konversationskontext gehalten werden.
+Das Cortex-System aktualisiert seine Dateien (`memory.md`, `soul.md`, `relationship.md`) nicht bei jeder Nachricht, sondern an einem definierten **Schwellenwert** innerhalb der Konversation. Dieser Schwellenwert wird als Prozentsatz des `contextLimit` berechnet — der vom User eingestellten maximalen Kontext-Länge (Nachrichten).
 
-Drei Aktivierungsstufen (Tiers) bestimmen, wann ein Cortex-Update ausgelöst wird:
+**Alle 3 Cortex-Dateien sind IMMER im System-Prompt** (via Computed Placeholders). Die Frequenz-Einstellung bestimmt nur **WIE OFT die KI die Dateien aktualisiert** — nicht welche Dateien geladen werden.
 
-| Stufe | Default-Schwelle | Bedeutung |
-|-------|:----------------:|-----------|
-| Tier 1 | 50% von `contextLimit` | Frühes Update — erste Eindrücke, initiale Details |
-| Tier 2 | 75% von `contextLimit` | Mittleres Update — Vertiefung, Beziehungsentwicklung |
-| Tier 3 | 95% von `contextLimit` | Spätes Update — letzte Chance vor Kontext-Rotation |
+### Die 3 Frequenz-Optionen
 
-Jeder Tier löst **genau einmal** pro Konversation aus. Die Trigger-Prüfung findet **server-seitig** in `chat.py` statt, **nachdem** der Chat-Response vollständig gestreamt und gespeichert wurde. Das Cortex-Update selbst läuft als **separater, nicht-blockierender Background-Request** via `tool_use` (dokumentiert in Schritt 3A).
+Der User wählt im CortexOverlay **eine** von 3 Frequenzen:
+
+| Option | Frontend-Label | Schwelle | Bedeutung |
+|:------:|:--------------:|:--------:|-----------|
+| 🔥 | **Häufig** | 50% | Update bei jeder Hälfte des Kontexts |
+| ⚡ | **Mittel** | 75% | Update bei 3/4 des Kontexts (Default) |
+| 🌙 | **Selten** | 95% | Update erst kurz vor Kontext-Ende |
+
+### Funktionsprinzip
+
+```
+1. User wählt Frequenz: "Mittel" (75%)
+2. contextLimit = 65 → Schwelle = floor(65 × 0.75) = 48 Nachrichten
+3. Konversation läuft...
+4. Bei Nachricht 48: → TRIGGER → Cortex-Update → Zähler reset auf 0
+5. Konversation läuft weiter...
+6. Bei Nachricht 96 (48+48): → TRIGGER → Cortex-Update → Zähler reset auf 0
+7. ...und so weiter, endlos zyklisch
+```
+
+```
+Nachricht:  0        48        96        144       192
+            ├────────┤─────────┤─────────┤─────────┤────
+            │ Zyklus 1│ Zyklus 2│ Zyklus 3│ Zyklus 4│
+            └──►UPD   └──►UPD   └──►UPD   └──►UPD
+```
+
+Die Trigger-Prüfung findet **server-seitig** in `chat.py` statt, **vor** dem `done`-Event (damit Progress-Info im SSE-Payload enthalten sein kann). Das Cortex-Update selbst läuft als **separater, nicht-blockierender Background-Request** via `tool_use` (dokumentiert in Schritt 3A).
 
 ---
 
@@ -21,170 +46,318 @@ Jeder Tier löst **genau einmal** pro Konversation aus. Die Trigger-Prüfung fin
 ### 1.1 Formel
 
 ```
-threshold_messages = floor(contextLimit × (tier_threshold_percent / 100))
+threshold_messages = floor(contextLimit × (frequency_percent / 100))
 ```
+
+Es gibt nur **einen** aktiven Schwellenwert — den der gewählten Frequenz.
 
 ### 1.2 Berechnungsbeispiele
 
 **Beispiel 1: `contextLimit = 65` (Default)**
 
-| Tier | Schwelle (%) | Berechnung | Trigger bei Nachricht # |
-|------|:------------:|-----------|:-----------------------:|
-| 1 | 50% | `floor(65 × 0.50)` | **32** |
-| 2 | 75% | `floor(65 × 0.75)` | **48** |
-| 3 | 95% | `floor(65 × 0.95)` | **61** |
+| Frequenz | % | Berechnung | Trigger alle # Nachrichten |
+|:--------:|:---:|-----------|:--------------------------:|
+| Häufig | 50% | `floor(65 × 0.50)` | alle **32** |
+| Mittel | 75% | `floor(65 × 0.75)` | alle **48** |
+| Selten | 95% | `floor(65 × 0.95)` | alle **61** |
 
-**Beispiel 2: `contextLimit = 200` (User-konfiguriert)**
+**Beispiel 2: `contextLimit = 200`**
 
-| Tier | Schwelle (%) | Berechnung | Trigger bei Nachricht # |
-|------|:------------:|-----------|:-----------------------:|
-| 1 | 50% | `floor(200 × 0.50)` | **100** |
-| 2 | 75% | `floor(200 × 0.75)` | **150** |
-| 3 | 95% | `floor(200 × 0.95)` | **190** |
+| Frequenz | % | Berechnung | Trigger alle # Nachrichten |
+|:--------:|:---:|-----------|:--------------------------:|
+| Häufig | 50% | `floor(200 × 0.50)` | alle **100** |
+| Mittel | 75% | `floor(200 × 0.75)` | alle **150** |
+| Selten | 95% | `floor(200 × 0.95)` | alle **190** |
 
 **Beispiel 3: `contextLimit = 10` (Minimum)**
 
-| Tier | Schwelle (%) | Berechnung | Trigger bei Nachricht # |
-|------|:------------:|-----------|:-----------------------:|
-| 1 | 50% | `floor(10 × 0.50)` | **5** |
-| 2 | 75% | `floor(10 × 0.75)` | **7** |
-| 3 | 95% | `floor(10 × 0.95)` | **9** |
+| Frequenz | % | Berechnung | Trigger alle # Nachrichten |
+|:--------:|:---:|-----------|:--------------------------:|
+| Häufig | 50% | `floor(10 × 0.50)` | alle **5** |
+| Mittel | 75% | `floor(10 × 0.75)` | alle **7** |
+| Selten | 95% | `floor(10 × 0.95)` | alle **9** |
 
-### 1.3 Hinweis zu `contextLimit`
+### 1.3 `contextLimit` — User-Wert (ungeclampt)
 
-Der `contextLimit` wird vom Frontend als Einstellung gesendet und definiert die maximale Anzahl von Nachrichten im Konversationskontext. Er wird in `chat_stream` aus dem Request gelesen:
+Die Tier-Berechnung nutzt den **User-Wert** aus `user_settings.json`, NICHT den geclampten Server-Wert.
 
 ```python
-# Bestehend in src/routes/chat.py (Zeile 79-84):
-context_limit = data.get('context_limit', 25)
-try:
-    context_limit = int(context_limit)
-except (TypeError, ValueError):
-    context_limit = 25
-context_limit = max(10, min(100, context_limit))
+# NEU: Für Cortex-Berechnung den User-Wert direkt lesen
+from utils.settings_helper import get_user_setting
+
+def _get_context_limit_for_cortex() -> int:
+    """Liest den User-contextLimit für Cortex-Berechnung (ungeclampt)."""
+    raw = get_user_setting('contextLimit', '65')
+    try:
+        return max(10, int(raw))  # Nur Minimum 10, kein Maximum-Clamp
+    except (TypeError, ValueError):
+        return 65
 ```
 
-> **Hinweis:** Der aktuelle Code clampt `contextLimit` auf `max(10, min(100, ...))`. Die `user_settings.json` kann jedoch Werte wie `200` enthalten. Ob der Clamp erweitert wird, ist eine separate Diskussion — die Tier-Berechnung nutzt den **effektiven** (geclampten) Wert.
+**Grund:** Wenn der User `contextLimit=200` hat und "Häufig" wählt, soll bei Nachricht 100 getriggert werden — nicht bei 50 (geclampt=100).
+
+> **TODO:** Der Clamp in `chat.py` (`max(10, min(100, ...))`) sollte ggf. auch angepasst werden. Das ist aber ein separater Schritt.
 
 ---
 
-## 2. Session-State: Tracking der gefeuerten Tiers
+## 2. Session-State: Zyklisches Tracking
 
-### 2.1 Problem
+### 2.1 Konzept
 
-Jeder Tier soll nur **einmal** pro Konversation (Session) feuern. Dafür muss der Server sich merken, welche Tiers in der aktuellen Session bereits ausgelöst wurden. Da Flask keine persistente In-Process-Session-State hat und die App neustarten kann, muss der State robust gespeichert werden.
+Pro Session tracken wir nur **einen Wert**: `cycle_base` — die Nachrichtenanzahl bei der der aktuelle Zyklus begann.
 
-### 2.2 Lösung: Server-seitiges In-Memory-Dictionary mit DB-Fallback
+```
+Zähler = message_count - cycle_base
+Schwelle = floor(contextLimit × frequency_percent / 100)
+
+Wenn Zähler >= Schwelle → TRIGGER → cycle_base = message_count → Zähler zurück auf 0
+```
+
+### 2.2 Lösung: File-Persistent Cycle State
 
 ```python
 # src/utils/cortex/tier_tracker.py (NEU)
 
 """
-Cortex Tier Tracker — Verfolgt welche Aktivierungsstufen pro Session bereits gefeuert haben.
+Cortex Cycle Tracker — Zyklisches Tracking für Cortex-Updates.
 
-Nutzt ein In-Memory-Dictionary als primären Speicher. Bei Neustart wird der State
-aus der Nachrichtenanzahl der Session re-kalkuliert (kein Datenverlust).
+Modell:
+- User wählt eine Frequenz (Häufig=50%, Mittel=75%, Selten=95%)
+- Bei Erreichen der Schwelle: Update auslösen, Zähler reset
+- Endlos zyklisch: 0 → Schwelle → Update → 0 → Schwelle → Update → ...
+- Progress = messages_since_base / threshold (für Progress Bar)
+
+Persistenz:
+- cycle_base wird in src/settings/cycle_state.json gespeichert
+- In-Memory Dict dient als Cache für schnellen Zugriff
+- Jeder Write (set_cycle_base, reset_session) schreibt sofort auf Disk
+- Atomarer Write via tempfile + os.replace (kein Datenverlust bei Crash)
 """
 
+import json
+import os
+import tempfile
 import threading
-from typing import Dict, Set
+import math
+from typing import Dict
 
-# Thread-safe In-Memory State
+from utils.logger import log
+
 _lock = threading.Lock()
-_fired_tiers: Dict[str, Set[int]] = {}
-# Key: "{persona_id}:{session_id}" → Value: set of fired tier numbers (1, 2, 3)
+
+# In-Memory Cache — wird beim ersten Zugriff von Disk geladen
+_cycle_state: Dict[str, int] = {}
+_loaded = False
+
+# Pfad zur persistenten State-Datei
+_STATE_FILE = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+    'settings', 'cycle_state.json'
+)
 
 
 def _session_key(persona_id: str, session_id: int) -> str:
-    """Erzeugt einen eindeutigen Key für die Session."""
     return f"{persona_id}:{session_id}"
 
 
-def get_fired_tiers(persona_id: str, session_id: int) -> Set[int]:
-    """Gibt die bereits gefeuerten Tiers für eine Session zurück."""
-    key = _session_key(persona_id, session_id)
-    with _lock:
-        return _fired_tiers.get(key, set()).copy()
+def _load_from_disk() -> None:
+    """Lädt den cycle_state von Disk in den Cache (einmalig beim ersten Zugriff)."""
+    global _cycle_state, _loaded
+    if _loaded:
+        return
+    try:
+        if os.path.exists(_STATE_FILE):
+            with open(_STATE_FILE, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            if isinstance(data, dict):
+                _cycle_state = {k: int(v) for k, v in data.items()}
+                log.debug("[tier_tracker] State von Disk geladen: %d Sessions", len(_cycle_state))
+    except Exception as e:
+        log.warning("[tier_tracker] cycle_state.json konnte nicht geladen werden: %s", e)
+        _cycle_state = {}
+    _loaded = True
 
 
-def mark_tier_fired(persona_id: str, session_id: int, tier: int) -> None:
-    """Markiert einen Tier als gefeuert für eine Session."""
+def _save_to_disk() -> None:
+    """Schreibt den aktuellen Cache atomar auf Disk."""
+    try:
+        os.makedirs(os.path.dirname(_STATE_FILE), exist_ok=True)
+        # Atomarer Write: tempfile → os.replace
+        fd, tmp_path = tempfile.mkstemp(
+            dir=os.path.dirname(_STATE_FILE),
+            suffix='.tmp'
+        )
+        try:
+            with os.fdopen(fd, 'w', encoding='utf-8') as f:
+                json.dump(_cycle_state, f, indent=2)
+            os.replace(tmp_path, _STATE_FILE)
+        except Exception:
+            # Tempfile aufräumen bei Fehler
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+            raise
+    except Exception as e:
+        log.warning("[tier_tracker] cycle_state.json konnte nicht gespeichert werden: %s", e)
+
+
+def get_cycle_base(persona_id: str, session_id: int) -> int:
+    """Gibt die cycle_base für die Session zurück (0 wenn nicht vorhanden)."""
     key = _session_key(persona_id, session_id)
     with _lock:
-        if key not in _fired_tiers:
-            _fired_tiers[key] = set()
-        _fired_tiers[key].add(tier)
+        _load_from_disk()
+        return _cycle_state.get(key, 0)
+
+
+def set_cycle_base(persona_id: str, session_id: int, base: int) -> None:
+    """Setzt die cycle_base (nach einem Trigger-Reset). Schreibt sofort auf Disk."""
+    key = _session_key(persona_id, session_id)
+    with _lock:
+        _load_from_disk()
+        _cycle_state[key] = base
+        _save_to_disk()
 
 
 def reset_session(persona_id: str, session_id: int) -> None:
-    """Setzt den Tier-State für eine Session zurück (z.B. bei clear_chat)."""
+    """Setzt den State für eine Session zurück (z.B. bei clear_chat). Schreibt auf Disk."""
     key = _session_key(persona_id, session_id)
     with _lock:
-        _fired_tiers.pop(key, None)
+        _load_from_disk()
+        if _cycle_state.pop(key, None) is not None:
+            _save_to_disk()
 
 
 def reset_all() -> None:
-    """Setzt den gesamten Tier-State zurück (z.B. bei App-Restart)."""
+    """Setzt den gesamten State zurück (z.B. bei App-Reset). Löscht die Datei."""
+    global _loaded
     with _lock:
-        _fired_tiers.clear()
+        _cycle_state.clear()
+        _loaded = True
+        try:
+            if os.path.exists(_STATE_FILE):
+                os.remove(_STATE_FILE)
+        except Exception as e:
+            log.warning("[tier_tracker] cycle_state.json konnte nicht gelöscht werden: %s", e)
 
 
-def rebuild_from_message_count(
+def rebuild_cycle_base(
     persona_id: str,
     session_id: int,
     message_count: int,
-    context_limit: int,
-    tier_thresholds: Dict[int, int]
-) -> Set[int]:
+    threshold: int
+) -> int:
     """
-    Re-kalkuliert welche Tiers basierend auf der aktuellen Nachrichtenanzahl
-    bereits gefeuert haben müssten. Wird nach App-Neustart verwendet.
-
+    Fallback: Rekonstruiert die cycle_base wenn die Datei fehlt/korrupt ist.
+    
+    Wird nur aufgerufen wenn get_cycle_base() == 0 und message_count > threshold,
+    d.h. die Session hat mehr Nachrichten als die Schwelle aber keinen gespeicherten State.
+    
     Args:
         persona_id: Persona-ID
         session_id: Session-ID
-        message_count: Aktuelle Anzahl Nachrichten in der Session
-        context_limit: Aktuelles Context-Limit
-        tier_thresholds: Dict {1: 50, 2: 75, 3: 95} (Prozentwerte)
-
+        message_count: Aktuelle Gesamtanzahl Nachrichten
+        threshold: Aktuelle Schwelle in Nachrichten (z.B. 48)
+    
     Returns:
-        Set der Tiers die als gefeuert markiert wurden
+        Rekonstruierte cycle_base
     """
-    key = _session_key(persona_id, session_id)
-    fired = set()
+    if threshold <= 0:
+        threshold = 1
+    
+    # Wie viele volle Zyklen sind vergangen?
+    completed_cycles = message_count // threshold
+    cycle_base = completed_cycles * threshold
+    
+    # Speichern (In-Memory + Disk)
+    set_cycle_base(persona_id, session_id, cycle_base)
+    
+    return cycle_base
 
-    for tier_num, threshold_percent in tier_thresholds.items():
-        threshold_messages = int(context_limit * (threshold_percent / 100))
-        if message_count >= threshold_messages:
-            fired.add(tier_num)
 
-    with _lock:
-        _fired_tiers[key] = fired
-
-    return fired
+def get_progress(
+    persona_id: str,
+    session_id: int,
+    message_count: int,
+    threshold: int
+) -> dict:
+    """
+    Berechnet den Fortschritt zum nächsten Trigger für die Progress Bar.
+    
+    Args:
+        persona_id: Persona-ID
+        session_id: Session-ID
+        message_count: Aktuelle Nachrichtenanzahl
+        threshold: Schwelle in Nachrichten (z.B. 48)
+    
+    Returns:
+        {
+            "messages_since_reset": 25,
+            "threshold": 48,
+            "progress_percent": 52.1,
+            "cycle_number": 3
+        }
+    """
+    cycle_base = get_cycle_base(persona_id, session_id)
+    messages_since_reset = message_count - cycle_base
+    
+    progress = (messages_since_reset / threshold * 100) if threshold > 0 else 0
+    progress = min(progress, 100.0)
+    
+    cycle_number = (cycle_base // threshold + 1) if threshold > 0 else 1
+    
+    return {
+        "messages_since_reset": messages_since_reset,
+        "threshold": threshold,
+        "progress_percent": round(progress, 1),
+        "cycle_number": cycle_number
+    }
 ```
 
-### 2.3 Warum In-Memory statt DB?
-
-| Ansatz | Vorteil | Nachteil |
-|--------|---------|----------|
-| **In-Memory Dict** ✅ | Schnell, einfach, kein DB-Schema | Verliert State bei Restart |
-| DB-Tabelle | Persistent | Neues SQL-Schema, Migration, Overhead |
-| File-basiert | Persistent, kein SQL | I/O bei jeder Nachricht |
-
-**Gewählter Kompromiss:** In-Memory mit **automatischem Rebuild** bei Bedarf. Wenn der Server neustartet und eine Session fortgesetzt wird, wird der Tier-State aus der aktuellen Nachrichtenanzahl re-kalkuliert. Das ist konservativ: Tiers die bereits gefeuert hätten, werden als "gefeuert" markiert (aber nicht erneut ausgelöst). Es gehen keine Updates verloren — sie werden im schlimmsten Fall übersprungen, was harmlos ist.
-
-### 2.4 Session-Key Struktur
+### 2.3 Visualisierung
 
 ```
-Key: "{persona_id}:{session_id}"
+Frequenz: Mittel (75%), contextLimit = 65 → Schwelle = 48
 
-Beispiele:
-  "default:1"           → Default-Persona, Session 1
-  "a1b2c3d4:5"          → Custom-Persona, Session 5
+Msg:  0    10    20    30    40    48    58    68    78    88    96   ...
+      ├─────┼─────┼─────┼─────┼────┤─────┼─────┼─────┼─────┼────┤───
+                                    │                              │
+      ├───── Zyklus 1 ─────────────►UPD   ├───── Zyklus 2 ───────►UPD
+      cycle_base=0                 reset   cycle_base=48          reset
+                                   =48                             =96
+      
+      Progress Bar:
+      [████████████████████████████] 100% → TRIGGER!
+      [                            ] 0%   → Neustart
+      [█████████████               ] 50%  → auf halbem Weg
 ```
 
-Die Kombination aus `persona_id` und `session_id` ist notwendig, da verschiedene Personas eigene Cortex-Dateien haben und unabhängig getrackt werden müssen.
+### 2.4 Persistenz-Strategie: File-backed Cache
+
+| Schicht | Zweck |
+|---------|-------|
+| **In-Memory Dict** | Cache für schnellen Zugriff (kein Disk-Read pro Check) |
+| **`cycle_state.json`** | Persistenter State, überlebt Server-Neustarts |
+| **`rebuild_cycle_base()`** | Fallback wenn Datei fehlt oder korrupt |
+
+**Warum JSON-Datei statt DB?**
+- Kein Schema/Migration nötig
+- Atomarer Write via `os.replace` — crash-safe
+- Nur geschrieben bei State-Änderung (Trigger oder Reset), nicht bei jedem Chat
+- Typisch < 1KB (wenige aktive Sessions gleichzeitig)
+- Liegt in `src/settings/` neben `cortex_settings.json`
+
+**Dateiformat:**
+```json
+{
+  "default:5": 48,
+  "a1b2c3d4:12": 150,
+  "default:8": 96
+}
+```
+Key = `"{persona_id}:{session_id}"`, Value = `cycle_base` (message_count beim letzten Reset).
+
+Manuelle `/cortex`-Resets werden genauso persistent wie automatische Trigger — kein Datenverlust bei Neustart.
 
 ---
 
@@ -200,16 +373,21 @@ Die Kombination aus `persona_id` und `session_id` ist notwendig, da verschiedene
 │  1. User-Nachricht empfangen                                     │
 │  2. Chat-Stream generieren (yield chunks)                        │
 │  3. Bot-Antwort speichern (save_message)                         │
-│  4. SSE 'done' Event senden                                      │
 │                                                                  │
-│  ══════ Stream ist abgeschlossen ══════════════════════════════  │
+│  ══════ TRIGGER-CHECK (vor done-Event) ════════════════════════  │
 │                                                                  │
-│  5. Tier-Check ausführen:                                        │
-│     a) Message-Count für Session holen (get_message_count)       │
-│     b) Cortex-Settings laden (Tiers + enabled)                   │
-│     c) Schwellenwerte berechnen                                  │
-│     d) Prüfen ob ein neuer Tier erreicht wurde                   │
-│     e) Falls ja: mark_tier_fired() + Background-Update starten   │
+│  4. Cortex Trigger-Check:                                        │
+│     a) Cortex enabled?                                           │
+│     b) Message-Count für Session holen                           │
+│     c) Frequenz laden (Häufig/Mittel/Selten)                    │
+│     d) Schwelle berechnen: floor(contextLimit × frequency%)     │
+│     e) Zähler = message_count - cycle_base                       │
+│     f) Wenn Zähler >= Schwelle → TRIGGER!                        │
+│        → cycle_base = message_count (Reset)                      │
+│        → Background Cortex-Update starten                        │
+│     g) Progress-Daten berechnen → in done-Event mitsenden        │
+│                                                                  │
+│  5. SSE 'done' Event senden (inkl. cortex_progress + trigger)   │
 │                                                                  │
 │  6. Cortex-Update (falls getriggert):                            │
 │     → Separater Thread (non-blocking)                            │
@@ -220,108 +398,91 @@ Die Kombination aus `persona_id` und `session_id` ist notwendig, da verschiedene
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### 3.2 Integration in `chat.py` — Tier-Check nach Stream
+### 3.2 Integration in `chat.py` — Trigger-Check vor done-Event
 
-Die Tier-Prüfung wird **nach** dem erfolgreichen Stream-Ende eingefügt. Da der SSE-Stream zu diesem Zeitpunkt bereits alles an den Client gesendet hat, ist der Cortex-Update ein reiner Hintergrundprozess.
+Der Trigger-Check wird **vor** dem `done`-yield ausgeführt, damit Progress-Daten im SSE-Payload enthalten sind.
 
 ```python
 # ═══════════════════════════════════════════════════════════════
 #  MODIFIKATION: src/routes/chat.py — chat_stream() Funktion
 # ═══════════════════════════════════════════════════════════════
 
-from utils.cortex.tier_tracker import get_fired_tiers, mark_tier_fired, rebuild_from_message_count
 from utils.cortex.tier_checker import check_and_trigger_cortex_update
-from utils.database import get_message_count
 
 @chat_bp.route('/chat_stream', methods=['POST'])
 @handle_route_error('chat_stream')
 def chat_stream():
-    """API-Endpoint für gestreamte Chat-Nachrichten via SSE"""
     data = request.get_json()
     user_message = data.get('message', '').strip()
     session_id = data.get('session_id')
     # ... bestehender Code ...
 
-    context_limit = data.get('context_limit', 25)
-    try:
-        context_limit = int(context_limit)
-    except (TypeError, ValueError):
-        context_limit = 25
-    context_limit = max(10, min(100, context_limit))
-
-    # ... bestehender Code (conversation_history, etc.) ...
-
     def generate():
         chat_service = get_chat_service()
         user_msg_saved = False
-        stream_success = False            # ← NEU: Tracking ob Stream erfolgreich war
 
         try:
-            for event_type, event_data in chat_service.chat_stream(
-                # ... bestehende Parameter ...
-            ):
+            for event_type, event_data in chat_service.chat_stream(...):
                 if event_type == 'chunk':
                     if not user_msg_saved:
-                        save_message(user_message, True, character_name, session_id, persona_id=persona_id)
+                        save_message(user_message, True, character_name, 
+                                     session_id, persona_id=persona_id)
                         user_msg_saved = True
                     yield f"data: {json.dumps({'type': 'chunk', 'text': event_data})}\n\n"
 
                 elif event_type == 'done':
-                    save_message(event_data['response'], False, character_name, session_id, persona_id=persona_id)
-                    stream_success = True  # ← NEU
-                    yield f"data: {json.dumps({'type': 'done', 'response': event_data['response'], 'stats': event_data['stats'], 'character_name': character_name})}\n\n"
+                    save_message(event_data['response'], False, character_name, 
+                                 session_id, persona_id=persona_id)
+
+                    # ═══ NEU: Cortex Trigger-Check VOR done-yield ═══
+                    cortex_info = None
+                    try:
+                        cortex_info = check_and_trigger_cortex_update(
+                            persona_id=persona_id,
+                            session_id=session_id
+                        )
+                    except Exception as e:
+                        log.warning("Cortex check failed (non-fatal): %s", e)
+
+                    # done-Payload zusammenbauen
+                    done_payload = {
+                        'type': 'done',
+                        'response': event_data['response'],
+                        'stats': event_data['stats'],
+                        'character_name': character_name
+                    }
+                    
+                    # Cortex-Info mitsenden (Progress + Trigger-Status)
+                    if cortex_info:
+                        done_payload['cortex'] = cortex_info
+
+                    yield f"data: {json.dumps(done_payload)}\n\n"
 
                 elif event_type == 'error':
-                    # ... bestehender Error-Code ...
-                    yield f"data: {json.dumps(error_payload)}\n\n"
+                    yield f"data: {json.dumps({'type': 'error', 'error': event_data})}\n\n"
 
         except Exception as e:
             log.error("Stream-Fehler: %s", e)
             yield f"data: {json.dumps({'type': 'error', 'error': str(e)})}\n\n"
 
-        # ══════════════════════════════════════════════════════════
-        #  NEU: Tier-Check NACH Stream-Ende
-        # ══════════════════════════════════════════════════════════
-        if stream_success:
-            try:
-                check_and_trigger_cortex_update(
-                    persona_id=persona_id,
-                    session_id=session_id,
-                    context_limit=context_limit
-                )
-            except Exception as e:
-                # Tier-Check darf niemals den Chat-Flow brechen
-                log.warning("Cortex Tier-Check Fehler (non-fatal): %s", e)
-
     return Response(
         stream_with_context(generate()),
         mimetype='text/event-stream',
-        headers={
-            'Cache-Control': 'no-cache',
-            'X-Accel-Buffering': 'no',
-            'Connection': 'keep-alive'
-        }
+        headers={'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no', 'Connection': 'keep-alive'}
     )
 ```
 
-### 3.3 Wichtig: Position des Tier-Checks
-
-Der Tier-Check steht **innerhalb** der `generate()` Generator-Funktion, **nach** dem letzten `yield`. Das bedeutet:
-
-1. Alle SSE-Events sind bereits an den Client gesendet
-2. Der Client hat `done` empfangen und zeigt die Antwort an
-3. Der Tier-Check läuft noch im Server-Kontext des Generators
-4. Flask schließt den Response erst, wenn der Generator endet
+### 3.3 Timing
 
 ```
 Timeline:
-───────────────────────────────────────────────────────────►
-  │ chunks...  │ done │ tier-check │ background-update │
-  │ ← Client sieht diese Events → │                    │
-                                   │ ← Nicht sichtbar → │
+──────────────────────────────────────────────────────────►
+  │ chunks...  │ trigger-check │ done (inkl. progress) │
+  │            │     ~5ms       │                        │
+  │ ← Client sieht chunks ──────────── done mit cortex → │
+                                                          │
+                                    Background-Update ───►│ (3-10s, non-blocking)
 ```
-
-> **Hinweis:** Der Tier-Check selbst ist schnell (DB-Query + Vergleich). Nur das eigentliche Cortex-Update wird in einen Background-Thread ausgelagert.
 
 ---
 
@@ -331,256 +492,203 @@ Timeline:
 
 ```python
 """
-Cortex Tier Checker — Prüft ob ein Cortex-Update ausgelöst werden soll.
+Cortex Trigger Checker — Prüft ob ein Cortex-Update ausgelöst werden soll.
 
-Wird nach jedem erfolgreichen Chat-Response aufgerufen.
-Vergleicht die aktuelle Nachrichtenanzahl mit den konfigurierten Schwellenwerten
-und startet bei Bedarf ein Background-Cortex-Update.
+Der User wählt eine Frequenz (Häufig=50%, Mittel=75%, Selten=95%).
+Bei Erreichen der Schwelle: Update → Zähler reset → zyklisch wiederholen.
 """
 
 import threading
 import math
+import json
+import os
 from typing import Optional
 
 from utils.logger import log
 from utils.database import get_message_count
-from utils.cortex.tier_tracker import get_fired_tiers, mark_tier_fired, rebuild_from_message_count
+from utils.cortex.tier_tracker import (
+    get_cycle_base, set_cycle_base, rebuild_cycle_base, get_progress
+)
 
 
-def _load_tier_config() -> dict:
+# Frequenz-Mapping
+FREQUENCIES = {
+    "frequent": {"label": "Häufig",  "percent": 50},
+    "medium":   {"label": "Mittel",  "percent": 75},
+    "rare":     {"label": "Selten",  "percent": 95},
+}
+DEFAULT_FREQUENCY = "medium"
+
+
+def _load_cortex_config() -> dict:
     """
-    Lädt die Cortex-Tier-Konfiguration.
+    Lädt die Cortex-Konfiguration.
 
     Returns:
         {
             "enabled": True,
-            "tiers": {
-                1: {"threshold": 50, "enabled": True},
-                2: {"threshold": 75, "enabled": True},
-                3: {"threshold": 95, "enabled": True}
-            }
+            "frequency": "medium"   # "frequent" | "medium" | "rare"
         }
     """
-    import json
-    import os
-
     settings_path = os.path.join(
         os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
         'settings', 'cortex_settings.json'
     )
 
-    defaults = {
-        "enabled": True,
-        "tiers": {
-            "tier1": {"threshold": 50, "enabled": True},
-            "tier2": {"threshold": 75, "enabled": True},
-            "tier3": {"threshold": 95, "enabled": True}
-        }
-    }
+    defaults = {"enabled": True, "frequency": DEFAULT_FREQUENCY}
 
     try:
         if os.path.exists(settings_path):
             with open(settings_path, 'r', encoding='utf-8') as f:
                 saved = json.load(f)
-            merged = {**defaults, **saved}
-            merged['tiers'] = {**defaults['tiers'], **saved.get('tiers', {})}
-        else:
-            merged = defaults
+            return {**defaults, **saved}
     except Exception:
-        merged = defaults
-
-    # Konvertiere "tier1" → 1 für internen Gebrauch
-    config = {
-        "enabled": merged.get("enabled", True),
-        "tiers": {}
-    }
-    for key, value in merged.get("tiers", {}).items():
-        tier_num = int(key.replace("tier", ""))
-        config["tiers"][tier_num] = {
-            "threshold": value.get("threshold", 50),
-            "enabled": value.get("enabled", True)
-        }
-
-    return config
+        pass
+    return defaults
 
 
-def _calculate_thresholds(context_limit: int, tier_config: dict) -> dict:
+def _get_context_limit() -> int:
+    """Liest den User-contextLimit (ungeclampt)."""
+    from utils.settings_helper import get_user_setting
+    raw = get_user_setting('contextLimit', '65')
+    try:
+        return max(10, int(raw))
+    except (TypeError, ValueError):
+        return 65
+
+
+def _calculate_threshold(context_limit: int, frequency: str) -> int:
     """
-    Berechnet die absoluten Nachrichtenanzahl-Schwellenwerte.
+    Berechnet die Nachrichtenanzahl-Schwelle.
 
     Args:
-        context_limit: Maximale Nachrichten im Kontext (z.B. 65)
-        tier_config: Tier-Konfiguration aus _load_tier_config()
+        context_limit: User-contextLimit (z.B. 65)
+        frequency: "frequent" | "medium" | "rare"
 
     Returns:
-        {1: 32, 2: 48, 3: 61}  → Tier → Nachrichtenanzahl
+        Schwelle in Nachrichten (z.B. 48)
     """
-    thresholds = {}
-    for tier_num, tier_data in tier_config["tiers"].items():
-        if tier_data["enabled"]:
-            thresholds[tier_num] = math.floor(
-                context_limit * (tier_data["threshold"] / 100)
-            )
-    return thresholds
+    freq_data = FREQUENCIES.get(frequency, FREQUENCIES[DEFAULT_FREQUENCY])
+    return math.floor(context_limit * (freq_data["percent"] / 100))
 
 
 def check_and_trigger_cortex_update(
     persona_id: str,
-    session_id: int,
-    context_limit: int
-) -> Optional[int]:
+    session_id: int
+) -> Optional[dict]:
     """
-    Prüft ob ein Cortex-Update getriggert werden soll und startet es ggf.
+    Prüft ob ein Cortex-Update getriggert werden soll.
+    Gibt Progress-Daten zurück für das done-Event.
 
-    Wird nach jedem erfolgreichen Chat-Response aufgerufen.
+    Wird nach jedem erfolgreichen Chat-Response aufgerufen (vor done-yield).
 
     Args:
         persona_id: Aktive Persona-ID
         session_id: Aktuelle Session-ID
-        context_limit: Aktuelles Context-Limit (geclampt)
 
     Returns:
-        Tier-Nummer die getriggert wurde, oder None
+        {
+            "triggered": bool,
+            "progress": {
+                "messages_since_reset": 25,
+                "threshold": 48,
+                "progress_percent": 52.1,
+                "cycle_number": 3
+            },
+            "frequency": "medium"
+        }
+        Oder None wenn Cortex deaktiviert.
     """
-    # 1. Cortex global deaktiviert?
-    config = _load_tier_config()
+    # 1. Cortex aktiviert?
+    config = _load_cortex_config()
     if not config["enabled"]:
         return None
 
-    # 2. Keine aktiven Tiers?
-    thresholds = _calculate_thresholds(context_limit, config)
-    if not thresholds:
+    frequency = config.get("frequency", DEFAULT_FREQUENCY)
+    context_limit = _get_context_limit()
+    threshold = _calculate_threshold(context_limit, frequency)
+
+    if threshold <= 0:
         return None
 
-    # 3. Aktuelle Nachrichtenanzahl holen
+    # 2. Nachrichtenanzahl holen
     message_count = get_message_count(session_id=session_id, persona_id=persona_id)
     if message_count == 0:
         return None
 
-    # 4. Bereits gefeuerte Tiers laden
-    fired = get_fired_tiers(persona_id, session_id)
+    # 3. cycle_base laden (oder rebuilden nach Restart)
+    cycle_base = get_cycle_base(persona_id, session_id)
+    
+    # Rebuild wenn cycle_base noch nicht initialisiert (= 0) 
+    # und die Session schon Nachrichten hat
+    if cycle_base == 0 and message_count > threshold:
+        cycle_base = rebuild_cycle_base(persona_id, session_id, message_count, threshold)
 
-    # 5. Falls noch kein State existiert (z.B. nach Restart), rebuilden
-    if not fired and message_count > 0:
-        threshold_percents = {
-            tier_num: tier_data["threshold"]
-            for tier_num, tier_data in config["tiers"].items()
-            if tier_data["enabled"]
-        }
-        # Rebuild markiert Tiers die VOR der jetzigen Nachricht erreicht wurden
-        # Wir nutzen (message_count - 1) damit der aktuelle neue Tier trotzdem feuert
-        fired = rebuild_from_message_count(
-            persona_id, session_id,
-            message_count - 1,  # -1: Nur Tiers die VOR dieser Nachricht gefeuert hätten
-            context_limit, threshold_percents
+    # 4. Prüfen ob Schwelle erreicht
+    messages_since_reset = message_count - cycle_base
+    triggered = messages_since_reset >= threshold
+
+    if triggered:
+        # Reset: neuer Zyklus beginnt
+        set_cycle_base(persona_id, session_id, message_count)
+
+        log.info(
+            "Cortex-Update getriggert: %d Nachrichten seit Reset (Schwelle: %d, "
+            "Frequenz: %s, contextLimit: %d) — Persona: %s, Session: %s",
+            messages_since_reset, threshold, frequency, context_limit,
+            persona_id, session_id
         )
 
-    # 6. Prüfen ob ein neuer Tier erreicht wurde
-    triggered_tier = None
-    for tier_num in sorted(thresholds.keys()):
-        threshold = thresholds[tier_num]
-        if message_count >= threshold and tier_num not in fired:
-            triggered_tier = tier_num
-            break  # Nur den niedrigsten neuen Tier auslösen
+        # Background-Update starten
+        _start_background_cortex_update(persona_id, session_id)
 
-    if triggered_tier is None:
-        return None
+    # 5. Progress-Daten berechnen (nach eventuellem Reset!)
+    progress = get_progress(persona_id, session_id, message_count, threshold)
 
-    # 7. Tier als gefeuert markieren
-    mark_tier_fired(persona_id, session_id, triggered_tier)
-
-    log.info(
-        "Cortex Tier %d ausgelöst: %d/%d Nachrichten (Schwelle: %d, contextLimit: %d) — Persona: %s, Session: %s",
-        triggered_tier, message_count, context_limit,
-        thresholds[triggered_tier], context_limit,
-        persona_id, session_id
-    )
-
-    # 8. Background Cortex-Update starten
-    _start_background_cortex_update(
-        persona_id=persona_id,
-        session_id=session_id,
-        context_limit=context_limit,
-        triggered_tier=triggered_tier
-    )
-
-    return triggered_tier
+    return {
+        "triggered": triggered,
+        "progress": progress,
+        "frequency": frequency
+    }
 
 
-def _start_background_cortex_update(
-    persona_id: str,
-    session_id: int,
-    context_limit: int,
-    triggered_tier: int
-) -> None:
+def _start_background_cortex_update(persona_id: str, session_id: int) -> None:
     """
     Startet das Cortex-Update in einem Background-Thread.
-
-    Der Thread führt den tool_use API-Call aus (Schritt 3A: CortexUpdateService).
-    Da dies ein separater API-Request ist, blockiert er weder den Chat-Stream
-    noch den Response an den Client.
-
-    Args:
-        persona_id: Persona-ID
-        session_id: Session-ID
-        context_limit: Context-Limit für den Konversationskontext
-        triggered_tier: Welcher Tier das Update ausgelöst hat (für Logging)
+    Nur ein Update pro Persona gleichzeitig.
     """
+    thread_name = f"cortex-update-{persona_id}"
+
+    # Prüfe ob bereits ein Update läuft
+    for t in threading.enumerate():
+        if t.name == thread_name and t.is_alive():
+            log.info("Cortex-Update übersprungen: läuft bereits — Persona: %s", persona_id)
+            return
+
     def _run_update():
         try:
             from utils.cortex.update_service import CortexUpdateService
-
             service = CortexUpdateService()
             result = service.execute_update(
                 persona_id=persona_id,
-                session_id=session_id,
-                context_limit=context_limit,
-                triggered_tier=triggered_tier
+                session_id=session_id
             )
-
             if result.get('success'):
-                log.info(
-                    "Cortex-Update abgeschlossen (Tier %d): %d Tool-Calls ausgeführt — Persona: %s",
-                    triggered_tier,
-                    result.get('tool_calls_count', 0),
-                    persona_id
-                )
+                log.info("Cortex-Update abgeschlossen: %d Tool-Calls — Persona: %s",
+                         result.get('tool_calls_count', 0), persona_id)
             else:
-                log.warning(
-                    "Cortex-Update fehlgeschlagen (Tier %d): %s — Persona: %s",
-                    triggered_tier,
-                    result.get('error', 'Unbekannter Fehler'),
-                    persona_id
-                )
+                log.warning("Cortex-Update fehlgeschlagen: %s — Persona: %s",
+                            result.get('error', '?'), persona_id)
         except Exception as e:
-            log.error("Cortex-Update Exception (Tier %d): %s", triggered_tier, e)
+            log.error("Cortex-Update Exception: %s", e)
 
-    thread = threading.Thread(
-        target=_run_update,
-        name=f"cortex-update-{persona_id}-t{triggered_tier}",
-        daemon=True  # Thread stirbt mit dem Hauptprozess
-    )
+    thread = threading.Thread(target=_run_update, name=thread_name, daemon=True)
     thread.start()
 ```
 
-### 4.2 Warum `break` beim ersten neuen Tier?
-
-```python
-for tier_num in sorted(thresholds.keys()):
-    if message_count >= threshold and tier_num not in fired:
-        triggered_tier = tier_num
-        break  # ← Nur EINEN Tier pro Nachricht
-```
-
-Es wird bewusst nur **ein** Tier pro Nachricht ausgelöst:
-
-1. **Vermeidet parallele Tool-Use Calls:** Zwei gleichzeitige Cortex-Updates könnten sich gegenseitig überschreiben
-2. **Progressive Vertiefung:** Tier 1 schreibt erste Eindrücke, Tier 2 baut darauf auf
-3. **Edge Case:** Falls der User mehrere Tiers gleichzeitig überspringt (z.B. bei Rebuild nach Restart), wird nur der niedrigste neue Tier ausgelöst. Die höheren Tiers feuern bei der nächsten Nachricht.
-
 ---
 
-## 5. Vollständiger Flow: Chat → Tier-Check → Cortex-Update
+## 5. Vollständiger Flow
 
 ### 5.1 Sequenzdiagramm
 
@@ -591,504 +699,316 @@ Client                    Server (chat.py)              TierChecker             
   │                            │                            │                         │
   │◄── SSE: chunk ─────────────│                            │                         │
   │◄── SSE: chunk ─────────────│                            │                         │
-  │◄── SSE: chunk ─────────────│                            │                         │
   │                            │                            │                         │
-  │                            │── save_message() ─────────►│                         │
-  │◄── SSE: done ──────────────│                            │                         │
+  │                            │── save_message() ──────────│                         │
   │                            │                            │                         │
-  │    (Client zeigt Antwort)  │── check_and_trigger() ────►│                         │
+  │                            │── check_and_trigger() ────►│                         │
   │                            │                            │── get_message_count()   │
-  │                            │                            │── get_fired_tiers()     │
-  │                            │                            │── calculate_thresholds()│
+  │                            │                            │── get_cycle_base()      │
+  │                            │                            │── messages_since >= 48? │
   │                            │                            │                         │
-  │                            │                            │── [Tier 2 erreicht!]    │
-  │                            │                            │── mark_tier_fired(2)    │
-  │                            │                            │                         │
+  │                            │                            │── [JA! Trigger!]        │
+  │                            │                            │── set_cycle_base(96)    │
   │                            │                            │── start_background() ──►│
-  │                            │◄─ return tier=2 ───────────│                         │
   │                            │                            │                         │
-  │    (Response closed)       │                            │  ┌─ CortexUpdateService │
+  │                            │◄─ {triggered: true,        │                         │
+  │                            │    progress: {0%, cycle 3}}│                         │
+  │                            │                            │                         │
+  │◄── SSE: done ──────────────│                            │                         │
+  │   (inkl. cortex.progress)  │                            │  ┌─ CortexUpdateService │
   │                            │                            │  │  tool_use API-Call    │
-  │                            │                            │  │  read memory.md       │
-  │                            │                            │  │  write memory.md      │
-  │                            │                            │  │  write soul.md        │
-  │                            │                            │  └─ Log result           │
-  │                            │                            │                         │
+  │   Frontend zeigt:          │                            │  │  read + write .md     │
+  │   Progress Bar: 0%         │                            │  └─ Log result           │
+  │   "🧠 Cortex updated!"    │                            │                         │
 ```
 
-### 5.2 Timing
-
-| Phase | Dauer | Blockiert Client? |
-|-------|-------|:-----------------:|
-| Chat-Stream (Chunks) | 2–15s | Nein (Streaming) |
-| Tier-Check | ~5ms | Nein (nach `done`) |
-| Background Cortex-Update | 3–10s | **Nein** (eigener Thread) |
-
-### 5.3 Was passiert bei jedem Chat-Response
+### 5.2 Pseudocode
 
 ```python
-# Pseudocode — vereinfachter Ablauf
+def on_chat_response_complete(persona_id, session_id):
+    """Wird vor dem done-yield aufgerufen."""
 
-def on_chat_response_complete(persona_id, session_id, context_limit):
-    """Wird nach jedem erfolgreichen Chat-Response aufgerufen."""
-
-    # 1. Cortex aktiviert?
     config = load_cortex_settings()
     if not config.enabled:
-        return
+        return None
 
-    # 2. Nachrichten zählen
-    msg_count = get_message_count(session_id, persona_id)
+    frequency = config.frequency     # z.B. "medium"
+    context_limit = get_user_context_limit()  # z.B. 65
+    threshold = floor(65 * 0.75)     # = 48
 
-    # 3. Schwellenwerte berechnen
-    #    contextLimit=65, tier1=50% → threshold=32
-    thresholds = {
-        1: floor(context_limit * 0.50),  # 32
-        2: floor(context_limit * 0.75),  # 48
-        3: floor(context_limit * 0.95),  # 61
-    }
-
-    # 4. Welche Tiers sind schon gefeuert?
-    fired = get_fired_tiers(persona_id, session_id)
-    # z.B. {1} → Tier 1 hat bereits gefeuert
-
-    # 5. Neuer Tier erreicht?
-    for tier in [1, 2, 3]:
-        if tier not in fired and msg_count >= thresholds[tier]:
-            # Tier 2 bei 48 Nachrichten → JA!
-            mark_tier_fired(persona_id, session_id, tier)
-            start_background_cortex_update(persona_id, session_id, tier)
-            break  # Nur einen Tier pro Nachricht
+    message_count = get_message_count(session_id)  # z.B. 96
+    cycle_base = get_cycle_base(session_id)         # z.B. 48 (letzter Reset)
+    
+    messages_since_reset = 96 - 48   # = 48
+    
+    if messages_since_reset >= threshold:  # 48 >= 48 → JA!
+        set_cycle_base(session_id, 96)     # Reset: neuer Zyklus
+        start_background_update()           # KI aktualisiert Cortex-Dateien
+        return {"triggered": True, "progress": {"percent": 0, "cycle": 3}}
+    else:
+        return {"triggered": False, "progress": {"percent": 75, "cycle": 2}}
 ```
 
 ---
 
-## 6. Settings-Struktur für Tier-Konfiguration
+## 6. Settings-Struktur
 
 ### 6.1 Datei: `src/settings/cortex_settings.json`
-
-Diese Datei wurde bereits in Schritt 2C definiert. Die Tier-relevanten Felder:
 
 ```json
 {
     "enabled": true,
-    "tiers": {
-        "tier1": {
-            "threshold": 50,
-            "enabled": true
-        },
-        "tier2": {
-            "threshold": 75,
-            "enabled": true
-        },
-        "tier3": {
-            "threshold": 95,
-            "enabled": true
-        }
-    }
+    "frequency": "medium"
 }
 ```
 
+**Das ist alles.** Keine komplexe Tier-Struktur mehr.
+
 ### 6.2 Felder-Referenz
 
-| Feld | Typ | Default | Beschreibung |
-|------|-----|---------|-------------|
-| `enabled` | `bool` | `true` | Cortex-System global ein/aus |
-| `tiers.tier1.threshold` | `int` | `50` | Schwellenwert in % des `contextLimit` — Stufe 1 |
-| `tiers.tier1.enabled` | `bool` | `true` | Ob Stufe 1 aktiv ist |
-| `tiers.tier2.threshold` | `int` | `75` | Schwellenwert in % des `contextLimit` — Stufe 2 |
-| `tiers.tier2.enabled` | `bool` | `true` | Ob Stufe 2 aktiv ist |
-| `tiers.tier3.threshold` | `int` | `95` | Schwellenwert in % des `contextLimit` — Stufe 3 |
-| `tiers.tier3.enabled` | `bool` | `true` | Ob Stufe 3 aktiv ist |
+| Feld | Typ | Default | Mögliche Werte | Beschreibung |
+|------|-----|---------|-----------------|--------------|
+| `enabled` | `bool` | `true` | `true`/`false` | Cortex-System global ein/aus |
+| `frequency` | `string` | `"medium"` | `"frequent"`, `"medium"`, `"rare"` | Gewählte Update-Frequenz |
 
-### 6.3 Validierungsregeln
+### 6.3 Frontend-Mapping
 
-| Regel | Beschreibung |
-|-------|-------------|
-| `threshold` ∈ [5, 99] | Muss zwischen 5% und 99% liegen |
-| `tier1 < tier2 < tier3` | Schwellen müssen aufsteigend sein |
-| Mindest-Abstand: 10% | Zwischen Tiers müssen mindestens 10 Prozentpunkte liegen |
-| Deaktivierte Tiers | Werden bei der Threshold-Berechnung übersprungen |
+| `frequency` Wert | Frontend-Label | Emoji | Schwelle |
+|:-----------------:|:--------------:|:-----:|:--------:|
+| `"frequent"` | Häufig | 🔥 | 50% |
+| `"medium"` | Mittel | ⚡ | 75% |
+| `"rare"` | Selten | 🌙 | 95% |
 
-Die Validierung wird in der Route `PUT /api/cortex/settings` (Schritt 2C) durchgeführt:
+### 6.4 Keine Validierung nötig
 
-```python
-def _validate_tier_thresholds(tiers: dict) -> tuple[bool, str]:
-    """Validiert die Tier-Schwellenwerte."""
-    active_tiers = []
-    for key in ['tier1', 'tier2', 'tier3']:
-        tier = tiers.get(key, {})
-        if tier.get('enabled', True):
-            threshold = tier.get('threshold')
-            if threshold is not None:
-                if not (5 <= threshold <= 99):
-                    return False, f"{key}.threshold muss zwischen 5 und 99 liegen"
-                active_tiers.append((key, threshold))
-
-    # Aufsteigende Reihenfolge prüfen
-    for i in range(1, len(active_tiers)):
-        prev_key, prev_val = active_tiers[i - 1]
-        curr_key, curr_val = active_tiers[i]
-        if curr_val <= prev_val:
-            return False, f"{curr_key}.threshold ({curr_val}) muss größer als {prev_key}.threshold ({prev_val}) sein"
-        if curr_val - prev_val < 10:
-            return False, f"Mindestabstand zwischen {prev_key} und {curr_key}: 10 Prozentpunkte"
-
-    return True, ""
-```
+Im Gegensatz zum alten 3-Slider-Modell braucht es keine Validierung:
+- Nur 3 feste Werte möglich (Radio-Buttons, kein Freitext)
+- Kein Sortierungs- oder Abstands-Check nötig
+- Ungültige Werte → Fallback auf `"medium"`
 
 ---
 
 ## 7. Edge Cases
 
-### 7.1 `contextLimit` ändert sich mid-conversation
+### 7.1 `contextLimit` ändert sich
 
-**Szenario:** User startet Chat mit `contextLimit=65`, wechselt nach 30 Nachrichten zu `contextLimit=200`.
-
-**Verhalten:**
-- Die Schwellenwerte werden bei **jedem** Tier-Check neu berechnet
-- Der `context_limit` kommt aus dem aktuellen Request (`data.get('context_limit')`)
-- Bereits gefeuerte Tiers bleiben gefeuert (In-Memory State)
-- Neue Tier-Schwellen werden gegen die neue Grenze berechnet
+Die Schwelle wird **jedes Mal** neu berechnet. Änderung wird beim nächsten Chat-Response wirksam.
 
 ```
-Vorher (contextLimit=65):
-  Tier 1 bei 32 → bereits gefeuert bei Nachricht 32 ✓
-  Tier 2 bei 48 → noch nicht erreicht
-
-User ändert contextLimit auf 200:
-  Tier 2 bei 150 → weit entfernt (aktuell 30 Nachrichten)
-  Tier 3 bei 190 → weit entfernt
+Vorher: contextLimit=65, Mittel → Schwelle 48, cycle_base=0, msg=30
+User ändert contextLimit auf 200 → Schwelle wird 150
+Nächster Check: 30 - 0 = 30 < 150 → noch nicht
 ```
 
-**Ergebnis:** Die höheren Tiers verschieben sich nach hinten. Das ist erwartetes Verhalten — ein größerer Kontext bedeutet mehr Nachrichten bevor ein Update nötig ist.
+### 7.2 Frequenz ändert sich
 
-### 7.2 `contextLimit` wird verkleinert
-
-**Szenario:** User hat `contextLimit=200`, wechselt nach 120 Nachrichten zu `contextLimit=65`.
+Gleich wie contextLimit — sofortige Auswirkung auf die nächste Berechnung.
 
 ```
-Vorher (contextLimit=200):
-  Tier 1 bei 100 → gefeuert bei Nachricht 100 ✓
-  Tier 2 bei 150 → noch nicht erreicht
-
-User ändert contextLimit auf 65:
-  Tier 2 bei 48 → msg_count=120 ≥ 48 → NICHT gefeuert (Rebuild markiert als "already fired")
-  Tier 3 bei 61 → msg_count=120 ≥ 61 → NICHT gefeuert (Rebuild markiert als "already fired")
+Vorher: Mittel=75%, contextLimit=65 → Schwelle 48, msg_since_reset=30
+User wechselt zu Häufig=50% → Schwelle wird 32
+Nächster Check: 30 < 32 → noch 2 Nachrichten
 ```
-
-**Verhalten:** Der Rebuild (Abschnitt 2.2, `rebuild_from_message_count`) erkennt, dass bei der neuen Berechnung Tier 2 und 3 schon überschritten wären, und markiert sie als "gefeuert" — ohne das Update tatsächlich auszuführen. Das ist konservativ korrekt: Lieber ein Update überspringen als den gleichen Kontext doppelt zu verarbeiten.
 
 ### 7.3 Session-Wechsel
 
-**Szenario:** User wechselt von Session 5 zu Session 8.
-
-**Verhalten:**
-- Der Tier-State ist pro Session (`"{persona_id}:{session_id}"`)
-- Session 5 behält ihren Tier-State
-- Session 8 hat einen eigenen (möglicherweise leeren) State
-- Beim ersten Chat in Session 8 wird der State ggf. rebuilt
+`cycle_base` ist pro `{persona_id}:{session_id}` — Wechsel betrifft nur die neue Session.
 
 ### 7.4 Persona-Wechsel
 
-**Szenario:** User wechselt von Default-Persona zu Custom-Persona.
+Verschiedene Personas haben eigene `cycle_base` States und eigene Cortex-Dateien.
 
-**Verhalten:**
-- Der Tier-State ist pro Persona+Session Kombination
-- Verschiedene Personas haben eigene Cortex-Dateien → eigene Update-Zyklen
-- `"default:5"` und `"custom123:5"` sind unabhängige Tier-States
+### 7.5 `clear_chat`
 
-### 7.5 `clear_chat` — Chat-Historie wird gelöscht
-
-**Szenario:** User löscht den gesamten Chat.
-
-**Verhalten:**
 ```python
-# In src/routes/chat.py — clear_chat()
-@chat_bp.route('/clear_chat', methods=['POST'])
-def clear_chat():
-    clear_chat_history()
-    # NEU: Tier-State für die Session zurücksetzen
-    reset_session(persona_id, session_id)
-    return success_response()
+# In chat.py — clear_chat():
+reset_session(persona_id, session_id)  # cycle_base gelöscht → nächster Zyklus startet bei 0
 ```
-
-Der Tier-State wird zurückgesetzt, damit bei neuen Nachrichten die Tiers erneut feuern können.
 
 ### 7.6 Server-Neustart
 
-**Szenario:** App wird neu gestartet, User chattet in bestehender Session weiter.
+State wird beim ersten Zugriff aus `cycle_state.json` geladen — exakter Wert, inkl. manueller `/cortex`-Resets. Nur wenn die Datei fehlt/korrupt ist, greift `rebuild_cycle_base()` als Fallback.
 
-**Verhalten:**
-1. In-Memory State ist leer (`_fired_tiers = {}`)
-2. Beim ersten Tier-Check wird `rebuild_from_message_count()` aufgerufen
-3. Basierend auf der aktuellen Nachrichtenanzahl werden vergangene Tiers als "gefeuert" markiert
-4. Nur der **nächste** noch nicht gefeuerte Tier kann auslösen
+### 7.7 Gleichzeitige Updates
 
-```
-Beispiel: Session hat 50 Nachrichten, contextLimit=65
-  → Rebuild: Tier 1 (32) → gefeuert, Tier 2 (48) → gefeuert
-  → Nächster Trigger: Tier 3 bei 61
-```
+Thread-Name-Sperre verhindert parallele Updates pro Persona. Wenn ein Update noch läuft und der nächste Trigger kommt, wird der Trigger trotzdem verarbeitet (cycle_base reset), aber kein zweiter Background-Thread gestartet.
 
-### 7.7 Gleichzeitige Updates vermeiden
+### 7.8 Kein API-Key
 
-**Szenario:** User sendet schnell hintereinander Nachrichten, ein Tier wird getriggert, aber der Background-Update läuft noch.
+Trigger-Check läuft (ist nur Zahlenvergleich). Background-Update schlägt fehl → Log-Warnung. cycle_base wurde aber schon resettet → nächster Trigger nach weiteren `threshold` Nachrichten.
 
-**Lösung:** Thread-Name als einfache Sperre:
+### 7.9 Regenerate
 
-```python
-def _start_background_cortex_update(persona_id, session_id, context_limit, triggered_tier):
-    """Startet Update nur wenn kein anderer für diese Persona läuft."""
-
-    thread_name = f"cortex-update-{persona_id}"
-
-    # Prüfe ob bereits ein Update-Thread für diese Persona läuft
-    for thread in threading.enumerate():
-        if thread.name == thread_name and thread.is_alive():
-            log.info(
-                "Cortex-Update übersprungen (Tier %d): Vorheriges Update läuft noch — Persona: %s",
-                triggered_tier, persona_id
-            )
-            return
-
-    thread = threading.Thread(
-        target=_run_update,
-        name=thread_name,
-        daemon=True
-    )
-    thread.start()
-```
-
-> **Hinweis:** `mark_tier_fired()` wird trotzdem aufgerufen — der Tier gilt als gefeuert, auch wenn das Update übersprungen wurde, weil ein anderes noch läuft. Das nächste reguläre Update (nächster Tier) wird die Änderungen aufholen.
-
-### 7.8 Kein API-Key konfiguriert
-
-**Szenario:** Cortex ist aktiviert, aber kein API-Key ist vorhanden.
-
-**Verhalten:** Der Tier-Check selbst läuft immer (ist nur ein Zahlenvergleich). Das Background-Update in `CortexUpdateService.execute_update()` prüft den API-Key und schlägt fehl → Log-Warnung. Der Tier wird als gefeuert markiert (kein Retry).
+Kein Trigger bei Regenerate — Nachrichtenanzahl ändert sich nicht (altes gelöscht, neues gespeichert).
 
 ---
 
-## 8. Frontend-Benachrichtigung (optionaler Indikator)
+## 8. Frontend: Progress Bar + Frequenz-Auswahl
 
-### 8.1 Überblick
+### 8.1 done-Event Payload
 
-Das Frontend kann optional anzeigen, dass ein Cortex-Update im Hintergrund läuft. Dies ist **kein** blockierendes UI-Element, sondern ein dezenter Indikator.
-
-### 8.2 Ansatz: SSE-Event im done-Payload
-
-Die einfachste Integration ist ein zusätzliches Feld im `done`-Event des Chat-Streams:
-
-```python
-# In chat.py — generate(), beim 'done' Event:
-elif event_type == 'done':
-    save_message(event_data['response'], False, character_name, session_id, persona_id=persona_id)
-    stream_success = True
-
-    # Tier-Check vorziehen für Frontend-Info
-    triggered_tier = None
-    try:
-        triggered_tier = check_and_trigger_cortex_update(
-            persona_id=persona_id,
-            session_id=session_id,
-            context_limit=context_limit
-        )
-    except Exception:
-        pass
-
-    done_payload = {
-        'type': 'done',
-        'response': event_data['response'],
-        'stats': event_data['stats'],
-        'character_name': character_name
+```json
+{
+    "type": "done",
+    "response": "...",
+    "stats": { ... },
+    "character_name": "Mia",
+    "cortex": {
+        "triggered": false,
+        "progress": {
+            "messages_since_reset": 25,
+            "threshold": 48,
+            "progress_percent": 52.1,
+            "cycle_number": 2
+        },
+        "frequency": "medium"
     }
-
-    # Optional: Cortex-Update-Info mitsenden
-    if triggered_tier is not None:
-        done_payload['cortex_update'] = {
-            'triggered': True,
-            'tier': triggered_tier
-        }
-
-    yield f"data: {json.dumps(done_payload)}\n\n"
+}
 ```
 
-> **Alternative zum Ansatz in Abschnitt 3.2:** Statt den Tier-Check **nach** dem letzten yield auszuführen, wird er **vor** dem done-yield ausgeführt, damit das `done`-Event die Cortex-Info enthalten kann. Der Background-Thread wird trotzdem erst nach dem yield gestartet (innerhalb von `check_and_trigger_cortex_update`).
+### 8.2 Progress Bar im Chat
 
-### 8.3 Frontend-Handling in `useMessages.js`
+Das Frontend kann eine dezente Progress Bar im ChatInput/ContextBar-Bereich anzeigen:
+
+```
+┌───────────────────────────────────────────┐
+│  [████████████░░░░░░░░░░░░] 52% ⚡ Mittel │  ← Cortex Progress
+│                                            │
+│  [Nachricht eingeben...]                   │
+└───────────────────────────────────────────┘
+```
+
+Bei Trigger:
+```
+┌───────────────────────────────────────────┐
+│  🧠 Cortex aktualisiert sich...           │  ← Kurze Notification (3s)
+│  [░░░░░░░░░░░░░░░░░░░░░░░░] 0%   ⚡      │  ← Reset auf 0
+│                                            │
+│  [Nachricht eingeben...]                   │
+└───────────────────────────────────────────┘
+```
+
+### 8.3 Frequenz-Auswahl im CortexOverlay
+
+Statt 3 Slidern: **Radio-Button-Gruppe / Segmented Control**:
+
+```
+┌─────────────────────────────────────────┐
+│  Cortex-Einstellungen                    │
+│                                          │
+│  Status: [Toggle: Ein/Aus]               │
+│                                          │
+│  Update-Frequenz:                        │
+│  ┌─────────┬─────────┬─────────┐        │
+│  │🔥 Häufig│⚡ Mittel │🌙 Selten│        │
+│  │  (50%)  │  (75%)  │  (95%)  │        │
+│  └─────────┴─────────┴─────────┘        │
+│       ↑ aktuell ausgewählt               │
+│                                          │
+│  Cortex-Dateien:                         │
+│  [Tab: Memory | Seele | Beziehung]       │
+│  ...                                     │
+└─────────────────────────────────────────┘
+```
+
+### 8.4 Frontend-Handling in `useMessages.js`
 
 ```javascript
-// In frontend/src/features/chat/hooks/useMessages.js
-// Im onDone-Callback:
-
 onDone: (data) => {
-    setIsStreaming(false);
-    setIsLoading(false);
-    setStreamingStats(data.stats || null);
+    // ... bestehender Code ...
 
-    // Finalize message
-    updateLastMessage({
-        message: data.response,
-        _streaming: false,
-        character_name: data.character_name,
-        timestamp: new Date().toISOString(),
-        stats: data.stats,
-    });
-
-    // NEU: Cortex-Update Benachrichtigung
-    if (data.cortex_update?.triggered) {
-        // Optional: Event emittieren für UI-Indikator
-        window.dispatchEvent(new CustomEvent('cortex-update', {
-            detail: { tier: data.cortex_update.tier }
+    // Cortex-Progress Event
+    if (data.cortex) {
+        window.dispatchEvent(new CustomEvent('cortex-progress', {
+            detail: data.cortex
         }));
-    }
-
-    if (get('notificationSound', false)) {
-        playNotificationSound();
     }
 },
 ```
 
-### 8.4 UI-Indikator Konzept
-
-```
-┌─────────────────────────────────────────────┐
-│              Chat-Interface                  │
-│                                              │
-│  [User] Hey, erzähl mir von deinem Tag      │
-│                                              │
-│  [Persona] Ach, heute war wirklich...        │
-│                                              │
-│  ┌──────────────────────────────────┐        │
-│  │ 🧠 Cortex aktualisiert sich...  │        │  ← Dezenter Indikator
-│  └──────────────────────────────────┘        │     (verschwindet nach ~3s)
-│                                              │
-│  [Nachricht eingeben...]                     │
-└─────────────────────────────────────────────┘
-```
-
-Der Indikator:
-- Erscheint nur wenn `cortex_update.triggered === true`
-- Zeigt sich als kleine, nicht-blockierende Notification
-- Verschwindet nach 3 Sekunden automatisch
-- Wird in Schritt 5 (Cortex Settings UI) implementiert
-
 ---
 
-## 9. Integration mit `chat/regenerate`
+## 9. Neue und geänderte Dateien
 
-Der Tier-Check muss auch beim Regenerieren von Nachrichten greifen, da die Nachrichtenanzahl sich dabei nicht ändert (altes Bot-Msg gelöscht, neues generiert), aber es ist trotzdem ein vollständiger Chat-Cycle.
-
-**Entscheidung:** Kein Tier-Check bei Regenerate. Die Nachrichtenanzahl bleibt gleich, also kann kein neuer Tier erreicht werden.
-
-```python
-# src/routes/chat.py — api_regenerate()
-# KEIN Tier-Check nötig:
-# - delete_last_message() entfernt die alte Bot-Nachricht
-# - save_message() speichert die neue Bot-Nachricht
-# - Netto-Änderung: 0 Nachrichten → kein neuer Tier möglich
-```
-
----
-
-## 10. Neue und geänderte Dateien
-
-### 10.1 Neue Dateien
+### 9.1 Neue Dateien
 
 | Datei | Zweck |
 |-------|-------|
 | `src/utils/cortex/__init__.py` | Package-Init (Exports) |
-| `src/utils/cortex/tier_tracker.py` | In-Memory Tracking der gefeuerten Tiers pro Session |
-| `src/utils/cortex/tier_checker.py` | Tier-Prüfung und Background-Update Trigger |
+| `src/utils/cortex/tier_tracker.py` | Zyklisches Tracking (cycle_base pro Session) |
+| `src/utils/cortex/tier_checker.py` | Trigger-Logik + Progress-Berechnung |
+| `src/settings/cycle_state.json` | Persistenter Cycle-State (auto-generiert) |
 
-### 10.2 Geänderte Dateien
+### 9.2 Geänderte Dateien
 
 | Datei | Änderung |
 |-------|----------|
-| `src/routes/chat.py` | Import `tier_checker`, Tier-Check nach Stream-Ende in `chat_stream()` und `clear_chat()` |
+| `src/routes/chat.py` | Trigger-Check vor done-yield, Progress in done-Payload |
+| `src/settings/cortex_settings.json` | Vereinfacht: nur `enabled` + `frequency` |
+| `src/settings/cycle_state.json` | Persistenter Cycle-State (auto-generiert bei erstem Trigger) |
 
-### 10.3 Abhängig von (noch nicht implementiert)
+### 9.3 Abhängig von
 
 | Datei | Schritt | Zweck |
 |-------|---------|-------|
-| `src/utils/cortex/update_service.py` | 3A + 6 | `CortexUpdateService.execute_update()` — der eigentliche Tool-Use Call |
-| `src/settings/cortex_settings.json` | 2C | Settings-Datei (wird von `_load_tier_config` gelesen) |
+| `src/utils/cortex/update_service.py` | 3C + 6 | CortexUpdateService — tool_use Call |
+| `src/settings/cortex_settings.json` | 2C | Settings-Datei |
 
-### 10.4 Package-Init
+### 9.4 Package-Init
 
 ```python
 # src/utils/cortex/__init__.py
 
-"""
-Cortex Utility Package — Aktivierungsstufen und Update-Logik.
-
-Modules:
-    tier_tracker — In-Memory State für gefeuerte Tiers pro Session
-    tier_checker — Schwellenwert-Prüfung und Background-Update Trigger
-    update_service — CortexUpdateService für Tool-Use API-Calls (Schritt 3A/6)
-"""
+"""Cortex Package — Update-Frequenz und zyklische Trigger-Logik."""
 
 from utils.cortex.tier_tracker import (
-    get_fired_tiers,
-    mark_tier_fired,
-    reset_session,
-    reset_all,
-    rebuild_from_message_count
+    get_cycle_base, set_cycle_base, reset_session, reset_all,
+    rebuild_cycle_base, get_progress
 )
 from utils.cortex.tier_checker import check_and_trigger_cortex_update
 
 __all__ = [
-    'get_fired_tiers',
-    'mark_tier_fired',
-    'reset_session',
-    'reset_all',
-    'rebuild_from_message_count',
-    'check_and_trigger_cortex_update',
+    'get_cycle_base', 'set_cycle_base', 'reset_session', 'reset_all',
+    'rebuild_cycle_base', 'get_progress', 'check_and_trigger_cortex_update',
 ]
 ```
 
 ---
 
-## 11. Zusammenfassung
+## 10. Zusammenfassung
 
 ```
-                    ┌──────────────────────────────────────┐
-                    │         Aktivierungsstufen-Logik       │
-                    ├──────────────────────────────────────┤
-                    │                                        │
-                    │  contextLimit = 65 (User-Einstellung)  │
-                    │                                        │
-                    │  Tier 1: 50% = 32 Nachrichten          │
-                    │  Tier 2: 75% = 48 Nachrichten          │
-                    │  Tier 3: 95% = 61 Nachrichten          │
-                    │                                        │
-                    │  ──────────────────────────────────     │
-                    │                                        │
-                    │  Nachricht 31: ❌ Kein Tier             │
-                    │  Nachricht 32: ✅ Tier 1 → Update      │
-                    │  Nachricht 33: ❌ Tier 1 schon gefeuert│
-                    │  ...                                    │
-                    │  Nachricht 48: ✅ Tier 2 → Update      │
-                    │  ...                                    │
-                    │  Nachricht 61: ✅ Tier 3 → Update      │
-                    │  Nachricht 62: ❌ Alle Tiers gefeuert  │
-                    │                                        │
-                    │  ──────────────────────────────────     │
-                    │                                        │
-                    │  Pro Tier: 1x feuern, Background-      │
-                    │  Thread, non-blocking, tool_use Call    │
-                    │                                        │
-                    └──────────────────────────────────────┘
+┌──────────────────────────────────────────────────┐
+│          Cortex Aktivierungslogik (v3)             │
+├──────────────────────────────────────────────────┤
+│                                                    │
+│  User wählt EINE Frequenz:                         │
+│                                                    │
+│   🔥 Häufig  = alle 50% von contextLimit           │
+│   ⚡ Mittel  = alle 75% von contextLimit (Default) │
+│   🌙 Selten  = alle 95% von contextLimit           │
+│                                                    │
+│  Beispiel: contextLimit=65, Mittel (75%)           │
+│  → Schwelle = 48 Nachrichten                       │
+│                                                    │
+│  Msg 0 ──────────────────── 48 → UPDATE → Reset    │
+│  Msg 0 ──────────────────── 48 → UPDATE → Reset    │
+│  Msg 0 ──────────────────── 48 → UPDATE → Reset    │
+│  ... (endlos zyklisch)                             │
+│                                                    │
+│  Progress Bar: [████████████░░░░] 52% ⚡            │
+│                                                    │
+└──────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 12. Abhängigkeiten zu anderen Schritten
+## 11. Abhängigkeiten
 
 | Abhängigkeit | Richtung | Details |
 |-------------|----------|---------|
-| **Schritt 2C** (Cortex API Routes) | ← Voraussetzung | `cortex_settings.json` Lesen/Schreiben, Settings-Endpoints |
-| **Schritt 3A** (Tool-Use API Client) | ← Voraussetzung | `ApiClient.tool_request()` für den Background-Update |
-| **Schritt 6** (API Integration) | → Nachfolger | `CortexUpdateService` implementiert den eigentlichen Update-Call |
-| **Schritt 5** (Cortex Settings UI) | → Nachfolger | UI zum Konfigurieren der Tier-Schwellenwerte |
+| **Schritt 2C** | ← | `cortex_settings.json` Lesen/Schreiben |
+| **Schritt 3A** | ← | `ApiClient.tool_request()` für Background-Update |
+| **Schritt 3C** | ← | `CortexUpdateService` für den Update-Call |
+| **Schritt 5** | → | CortexOverlay: Frequenz-Selector + Progress Bar |
+| **Schritt 6** | → | Chat-Flow Integration |

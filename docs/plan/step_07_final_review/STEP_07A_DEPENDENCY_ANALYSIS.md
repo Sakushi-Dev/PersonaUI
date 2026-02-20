@@ -1,5 +1,15 @@
 # Schritt 7A: Abhängigkeits- und Konsistenzanalyse
 
+> **⚠️ KORREKTUR v3:** Dieses Dokument basiert noch teilweise auf dem alten 3-Tier-Sequenz-Modell. Folgende Punkte sind durch das neue Single-Frequency-Modell OBSOLET oder VERÄNDERT:
+>
+> - **2.7 (Tier-Schwellwerte Format):** OBSOLET — Es gibt keine `tierThresholds` mehr. `cortex_settings.json` enthält nur `{"enabled": true, "frequency": "medium"}`.
+> - **2.6 (cortexEnabled an zwei Orten):** GELÖST — `cortexEnabled` bleibt in `user_settings.json`, `cortex_settings.json` enthält nur `frequency`. Kein Konflikt mehr.
+> - **2.8/2.9 (API-Endpunkt/fileType vs filename):** Weiterhin relevant, unverändert.
+> - **5.1 (Settings-Landscape):** OBSOLET — Keine `tierThresholds` mehr. Nur `cortexEnabled` (in `user_settings.json`) und `frequency` (in `cortex_settings.json`).
+> - **3.3 (Paket-Exports):** GEÄNDERT — `get_fired_tiers`, `mark_tier_fired`, `rebuild_from_message_count` entfallen. Neue Exports: `get_cycle_base`, `set_cycle_base`, `reset_session`, `reset_all`, `rebuild_cycle_base`, `get_progress`.
+> - **4.2 (SSE-Done-Event):** GEÄNDERT — Backend sendet jetzt `cortex: {triggered, progress, frequency}` statt `cortex_update: {tier, status}`.
+> - **Settings-Keys:** `cortexTier1/2/3` entfallen. Nur noch `cortexEnabled` + `cortexFrequency` in `user_settings.json`.
+
 ## Übersicht
 
 Dieses Dokument analysiert die **gesamte Cortex-Migrationstrategie** (Schritte 1–6) auf:

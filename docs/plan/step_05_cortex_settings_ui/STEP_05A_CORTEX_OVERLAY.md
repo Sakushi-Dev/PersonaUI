@@ -1,8 +1,10 @@
 # Schritt 5A: CortexOverlay Component
 
+> **⚠️ v3:** Tier-Modell vereinfacht. Statt 3 Slider-Regler gibt es jetzt einen **Frequenz-Selector** (Radio-Buttons/Segmented Control) mit 3 festen Optionen: Häufig (50%), Mittel (75%), Selten (95%).
+
 ## Übersicht
 
-Das `CortexOverlay` ersetzt das bisherige `MemoryOverlay` als zentrale Verwaltungsoberfläche für das Cortex-System. Es kombiniert **Settings-Steuerung** (Enable/Disable, Tier-Schwellwerte) mit **Datei-Verwaltung** (Lesen/Bearbeiten der drei Cortex-Markdown-Dateien).
+Das `CortexOverlay` ersetzt das bisherige `MemoryOverlay` als zentrale Verwaltungsoberfläche für das Cortex-System. Es kombiniert **Settings-Steuerung** (Enable/Disable, Frequenz-Auswahl) mit **Datei-Verwaltung** (Lesen/Bearbeiten der drei Cortex-Markdown-Dateien).
 
 ### Betroffene Dateien
 
@@ -25,7 +27,7 @@ Das `CortexOverlay` ersetzt das bisherige `MemoryOverlay` als zentrale Verwaltun
 | State | Typ | Quelle | Beschreibung |
 |---|---|---|---|
 | `cortexEnabled` | Settings | `useSettings().get('cortexEnabled')` | Cortex an/aus |
-| `tierThresholds` | Settings | `useSettings().get(...)` | 3 Schwellwerte (50/75/95) |
+| `frequency` | Settings | `useSettings().get('cortexFrequency')` | Gewählte Frequenz (`"frequent"` / `"medium"` / `"rare"`) |
 | `activeTab` | Lokal | `useState('memory')` | Aktuell sichtbarer Tab |
 | `files` | Lokal (API) | `useState({})` | Datei-Inhalte von Server |
 | `editContent` | Lokal | `useState('')` | Textarea-Inhalt beim Bearbeiten |
@@ -36,7 +38,7 @@ Das `CortexOverlay` ersetzt das bisherige `MemoryOverlay` als zentrale Verwaltun
 
 ### Warum Settings vs. Lokal?
 
-- **`cortexEnabled`** und **Tier-Schwellwerte** → `useSettings()`, weil sie serverseitig persistiert werden und von der PromptEngine gelesen werden müssen
+- **`cortexEnabled`** und **`frequency`** → `useSettings()`, weil sie serverseitig persistiert werden und von der Trigger-Logik gelesen werden müssen
 - **File-Inhalte** → Lokal + API-Calls, weil die Dateien per REST geladen/gespeichert werden (nicht Teil des Settings-Systems)
 - **UI-State** (activeTab, editing, etc.) → Rein lokal, ephemer
 
@@ -44,7 +46,7 @@ Das `CortexOverlay` ersetzt das bisherige `MemoryOverlay` als zentrale Verwaltun
 
 ## 3. API-Integration
 
-### Benötigte Endpoints (aus Step 6)
+### Benötigte Endpoints (aus Step 2C/6)
 
 ```
 GET  /api/cortex/files?persona_id={id}
@@ -56,14 +58,12 @@ PUT  /api/cortex/files
 
 POST /api/cortex/files/reset
      Body: { persona_id, file_type: "memory"|"soul"|"relationship" }
-     → { success: true, content: "..." }  // gibt Default-Inhalt zurück
+     → { success: true, content: "..." }
 ```
 
 ### Service-Datei: `frontend/src/services/cortexApi.js`
 
 ```js
-// ── Cortex API Service ──
-
 const BASE = '/api/cortex';
 
 export async function getCortexFiles(personaId) {
@@ -116,7 +116,6 @@ import OverlayHeader from '../../components/Overlay/OverlayHeader';
 import OverlayBody from '../../components/Overlay/OverlayBody';
 import OverlayFooter from '../../components/Overlay/OverlayFooter';
 import Toggle from '../../components/Toggle/Toggle';
-import Slider from '../../components/Slider/Slider';
 import Button from '../../components/Button/Button';
 import Spinner from '../../components/Spinner/Spinner';
 import { getCortexFiles, saveCortexFile, resetCortexFile } from '../../services/cortexApi';
@@ -129,20 +128,21 @@ const TABS = [
   { key: 'relationship', label: '💞 Beziehung',   fileType: 'relationship' },
 ];
 
-// ── Tier-Defaults & Constraints ──
-const TIER_DEFAULTS = { tier1: 50, tier2: 75, tier3: 95 };
-const TIER_MIN = 5;
-const TIER_MAX = 99;
-const TIER_STEP = 5;
-const TIER_GAP = 10;
+// ── Frequenz-Optionen ──
+const FREQUENCY_OPTIONS = [
+  { value: 'frequent', label: 'Häufig',  emoji: '🔥', percent: 50, hint: 'Update alle 50% des Kontexts' },
+  { value: 'medium',   label: 'Mittel',  emoji: '⚡', percent: 75, hint: 'Update alle 75% des Kontexts' },
+  { value: 'rare',     label: 'Selten',  emoji: '🌙', percent: 95, hint: 'Update alle 95% des Kontexts' },
+];
+const DEFAULT_FREQUENCY = 'medium';
 
 export default function CortexOverlay({ open, onClose }) {
   const { personaId, character } = useSession();
   const { get, setMany } = useSettings();
 
-  // ── Settings State (synced from useSettings on open) ──
+  // ── Settings State ──
   const [cortexEnabled, setCortexEnabled] = useState(true);
-  const [tiers, setTiers] = useState({ ...TIER_DEFAULTS });
+  const [frequency, setFrequency] = useState(DEFAULT_FREQUENCY);
 
   // ── File State ──
   const [files, setFiles] = useState({ memory: '', soul: '', relationship: '' });
@@ -164,11 +164,7 @@ export default function CortexOverlay({ open, onClose }) {
 
     // Sync settings into local state
     setCortexEnabled(get('cortexEnabled', true));
-    setTiers({
-      tier1: parseInt(get('cortexTier1', '50'), 10),
-      tier2: parseInt(get('cortexTier2', '75'), 10),
-      tier3: parseInt(get('cortexTier3', '95'), 10),
-    });
+    setFrequency(get('cortexFrequency', DEFAULT_FREQUENCY));
 
     // Reset UI state
     setActiveTab('memory');
@@ -192,41 +188,6 @@ export default function CortexOverlay({ open, onClose }) {
       setLoading(false);
     }
   }, [open, personaId, get, character]);
-
-  // ══════════════════════════════════════════
-  // Tier Validation
-  // ══════════════════════════════════════════
-  const updateTier = useCallback((key, rawValue) => {
-    setTiers((prev) => {
-      const next = { ...prev, [key]: rawValue };
-
-      // Enforce: tier1 < tier2 < tier3 with minimum TIER_GAP
-      if (key === 'tier1') {
-        if (next.tier1 >= next.tier2 - TIER_GAP) {
-          next.tier2 = Math.min(next.tier1 + TIER_GAP, TIER_MAX);
-        }
-        if (next.tier2 >= next.tier3 - TIER_GAP) {
-          next.tier3 = Math.min(next.tier2 + TIER_GAP, TIER_MAX);
-        }
-      } else if (key === 'tier2') {
-        if (next.tier2 <= next.tier1 + TIER_GAP) {
-          next.tier1 = Math.max(next.tier2 - TIER_GAP, TIER_MIN);
-        }
-        if (next.tier2 >= next.tier3 - TIER_GAP) {
-          next.tier3 = Math.min(next.tier2 + TIER_GAP, TIER_MAX);
-        }
-      } else if (key === 'tier3') {
-        if (next.tier3 <= next.tier2 + TIER_GAP) {
-          next.tier2 = Math.max(next.tier3 - TIER_GAP, TIER_MIN);
-        }
-        if (next.tier2 <= next.tier1 + TIER_GAP) {
-          next.tier1 = Math.max(next.tier2 - TIER_GAP, TIER_MIN);
-        }
-      }
-
-      return next;
-    });
-  }, []);
 
   // ══════════════════════════════════════════
   // File Actions
@@ -280,19 +241,17 @@ export default function CortexOverlay({ open, onClose }) {
   const handleSaveSettings = useCallback(() => {
     setMany({
       cortexEnabled,
-      cortexTier1: String(tiers.tier1),
-      cortexTier2: String(tiers.tier2),
-      cortexTier3: String(tiers.tier3),
+      cortexFrequency: frequency,
     });
     onClose();
-  }, [cortexEnabled, tiers, setMany, onClose]);
+  }, [cortexEnabled, frequency, setMany, onClose]);
 
   // ══════════════════════════════════════════
   // Reset Settings (Footer "Zurücksetzen")
   // ══════════════════════════════════════════
   const handleResetSettings = useCallback(() => {
     setCortexEnabled(true);
-    setTiers({ ...TIER_DEFAULTS });
+    setFrequency(DEFAULT_FREQUENCY);
   }, []);
 
   // ══════════════════════════════════════════
@@ -335,73 +294,40 @@ export default function CortexOverlay({ open, onClose }) {
           </div>
         </div>
 
-        {/* ═══ Section: Tier-Konfiguration ═══ */}
+        {/* ═══ Section: Frequenz-Auswahl ═══ */}
         <div className={styles.ifaceSection}>
-          <h3 className={styles.ifaceSectionTitle}>Aktivierungsstufen</h3>
+          <h3 className={styles.ifaceSectionTitle}>Update-Frequenz</h3>
           <div className={styles.ifaceCard}>
-            <div className={styles.ifaceFieldGroup}>
-              <span className={styles.ifaceFieldLabel}>Tier 1 – Memory</span>
-              <span className={styles.ifaceFieldHint}>
-                Ab diesem Schwellwert wird memory.md in den Prompt geladen
-              </span>
-              <Slider
-                label="Tier 1"
-                value={tiers.tier1}
-                onChange={(v) => updateTier('tier1', Math.round(v))}
-                min={TIER_MIN}
-                max={TIER_MAX}
-                step={TIER_STEP}
-                displayValue={`${tiers.tier1}%`}
-              />
+            <span className={styles.ifaceFieldHint}>
+              Wie oft soll Cortex seine Dateien aktualisieren?
+              Der Prozentsatz bezieht sich auf dein Kontext-Limit.
+            </span>
+
+            {/* Segmented Control / Radio Group */}
+            <div className={styles.cortexFrequencySelector}>
+              {FREQUENCY_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  className={`${styles.cortexFrequencyOption} ${
+                    frequency === opt.value ? styles.cortexFrequencyActive : ''
+                  }`}
+                  onClick={() => setFrequency(opt.value)}
+                  type="button"
+                  role="radio"
+                  aria-checked={frequency === opt.value}
+                  aria-label={`${opt.label} – Update alle ${opt.percent}% des Kontexts`}
+                >
+                  <span className={styles.cortexFrequencyEmoji}>{opt.emoji}</span>
+                  <span className={styles.cortexFrequencyLabel}>{opt.label}</span>
+                  <span className={styles.cortexFrequencyPercent}>{opt.percent}%</span>
+                </button>
+              ))}
             </div>
 
-            <div className={styles.ifaceDivider} />
-
-            <div className={styles.ifaceFieldGroup}>
-              <span className={styles.ifaceFieldLabel}>Tier 2 – Seele</span>
-              <span className={styles.ifaceFieldHint}>
-                Ab diesem Schwellwert wird zusätzlich soul.md geladen
-              </span>
-              <Slider
-                label="Tier 2"
-                value={tiers.tier2}
-                onChange={(v) => updateTier('tier2', Math.round(v))}
-                min={TIER_MIN}
-                max={TIER_MAX}
-                step={TIER_STEP}
-                displayValue={`${tiers.tier2}%`}
-              />
-            </div>
-
-            <div className={styles.ifaceDivider} />
-
-            <div className={styles.ifaceFieldGroup}>
-              <span className={styles.ifaceFieldLabel}>Tier 3 – Beziehung</span>
-              <span className={styles.ifaceFieldHint}>
-                Ab diesem Schwellwert wird zusätzlich relationship.md geladen
-              </span>
-              <Slider
-                label="Tier 3"
-                value={tiers.tier3}
-                onChange={(v) => updateTier('tier3', Math.round(v))}
-                min={TIER_MIN}
-                max={TIER_MAX}
-                step={TIER_STEP}
-                displayValue={`${tiers.tier3}%`}
-              />
-            </div>
-
-            {/* Tier-Visualisierung */}
-            <div className={styles.cortexTierBar}>
-              <div className={styles.cortexTierSegment} style={{ width: `${tiers.tier1}%` }} />
-              <div className={styles.cortexTierSegment} style={{ width: `${tiers.tier2 - tiers.tier1}%` }} />
-              <div className={styles.cortexTierSegment} style={{ width: `${tiers.tier3 - tiers.tier2}%` }} />
-              <div className={styles.cortexTierSegment} style={{ width: `${100 - tiers.tier3}%` }} />
-            </div>
-
-            <div className={styles.ifaceInfoNote}>
-              Tier 1 &lt; Tier 2 &lt; Tier 3 – Mindestabstand: {TIER_GAP}%
-            </div>
+            {/* Hint für aktive Auswahl */}
+            <span className={styles.ifaceInfoNote}>
+              {FREQUENCY_OPTIONS.find((o) => o.value === frequency)?.hint}
+            </span>
           </div>
         </div>
 
@@ -510,17 +436,14 @@ export default function CortexOverlay({ open, onClose }) {
 
 ### Bestehende Klassen (aus `Overlays.module.css`)
 
-Folgende existierende Klassen werden direkt wiederverwendet:
-
 | Klasse | Verwendung |
 |---|---|
-| `.ifaceSection` | Jede der 3 Sektionen (Status, Tiers, Dateien) |
+| `.ifaceSection` | Jede der 3 Sektionen (Status, Frequenz, Dateien) |
 | `.ifaceSectionTitle` | Sektions-Überschrift |
 | `.ifaceCard` | Karten-Container für Settings |
 | `.ifaceToggleRow` / `.ifaceToggleInfo` / `.ifaceToggleLabel` / `.ifaceToggleHint` | Cortex-Enable-Toggle |
-| `.ifaceFieldGroup` / `.ifaceFieldLabel` / `.ifaceFieldHint` | Slider-Felder pro Tier |
-| `.ifaceDivider` | Trennlinie zwischen Slider-Feldern |
-| `.ifaceInfoNote` | Hinweis unter Tier-Karte |
+| `.ifaceFieldHint` | Beschreibungstext unter Überschriften |
+| `.ifaceInfoNote` | Hinweis unter Frequenz-Selector |
 | `.tabBar` / `.tab` / `.activeTab` | Tab-Leiste für Datei-Auswahl |
 | `.textarea` | Textarea im Edit-Modus |
 | `.emptyText` | Leerer-Zustand-Text |
@@ -530,37 +453,74 @@ Folgende existierende Klassen werden direkt wiederverwendet:
 ### Neue Klassen (hinzuzufügen)
 
 ```css
-/* ── Cortex Overlay – Tier Bar ── */
+/* ═══ Cortex Overlay – Frequenz-Selector (Segmented Control) ═══ */
 
-.cortexTierBar {
+.cortexFrequencySelector {
   display: flex;
-  height: 8px;
-  border-radius: 4px;
+  gap: 0;
+  border: 1px solid var(--overlay-border-color, rgba(0, 0, 0, 0.12));
+  border-radius: var(--radius-md, 8px);
   overflow: hidden;
-  margin: 12px 0 4px;
-  background: rgba(0, 0, 0, 0.06);
+  margin: 12px 0 8px;
 }
 
-.cortexTierSegment:nth-child(1) {
-  background: var(--color-success, #22c55e);
-  opacity: 0.5;
-}
-
-.cortexTierSegment:nth-child(2) {
-  background: var(--color-warning, #f59e0b);
-  opacity: 0.6;
-}
-
-.cortexTierSegment:nth-child(3) {
-  background: var(--color-danger, #ef4444);
-  opacity: 0.6;
-}
-
-.cortexTierSegment:nth-child(4) {
+.cortexFrequencyOption {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  border: none;
   background: transparent;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  color: var(--overlay-text-secondary, #666);
+  position: relative;
 }
 
-/* ── Cortex Overlay – Persona Badge ── */
+/* Vertikale Trennlinie zwischen Optionen */
+.cortexFrequencyOption + .cortexFrequencyOption {
+  border-left: 1px solid var(--overlay-border-color, rgba(0, 0, 0, 0.12));
+}
+
+.cortexFrequencyOption:hover {
+  background: rgba(99, 102, 241, 0.05);
+}
+
+/* Aktive Auswahl */
+.cortexFrequencyActive {
+  background: rgba(99, 102, 241, 0.1) !important;
+  color: var(--overlay-accent, #6366f1);
+}
+
+.cortexFrequencyActive::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--overlay-accent, #6366f1);
+  border-radius: 3px 3px 0 0;
+}
+
+.cortexFrequencyEmoji {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.cortexFrequencyLabel {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.cortexFrequencyPercent {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+/* ═══ Cortex Overlay – Persona Badge ═══ */
 
 .cortexPersonaBadge {
   font-size: 11px;
@@ -574,7 +534,7 @@ Folgende existierende Klassen werden direkt wiederverwendet:
   margin-left: auto;
 }
 
-/* ── Cortex Overlay – File View ── */
+/* ═══ Cortex Overlay – File View ═══ */
 
 .cortexFileView {
   background: var(--overlay-input-bg, rgba(0, 0, 0, 0.03));
@@ -602,7 +562,7 @@ Folgende existierende Klassen werden direkt wiederverwendet:
   gap: 8px;
 }
 
-/* ── Cortex Overlay – Edit Area ── */
+/* ═══ Cortex Overlay – Edit Area ═══ */
 
 .cortexEditArea {
   display: flex;
@@ -623,7 +583,7 @@ Folgende existierende Klassen werden direkt wiederverwendet:
   gap: 8px;
 }
 
-/* ── Cortex Overlay – Empty State ── */
+/* ═══ Cortex Overlay – Empty State ═══ */
 
 .cortexEmptyState {
   display: flex;
@@ -634,10 +594,15 @@ Folgende existierende Klassen werden direkt wiederverwendet:
   text-align: center;
 }
 
-/* ── Dark Mode ── */
+/* ═══ Dark Mode ═══ */
 
-:root[data-theme="dark"] .cortexTierBar {
-  background: rgba(255, 255, 255, 0.08);
+:root[data-theme="dark"] .cortexFrequencyOption {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+:root[data-theme="dark"] .cortexFrequencyActive {
+  background: rgba(99, 102, 241, 0.2) !important;
+  color: #818cf8;
 }
 
 :root[data-theme="dark"] .cortexPersonaBadge {
@@ -647,11 +612,11 @@ Folgende existierende Klassen werden direkt wiederverwendet:
 
 ---
 
-## 6. Tab-Design im Detail
+## 6. Tab-Design (unverändert)
 
 ### Verhalten
 
-Die Tab-Leiste verwendet die existierenden `.tabBar` / `.tab` / `.activeTab` Klassen aus `CustomSpecsOverlay`. 3 Tabs, horizontal, scrollbar bei Bedarf.
+Tab-Leiste nutzt existierende `.tabBar` / `.tab` / `.activeTab` Klassen. 3 Tabs, horizontal.
 
 ```
 ┌──────────────────────────────────────────────────┐
@@ -661,7 +626,7 @@ Die Tab-Leiste verwendet die existierenden `.tabBar` / `.tab` / `.activeTab` Kla
 
 ### Tab-Wechsel-Logik
 
-1. Benutzer klickt auf Tab → `handleTabChange(tabKey)` wird aufgerufen
+1. Benutzer klickt auf Tab → `handleTabChange(tabKey)`
 2. Falls `editing === true`: Bearbeitung wird **verworfen** (kein Auto-Save)
 3. `activeTab` wird gesetzt, `editing` auf `false`
 4. Content wird aus dem bereits geladenen `files`-Objekt gelesen (kein API-Call)
@@ -676,7 +641,7 @@ Die Tab-Leiste verwendet die existierenden `.tabBar` / `.tab` / `.activeTab` Kla
 
 ---
 
-## 7. Textarea-Editing-Flow
+## 7. Textarea-Editing-Flow (unverändert)
 
 ### Zustände pro Tab
 
@@ -702,158 +667,47 @@ Die Tab-Leiste verwendet die existierenden `.tabBar` / `.tab` / `.activeTab` Kla
 └─────────────────────┘
 ```
 
-### Ablauf: Datei bearbeiten
-
-1. User klickt **"✏️ Bearbeiten"** → `handleStartEdit()`
-2. `editContent` wird mit aktuellem `files[fileType]` befüllt
-3. `editing = true` → Textarea wird angezeigt
-4. User bearbeitet Text in Textarea
-5. **Speichern**: `handleSaveFile()` → `PUT /api/cortex/files` → bei Erfolg: `files` State updaten, `editing = false`
-6. **Abbrechen**: `handleCancelEdit()` → `editing = false`, Änderungen verworfen
-7. **Zurücksetzen**: `handleResetFile()` → `POST /api/cortex/files/reset` → Server liefert Default-Inhalt → `files` State updaten
-
-### Validierung
-
-- Kein Client-Side Markdown-Validierung (der User kann beliebigen Markdown-Text eingeben)
-- Maximal-Länge wird **nicht** erzwungen (Server kann optional ein Limit prüfen)
-- `saving`-Flag disabled alle Buttons während des Speichervorgangs
-
 ---
 
-## 8. Error Handling
-
-### Fehlerfälle und Behandlung
+## 8. Error Handling (unverändert)
 
 | Fehler | Auslöser | UI-Reaktion |
 |---|---|---|
-| Dateien laden fehlgeschlagen | `getCortexFiles()` rejected | `error`-State gesetzt, `.statusArea.error` angezeigt |
-| Datei speichern fehlgeschlagen | `saveCortexFile()` rejected | `error`-State gesetzt, Textarea bleibt offen |
-| Datei zurücksetzen fehlgeschlagen | `resetCortexFile()` rejected | `error`-State gesetzt |
-| Keine Persona ausgewählt | `personaId` ist null/undefined | Spezial-Empty-State: "Keine Persona ausgewählt" |
-| Netzwerkfehler | fetch failed | Generische Error-Box |
+| Dateien laden fehlgeschlagen | `getCortexFiles()` rejected | `error`-State |
+| Datei speichern fehlgeschlagen | `saveCortexFile()` rejected | `error`-State, Textarea bleibt offen |
+| Datei zurücksetzen fehlgeschlagen | `resetCortexFile()` rejected | `error`-State |
+| Keine Persona ausgewählt | `personaId` ist null | Spezial-Empty-State |
 
-### Error-Display
-
-```jsx
-{error && (
-  <div className={`${styles.statusArea} ${styles.error}`}>
-    {error}
-  </div>
-)}
-```
-
-Verwendet die bestehenden `.statusArea.error` Klassen (rötlicher Hintergrund, roter Text).
-
-### Error-Reset
-
-- Error wird bei Tab-Wechsel zurückgesetzt (`handleTabChange`)
-- Error wird bei neuem Speicher-/Reset-Versuch zurückgesetzt
-- Error wird beim Öffnen des Overlays zurückgesetzt
+Error wird bei Tab-Wechsel, neuem Speicher-Versuch und beim Overlay-Öffnen zurückgesetzt.
 
 ---
 
-## 9. Empty State
-
-### Kein Persona ausgewählt
-
-```
-┌──────────────────────────────────────┐
-│  🧬 Cortex                      [✕] │
-│──────────────────────────────────────│
-│                                      │
-│  Keine Persona ausgewählt.           │
-│  Bitte erstelle zuerst eine Persona. │
-│                                      │
-└──────────────────────────────────────┘
-```
-
-### Datei noch leer
-
-```
-┌──────────────────────────────────────┐
-│  [🧠 Memory] [💜 Seele] [💞 Bezihg] │
-│──────────────────────────────────────│
-│                                      │
-│  Diese Datei ist noch leer.          │
-│  Cortex wird sie automatisch         │
-│  befüllen, oder du kannst sie        │
-│  manuell bearbeiten.                 │
-│                                      │
-│       [✏️ Manuell bearbeiten]        │
-│                                      │
-└──────────────────────────────────────┘
-```
-
----
-
-## 10. Wire-Up: Overlay-Registrierung
+## 9. Wire-Up: Overlay-Registrierung (unverändert)
 
 ### Schritt 1: Export in `index.js`
 
 ```js
-// frontend/src/features/overlays/index.js
 export { default as CortexOverlay } from './CortexOverlay';
-// MemoryOverlay Export entfernen (nach vollständiger Migration)
 ```
 
 ### Schritt 2: Overlay-Hook in `ChatPage.jsx`
 
 ```jsx
-// In ChatPageContent():
-
-// ERSETZE:
-// const memory = useOverlay();
-// DURCH:
 const cortex = useOverlay();
-
-// ... und weiter unten im JSX:
-
-// ERSETZE:
-// <MemoryOverlay open={memory.isOpen} onClose={memory.close} />
-// DURCH:
+// ...
 <CortexOverlay open={cortex.isOpen} onClose={cortex.close} />
 ```
 
 ### Schritt 3: Header-Button umbenennen
 
-In `Header.jsx`:
-
 ```jsx
-// Props:
-// ERSETZE: onOpenMemory
-// DURCH:   onOpenCortex
-
-// Button-Text:
-// ERSETZE: "Erinnern"
-// DURCH:   "Cortex"
-```
-
-In `ChatPage.jsx`:
-
-```jsx
-// Header props:
-// ERSETZE: onOpenMemory={memory.open}
-// DURCH:   onOpenCortex={cortex.open}
-```
-
-### Schritt 4: Import anpassen
-
-```jsx
-// ChatPage.jsx imports:
-// ERSETZE: MemoryOverlay,
-// DURCH:   CortexOverlay,
-
-// Import aus overlays/index.js
-import {
-  // ...
-  CortexOverlay,    // NEU (ersetzt MemoryOverlay)
-  // ...
-} from '../overlays';
+// Props: onOpenMemory → onOpenCortex
+// Button-Text: "Erinnern" → "Cortex"
 ```
 
 ---
 
-## 11. Overlay-Wireframe (ASCII)
+## 10. Overlay-Wireframe (ASCII) — NEU
 
 ```
 ┌──────────────────────────────────────────────────────┐
@@ -867,22 +721,18 @@ import {
 │  │  Prompt eingebunden.                         │    │
 │  └──────────────────────────────────────────────┘    │
 │                                                      │
-│  AKTIVIERUNGSSTUFEN                                  │
+│  UPDATE-FREQUENZ                                     │
 │  ┌──────────────────────────────────────────────┐    │
-│  │  Tier 1 – Memory                             │    │
-│  │  Ab diesem Schwellwert wird memory.md geladen │    │
-│  │  Tier 1         ──────●──────────────  50%    │    │  ← Slider
-│  │  ─────────────────────────────────────────── │    │
-│  │  Tier 2 – Seele                               │    │
-│  │  Ab diesem Schwellwert wird soul.md geladen   │    │
-│  │  Tier 2         ────────────●────────  75%    │    │  ← Slider
-│  │  ─────────────────────────────────────────── │    │
-│  │  Tier 3 – Beziehung                          │    │
-│  │  Ab diesem Schwellwert wird relationship.md   │    │
-│  │  Tier 3         ──────────────────●──  95%    │    │  ← Slider
+│  │  Wie oft soll Cortex seine Dateien            │    │
+│  │  aktualisieren?                               │    │
 │  │                                               │    │
-│  │  [████░░░░████░░░░████████░░]                │    │  ← Tier-Bar
-│  │  Tier 1 < Tier 2 < Tier 3 – Mindestabstand 10% │  │
+│  │  ┌──────────┬──────────┬──────────┐          │    │
+│  │  │  🔥      │  ⚡      │  🌙      │          │    │  ← Segmented Control
+│  │  │ Häufig   │ [Mittel] │ Selten   │          │    │
+│  │  │  50%     │  75%     │  95%     │          │    │
+│  │  └──────────┴──────────┴──────────┘          │    │
+│  │                                               │    │
+│  │  Update alle 75% des Kontexts                 │    │  ← Dynamischer Hint
 │  └──────────────────────────────────────────────┘    │
 │                                                      │
 │  CORTEX-DATEIEN                        [Persona-Name]│
@@ -904,36 +754,28 @@ import {
 
 ---
 
-## 12. Hinweise zur Implementierung
+## 11. Implementierungshinweise
 
 ### Design-Pattern-Konsistenz
 
-- **Exakt** die gleiche Overlay-Shell wie `ApiSettingsOverlay`:
-  - `Overlay` → `OverlayHeader` → `OverlayBody` → `OverlayFooter`
-  - `width="580px"` (leicht breiter als `540px` wegen Tabs + Textarea)
-- **Settings-Sync-Pattern** wie `ApiSettingsOverlay`:
-  - `useEffect` auf `open` → lokalen State aus `get()` befüllen
-  - Footer "Speichern" → `setMany()` aufrufen + `onClose()`
-  - Footer "Zurücksetzen" → lokalen State auf Defaults setzen
-- **Tab-Pattern** wie `CustomSpecsOverlay`:
-  - `.tabBar` mit `.tab` / `.activeTab`
-  - `activeTab` State-Variable
-- **Textarea-Pattern** wie `MemoryOverlay`:
-  - `.textarea` Klasse
-  - Edit/Cancel/Save Flow mit separatem `editContent` State
+- Exakt gleiche Overlay-Shell wie `ApiSettingsOverlay`: Overlay → OverlayHeader → OverlayBody → OverlayFooter
+- `width="580px"`
+- Settings-Sync-Pattern: `useEffect` auf `open` → lokalen State befüllen → Footer "Speichern" → `setMany()` + `onClose()`
+- Tab-Pattern wie `CustomSpecsOverlay`
+- Textarea-Pattern wie `MemoryOverlay`
 
-### Settings-Keys
+### Settings-Keys (vereinfacht)
 
-Neue Keys im Settings-System (müssen auch in `defaults.json` registriert werden):
+Neue Keys im Settings-System — in `defaults.json` registrieren:
 
 ```json
 {
   "cortexEnabled": true,
-  "cortexTier1": "50",
-  "cortexTier2": "75",
-  "cortexTier3": "95"
+  "cortexFrequency": "medium"
 }
 ```
+
+**Nur 2 Keys** statt der alten 4 (cortexEnabled + cortexTier1/2/3).
 
 ### Reihenfolge der Implementierung
 
@@ -944,4 +786,15 @@ Neue Keys im Settings-System (müssen auch in `defaults.json` registriert werden
 5. `ChatPage.jsx` umverdrahten (Memory → Cortex)
 6. `Header.jsx` Button-Label und Props umbenennen
 7. Settings-Defaults in `defaults.json` ergänzen
-8. `MemoryOverlay.jsx` als deprecated markieren (Entfernung in separatem Cleanup-Step)
+8. `MemoryOverlay.jsx` als deprecated markieren
+
+---
+
+## 12. Abhängigkeiten
+
+| Abhängigkeit | Richtung | Details |
+|-------------|----------|---------|
+| **Schritt 2C** | ← | API-Endpoints für Cortex-Dateien |
+| **Schritt 3B** | ← | `cortex_settings.json` Struktur (`enabled`, `frequency`) |
+| **Schritt 5B** | → | `cortexApi.js` Service (hier definiert, dort detailliert) |
+| **Schritt 5C** | → | ChatPage/Header Wiring |
