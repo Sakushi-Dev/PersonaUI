@@ -238,6 +238,40 @@ def delete_cortex_dir(persona_id: str) -> bool:
         return False
 
 
+def ensure_cortex_dirs() -> int:
+    """
+    Startup-Funktion: Stellt sicher, dass Cortex-Verzeichnisse für die
+    Default-Persona und alle existierenden Custom-Personas vorhanden sind.
+
+    Iteriert über ``instructions/created_personas/*.json`` und erstellt
+    fehlende ``cortex/custom/{persona_id}/`` Verzeichnisse mit Templates.
+
+    Returns:
+        Anzahl der neu erstellten / geprüften Verzeichnisse.
+    """
+    count = 0
+
+    # 1. Default-Persona
+    ensure_cortex_dir('default')
+    count += 1
+
+    # 2. Alle Custom-Personas aus created_personas/
+    personas_dir = os.path.join(BASE_DIR, 'instructions', 'created_personas')
+    if not os.path.isdir(personas_dir):
+        return count
+
+    for filename in os.listdir(personas_dir):
+        if not filename.endswith('.json'):
+            continue
+        persona_id = filename[:-5]  # strip '.json'
+        if persona_id:
+            ensure_cortex_dir(persona_id)
+            count += 1
+
+    log.info("Cortex-Verzeichnisse geprüft: %d Personas", count)
+    return count
+
+
 # ─── CortexService Klasse ───────────────────────────────────────────────────
 
 class CortexService:

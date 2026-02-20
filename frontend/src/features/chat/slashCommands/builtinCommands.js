@@ -48,3 +48,54 @@ register({
 //   },
 // });
 // ────────────────────────────────────────
+
+// /cortex – Sofort Cortex-Update auslösen und Zähler auf 0 zurücksetzen
+register({
+  name: 'cortex',
+  description: 'Cortex-Update sofort auslösen (Zähler wird zurückgesetzt)',
+  async execute() {
+    console.log('[SlashCommand] /cortex – starte manuellen Cortex-Update …');
+
+    try {
+      const res = await fetch('/api/commands/cortex-update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || !data.success) {
+        const msg = data.error || 'Unbekannter Fehler';
+        console.error('[SlashCommand] /cortex fehlgeschlagen:', msg);
+        window.dispatchEvent(
+          new CustomEvent('cortex-command-error', {
+            detail: { error: msg },
+          })
+        );
+        return;
+      }
+
+      console.log('[SlashCommand] /cortex – Update gestartet.');
+
+      // Dispatch cortex-update event so the CortexUpdateIndicator shows
+      if (data.cortex) {
+        window.dispatchEvent(
+          new CustomEvent('cortex-update', {
+            detail: {
+              ...data.cortex,
+              manual: true,
+            },
+          })
+        );
+      }
+    } catch (err) {
+      console.error('[SlashCommand] /cortex Netzwerk-Fehler:', err);
+      window.dispatchEvent(
+        new CustomEvent('cortex-command-error', {
+          detail: { error: err.message },
+        })
+      );
+    }
+  },
+});

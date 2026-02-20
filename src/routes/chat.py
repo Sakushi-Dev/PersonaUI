@@ -280,7 +280,27 @@ def api_regenerate():
                 elif event_type == 'done':
                     # Neue Bot-Antwort speichern
                     save_message(event_data['response'], False, character_name, session_id, persona_id=persona_id)
-                    yield f"data: {json.dumps({'type': 'done', 'response': event_data['response'], 'stats': event_data['stats'], 'character_name': character_name})}\n\n"
+
+                    # ═══ Cortex Trigger-Check (identisch zu chat_stream) ═══
+                    cortex_info = None
+                    try:
+                        cortex_info = check_and_trigger_cortex_update(
+                            persona_id=persona_id,
+                            session_id=session_id
+                        )
+                    except Exception as cortex_err:
+                        log.warning("Cortex check failed (non-fatal): %s", cortex_err)
+
+                    done_payload = {
+                        'type': 'done',
+                        'response': event_data['response'],
+                        'stats': event_data['stats'],
+                        'character_name': character_name
+                    }
+                    if cortex_info:
+                        done_payload['cortex'] = cortex_info
+
+                    yield f"data: {json.dumps(done_payload)}\n\n"
                 elif event_type == 'error':
                     error_payload = {'type': 'error', 'error': event_data}
                     if event_data == 'credit_balance_exhausted':

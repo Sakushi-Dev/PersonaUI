@@ -237,12 +237,20 @@ if __name__ == '__main__':
             show_console_window()
             log.warning("PyWebView nicht installiert. Starte im Browser-Modus...")
             init_all_dbs()
+            from utils.cortex_service import ensure_cortex_dirs
+            ensure_cortex_dirs()
+            from utils.settings_migration import migrate_settings
+            migrate_settings()
             log.info("Server running at: http://%s:%s", host, server_port)
             log.info("Web UI & Backend developed by Sakushi-Dev")
             app.run(host=host, port=server_port, debug=False)
     else:
         # Fallback: Normaler Flask-Server ohne GUI-Fenster
         init_all_dbs()
+        from utils.cortex_service import ensure_cortex_dirs
+        ensure_cortex_dirs()
+        from utils.settings_migration import migrate_settings
+        migrate_settings()
         app.run(host=host, port=server_port, debug=False)
 
 

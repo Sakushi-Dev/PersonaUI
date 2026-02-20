@@ -7,8 +7,8 @@ Route-Prefix: /api/commands/
 import os
 import subprocess
 
-from flask import Blueprint
-from routes.helpers import success_response, error_response, handle_route_error
+from flask import Blueprint, request
+from routes.helpers import success_response, error_response, handle_route_error, resolve_persona_id
 from utils.logger import log
 
 commands_bp = Blueprint('commands', __name__)
@@ -46,3 +46,81 @@ def rebuild_frontend():
 
     log.info('[rebuild] Build-Script gestartet (eigenes Fenster).')
     return success_response(message='Build-Script gestartet – siehe Konsolenfenster')
+
+
+# ═══════════════════════════════════════════════════════════════
+#  /cortex – Manueller Cortex-Update + Zähler-Reset
+# ═══════════════════════════════════════════════════════════════
+
+@commands_bp.route('/api/commands/cortex-update', methods=['POST'])
+@handle_route_error('cortex_update')
+def cortex_update():
+    """
+    Slash Command: /cortex — Sofortiger Cortex-Update + Zähler-Reset.
+
+    Prüft:
+    - Cortex aktiviert?
+    - Session hat Nachrichten?
+
+    Startet Background-Update und gibt Progress-Daten zurück.
+    """
+    from utils.database import get_message_count
+    from utils.database.sessions import get_all_sessions
+    from utils.cortex.tier_tracker import set_cycle_base, get_progress
+    from utils.cortex.tier_checker import (
+        _load_cortex_config,
+        _get_context_limit,
+        _calculate_threshold,
+        _start_background_cortex_update,
+        DEFAULT_FREQUENCY,
+    )
+
+    # 1. Cortex aktiviert?
+    config = _load_cortex_config()
+    if not config.get("enabled", False):
+        return error_response("Cortex ist deaktiviert", 400)
+
+    # 2. Persona bestimmen
+    persona_id = resolve_persona_id()
+
+    # 3. Neueste Session ermitteln
+    data = request.get_json(silent=True) or {}
+    session_id = data.get('session_id')
+
+    if not session_id:
+        sessions = get_all_sessions(persona_id)
+        if not sessions:
+            return error_response("Keine aktive Session", 400)
+        session_id = sessions[0]['id']
+
+    # 4. Session hat Nachrichten?
+    message_count = get_message_count(session_id=session_id, persona_id=persona_id)
+    if message_count == 0:
+        return error_response("Keine Nachrichten in der Session", 400)
+
+    # 5. Zähler-Reset: cycle_base = aktuelle message_count
+    set_cycle_base(persona_id, session_id, message_count)
+
+    # 6. Background-Update starten
+    _start_background_cortex_update(persona_id, session_id)
+
+    log.info(
+        "[/cortex] Manueller Cortex-Update gestartet — Persona: %s, Session: %s, "
+        "Messages: %d",
+        persona_id, session_id, message_count
+    )
+
+    # 7. Progress-Daten für Frontend (nach Reset = 0%)
+    frequency = config.get("frequency", DEFAULT_FREQUENCY)
+    context_limit = _get_context_limit()
+    threshold = _calculate_threshold(context_limit, frequency)
+    progress = get_progress(persona_id, session_id, message_count, threshold)
+
+    return success_response(
+        message="Cortex-Update gestartet",
+        cortex={
+            "triggered": True,
+            "progress": progress,
+            "frequency": frequency
+        }
+    )
