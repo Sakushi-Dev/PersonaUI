@@ -1,5 +1,5 @@
 // ── DebugOverlay ──
-// Debug panel with toast tests, session info
+// Debug panel with toast tests, cortex status, session info
 
 import { useState, useCallback } from 'react';
 import { useSession } from '../../hooks/useSession';
@@ -10,6 +10,7 @@ import OverlayBody from '../../components/Overlay/OverlayBody';
 import OverlayFooter from '../../components/Overlay/OverlayFooter';
 import Button from '../../components/Button/Button';
 import Spinner from '../../components/Spinner/Spinner';
+import { getCortexFiles } from '../../services/cortexApi';
 import styles from './Overlays.module.css';
 
 export default function DebugOverlay({ open, onClose }) {
@@ -20,16 +21,17 @@ export default function DebugOverlay({ open, onClose }) {
   const [loadingInfo, setLoadingInfo] = useState(false);
 
   const refreshInfo = useCallback(async () => {
-    if (!sessionId) return;
+    if (!personaId) return;
     setLoadingInfo(true);
     try {
-      setSessionInfo({ session_id: sessionId });
+      const data = await getCortexFiles(personaId);
+      setSessionInfo({ session_id: sessionId, ...data });
     } catch {
       setSessionInfo({ error: 'Failed to load' });
     } finally {
       setLoadingInfo(false);
     }
-  }, [sessionId]);
+  }, [personaId, sessionId]);
 
   return (
     <Overlay open={open} onClose={onClose} width="520px">
@@ -94,6 +96,27 @@ export default function DebugOverlay({ open, onClose }) {
                 <span>Messages (loaded):</span>
                 <code>{chatHistory.length}</code>
               </div>
+
+              {sessionInfo && !sessionInfo.error && sessionInfo.files && (
+                <>
+                  <div className={styles.debugRow}>
+                    <span>Cortex Files:</span>
+                    <code>{Object.keys(sessionInfo.files).join(', ')}</code>
+                  </div>
+                  <div className={styles.debugRow}>
+                    <span>memory.md:</span>
+                    <code>{sessionInfo.files.memory ? `${sessionInfo.files.memory.length} chars` : '-'}</code>
+                  </div>
+                  <div className={styles.debugRow}>
+                    <span>soul.md:</span>
+                    <code>{sessionInfo.files.soul ? `${sessionInfo.files.soul.length} chars` : '-'}</code>
+                  </div>
+                  <div className={styles.debugRow}>
+                    <span>relationship.md:</span>
+                    <code>{sessionInfo.files.relationship ? `${sessionInfo.files.relationship.length} chars` : '-'}</code>
+                  </div>
+                </>
+              )}
 
             </div>
           )}

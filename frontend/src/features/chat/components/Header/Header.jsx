@@ -54,6 +54,7 @@ export default function Header({
   onOpenApiKey,
   onOpenApiSettings,
   onOpenServerSettings,
+  onOpenCortex,
   onOpenUserProfile,
   onOpenQRCode,
   onOpenAccessControl,
@@ -112,6 +113,15 @@ export default function Header({
 
         {/* ── Right: Actions ── */}
         <div className={styles.right}>
+          {/* Cortex Button */}
+          <button
+            className={styles.cortexBtn}
+            onClick={onOpenCortex}
+            title="Cortex – Gedächtnis & Persönlichkeit"
+          >
+            Cortex
+          </button>
+
           {/* Sound Toggle */}
           <button
             className={`${styles.soundToggle} ${!soundEnabled ? styles.soundMuted : ''}`}
@@ -150,6 +160,7 @@ export default function Header({
               <>
                 <DropdownItem label="Mein Profil" onClick={() => { close(); onOpenUserProfile?.(); }} />
                 <DropdownItem label="Set API-Key" onClick={() => { close(); onOpenApiKey?.(); }} />
+                <DropdownItem label="Cortex" onClick={() => { close(); onOpenCortex?.(); }} />
                 <DropdownItem label="Persona" onClick={() => { close(); onOpenPersonaSettings?.(); }} />
                 <DropdownSubmenu label="Einstellungen">
                   <DropdownItem label="Interface" onClick={() => { close(); onOpenInterfaceSettings?.(); }} />

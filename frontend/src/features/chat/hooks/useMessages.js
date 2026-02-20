@@ -78,6 +78,13 @@ export function useMessages() {
           stats: data.stats,
         });
 
+        // Cortex-Update Benachrichtigung (aus SSE done-Event)
+        if (data.cortex_update?.triggered) {
+          window.dispatchEvent(new CustomEvent('cortex-update', {
+            detail: { tier: data.cortex_update.tier }
+          }));
+        }
+
         // Play notification sound if enabled
         if (get('notificationSound', false)) {
           playNotificationSound();

@@ -19,6 +19,7 @@ import Sidebar from './components/Sidebar/Sidebar';
 import MessageList from './components/MessageList/MessageList';
 import ChatInput from './components/ChatInput/ChatInput';
 import ContextBar from './components/ChatInput/ContextBar';
+import CortexUpdateIndicator from './components/CortexUpdateIndicator/CortexUpdateIndicator';
 import Spinner from '../../components/Spinner/Spinner';
 import ErrorBoundary from '../../components/ErrorBoundary/ErrorBoundary';
 import AccessNotification from './components/AccessNotification/AccessNotification';
@@ -31,6 +32,7 @@ import {
   ApiSettingsOverlay,
   ServerSettingsOverlay,
   AvatarEditorOverlay,
+  CortexOverlay,
   CustomSpecsOverlay,
   UserProfileOverlay,
   QRCodeOverlay,
@@ -139,6 +141,7 @@ function ChatPageContent() {
   const apiSettings = useOverlay();
   const serverSettings = useOverlay();
   const avatarEditor = useOverlay();
+  const cortex = useOverlay();
   const customSpecs = useOverlay();
   const userProfile = useOverlay();
   const qrCode = useOverlay();
@@ -146,6 +149,26 @@ function ChatPageContent() {
   const debug = useOverlay();
   const creditExhausted = useOverlay();
   const apiWarning = useOverlay();
+
+  // ── Cortex update indicator ──
+  const [cortexUpdating, setCortexUpdating] = useState(false);
+  const cortexTimerRef = useRef(null);
+
+  useEffect(() => {
+    const handleCortexUpdate = () => {
+      setCortexUpdating(true);
+      clearTimeout(cortexTimerRef.current);
+      cortexTimerRef.current = setTimeout(() => {
+        setCortexUpdating(false);
+      }, 4000);
+    };
+
+    window.addEventListener('cortex-update', handleCortexUpdate);
+    return () => {
+      window.removeEventListener('cortex-update', handleCortexUpdate);
+      clearTimeout(cortexTimerRef.current);
+    };
+  }, []);
 
   // ── Auto-open error overlays on chat errors ──
   useEffect(() => {
@@ -216,6 +239,7 @@ function ChatPageContent() {
         onOpenApiKey={apiKey.open}
         onOpenApiSettings={apiSettings.open}
         onOpenServerSettings={serverSettings.open}
+        onOpenCortex={cortex.open}
         onOpenUserProfile={userProfile.open}
         onOpenQRCode={qrCode.open}
         onOpenAccessControl={accessControl.open}
@@ -223,6 +247,7 @@ function ChatPageContent() {
 
       <div style={{ position: 'relative', height: 0, zIndex: 50 }}>
         <ContextBar />
+        {cortexUpdating && <CortexUpdateIndicator />}
       </div>
 
       <Sidebar
@@ -290,6 +315,10 @@ function ChatPageContent() {
       <CustomSpecsOverlay
         open={customSpecs.isOpen}
         onClose={customSpecs.close}
+      />
+      <CortexOverlay
+        open={cortex.isOpen}
+        onClose={cortex.close}
       />
       <UserProfileOverlay
         open={userProfile.isOpen}

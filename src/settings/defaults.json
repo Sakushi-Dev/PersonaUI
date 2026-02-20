@@ -18,5 +18,6 @@
     "nachgedankeMode": "off",
     "nonverbalColor": "#e4ba00",
     "notificationSound": true,
-    "cortexEnabled": true
+    "cortexEnabled": true,
+    "cortexFrequency": "medium"
 }
