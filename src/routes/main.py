@@ -6,8 +6,7 @@ import os
 
 from utils.database import (
     get_chat_history, save_message, get_current_session_id,
-    get_all_sessions, get_message_count, get_session_persona_id,
-    get_last_memory_message_id
+    get_all_sessions, get_message_count, get_session_persona_id
 )
 from utils.config import load_character, load_char_config, get_active_persona_id, activate_persona
 from routes.helpers import resolve_persona_id
@@ -102,7 +101,6 @@ def index():
     
     chat_history = get_chat_history(session_id=session_id, persona_id=active_persona_id) if session_id else []
     total_count = get_message_count(session_id=session_id, persona_id=active_persona_id) if session_id else 0
-    last_memory_msg_id = get_last_memory_message_id(session_id, persona_id=active_persona_id) if session_id else None
     
     # Wenn Session vorhanden aber keine Chat-Historie, speichere Greeting (falls aktiviert)
     if session_id and not chat_history:
@@ -121,8 +119,7 @@ def index():
                          show_welcome=False,
                          total_message_count=total_count,
                          active_persona_id=active_persona_id,
-                         user_profile=user_profile,
-                         last_memory_message_id=last_memory_msg_id)
+                         user_profile=user_profile)
 
 
 # Avatar-Bilder werden jetzt über Flask's static-Ordner serviert:

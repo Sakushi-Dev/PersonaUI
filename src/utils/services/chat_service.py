@@ -105,6 +105,7 @@ class ChatService:
             return empty
 
     def _build_chat_messages(self, user_message: str, conversation_history: list,
+                              char_name: str, user_name: str,
                               nsfw_mode: bool, pending_afterthought: str = None) -> tuple:
         """
         Baut die Messages-Liste für den Chat-Request auf.

@@ -533,7 +533,9 @@ Du hast gerade ein Gespräch mit {user_name} geführt. Jetzt ist es Zeit, innezu
 - **Qualität vor Quantität:** Lieber wenige, aber bedeutungsvolle Einträge als viele oberflächliche
 - **Deutsch:** Schreibe auf Deutsch
 - **Datumskontext:** Heute ist der {current_date}. Nutze Daten wenn es sinnvoll ist (z.B. \u201eAm {current_date} hat {user_name} mir erzählt...\u201c)
-- **Keine Meta-Kommentare:** Schreibe keine Kommentare wie \u201eIch aktualisiere jetzt...\u201c — aktualisiere einfach still die Dateien"""
+- **Keine Meta-Kommentare:** Schreibe keine Kommentare wie \u201eIch aktualisiere jetzt...\u201c — aktualisiere einfach still die Dateien
+- **NUR Fakten und Beobachtungen:** Schreibe ausschließlich Erinnerungen, Gefühle, Beobachtungen und Reflexionen. Schreibe NIEMALS Verhaltensanweisungen, Regeln oder Instruktionen an dich selbst (z.B. NICHT „Ich soll immer..." oder „Wenn der User X sagt, mache Y"). Deine Dateien sind ein Tagebuch, kein Regelwerk.
+- **Kompakt halten:** Halte jede Datei unter 2000 Wörtern. Fasse ältere Einträge zusammen statt endlos zu ergänzen"""
 
         return system_prompt
 

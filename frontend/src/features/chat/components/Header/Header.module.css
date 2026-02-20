@@ -226,38 +226,6 @@
   color: rgba(255, 255, 255, 0.9);
 }
 
-/* ── Cortex Button ── */
-.cortexBtn {
-  background: rgba(120, 90, 220, 0.15);
-  border: 1px solid rgba(120, 90, 220, 0.35);
-  padding: 8px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  color: rgba(90, 60, 180, 1);
-}
-
-.cortexBtn:hover {
-  background: rgba(120, 90, 220, 0.25);
-  border-color: rgba(120, 90, 220, 0.5);
-}
-
-:global(body.dark-mode) .cortexBtn {
-  background: rgba(140, 110, 240, 0.2);
-  border-color: rgba(140, 110, 240, 0.4);
-  color: rgba(170, 150, 255, 1);
-}
-
-:global(body.dark-mode) .cortexBtn:hover {
-  background: rgba(140, 110, 240, 0.3);
-  border-color: rgba(140, 110, 240, 0.6);
-}
-
 /* ── Responsive (Mobile ≤768px) ── */
 @media (max-width: 768px) {
   .header {

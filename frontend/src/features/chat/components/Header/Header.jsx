@@ -113,15 +113,6 @@ export default function Header({
 
         {/* ── Right: Actions ── */}
         <div className={styles.right}>
-          {/* Cortex Button */}
-          <button
-            className={styles.cortexBtn}
-            onClick={onOpenCortex}
-            title="Cortex – Gedächtnis & Persönlichkeit"
-          >
-            Cortex
-          </button>
-
           {/* Sound Toggle */}
           <button
             className={`${styles.soundToggle} ${!soundEnabled ? styles.soundMuted : ''}`}

@@ -9,7 +9,7 @@ import threading
 import math
 import json
 import os
-from typing import Optional
+from typing import Dict, Optional
 
 from utils.logger import log
 from utils.database import get_message_count
@@ -188,35 +188,43 @@ def check_and_trigger_cortex_update(
 
 # ─── Background-Update ──────────────────────────────────────────────────────
 
+_active_updates: Dict[str, threading.Thread] = {}
+_active_lock = threading.Lock()
+
+
 def _start_background_cortex_update(persona_id: str, session_id: int) -> None:
     """
     Startet das Cortex-Update in einem Background-Thread.
-    Nur ein Update pro Persona gleichzeitig.
+    Nur ein Update pro Persona gleichzeitig (via _active_updates Dict).
     """
-    thread_name = f"cortex-update-{persona_id}"
-
-    # Prüfe ob bereits ein Update läuft
-    for t in threading.enumerate():
-        if t.name == thread_name and t.is_alive():
+    with _active_lock:
+        existing = _active_updates.get(persona_id)
+        if existing and existing.is_alive():
             log.info("Cortex-Update übersprungen: läuft bereits — Persona: %s", persona_id)
             return
 
-    def _run_update():
-        try:
-            from utils.cortex.update_service import CortexUpdateService
-            service = CortexUpdateService()
-            result = service.execute_update(
-                persona_id=persona_id,
-                session_id=session_id
-            )
-            if result.get('success'):
-                log.info("Cortex-Update abgeschlossen: %d Tool-Calls — Persona: %s",
-                         result.get('tool_calls_count', 0), persona_id)
-            else:
-                log.warning("Cortex-Update fehlgeschlagen: %s — Persona: %s",
-                            result.get('error', '?'), persona_id)
-        except Exception as e:
-            log.error("Cortex-Update Exception: %s", e)
+        def _run_update():
+            try:
+                from utils.cortex.update_service import CortexUpdateService
+                service = CortexUpdateService()
+                result = service.execute_update(
+                    persona_id=persona_id,
+                    session_id=session_id
+                )
+                if result.get('success'):
+                    log.info("Cortex-Update abgeschlossen: %d Tool-Calls — Persona: %s",
+                             result.get('tool_calls_count', 0), persona_id)
+                else:
+                    log.warning("Cortex-Update fehlgeschlagen: %s — Persona: %s",
+                                result.get('error', '?'), persona_id)
+            except Exception as e:
+                log.error("Cortex-Update Exception: %s", e)
+            finally:
+                # Thread aus Tracking entfernen
+                with _active_lock:
+                    _active_updates.pop(persona_id, None)
 
-    thread = threading.Thread(target=_run_update, name=thread_name, daemon=True)
-    thread.start()
+        thread_name = f"cortex-update-{persona_id}"
+        thread = threading.Thread(target=_run_update, name=thread_name, daemon=True)
+        _active_updates[persona_id] = thread
+        thread.start()

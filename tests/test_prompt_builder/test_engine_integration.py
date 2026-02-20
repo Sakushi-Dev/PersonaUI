@@ -74,7 +74,7 @@ class TestPromptEngineParity:
         )
         assert isinstance(result, str)
         assert len(result) > 50
-        assert 'INNERER DIALOG' in result or 'innerer Dialog' in result.lower() or 'NACHGEDANKE' in result
+        assert 'INNER DIALOGUE' in result or 'INNERER DIALOG' in result or 'NACHGEDANKE' in result
 
     def test_afterthought_followup(self):
         """Afterthought Followup enthält sinnvollen Text."""
@@ -86,10 +86,10 @@ class TestPromptEngineParity:
         assert len(result) > 30
 
     def test_afterthought_system_note(self):
-        """Afterthought System Note (append) enthält NACHGEDANKE."""
+        """Afterthought System Note (append) enthält AFTERTHOUGHT oder NACHGEDANKE."""
         result = self.engine.get_system_prompt_append(variant='default')
         assert isinstance(result, str)
-        assert 'NACHGEDANKE' in result
+        assert 'AFTERTHOUGHT' in result or 'NACHGEDANKE' in result
 
     def test_spec_autofill_persona_type(self):
         """Spec-Autofill Persona-Type enthält Input."""

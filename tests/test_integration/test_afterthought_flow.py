@@ -18,15 +18,15 @@ def _make_chat_service(mock_api_client, mock_engine):
 
 class TestAfterthoughtFlowE2E:
     def test_decision_then_followup(self, mock_api_client, test_character_data, sample_conversation, mock_engine):
-        """Kompletter Afterthought-Ablauf: Decision=Ja → Followup-Stream"""
+        """Kompletter Afterthought-Ablauf: Decision=[afterthought_OK] → Followup-Stream"""
         from utils.api_request.types import ApiResponse, StreamEvent
 
         service = _make_chat_service(mock_api_client, mock_engine)
 
-        # Step 1: Decision (letzes Wort = "Ja")
+        # Step 1: Decision (letztes Wort = "[afterthought_OK]")
         mock_api_client.request.return_value = ApiResponse(
             success=True,
-            content='Ich möchte noch etwas sagen über Katzen. Ja',
+            content='Ich möchte noch etwas sagen über Katzen. [afterthought_OK]',
             usage={'input_tokens': 100, 'output_tokens': 30},
         )
 
@@ -63,13 +63,13 @@ class TestAfterthoughtFlowE2E:
         assert len(dones) == 1
 
     def test_decision_no_skips_followup(self, mock_api_client, test_character_data, sample_conversation, mock_engine):
-        """Decision=Nein → kein Followup nötig"""
+        """Decision=[i_can_wait] → kein Followup nötig"""
         from utils.api_request.types import ApiResponse
 
         service = _make_chat_service(mock_api_client, mock_engine)
         mock_api_client.request.return_value = ApiResponse(
             success=True,
-            content='Nein, ich habe nichts hinzuzufügen. Nein',
+            content='Nein, ich habe nichts hinzuzufügen. [i_can_wait]',
             usage={'input_tokens': 100, 'output_tokens': 30},
         )
 

@@ -11,10 +11,17 @@ Verwendet ApiClient als einzigen API-Zugang.
 
 import os
 import shutil
+import tempfile
+import threading
 from typing import Dict, Any, Optional, List
 
 from .api_request import ApiClient
 from .logger import log
+
+
+# ─── Limits ──────────────────────────────────────────────────────────────────
+
+MAX_CORTEX_FILE_SIZE = 8000  # Max Zeichen pro Cortex-Datei (~2000 Tokens)
 
 
 # ─── Konstanten ──────────────────────────────────────────────────────────────
@@ -278,10 +285,17 @@ class CortexService:
     """
     Orchestriert dateibasiertes Persona-Gedächtnis:
     Dateien lesen/schreiben → Prompt-Kontext bauen → tool_use API-Calls ausführen
+
+    Features:
+    - Atomare Schreibvorgänge (tempfile + os.replace)
+    - Dateigröße-Limit (MAX_CORTEX_FILE_SIZE)
+    - In-Memory-Cache mit Write-Through (thread-safe)
     """
 
     def __init__(self, api_client: ApiClient):
         self.api_client = api_client
+        self._cache: Dict[str, Dict[str, str]] = {}  # persona_id → {filename: content}
+        self._cache_lock = threading.Lock()
 
     # ─── Pfad-Auflösung ─────────────────────────────────────────────────
 
@@ -324,7 +338,12 @@ class CortexService:
         Returns:
             True bei Erfolg, False bei Fehler oder wenn default
         """
-        return delete_cortex_dir(persona_id)
+        result = delete_cortex_dir(persona_id)
+        # Cache invalidieren
+        if result:
+            with self._cache_lock:
+                self._cache.pop(persona_id, None)
+        return result
 
     # ─── Datei-I/O ──────────────────────────────────────────────────────
 
@@ -346,13 +365,23 @@ class CortexService:
             raise ValueError(f"Ungültige Cortex-Datei: {filename}. "
                              f"Erlaubt: {CORTEX_FILES}")
 
+        # Cache-Hit prüfen
+        with self._cache_lock:
+            cached = self._cache.get(persona_id, {}).get(filename)
+            if cached is not None:
+                return cached
+
         # Defensiv: Dateien sicherstellen
         self.ensure_cortex_files(persona_id)
 
         filepath = os.path.join(self.get_cortex_path(persona_id), filename)
         try:
             with open(filepath, 'r', encoding='utf-8') as f:
-                return f.read()
+                content = f.read()
+            # Cache befüllen
+            with self._cache_lock:
+                self._cache.setdefault(persona_id, {})[filename] = content
+            return content
         except Exception as e:
             log.error("Fehler beim Lesen von %s/%s: %s", persona_id, filename, e)
             return ''
@@ -373,19 +402,54 @@ class CortexService:
             raise ValueError(f"Ungültige Cortex-Datei: {filename}. "
                              f"Erlaubt: {CORTEX_FILES}")
 
+        # Dateigröße-Limit prüfen
+        original_len = len(content)
+        if original_len > MAX_CORTEX_FILE_SIZE:
+            content = content[:MAX_CORTEX_FILE_SIZE]
+            log.warning(
+                "Cortex-Datei gekürzt: %s/%s — %d → %d Zeichen",
+                persona_id, filename, original_len, MAX_CORTEX_FILE_SIZE
+            )
+
         # Defensiv: Verzeichnis sicherstellen
         self.ensure_cortex_files(persona_id)
 
         filepath = os.path.join(self.get_cortex_path(persona_id), filename)
+        dir_path = os.path.dirname(filepath)
+
+        # Atomarer Schreibvorgang: tempfile → os.replace()
+        fd = None
+        tmp_path = None
         try:
-            with open(filepath, 'w', encoding='utf-8') as f:
+            fd, tmp_path = tempfile.mkstemp(dir=dir_path, suffix='.tmp')
+            with os.fdopen(fd, 'w', encoding='utf-8') as f:
+                fd = None  # fdopen übernimmt das Handle
                 f.write(content)
+            os.replace(tmp_path, filepath)  # Atomar auf allen Plattformen
+            tmp_path = None  # Erfolgreich verschoben
+
+            # Cache aktualisieren (Write-Through)
+            with self._cache_lock:
+                self._cache.setdefault(persona_id, {})[filename] = content
+
             log.info("Cortex-Datei geschrieben: %s/%s (%d Zeichen)",
                      persona_id, filename, len(content))
         except Exception as e:
             log.error("Fehler beim Schreiben von %s/%s: %s",
                       persona_id, filename, e)
             raise
+        finally:
+            # Aufräumen bei Fehler
+            if fd is not None:
+                try:
+                    os.close(fd)
+                except OSError:
+                    pass
+            if tmp_path and os.path.exists(tmp_path):
+                try:
+                    os.unlink(tmp_path)
+                except OSError:
+                    pass
 
     def read_all(self, persona_id: str) -> Dict[str, str]:
         """

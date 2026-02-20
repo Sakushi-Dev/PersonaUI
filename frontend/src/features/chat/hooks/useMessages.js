@@ -79,9 +79,13 @@ export function useMessages() {
         });
 
         // Cortex-Update Benachrichtigung (aus SSE done-Event)
-        if (data.cortex_update?.triggered) {
+        if (data.cortex?.triggered) {
           window.dispatchEvent(new CustomEvent('cortex-update', {
-            detail: { tier: data.cortex_update.tier }
+            detail: {
+              triggered: true,
+              progress: data.cortex.progress,
+              frequency: data.cortex.frequency
+            }
           }));
         }
 

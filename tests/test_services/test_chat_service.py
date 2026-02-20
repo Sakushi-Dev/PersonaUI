@@ -82,7 +82,7 @@ class TestAfterthoughtDecision:
         from utils.api_request.types import ApiResponse
         chat_service.api_client.request.return_value = ApiResponse(
             success=True,
-            content='Ich denke darüber nach... Ja',
+            content='Ich denke darüber nach... [afterthought_OK]',
             usage={'input_tokens': 50, 'output_tokens': 20},
         )
 
@@ -98,11 +98,11 @@ class TestAfterthoughtDecision:
         assert isinstance(result['decision'], bool)
 
     def test_decision_yes(self, chat_service, test_character_data):
-        """Letztes Wort 'Ja' → decision=True"""
+        """Letztes Wort '[afterthought_OK]' → decision=True"""
         from utils.api_request.types import ApiResponse
         chat_service.api_client.request.return_value = ApiResponse(
             success=True,
-            content='Mein innerer Dialog... Ja',
+            content='Mein innerer Dialog... [afterthought_OK]',
             usage={'input_tokens': 50, 'output_tokens': 20},
         )
 
@@ -115,11 +115,11 @@ class TestAfterthoughtDecision:
         assert result['decision'] is True
 
     def test_decision_no(self, chat_service, test_character_data):
-        """Letztes Wort 'Nein' → decision=False"""
+        """Letztes Wort '[i_can_wait]' → decision=False"""
         from utils.api_request.types import ApiResponse
         chat_service.api_client.request.return_value = ApiResponse(
             success=True,
-            content='Ich habe nichts zu sagen. Nein',
+            content='Ich habe nichts zu sagen. [i_can_wait]',
             usage={'input_tokens': 50, 'output_tokens': 20},
         )
 
