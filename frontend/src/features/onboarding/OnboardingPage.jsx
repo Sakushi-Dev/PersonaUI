@@ -1,6 +1,5 @@
 // ── OnboardingPage ──
-// 5-step wizard: Welcome → Profile → Interface → API → Finish
-// 1:1 match with legacy onboarding
+// 8-step wizard: Welcome → Profile → Interface → Context → Cortex → Afterthought → API → Finish
 
 import { useState, useCallback, useEffect } from 'react';
 import { useTheme } from '../../hooks/useTheme';
@@ -8,6 +7,9 @@ import DynamicBackground from '../../components/DynamicBackground/DynamicBackgro
 import StepWelcome from './steps/StepWelcome';
 import StepProfile from './steps/StepProfile';
 import StepInterface from './steps/StepInterface';
+import StepContext from './steps/StepContext';
+import StepCortex from './steps/StepCortex';
+import StepAfterthought from './steps/StepAfterthought';
 import StepApi from './steps/StepApi';
 import StepFinish from './steps/StepFinish';
 import ProgressBar from './components/ProgressBar';
@@ -19,7 +21,7 @@ import { completeOnboarding } from '../../services/onboardingApi';
 import * as storage from '../../utils/storage';
 import styles from './OnboardingPage.module.css';
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 8;
 
 export default function OnboardingPage() {
   const [step, setStep] = useState(0);
@@ -48,9 +50,20 @@ export default function OnboardingPage() {
     nonverbalColor: '#e4ba00',
   });
 
-  const [apiData, setApiData] = useState({
-    contextLimit: '25',
+  const [cortexData, setCortexData] = useState({
+    cortexEnabled: true,
+    cortexFrequency: 'medium',
+  });
+
+  const [afterthoughtData, setAfterthoughtData] = useState({
     nachgedankeMode: 'off',
+  });
+
+  const [contextData, setContextData] = useState({
+    contextLimit: '200',
+  });
+
+  const [apiData, setApiData] = useState({
     apiKey: '',
     apiKeyValid: false,
   });
@@ -76,8 +89,10 @@ export default function OnboardingPage() {
       await updateSettings({
         darkMode: interfaceData.darkMode,
         nonverbalColor: interfaceData.nonverbalColor,
-        contextLimit: apiData.contextLimit,
-        nachgedankeMode: apiData.nachgedankeMode,
+        contextLimit: contextData.contextLimit,
+        nachgedankeMode: afterthoughtData.nachgedankeMode,
+        cortexEnabled: cortexData.cortexEnabled,
+        cortexFrequency: cortexData.cortexFrequency,
       });
 
       if (apiData.apiKey) {
@@ -92,7 +107,7 @@ export default function OnboardingPage() {
     } finally {
       setSaving(false);
     }
-  }, [profileData, interfaceData, apiData]);
+  }, [profileData, interfaceData, contextData, cortexData, afterthoughtData, apiData]);
 
   const progress = (step / (TOTAL_STEPS - 1)) * 100;
 
@@ -133,6 +148,30 @@ export default function OnboardingPage() {
             />
           )}
           {step === 3 && (
+            <StepContext
+              data={contextData}
+              onChange={setContextData}
+              onNext={handleNext}
+              onBack={handleBack}
+            />
+          )}
+          {step === 4 && (
+            <StepCortex
+              data={cortexData}
+              onChange={setCortexData}
+              onNext={handleNext}
+              onBack={handleBack}
+            />
+          )}
+          {step === 5 && (
+            <StepAfterthought
+              data={afterthoughtData}
+              onChange={setAfterthoughtData}
+              onNext={handleNext}
+              onBack={handleBack}
+            />
+          )}
+          {step === 6 && (
             <StepApi
               data={apiData}
               onChange={setApiData}
@@ -140,7 +179,7 @@ export default function OnboardingPage() {
               onBack={handleBack}
             />
           )}
-          {step === 4 && (
+          {step === 7 && (
             <StepFinish
               hasApiKey={apiData.apiKeyValid}
               onFinish={handleFinish}

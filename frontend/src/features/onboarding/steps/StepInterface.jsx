@@ -1,6 +1,7 @@
-// ── Step: Interface (2/4) – Legacy 1:1 ──
+// ── Step: Interface (2/4) ──
 
 import InterfacePreview from '../../../components/InterfacePreview/InterfacePreview';
+import { NONVERBAL_PRESETS } from '../../../utils/constants';
 import styles from './Steps.module.css';
 
 export default function StepInterface({ data, onChange, onDarkModeChange, onNext, onBack }) {
@@ -17,23 +18,10 @@ export default function StepInterface({ data, onChange, onDarkModeChange, onNext
     }
   };
 
-  const handleColorInput = (e) => {
-    update('nonverbalColor', e.target.value);
-  };
-
-  const handleColorText = (e) => {
-    const v = e.target.value;
-    if (/^#[0-9a-fA-F]{6}$/.test(v)) {
-      update('nonverbalColor', v);
-    }
-    // Always update the text field
-    e.target.value = v;
-  };
-
   return (
     <div className={styles.card}>
       <div className={styles.cardHeader}>
-        <span className={styles.cardStep}>2 / 4</span>
+        <span className={styles.cardStep}>2 / 6</span>
         <h2>Interface</h2>
         <p className={styles.cardDesc}>Passe das Aussehen an deinen Geschmack an.</p>
       </div>
@@ -64,23 +52,22 @@ export default function StepInterface({ data, onChange, onDarkModeChange, onNext
           </div>
         </div>
 
-        {/* Nonverbal Color */}
+        {/* Nonverbal Color Presets */}
         <div className={styles.fieldGroup}>
           <label className={styles.label}>Nonverbale Text-Farbe</label>
-          <div className={styles.colorRow}>
-            <input
-              type="color"
-              className={styles.colorInput}
-              value={data.nonverbalColor}
-              onChange={handleColorInput}
-            />
-            <input
-              type="text"
-              className={`${styles.input} ${styles.colorText}`}
-              value={data.nonverbalColor}
-              onChange={handleColorText}
-              placeholder="#e4ba00"
-            />
+          <div className={styles.colorPresets}>
+            {NONVERBAL_PRESETS.map((preset) => (
+              <button
+                key={preset.value}
+                type="button"
+                className={`${styles.colorSwatch} ${data.nonverbalColor === preset.value ? styles.colorSwatchActive : ''}`}
+                style={{ background: preset.value }}
+                onClick={() => update('nonverbalColor', preset.value)}
+                title={preset.label}
+              >
+                {data.nonverbalColor === preset.value && <span className={styles.swatchCheck}>✓</span>}
+              </button>
+            ))}
           </div>
           <span className={styles.hint}>Farbe für Text zwischen Sternchen (*nonverbal*) – z.B. Aktionen, Emotionen</span>
         </div>

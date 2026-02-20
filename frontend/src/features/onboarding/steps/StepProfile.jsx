@@ -119,7 +119,7 @@ export default function StepProfile({ data, onChange, onNext, onBack }) {
   return (
     <div className={styles.card}>
       <div className={styles.cardHeader}>
-        <span className={styles.cardStep}>1 / 4</span>
+        <span className={styles.cardStep}>1 / 6</span>
         <h2>Dein Profil</h2>
         <p className={styles.cardDesc}>So lernen dich deine Personas kennen.</p>
       </div>

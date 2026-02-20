@@ -1,4 +1,4 @@
-// ── Step: API & Chat (3/4) – Legacy 1:1 ──
+// ── Step: API-Key (6/6) ──
 
 import { useState, useCallback, useRef } from 'react';
 import { testApiKey } from '../../../services/serverApi';
@@ -84,66 +84,11 @@ export default function StepApi({ data, onChange, onNext, onBack }) {
   return (
     <div className={styles.card}>
       <div className={styles.cardHeader}>
-        <span className={styles.cardStep}>3 / 4</span>
-        <h2>API &amp; Chat</h2>
+        <span className={styles.cardStep}>6 / 6</span>
+        <h2>API-Key</h2>
         <p className={styles.cardDesc}>Verbinde PersonaUI mit der Anthropic API.</p>
       </div>
       <div className={styles.cardBody}>
-
-        {/* Kontext-Limit */}
-        <div className={styles.fieldGroup}>
-          <label className={styles.label}>Kontext-Limit: <strong>{data.contextLimit}</strong> Nachrichten</label>
-          <input
-            type="range"
-            className={styles.slider}
-            min={10}
-            max={100}
-            step={5}
-            value={parseInt(data.contextLimit, 10)}
-            onChange={(e) => update('contextLimit', e.target.value)}
-          />
-          <div className={styles.sliderLabels}>
-            <span>10</span>
-            <span className={styles.sliderRec}>Empfohlen: 65</span>
-            <span>100</span>
-          </div>
-          <span className={`${styles.hint} ${styles.hintWarning}`}>
-            ⚠️ Höhere Werte bedeuten mehr Kontext für die KI, aber auch höhere API-Kosten pro Nachricht. Die Kostenunterschiede bewegen sich im Bereich von Variationen um ca. 4 Nachkommastellen ($0.000x).
-          </span>
-        </div>
-
-        {/* Nachgedanke */}
-        <div className={styles.fieldGroup}>
-          <label className={styles.label}>Nachgedanke <span className={styles.betaBadge}>Beta</span></label>
-          <div className={styles.typeGrid} style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
-            {[
-              { value: 'off',    label: 'Aus' },
-              { value: 'selten', label: 'Selten' },
-              { value: 'mittel', label: 'Mittel' },
-              { value: 'hoch',   label: 'Hoch' },
-            ].map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                className={`${styles.typeChip} ${data.nachgedankeMode === opt.value ? styles.chipActive : ''}`}
-                onClick={() => update('nachgedankeMode', opt.value)}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-          {data.nachgedankeMode !== 'off' && (
-            <div className={`${styles.infoBox} ${styles.infoBoxCompact}`}>
-              <span className={styles.infoIcon}>💭</span>
-              <span>
-                {data.nachgedankeMode === 'selten' && 'Jede 3. Nachricht löst einen inneren Dialog aus.'}
-                {data.nachgedankeMode === 'mittel' && 'Jede 2. Nachricht löst einen inneren Dialog aus.'}
-                {data.nachgedankeMode === 'hoch' && 'Jede Nachricht löst einen inneren Dialog aus.'}
-                {' '}<strong>Verursacht zusätzliche API-Kosten im Hintergrund.</strong>
-              </span>
-            </div>
-          )}
-        </div>
 
         {/* API Key */}
         <div className={styles.fieldGroup}>

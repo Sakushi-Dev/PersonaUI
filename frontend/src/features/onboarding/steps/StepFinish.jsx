@@ -1,4 +1,4 @@
-// ── Step: Finish – Legacy 1:1 ──
+// ── Step: Finish ──
 
 import styles from './Steps.module.css';
 
@@ -13,6 +13,7 @@ export default function StepFinish({ hasApiKey, onFinish, saving }) {
           <p className={styles.finishText}>
             Alles eingerichtet. Du kannst jetzt losschreiben, Personas entdecken oder deine eigenen erfinden.
           </p>
+
           <p className={styles.finishHint}>Alle Einstellungen lassen sich jederzeit über das Menü anpassen.</p>
           <button
             className={`${styles.btnPrimary} ${styles.btnLarge} ${styles.btnGlow}`}

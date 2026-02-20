@@ -49,6 +49,32 @@ register({
 // });
 // ────────────────────────────────────────
 
+// /onboarding – Start-Sequenz (Onboarding) erneut aktivieren
+register({
+  name: 'onboarding',
+  description: 'Start-Sequenz (Onboarding) erneut aktivieren',
+  async execute() {
+    console.log('[SlashCommand] /onboarding – setze Onboarding zurück …');
+
+    try {
+      const res = await fetch('/api/commands/reset-onboarding', { method: 'POST' });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || !data.success) {
+        const msg = data.error || 'Unbekannter Fehler';
+        console.error('[SlashCommand] /onboarding fehlgeschlagen:', msg);
+        alert(`Onboarding konnte nicht zurückgesetzt werden:\n${msg}`);
+        return;
+      }
+
+      console.log('[SlashCommand] /onboarding – Onboarding zurückgesetzt, lade Seite neu …');
+      window.location.reload();
+    } catch (err) {
+      console.error('[SlashCommand] /onboarding Netzwerk-Fehler:', err);
+    }
+  },
+});
+
 // /cortex – Sofort Cortex-Update auslösen und Zähler auf 0 zurücksetzen
 register({
   name: 'cortex',

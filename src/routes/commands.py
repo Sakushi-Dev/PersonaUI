@@ -49,6 +49,32 @@ def rebuild_frontend():
 
 
 # ═══════════════════════════════════════════════════════════════
+#  /onboarding – Start-Sequenz erneut aktivieren
+# ═══════════════════════════════════════════════════════════════
+
+@commands_bp.route('/api/commands/reset-onboarding', methods=['POST'])
+@handle_route_error('reset_onboarding')
+def reset_onboarding():
+    """
+    Slash Command: /onboarding — Setzt das Onboarding zurück.
+    Beim nächsten Seitenaufruf wird die Start-Sequenz erneut angezeigt.
+    """
+    import json
+
+    onboarding_file = os.path.join(_ROOT_DIR, 'settings', 'onboarding.json')
+
+    try:
+        os.makedirs(os.path.dirname(onboarding_file), exist_ok=True)
+        with open(onboarding_file, 'w', encoding='utf-8') as f:
+            json.dump({'completed': False}, f, indent=2)
+        log.info('[/onboarding] Onboarding zurückgesetzt – wird beim nächsten Laden angezeigt.')
+        return success_response(message='Onboarding zurückgesetzt – Seite wird neu geladen.')
+    except Exception as exc:
+        log.error('[/onboarding] Fehler beim Zurücksetzen: %s', exc)
+        return error_response(f'Onboarding konnte nicht zurückgesetzt werden: {exc}', 500)
+
+
+# ═══════════════════════════════════════════════════════════════
 #  /cortex – Manueller Cortex-Update + Zähler-Reset
 # ═══════════════════════════════════════════════════════════════
 
