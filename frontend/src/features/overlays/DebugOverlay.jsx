@@ -1,5 +1,5 @@
 // ── DebugOverlay ──
-// Debug panel with toast tests, memory buttons, session info
+// Debug panel with toast tests, session info
 
 import { useState, useCallback } from 'react';
 import { useSession } from '../../hooks/useSession';
@@ -10,7 +10,6 @@ import OverlayBody from '../../components/Overlay/OverlayBody';
 import OverlayFooter from '../../components/Overlay/OverlayFooter';
 import Button from '../../components/Button/Button';
 import Spinner from '../../components/Spinner/Spinner';
-import { checkMemoryAvailability } from '../../services/memoryApi';
 import styles from './Overlays.module.css';
 
 export default function DebugOverlay({ open, onClose }) {
@@ -24,8 +23,7 @@ export default function DebugOverlay({ open, onClose }) {
     if (!sessionId) return;
     setLoadingInfo(true);
     try {
-      const data = await checkMemoryAvailability(sessionId);
-      setSessionInfo(data);
+      setSessionInfo({ session_id: sessionId });
     } catch {
       setSessionInfo({ error: 'Failed to load' });
     } finally {
@@ -96,26 +94,7 @@ export default function DebugOverlay({ open, onClose }) {
                 <span>Messages (loaded):</span>
                 <code>{chatHistory.length}</code>
               </div>
-              {sessionInfo && !sessionInfo.error && (
-                <>
-                  <div className={styles.debugRow}>
-                    <span>Last Memory Marker:</span>
-                    <code>{sessionInfo.last_marker || '-'}</code>
-                  </div>
-                  <div className={styles.debugRow}>
-                    <span>User msgs since marker:</span>
-                    <code>{sessionInfo.user_messages_since_marker ?? '-'}</code>
-                  </div>
-                  <div className={styles.debugRow}>
-                    <span>Memory Available:</span>
-                    <code>{sessionInfo.available ? '✅' : '❌'}</code>
-                  </div>
-                  <div className={styles.debugRow}>
-                    <span>Context Ratio:</span>
-                    <code>{sessionInfo.context_ratio ?? '-'}</code>
-                  </div>
-                </>
-              )}
+
             </div>
           )}
         </section>

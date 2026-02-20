@@ -59,7 +59,6 @@
     {% include 'chat/_overlay_api_settings.html' %}
     {% include 'chat/_overlay_server_settings.html' %}
     {% include 'chat/_overlay_avatar_editor.html' %}
-    {% include 'chat/_overlay_memory.html' %}
     {% include 'chat/_overlay_qr_code.html' %}
     {% include 'chat/_overlay_custom_specs.html' %}
     {% include 'chat/_overlay_access_control.html' %}
@@ -85,7 +84,6 @@
             type: {% if character.get('avatar_type') %}'{{ character.avatar_type }}'{% else %}'standard'{% endif %}
         };
         window.userProfile = {{ user_profile | tojson }};
-        window.lastMemoryMessageId = {% if last_memory_message_id %}{{ last_memory_message_id }}{% else %}null{% endif %};
 
         // Global Toast Notification System
         window.showNotification = function(message, type, duration) {

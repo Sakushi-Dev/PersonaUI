@@ -17,7 +17,6 @@ export default function PromptInfoOverlay({ open, onClose, stats }) {
 
   // ── Estimated breakdown (scale proportionally to real API input) ──
   const systemEst = stats.system_prompt_est || 0;
-  const memoryEst = stats.memory_est || 0;
   const historyEst = stats.history_est || 0;
   const userMsgEst = stats.user_msg_est || 0;
   const prefillEst = stats.prefill_est || 0;
@@ -25,7 +24,6 @@ export default function PromptInfoOverlay({ open, onClose, stats }) {
 
   const scale = apiInput > 0 && totalEst > 0 ? apiInput / totalEst : 1;
   const systemScaled = Math.round(systemEst * scale);
-  const memoryScaled = Math.round(memoryEst * scale);
   const historyScaled = Math.round(historyEst * scale);
   const userMsgScaled = Math.round(userMsgEst * scale);
   const prefillScaled = Math.round(prefillEst * scale);
@@ -100,12 +98,6 @@ export default function PromptInfoOverlay({ open, onClose, stats }) {
                 <span className={styles.statName}>Prompt + Persona</span>
                 <span className={styles.statValue}>{systemScaled.toLocaleString()} Token</span>
               </div>
-              {memoryScaled > 0 && (
-                <div className={styles.statItem}>
-                  <span className={styles.statName}>Memory</span>
-                  <span className={styles.statValue}>{memoryScaled.toLocaleString()} Token</span>
-                </div>
-              )}
             </div>
           </div>
 

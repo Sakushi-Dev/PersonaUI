@@ -31,7 +31,6 @@ import {
   ApiSettingsOverlay,
   ServerSettingsOverlay,
   AvatarEditorOverlay,
-  MemoryOverlay,
   CustomSpecsOverlay,
   UserProfileOverlay,
   QRCodeOverlay,
@@ -140,7 +139,6 @@ function ChatPageContent() {
   const apiSettings = useOverlay();
   const serverSettings = useOverlay();
   const avatarEditor = useOverlay();
-  const memory = useOverlay();
   const customSpecs = useOverlay();
   const userProfile = useOverlay();
   const qrCode = useOverlay();
@@ -218,7 +216,6 @@ function ChatPageContent() {
         onOpenApiKey={apiKey.open}
         onOpenApiSettings={apiSettings.open}
         onOpenServerSettings={serverSettings.open}
-        onOpenMemory={memory.open}
         onOpenUserProfile={userProfile.open}
         onOpenQRCode={qrCode.open}
         onOpenAccessControl={accessControl.open}
@@ -289,10 +286,6 @@ function ChatPageContent() {
         target={avatarTarget}
         onSaved={handleAvatarSaved}
         stacked
-      />
-      <MemoryOverlay
-        open={memory.isOpen}
-        onClose={memory.close}
       />
       <CustomSpecsOverlay
         open={customSpecs.isOpen}

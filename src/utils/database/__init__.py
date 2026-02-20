@@ -9,7 +9,7 @@ The database has been refactored into logical modules:
 - persona: Persona DB management & migration  
 - chat: Messages, history, context
 - sessions: Session management
-- memories: Memory management
+
 """
 
 # Core connection & schema functions
@@ -40,8 +40,6 @@ from .chat import (
     clear_chat_history,
     get_total_message_count,
     get_max_message_id,
-    get_user_message_count_since_marker,
-    get_messages_since_marker,
     get_last_message,
     delete_last_message,
     update_last_message_text,
@@ -57,18 +55,6 @@ from .sessions import (
     update_session_title,
     delete_session,
     get_current_session_id
-)
-
-# Memory functions
-from .memories import (
-    save_memory,
-    get_all_memories,
-    get_active_memories,
-    update_memory,
-    delete_memory,
-    toggle_memory_status,
-    set_last_memory_message_id,
-    get_last_memory_message_id
 )
 
 # Legacy aliases for backwards compatibility
@@ -98,8 +84,6 @@ __all__ = [
     'clear_chat_history',
     'get_total_message_count',
     'get_max_message_id',
-    'get_user_message_count_since_marker',
-    'get_messages_since_marker',
     'get_last_message',
     'delete_last_message',
     'update_last_message_text',
@@ -113,16 +97,6 @@ __all__ = [
     'update_session_title',
     'delete_session',
     'get_current_session_id',
-    
-    # Memory Management
-    'save_memory',
-    'get_all_memories',
-    'get_active_memories',
-    'update_memory',
-    'delete_memory',
-    'toggle_memory_status',
-    'set_last_memory_message_id',
-    'get_last_memory_message_id',
     
     # Legacy aliases
     'get_session_message_count'

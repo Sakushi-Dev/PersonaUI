@@ -584,46 +584,6 @@ class PromptEngine:
 
         return self._resolve_prompt_content(prompt_data, variant, runtime_vars)
 
-    def build_summary_prompt(self, variant: str = 'default',
-                              runtime_vars: Optional[Dict[str, str]] = None) -> Dict[str, str]:
-        """
-        Baut System-Prompt und Prefill für Memory-Zusammenfassungen.
-
-        Returns:
-            Dict mit 'system_prompt' und 'prefill'
-        """
-        # System Prompt: nur summary-category Prompts mit target=system_prompt
-        system_parts: List[str] = []
-        prefill_parts: List[str] = []
-
-        for prompt_id, meta in sorted(
-            self._manifest.get('prompts', {}).items(),
-            key=lambda x: x[1].get('order', 9999)
-        ):
-            if meta.get('category') != 'summary':
-                continue
-            if not meta.get('enabled', True):
-                continue
-
-            prompt_data = self.get_prompt(prompt_id)
-            if not prompt_data:
-                continue
-
-            content = self._resolve_prompt_content(prompt_data, variant, runtime_vars)
-            if not content:
-                continue
-
-            target = meta.get('target', '')
-            if target == 'system_prompt':
-                system_parts.append(content)
-            elif target == 'prefill':
-                prefill_parts.append(content)
-
-        return {
-            'system_prompt': "\n\n".join(system_parts),
-            'prefill': "\n\n".join(prefill_parts)
-        }
-
     def build_afterthought_inner_dialogue(self, variant: str = 'default',
                                            runtime_vars: Optional[Dict[str, str]] = None) -> Optional[str]:
         """Baut den Afterthought Inner Dialogue Prompt."""

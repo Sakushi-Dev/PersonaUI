@@ -49,7 +49,7 @@ app.config['SESSION_COOKIE_SECURE'] = False  # Für HTTPS auf True setzen
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # Schutz vor XSS
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # CSRF-Schutz
 
-# Initialisiere Services (API-Client, Chat-Service, Memory-Service)
+# Initialisiere Services (API-Client, Chat-Service)
 init_services()
 
 # Registriere Template-Filter

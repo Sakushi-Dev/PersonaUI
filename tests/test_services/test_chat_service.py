@@ -28,13 +28,12 @@ class TestChatStream:
             StreamEvent('done', done_data),
         ])
 
-        with patch.object(chat_service, '_load_memory_context', return_value=''):
-            events = list(chat_service.chat_stream(
-                user_message='Hi',
-                conversation_history=[],
-                character_data=test_character_data,
-                persona_id='default',
-            ))
+        events = list(chat_service.chat_stream(
+            user_message='Hi',
+            conversation_history=[],
+            character_data=test_character_data,
+            persona_id='default',
+        ))
 
         assert len(events) > 0
         # Prüfe Tuple-Format
@@ -54,24 +53,22 @@ class TestChatStream:
                 'api_input_tokens': 150,
                 'output_tokens': 80,
                 'system_prompt_est': 5000,
-                'memory_est': 200,
                 'history_est': 100,
                 'user_msg_est': 20,
                 'prefill_est': 50,
-                'total_est': 5370,
+                'total_est': 5170,
             },
         }
         chat_service.api_client.stream.return_value = iter([
             StreamEvent('done', done_data),
         ])
 
-        with patch.object(chat_service, '_load_memory_context', return_value=''):
-            events = list(chat_service.chat_stream(
-                user_message='Test',
-                conversation_history=[],
-                character_data=test_character_data,
-                persona_id='default',
-            ))
+        events = list(chat_service.chat_stream(
+            user_message='Test',
+            conversation_history=[],
+            character_data=test_character_data,
+            persona_id='default',
+        ))
 
         done_events = [e for e in events if e[0] == 'done']
         assert len(done_events) == 1

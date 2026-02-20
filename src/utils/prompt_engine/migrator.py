@@ -31,7 +31,7 @@ class PromptMigrator:
         'user_type', 'user_type_description', 'user_info',
         'elapsed_time', 'inner_dialogue', 'input',
         'experimental_01', 'experimental_02', 'experimental_03',
-        'prompt_id_3', 'memory_entries'
+        'prompt_id_3'
     }
 
     # Mapping: .txt Datei → (prompt_id, domain_file, variante)

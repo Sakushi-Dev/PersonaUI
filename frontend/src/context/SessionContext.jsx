@@ -13,7 +13,6 @@ export function SessionProvider({ children }) {
   const [personas, setPersonas] = useState([]);
   const [chatHistory, setChatHistory] = useState([]);
   const [totalMessageCount, setTotalMessageCount] = useState(0);
-  const [lastMemoryMessageId, setLastMemoryMessageId] = useState(null);
   const [loading, setLoading] = useState(true);
   const initialized = useRef(false);
 
@@ -63,7 +62,6 @@ export function SessionProvider({ children }) {
             setCharacter(sessionData.character);
             setChatHistory(sessionData.chat_history || []);
             setTotalMessageCount(sessionData.total_message_count || 0);
-            setLastMemoryMessageId(sessionData.last_memory_message_id || null);
             return;
           }
         } catch { /* fallthrough to load latest */ }
@@ -80,7 +78,6 @@ export function SessionProvider({ children }) {
           setCharacter(sessionData.character);
           setChatHistory(sessionData.chat_history || []);
           setTotalMessageCount(sessionData.total_message_count || 0);
-          setLastMemoryMessageId(sessionData.last_memory_message_id || null);
           updateUrl(latestId, sessionData.persona_id || activePid);
           return;
         }
@@ -171,7 +168,6 @@ export function SessionProvider({ children }) {
         setCharacter(data.character);
         setChatHistory(data.chat_history || []);
         setTotalMessageCount(data.total_message_count || 0);
-        setLastMemoryMessageId(data.last_memory_message_id || null);
         updateUrl(newSessionId, data.persona_id || pid);
       }
     } catch (err) {
@@ -269,7 +265,6 @@ export function SessionProvider({ children }) {
     personas,
     chatHistory,
     totalMessageCount,
-    lastMemoryMessageId,
     loading,
     setLoading,
     setCharacter,

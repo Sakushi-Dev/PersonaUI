@@ -15,8 +15,7 @@ CREATE TABLE IF NOT EXISTS chat_sessions (
     title TEXT DEFAULT 'Neue Konversation',
     persona_id TEXT DEFAULT 'default',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    last_memory_message_id INTEGER DEFAULT NULL
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Chat-Nachrichten Tabelle
@@ -33,25 +32,3 @@ CREATE TABLE IF NOT EXISTS chat_messages (
 -- Index für schnellere Nachrichten-Abfragen
 CREATE INDEX IF NOT EXISTS idx_session_id 
 ON chat_messages(session_id);
-
--- Memory-Tabelle für Erinnerungen
-CREATE TABLE IF NOT EXISTS memories (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    session_id INTEGER,
-    persona_id TEXT DEFAULT 'default',
-    content TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    is_active BOOLEAN DEFAULT 1,
-    start_message_id INTEGER DEFAULT NULL,
-    end_message_id INTEGER DEFAULT NULL
-);
-
--- Indizes für Memory-Abfragen
-CREATE INDEX IF NOT EXISTS idx_memory_session 
-ON memories(session_id);
-
-CREATE INDEX IF NOT EXISTS idx_memory_active 
-ON memories(is_active);
-
-CREATE INDEX IF NOT EXISTS idx_memory_persona 
-ON memories(persona_id);

@@ -91,21 +91,6 @@
         "format"
       ]
     },
-    "memory_context": {
-      "name": "Memory-Kontext",
-      "description": "Erinnerungen aus vergangenen Konversationen",
-      "category": "context",
-      "type": "text",
-      "target": "message",
-      "position": "first_assistant",
-      "order": 100,
-      "enabled": true,
-      "domain_file": "memory_context.json",
-      "tags": [
-        "context",
-        "memory"
-      ]
-    },
     "conversation_history": {
       "name": "Konversationsverlauf",
       "description": "Platzhalter für den Konversationsverlauf (user/assistant Messages). Enthält nur {{history}} ohne Zusatztext.",
@@ -179,108 +164,6 @@
       "tags": [
         "afterthought",
         "system"
-      ]
-    },
-    "summary_impersonation": {
-      "name": "Summary – Impersonation",
-      "description": "Rollenanweisung für Summary-Erstellung",
-      "category": "summary",
-      "type": "text",
-      "target": "system_prompt",
-      "position": "system_prompt",
-      "order": 100,
-      "enabled": true,
-      "domain_file": "summary_impersonation.json",
-      "tags": [
-        "summary"
-      ]
-    },
-    "summary_system_rule": {
-      "name": "Summary – System-Regeln",
-      "description": "Regeln für Summary-Erstellung",
-      "category": "summary",
-      "type": "text",
-      "target": "system_prompt",
-      "position": "system_prompt",
-      "order": 200,
-      "enabled": true,
-      "domain_file": "summary_system_rule.json",
-      "tags": [
-        "summary"
-      ]
-    },
-    "summary_char_description": {
-      "name": "Summary – Charakter",
-      "description": "Charakter-Kontext für Summary",
-      "category": "summary",
-      "type": "text",
-      "target": "system_prompt",
-      "position": "system_prompt",
-      "order": 300,
-      "enabled": true,
-      "domain_file": "summary_char_description.json",
-      "tags": [
-        "summary",
-        "persona"
-      ]
-    },
-    "summary_persona_block": {
-      "name": "Summary – Persona-Block",
-      "description": "Aktive Persona-Beschreibung im Summary-Kontext",
-      "category": "summary",
-      "type": "text",
-      "target": "system_prompt",
-      "position": "system_prompt",
-      "order": 400,
-      "enabled": true,
-      "domain_file": "summary_persona_block.json",
-      "tags": [
-        "summary",
-        "persona"
-      ]
-    },
-    "summary_prefill_impersonation": {
-      "name": "Summary – Prefill Impersonation",
-      "description": "Prefill-Impersonation für Summary",
-      "category": "summary",
-      "type": "text",
-      "target": "prefill",
-      "position": "prefill",
-      "order": 100,
-      "enabled": true,
-      "domain_file": "summary_prefill_impersonation.json",
-      "tags": [
-        "summary",
-        "prefill"
-      ]
-    },
-    "summary_remember": {
-      "name": "Summary – Remember",
-      "description": "Remember-Prefill für Summary",
-      "category": "summary",
-      "type": "text",
-      "target": "prefill",
-      "position": "prefill",
-      "order": 200,
-      "enabled": true,
-      "domain_file": "summary_remember.json",
-      "tags": [
-        "summary",
-        "prefill"
-      ]
-    },
-    "summary_user_prompt": {
-      "name": "Summary – User-Prompt",
-      "description": "User-Prompt für Summary-Request",
-      "category": "summary",
-      "type": "text",
-      "target": "message",
-      "position": "user_message",
-      "order": 100,
-      "enabled": true,
-      "domain_file": "summary_user_prompt.json",
-      "tags": [
-        "summary"
       ]
     },
     "spec_autofill_persona_type": {

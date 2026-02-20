@@ -7,7 +7,7 @@ Usage in app.py:
     init_services()
 
 Usage in routes:
-    from utils.provider import get_api_client, get_chat_service, get_memory_service
+    from utils.provider import get_api_client, get_chat_service
 """
 
 from typing import Optional
@@ -15,7 +15,6 @@ from typing import Optional
 
 _api_client = None
 _chat_service = None
-_memory_service = None
 _prompt_engine = None
 
 
@@ -26,13 +25,12 @@ def init_services(api_key: str = None):
     Args:
         api_key: Optionaler API-Key (sonst aus ENV)
     """
-    global _api_client, _chat_service, _memory_service
+    global _api_client, _chat_service
     from .api_request import ApiClient
-    from .services import ChatService, MemoryService
+    from .services import ChatService
 
     _api_client = ApiClient(api_key=api_key)
     _chat_service = ChatService(_api_client)
-    _memory_service = MemoryService(_api_client)
 
 
 def get_api_client():
@@ -47,13 +45,6 @@ def get_chat_service():
     if _chat_service is None:
         raise RuntimeError("ChatService nicht initialisiert – init_services() in app.py aufrufen")
     return _chat_service
-
-
-def get_memory_service():
-    """Gibt den MemoryService zurück"""
-    if _memory_service is None:
-        raise RuntimeError("MemoryService nicht initialisiert – init_services() in app.py aufrufen")
-    return _memory_service
 
 
 def get_prompt_engine():

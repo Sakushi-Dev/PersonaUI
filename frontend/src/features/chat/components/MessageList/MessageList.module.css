@@ -151,21 +151,6 @@
   -webkit-backdrop-filter: blur(25px);
 }
 
-.memorized {
-  border-color: rgba(0, 160, 253, 0.6) !important;
-  border-width: 1.5px !important;
-  position: relative;
-}
-
-.memorized::after {
-  content: 'in-memory';
-  position: absolute;
-  bottom: 8px;
-  font-size: 12px;
-  font-weight: 600;
-  color: rgba(0, 160, 253, 0.6);
-}
-
 /* ── Time ── */
 
 .messageTime {

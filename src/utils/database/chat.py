@@ -41,25 +41,6 @@ def get_chat_history(limit: int = 30, session_id: int = None, offset: int = 0,
             conn.close()
             return []
     
-    # Get memory ranges for this session (only ACTIVE memories with ranges)
-    cursor.execute(sql('chat.get_memory_ranges'), (session_id,))
-    memory_ranges = cursor.fetchall()
-    
-    # Fallback: If no ranges available, use old marker
-    cursor.execute(sql('chat.get_session_memory_marker'), (session_id,))
-    marker_row = cursor.fetchone()
-    last_memory_message_id = marker_row[0] if marker_row and marker_row[0] else None
-    
-    # Helper function: Check if a message ID is in any memory range
-    def is_memorized(msg_id):
-        if memory_ranges:
-            for start_id, end_id in memory_ranges:
-                if start_id <= msg_id <= end_id:
-                    return True
-            return False
-        # Fallback for old memories without ranges
-        return last_memory_message_id is not None and msg_id <= last_memory_message_id
-    
     cursor.execute(sql('chat.get_chat_history'), (session_id, limit, offset))
     
     # Reverse so oldest of the loaded messages comes first
@@ -70,8 +51,7 @@ def get_chat_history(limit: int = 30, session_id: int = None, offset: int = 0,
             'message': row[1],
             'is_user': bool(row[2]),
             'timestamp': row[3],
-            'character_name': row[4],
-            'memorized': is_memorized(row[0])
+            'character_name': row[4]
         }
         messages.append(msg)
     
@@ -254,36 +234,6 @@ def get_max_message_id(session_id: int, persona_id: str = 'default') -> Optional
     return row[0] if row and row[0] else None
 
 
-def get_user_message_count_since_marker(session_id: int, persona_id: str = 'default') -> int:
-    """
-    Counts user messages since the last memory marker.
-    If no marker is set, counts all user messages.
-    
-    Args:
-        session_id: Session ID
-        persona_id: Persona ID
-        
-    Returns:
-        Number of user messages since marker
-    """
-    conn = get_db_connection(persona_id)
-    cursor = conn.cursor()
-    
-    # Get marker
-    cursor.execute(sql('chat.get_session_memory_marker'), (session_id,))
-    marker_row = cursor.fetchone()
-    marker = marker_row[0] if marker_row and marker_row[0] else None
-    
-    if marker:
-        cursor.execute(sql('chat.count_user_messages_since_marker'), (session_id, marker))
-    else:
-        cursor.execute(sql('chat.count_all_user_messages'), (session_id,))
-    
-    count = cursor.fetchone()[0]
-    conn.close()
-    return count
-
-
 def get_last_message(session_id: int, persona_id: str = 'default') -> Optional[Dict[str, Any]]:
     """
     Gets the last message of a session.
@@ -372,54 +322,3 @@ def update_last_message_text(session_id: int, new_text: str, persona_id: str = '
     if affected > 0:
         log.info("Letzte Nachricht aktualisiert: session=%s", session_id)
     return affected > 0
-
-
-def get_messages_since_marker(session_id: int, persona_id: str = 'default', limit: int = 100) -> Dict[str, Any]:
-    """
-    Gets only messages AFTER the last memory marker.
-    If no marker is set, returns all messages.
-    Limited to max `limit` messages (default: 100).
-    
-    Args:
-        session_id: Session ID
-        persona_id: Persona ID
-        limit: Maximum number of messages (default: 100)
-        
-    Returns:
-        Dict with 'messages' (list), 'total' (total count since marker), 'truncated' (bool)
-    """
-    conn = get_db_connection(persona_id)
-    cursor = conn.cursor()
-    
-    # Get marker
-    cursor.execute(sql('chat.get_session_memory_marker'), (session_id,))
-    marker_row = cursor.fetchone()
-    marker = marker_row[0] if marker_row and marker_row[0] else None
-    
-    # Count total since marker
-    if marker:
-        cursor.execute(sql('chat.get_messages_since_marker_count'), (session_id, marker))
-    else:
-        cursor.execute(sql('chat.get_all_messages_count'), (session_id,))
-    total = cursor.fetchone()[0]
-    truncated = total > limit
-    
-    # Get the last `limit` messages since marker (newest ones, so nothing important is missing)
-    if marker:
-        cursor.execute(sql('chat.get_messages_since_marker'), (session_id, marker, limit))
-    else:
-        cursor.execute(sql('chat.get_all_messages_limited'), (session_id, limit))
-    
-    # Reverse for chronological order
-    messages = []
-    for row in reversed(cursor.fetchall()):
-        messages.append({
-            'id': row[0],
-            'message': row[1],
-            'is_user': bool(row[2]),
-            'timestamp': row[3],
-            'character_name': row[4]
-        })
-    
-    conn.close()
-    return {'messages': messages, 'total': total, 'truncated': truncated}

@@ -61,22 +61,9 @@ def init_db_schema(conn: sqlite3.Connection, persona_id: str = 'default'):
     cursor.executescript(load_schema())
     
     # Set persona_id in db_info
-    cursor.execute(sql('memories.upsert_db_info'), ('persona_id', persona_id))
+    cursor.execute(sql('chat.upsert_db_info'), ('persona_id', persona_id))
     
-    # Migration: Add last_memory_message_id column to chat_sessions
-    try:
-        cursor.execute(sql('migrations.check_last_memory_message_id'))
-    except sqlite3.OperationalError:
-        cursor.execute(sql('migrations.add_last_memory_message_id'))
-        log.info("Migration: added last_memory_message_id to chat_sessions (persona=%s)", persona_id)
-    
-    # Migration: Add start_message_id and end_message_id columns to memories
-    try:
-        cursor.execute(sql('migrations.check_memory_message_ranges'))
-    except sqlite3.OperationalError:
-        cursor.execute(sql('migrations.add_start_message_id'))
-        cursor.execute(sql('migrations.add_end_message_id'))
-        log.info("Migration: added start_message_id/end_message_id to memories (persona=%s)", persona_id)
+    conn.commit()
     
     conn.commit()
 

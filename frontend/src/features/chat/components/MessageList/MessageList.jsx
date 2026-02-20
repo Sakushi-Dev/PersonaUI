@@ -87,7 +87,6 @@ export default function MessageList({
                 characterName={msg.character_name}
                 timestamp={msg.timestamp}
                 stats={msg.stats}
-                memorized={!!msg.memorized}
                 isStreaming={!!msg._streaming}
                 characterAvatar={character?.avatar}
                 characterAvatarType={character?.avatar_type}

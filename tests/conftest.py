@@ -55,34 +55,6 @@ def minimal_character_data():
 
 
 # ============================================================
-# Memory Fixtures
-# ============================================================
-
-@pytest.fixture
-def sample_memories():
-    """Test-Memories"""
-    return [
-        {'id': 1, 'content': 'Erinnerung vom 01.01.2026\nTest memory 1', 'is_active': True},
-        {'id': 2, 'content': 'Erinnerung vom 02.01.2026\nTest memory 2', 'is_active': True},
-    ]
-
-
-@pytest.fixture
-def empty_memories():
-    """Leere Memory-Liste"""
-    return []
-
-
-@pytest.fixture
-def many_memories():
-    """35 Memories — über dem Default-Limit von 30"""
-    return [
-        {'id': i, 'content': f'Erinnerung vom {i:02d}.01.2026\nMemory Nummer {i}', 'is_active': True}
-        for i in range(1, 36)
-    ]
-
-
-# ============================================================
 # Conversation Fixtures
 # ============================================================
 
@@ -221,20 +193,4 @@ def chat_service(mock_api_client, mock_engine):
         service = ChatService.__new__(ChatService)
     service.api_client = mock_api_client
     service._engine = mock_engine
-    return service
-
-
-@pytest.fixture
-def memory_service(mock_api_client, mock_engine):
-    """MemoryService mit gemocktem API-Client und Engine"""
-    from utils.services.memory_service import MemoryService
-    service = MemoryService(mock_api_client)
-    service._engine = mock_engine
-    # build_summary_prompt returns dict with system_prompt + prefill
-    mock_engine.build_summary_prompt.return_value = {
-        'system_prompt': 'Du bist ein Zusammenfassungs-Assistent.',
-        'prefill': 'Hier ist meine Zusammenfassung:\n'
-    }
-    # resolve_prompt for summary_user_prompt
-    mock_engine.resolve_prompt.return_value = 'Fasse das folgende Gespräch zusammen.'
     return service

@@ -36,7 +36,6 @@ Versioned default settings shipped with updates:
 | `darkMode` | `false` | Dark mode on/off |
 | `dynamicBackground` | `true` | Animated background |
 | `experimentalMode` | `false` | Experimental mode |
-| `memoriesEnabled` | `true` | Memories enabled |
 | `nachgedankeEnabled` | `false` | Afterthought system |
 | `notificationSound` | `true` | Notification sound |
 | `backgroundColor_dark/light` | Color hex | Background colors per mode |

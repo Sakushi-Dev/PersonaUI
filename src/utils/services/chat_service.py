@@ -2,8 +2,7 @@
 Chat Service – Orchestriert Chat-Requests.
 
 Verwendet die PromptEngine als einzige Prompt-Quelle.
-- Memory-Loading
-- Message-Assembly (Memory + Prefill + Dialog-Injections + History + User-Message + Remember)
+- Message-Assembly (Prefill + Dialog-Injections + History + User-Message + Remember)
 - Stats-Berechnung (Token-Schätzungen)
 - Afterthought Decision-Parsing (Ja/Nein Erkennung)
 """
@@ -12,7 +11,6 @@ from typing import Dict, Any, List, Generator
 
 from ..api_request import ApiClient, RequestConfig, StreamEvent
 from ..api_request.response_cleaner import clean_api_response
-from ..prompt_engine.memory_context import format_memories_for_prompt
 from ..logger import log
 from ..config import load_character
 
@@ -39,30 +37,13 @@ class ChatService:
         except Exception as e:
             log.error("ChatService: PromptEngine konnte nicht geladen werden: %s", e)
 
-    def _load_memory_context(self, persona_id: str = None) -> str:
-        """
-        Lädt und formatiert Memories aus der DB.
-        Zentrale Memory-Loading-Logik (statt 3x dupliziert).
-        """
-        try:
-            from ..database import get_active_memories
-            if persona_id is None:
-                from ..config import get_active_persona_id
-                persona_id = get_active_persona_id()
-            memories = get_active_memories(persona_id=persona_id)
-            return format_memories_for_prompt(memories, engine=self._engine)
-        except Exception as e:
-            log.warning("Memories konnten nicht geladen werden: %s", e)
-            return ''
-
     def _build_chat_messages(self, user_message: str, conversation_history: list,
-                              memory_context: str, char_name: str, user_name: str,
                               nsfw_mode: bool, pending_afterthought: str = None) -> tuple:
         """
         Baut die Messages-Liste für den Chat-Request auf.
 
         Die Reihenfolge wird durch die PromptEngine-Sequenz bestimmt:
-        - first_assistant: Memory + Prefill-Impersonation
+        - first_assistant: Prefill-Impersonation
         - history: Konversationsverlauf ({{history}}) – Greeting ist bereits in DB gespeichert
         - prefill: Remember als letzte Assistant-Message
 
@@ -109,10 +90,8 @@ class ChatService:
             position = template['position']
 
             if position == 'first_assistant':
-                # Memory + Prefill-Impersonation kombiniert
+                # Prefill-Impersonation
                 first_parts = []
-                if memory_context:
-                    first_parts.append(memory_context)
                 if prefill_imp_text:
                     first_parts.append(prefill_imp_text)
 
@@ -146,14 +125,14 @@ class ChatService:
                 history_processed = True
                 if effective_history:
                     # Wenn History mit assistant beginnt und letzte Message auch assistant ist
-                    # (z.B. Memory + Greeting), Bridge einfügen statt zu mergen.
+                    # (z.B. Greeting), Bridge einfügen statt zu mergen.
                     # Sonst wird das Greeting im Memory-Text versteckt und die KI
                     # erkennt nicht, dass sie bereits begrüßt hat.
                     if messages and effective_history[0]['role'] == messages[-1]['role']:
                         if effective_history[0]['role'] == 'assistant':
                             # Bridge-Message damit Greeting als eigene Nachricht bleibt
                             messages.append({'role': 'user', 'content': '[Beginn der Konversation]'})
-                            log.debug("History-Bridge eingefügt (Memory → Greeting)")
+                            log.debug("History-Bridge eingefügt (Greeting)")
                         else:
                             # Seltener Fall: beide user → zusammenführen
                             messages[-1]['content'] += "\n\n" + effective_history[0]['content']
@@ -232,7 +211,7 @@ class ChatService:
     def chat_stream(self, user_message: str, conversation_history: list,
                     character_data: dict, language: str = 'de',
                     user_name: str = 'User', api_model: str = None,
-                    api_temperature: float = None, include_memories: bool = True,
+                    api_temperature: float = None,
                     ip_address: str = None, experimental_mode: bool = False,
                     persona_id: str = None, pending_afterthought: str = None) -> Generator:
         """
@@ -260,17 +239,9 @@ class ChatService:
             log.error("ChatService: Kein System-Prompt — PromptEngine nicht verfügbar!")
         system_prompt_est = len(system_prompt)
 
-        # 2. Memories laden
-        memory_context = ''
-        memory_tokens_est = 0
-        if include_memories:
-            memory_context = self._load_memory_context(persona_id)
-            if memory_context:
-                memory_tokens_est = len(memory_context)
-
-        # 3. Messages zusammenbauen
+        # 2. Messages zusammenbauen
         messages, msg_stats = self._build_chat_messages(
-            user_message, conversation_history, memory_context,
+            user_message, conversation_history,
             char_name, user_name, experimental_mode,
             pending_afterthought=pending_afterthought
         )
@@ -284,7 +255,7 @@ class ChatService:
                       len(conversation_history),
                       conversation_history[0]['role'] if conversation_history else 'empty')
 
-        # 4. RequestConfig erstellen
+        # 3. RequestConfig erstellen
         config = RequestConfig(
             system_prompt=system_prompt,
             messages=messages,
@@ -295,20 +266,19 @@ class ChatService:
             request_type='chat'
         )
 
-        # 5. Stream über ApiClient
+        # 4. Stream über ApiClient
         for event in self.api_client.stream(config):
             if event.event_type == 'chunk':
                 yield ('chunk', event.data)
             elif event.event_type == 'done':
                 # Stats berechnen
-                total_est = system_prompt_est + memory_tokens_est + msg_stats['history_est'] + msg_stats['user_msg_est'] + msg_stats['prefill_est']
+                total_est = system_prompt_est + msg_stats['history_est'] + msg_stats['user_msg_est'] + msg_stats['prefill_est']
                 yield ('done', {
                     'response': event.data['response'],
                     'stats': {
                         'api_input_tokens': event.data.get('api_input_tokens', 0),
                         'output_tokens': event.data.get('output_tokens', 0),
                         'system_prompt_est': system_prompt_est,
-                        'memory_est': memory_tokens_est,
                         'history_est': msg_stats['history_est'],
                         'user_msg_est': msg_stats['user_msg_est'],
                         'prefill_est': msg_stats['prefill_est'],
@@ -361,13 +331,8 @@ class ChatService:
                 variant=variant, runtime_vars=runtime_vars
             ) or ''
 
-            # Memories laden (zentral, nicht dupliziert)
-            memory_context = self._load_memory_context(persona_id)
-
             # Nachrichtenverlauf + innere Dialog-Anweisung
             messages = []
-            if memory_context:
-                messages.append({'role': 'assistant', 'content': memory_context})
             if conversation_history:
                 messages.extend(conversation_history)
 
@@ -457,13 +422,8 @@ class ChatService:
             ) or ''
             system_prompt_est = len(system_prompt)
 
-            # Memories laden (zentral)
-            memory_context = self._load_memory_context(persona_id)
-
             # Nachrichtenverlauf + Followup-Anweisung
             messages = []
-            if memory_context:
-                messages.append({'role': 'assistant', 'content': memory_context})
             if conversation_history:
                 messages.extend(conversation_history)
 
@@ -494,7 +454,6 @@ class ChatService:
                             'api_input_tokens': event.data.get('api_input_tokens', 0),
                             'output_tokens': event.data.get('output_tokens', 0),
                             'system_prompt_est': system_prompt_est,
-                            'memory_est': 0,
                             'history_est': 0,
                             'user_msg_est': 0,
                             'prefill_est': prefill_est,

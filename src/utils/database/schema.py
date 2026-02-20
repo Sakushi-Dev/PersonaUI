@@ -26,7 +26,7 @@ def _init_db_schema(conn: sqlite3.Connection, persona_id: str = 'default'):
     cursor.executescript(load_schema())
     
     # Persona-ID in DB-Info setzen
-    cursor.execute(sql('memories.upsert_db_info'), ('persona_id', persona_id))
+    cursor.execute(sql('chat.upsert_db_info'), ('persona_id', persona_id))
     
     conn.commit()
 

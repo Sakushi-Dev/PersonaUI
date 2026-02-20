@@ -91,15 +91,6 @@ class TestPromptEngineParity:
         assert isinstance(result, str)
         assert 'NACHGEDANKE' in result
 
-    def test_summary_prompt_has_system_and_prefill(self):
-        """Summary Prompt enthält system_prompt und prefill."""
-        result = self.engine.build_summary_prompt(variant='default')
-        assert isinstance(result, dict)
-        assert 'system_prompt' in result
-        assert 'prefill' in result
-        assert len(result['system_prompt']) > 100
-        assert len(result['prefill']) > 10
-
     def test_spec_autofill_persona_type(self):
         """Spec-Autofill Persona-Type enthält Input."""
         result = self.engine.build_spec_autofill_prompt('persona_type', 'Fee')

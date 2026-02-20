@@ -8,7 +8,6 @@ import { SettingsManager } from './modules/SettingsManager.js';
 import { SessionManager } from './modules/SessionManager.js';
 import { MessageManager } from './modules/MessageManager.js';
 import { AvatarManager } from './modules/AvatarManager.js';
-import { MemoryManager } from './modules/MemoryManager.js';
 import { QRCodeManager } from './modules/QRCodeManager.js';
 import { UserSettings } from './modules/UserSettings.js';
 import { CustomSpecsManager } from './modules/CustomSpecsManager.js';
@@ -25,12 +24,11 @@ class ChatApp {
         this.messages = new MessageManager(this.dom);
         window.messageManager = this.messages; // Global für SettingsManager Zugriff
         this.avatar = new AvatarManager(this.dom);
-        this.memory = new MemoryManager();
         this.qrCode = new QRCodeManager();
         this.customSpecs = new CustomSpecsManager(this.dom);
         this.accessControl = new AccessControlManager(this.dom);
         this.userProfile = new UserProfileManager(this.dom, this.avatar);
-        this.debugPanel = new DebugPanel(this.memory);
+        this.debugPanel = new DebugPanel();
         window._accessControl = this.accessControl; // Global für Inline-Onclick-Handler
         
         // Share customSpecs with settings for highlighting + refresh
@@ -43,12 +41,8 @@ class ChatApp {
         // Share MessageManager with SettingsManager for afterthought timer control
         this.settings.messageManager = this.messages;
         
-        // Share MessageManager und MemoryManager mit SessionManager für Soft-Reload
+        // Share MessageManager mit SessionManager für Soft-Reload
         this.sessions.messageManager = this.messages;
-        this.sessions.memoryManager = this.memory;
-        
-        // Set message sent callback für Memory
-        this.messages.setMessageSentCallback(() => this.memory.onMessageSent());
         
         // Initialize
         this.init();
@@ -159,8 +153,6 @@ class ChatApp {
             } else if (sessionItem) {
                 const sessionId = parseInt(sessionItem.dataset.sessionId);
                 this.sessions.loadSession(sessionId);
-                // Informiere Memory-Manager über Session-Wechsel
-                this.memory.onSessionChange();
             }
         });
         

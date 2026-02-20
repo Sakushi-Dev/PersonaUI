@@ -228,15 +228,6 @@
       "category": "afterthought",
       "resolve_phase": "runtime"
     },
-    "memory_entries": {
-      "name": "Erinnerungen",
-      "description": "Formatierte Memory-Einträge für den Prompt-Kontext",
-      "source": "runtime",
-      "type": "string",
-      "default": "",
-      "category": "context",
-      "resolve_phase": "runtime"
-    },
     "input": {
       "name": "Input-Text",
       "description": "Dynamischer Input-Text (für Spec-Autofill)",

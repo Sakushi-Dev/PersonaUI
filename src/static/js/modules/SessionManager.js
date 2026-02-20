@@ -13,7 +13,6 @@ export class SessionManager {
         this.personaSessions = {}; // Cache: persona_id -> sessions[]
         this.sidebarView = 'personas'; // 'personas' oder 'sessions'
         this.messageManager = null; // Wird von ChatApp gesetzt
-        this.memoryManager = null;  // Wird von ChatApp gesetzt
     }
 
     async init() {
@@ -490,12 +489,7 @@ export class SessionManager {
             this.messageManager.setLoading(false);
         }
         
-        // 6. Memory-Manager über Session-Wechsel informieren
-        if (this.memoryManager) {
-            this.memoryManager.onSessionChange();
-        }
-        
-        // 7. Persona-Liste in Sidebar aktualisieren (aktive Markierung)
+        // 6. Persona-Liste in Sidebar aktualisieren (aktive Markierung)
         this.loadPersonas().then(() => {
             if (this.sidebarView === 'personas') {
                 this.renderPersonaList();

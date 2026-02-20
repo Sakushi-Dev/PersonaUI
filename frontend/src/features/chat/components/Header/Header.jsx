@@ -8,7 +8,6 @@ import Dropdown from '../../../../components/Dropdown/Dropdown';
 import DropdownItem from '../../../../components/Dropdown/DropdownItem';
 import DropdownSubmenu from '../../../../components/Dropdown/DropdownSubmenu';
 import { checkApiStatus } from '../../../../services/serverApi';
-import { checkMemoryAvailability } from '../../../../services/memoryApi';
 import styles from './Header.module.css';
 
 // ── SVG Icons ──
@@ -55,7 +54,6 @@ export default function Header({
   onOpenApiKey,
   onOpenApiSettings,
   onOpenServerSettings,
-  onOpenMemory,
   onOpenUserProfile,
   onOpenQRCode,
   onOpenAccessControl,
@@ -91,44 +89,6 @@ export default function Header({
     return () => { mounted = false; clearInterval(interval); };
   }, []);
 
-  // ── Memory availability ──
-  const [memoryState, setMemoryState] = useState({ available: false, warning: false, critical: false });
-
-  useEffect(() => {
-    if (!sessionId) return;
-    let mounted = true;
-    const check = async () => {
-      try {
-        const data = await checkMemoryAvailability(sessionId);
-        if (mounted && data?.success) {
-          setMemoryState({
-            available: !!data.available,
-            warning: !!data.context_limit_warning,
-            critical: !!data.context_limit_critical,
-          });
-        }
-      } catch {
-        // ignore
-      }
-    };
-    check();
-    const interval = setInterval(check, 15000);
-    return () => { mounted = false; clearInterval(interval); };
-  }, [sessionId]);
-
-  const memoryBtnClass = [
-    styles.memoryBtn,
-    !memoryState.available ? styles.memoryDisabled : '',
-    memoryState.critical ? styles.memoryCritical : '',
-    !memoryState.critical && memoryState.warning ? styles.memoryWarning : '',
-  ].filter(Boolean).join(' ');
-
-  const handleMemoryClick = useCallback(() => {
-    if (memoryState.available) {
-      onOpenMemory?.();
-    }
-  }, [memoryState.available, onOpenMemory]);
-
   return (
     <header className={styles.header}>
       <div className={styles.headerContent}>
@@ -152,21 +112,6 @@ export default function Header({
 
         {/* ── Right: Actions ── */}
         <div className={styles.right}>
-          {/* Memory Button */}
-          <button
-            className={memoryBtnClass}
-            onClick={handleMemoryClick}
-            title={memoryState.available
-              ? (memoryState.critical
-                ? 'Erinnerung dringend empfohlen – Kontextlimit fast erreicht!'
-                : memoryState.warning
-                  ? 'Erinnerung empfohlen – Kontextlimit wird bald erreicht'
-                  : 'Erinnerung erstellen')
-              : 'Erinnerung erstellen (ab 3 Nachrichten)'}
-          >
-            Erinnern
-          </button>
-
           {/* Sound Toggle */}
           <button
             className={`${styles.soundToggle} ${!soundEnabled ? styles.soundMuted : ''}`}
@@ -205,7 +150,6 @@ export default function Header({
               <>
                 <DropdownItem label="Mein Profil" onClick={() => { close(); onOpenUserProfile?.(); }} />
                 <DropdownItem label="Set API-Key" onClick={() => { close(); onOpenApiKey?.(); }} />
-                <DropdownItem label="Erinnerungen" onClick={() => { close(); onOpenMemory?.(); }} />
                 <DropdownItem label="Persona" onClick={() => { close(); onOpenPersonaSettings?.(); }} />
                 <DropdownSubmenu label="Einstellungen">
                   <DropdownItem label="Interface" onClick={() => { close(); onOpenInterfaceSettings?.(); }} />

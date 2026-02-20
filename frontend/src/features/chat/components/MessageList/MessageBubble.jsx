@@ -18,7 +18,6 @@ export default function MessageBubble({
   isStreaming = false,
   characterAvatar,
   characterAvatarType,
-  memorized = false,
   showActions = false,
   onDelete,
   onEdit,
@@ -43,7 +42,6 @@ export default function MessageBubble({
     styles.messageBubble,
     isUser ? styles.userBubble : styles.botBubble,
     isStreaming ? styles.streaming : '',
-    memorized ? styles.memorized : '',
   ].filter(Boolean).join(' ');
 
   // Auto-focus & auto-resize textarea when entering edit mode
