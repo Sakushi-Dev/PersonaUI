@@ -47,6 +47,9 @@ src/instructions/personas/cortex/custom/
 # Cortex-Settings (Benutzer-Konfiguration)
 src/settings/cortex_settings.json
 
+# Cortex Cycle State (auto-generiert, Session-Tracking)
+src/settings/cycle_state.json
+
 # Aktive Persona-Config (wird bei jeder Aktivierung überschrieben)
 src/instructions/personas/active/persona_config.json
 

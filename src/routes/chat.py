@@ -11,6 +11,7 @@ from utils.database import (
 from utils.config import load_character
 from utils.logger import log
 from utils.provider import get_chat_service, get_api_client
+from utils.cortex.tier_checker import check_and_trigger_cortex_update
 from routes.helpers import success_response, error_response, handle_route_error, resolve_persona_id, get_client_ip
 from routes.user_profile import get_user_profile_data
 
@@ -110,7 +111,30 @@ def chat_stream():
                 elif event_type == 'done':
                     # Bot-Antwort in Persona-DB speichern
                     save_message(event_data['response'], False, character_name, session_id, persona_id=persona_id)
-                    yield f"data: {json.dumps({'type': 'done', 'response': event_data['response'], 'stats': event_data['stats'], 'character_name': character_name})}\n\n"
+
+                    # ═══ Cortex Trigger-Check VOR done-yield ═══
+                    cortex_info = None
+                    try:
+                        cortex_info = check_and_trigger_cortex_update(
+                            persona_id=persona_id,
+                            session_id=session_id
+                        )
+                    except Exception as cortex_err:
+                        log.warning("Cortex check failed (non-fatal): %s", cortex_err)
+
+                    # done-Payload zusammenbauen
+                    done_payload = {
+                        'type': 'done',
+                        'response': event_data['response'],
+                        'stats': event_data['stats'],
+                        'character_name': character_name
+                    }
+
+                    # Cortex-Info mitsenden (Progress + Trigger-Status)
+                    if cortex_info:
+                        done_payload['cortex'] = cortex_info
+
+                    yield f"data: {json.dumps(done_payload)}\n\n"
                 elif event_type == 'error':
                     error_payload = {'type': 'error', 'error': event_data}
                     if event_data == 'credit_balance_exhausted':
