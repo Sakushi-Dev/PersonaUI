@@ -171,35 +171,35 @@ class TestToolExecutor:
 # ─── System-Prompt-Builder ──────────────────────────────────────────────────
 
 class TestSystemPromptBuilder:
-    """_build_cortex_system_prompt."""
+    """_build_cortex_system_prompt — testet den Fallback-Pfad (ohne PromptEngine)."""
 
     def test_contains_persona_name(self, service, mock_character):
-        prompt = service._build_cortex_system_prompt('Mia', 'Alex', mock_character)
+        prompt = service._build_cortex_system_prompt_fallback('Mia', 'Alex', mock_character)
         assert 'Du bist Mia' in prompt
 
     def test_contains_user_name(self, service, mock_character):
-        prompt = service._build_cortex_system_prompt('Mia', 'Alex', mock_character)
+        prompt = service._build_cortex_system_prompt_fallback('Mia', 'Alex', mock_character)
         assert 'Alex' in prompt
 
     def test_contains_file_descriptions(self, service, mock_character):
-        prompt = service._build_cortex_system_prompt('Mia', 'Alex', mock_character)
+        prompt = service._build_cortex_system_prompt_fallback('Mia', 'Alex', mock_character)
         assert 'memory.md' in prompt
         assert 'soul.md' in prompt
         assert 'relationship.md' in prompt
 
     def test_contains_identity(self, service, mock_character):
-        prompt = service._build_cortex_system_prompt('Mia', 'Alex', mock_character)
+        prompt = service._build_cortex_system_prompt_fallback('Mia', 'Alex', mock_character)
         assert '22, weiblich' in prompt
 
     def test_contains_date(self, service, mock_character):
         from datetime import datetime
         today = datetime.now().strftime('%d.%m.%Y')
-        prompt = service._build_cortex_system_prompt('Mia', 'Alex', mock_character)
+        prompt = service._build_cortex_system_prompt_fallback('Mia', 'Alex', mock_character)
         assert today in prompt
 
     def test_minimal_character(self, service):
         """Leere Character-Daten crashen nicht."""
-        prompt = service._build_cortex_system_prompt('Bot', 'User', {})
+        prompt = service._build_cortex_system_prompt_fallback('Bot', 'User', {})
         assert 'Du bist Bot' in prompt
 
 

@@ -205,7 +205,7 @@ class TestCortexServicePromptIntegration:
         ensure_cortex_dir('default')
         cortex_service.write_file('default', 'memory.md', '# Test Memory Content')
         result = cortex_service.get_cortex_for_prompt('default')
-        assert result['cortex_memory'] == '# Test Memory Content'
+        assert result['cortex_memory'] == '### Erinnerungen & Wissen\n\n# Test Memory Content'
 
 
 class TestCortexServiceFilenameValidation:

@@ -60,6 +60,7 @@ class PlaceholderResolver:
             'get_time_context.current_date': self._compute_current_date,
             'get_time_context.current_time': self._compute_current_time,
             'get_time_context.current_weekday': self._compute_current_weekday,
+            'build_cortex_persona_context': self._compute_cortex_persona_context,
         }
 
     def resolve_text(self, text: str, variant: str = 'default',
@@ -372,4 +373,31 @@ class PlaceholderResolver:
         """Aktueller Wochentag auf Deutsch."""
         from ..time_context import get_time_context
         return get_time_context().get('current_weekday', '')
+
+    def _compute_cortex_persona_context(self) -> str:
+        """Baut den Persona-Kontext für Cortex-Updates aus Character-Daten.
+
+        Kombiniert identity, core und background zu einem
+        zusammenhängenden Persona-Beschreibungstext.
+        """
+        try:
+            from ..config import load_character
+            character = load_character()
+            parts = []
+
+            identity = character.get('identity', '')
+            core = character.get('core', '')
+            background = character.get('background', '')
+
+            if identity:
+                parts.append(identity)
+            if core:
+                parts.append(core)
+            if background:
+                parts.append(f"Hintergrund: {background}")
+
+            return "\n".join(parts)
+        except Exception as e:
+            log.warning("cortex_persona_context konnte nicht berechnet werden: %s", e)
+            return ''
 

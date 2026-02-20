@@ -15,6 +15,36 @@ from ..logger import log
 from ..config import load_character
 
 
+def _read_setting(key: str, default=None):
+    """Liest ein Setting aus user_settings.json mit defaults.json Fallback."""
+    import os
+    import json
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+    # user_settings.json
+    path = os.path.join(base_dir, 'settings', 'user_settings.json')
+    try:
+        if os.path.exists(path):
+            with open(path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            if key in data:
+                return data[key]
+    except Exception:
+        pass
+
+    # defaults.json Fallback
+    path = os.path.join(base_dir, 'settings', 'defaults.json')
+    try:
+        if os.path.exists(path):
+            with open(path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            return data.get(key, default)
+    except Exception:
+        pass
+
+    return default
+
+
 class ChatService:
     """
     Orchestriert Chat-Requests:
@@ -36,6 +66,43 @@ class ChatService:
                 log.error("ChatService: PromptEngine nicht verfügbar!")
         except Exception as e:
             log.error("ChatService: PromptEngine konnte nicht geladen werden: %s", e)
+
+    def _load_cortex_context(self, persona_id: str = None) -> Dict[str, str]:
+        """
+        Lädt Cortex-Dateien als Placeholder-Werte für die PromptEngine.
+
+        Prüft zuerst das cortexEnabled-Setting. Gibt bei deaktiviertem Cortex
+        oder Fehler leere Strings zurück (der requires_any-Check in der Engine
+        überspringt dann den Cortex-Block).
+
+        Args:
+            persona_id: Optional Persona-ID (Default: aktive Persona)
+
+        Returns:
+            Dict mit cortex_memory, cortex_soul, cortex_relationship
+        """
+        empty = {
+            'cortex_memory': '',
+            'cortex_soul': '',
+            'cortex_relationship': '',
+        }
+
+        # Setting-Check: Cortex global deaktiviert?
+        if not _read_setting('cortexEnabled', True):
+            return empty
+
+        try:
+            from ..provider import get_cortex_service
+            cortex_service = get_cortex_service()
+
+            if persona_id is None:
+                from ..config import get_active_persona_id
+                persona_id = get_active_persona_id()
+
+            return cortex_service.get_cortex_for_prompt(persona_id)
+        except Exception as e:
+            log.warning("Cortex-Kontext konnte nicht geladen werden: %s", e)
+            return empty
 
     def _build_chat_messages(self, user_message: str, conversation_history: list,
                               nsfw_mode: bool, pending_afterthought: str = None) -> tuple:
@@ -234,6 +301,9 @@ class ChatService:
             runtime_vars = {'language': language}
             if ip_address:
                 runtime_vars['ip_address'] = ip_address
+            # Cortex-Daten laden und als runtime_vars hinzufügen
+            cortex_data = self._load_cortex_context(persona_id)
+            runtime_vars.update(cortex_data)
             system_prompt = self._engine.build_system_prompt(variant=variant, runtime_vars=runtime_vars) or ''
         else:
             log.error("ChatService: Kein System-Prompt — PromptEngine nicht verfügbar!")
@@ -318,6 +388,9 @@ class ChatService:
             }
             if ip_address:
                 runtime_vars['ip_address'] = ip_address
+            # Cortex-Daten laden und als runtime_vars hinzufügen
+            cortex_data = self._load_cortex_context(persona_id)
+            runtime_vars.update(cortex_data)
 
             if not self._engine:
                 return {'decision': False, 'inner_dialogue': '', 'error': 'PromptEngine nicht verfügbar'}
@@ -411,6 +484,9 @@ class ChatService:
             }
             if ip_address:
                 runtime_vars['ip_address'] = ip_address
+            # Cortex-Daten laden und als runtime_vars hinzufügen
+            cortex_data = self._load_cortex_context(persona_id)
+            runtime_vars.update(cortex_data)
 
             if not self._engine:
                 yield ('error', 'PromptEngine nicht verfügbar')

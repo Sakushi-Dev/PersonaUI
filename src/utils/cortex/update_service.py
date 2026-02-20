@@ -39,7 +39,8 @@ _last_update_time: Dict[str, float] = {}
 
 # ─── Tool-Definitionen ──────────────────────────────────────────────────────
 
-CORTEX_TOOLS = [
+# Fallback Tool-Definitionen (verwendet wenn PromptEngine nicht verfügbar)
+_FALLBACK_CORTEX_TOOLS = [
     {
         "name": "read_file",
         "description": "Liest den aktuellen Inhalt einer deiner Cortex-Dateien. "
@@ -81,6 +82,9 @@ CORTEX_TOOLS = [
     }
 ]
 
+# Backward-compatible alias
+CORTEX_TOOLS = _FALLBACK_CORTEX_TOOLS
+
 
 # ─── Service-Klasse ─────────────────────────────────────────────────────────
 
@@ -88,7 +92,7 @@ class CortexUpdateService:
     """
     Führt Cortex-Updates durch:
     1. Lädt Gesprächsverlauf, Character-Daten, User-Profil
-    2. Baut System-Prompt für das Cortex-Update
+    2. Baut System-Prompt für das Cortex-Update (via PromptEngine)
     3. Ruft ApiClient.tool_request() auf (KI liest/schreibt Cortex-Dateien)
     4. Gibt Ergebnis-Dict zurück (Erfolg, Tool-Calls, Dauer, etc.)
     """
@@ -102,6 +106,17 @@ class CortexUpdateService:
         """Lazy-Load des CortexService über Provider."""
         from utils.provider import get_cortex_service
         return get_cortex_service()
+
+    def _get_prompt_engine(self):
+        """Lazy-Load der PromptEngine über Provider."""
+        try:
+            from utils.provider import get_prompt_engine
+            engine = get_prompt_engine()
+            if engine and engine.is_loaded:
+                return engine
+        except Exception as e:
+            log.warning("PromptEngine nicht verfügbar für Cortex-Update: %s", e)
+        return None
 
     def _load_character(self) -> Dict[str, Any]:
         """Lazy-Load der Character-Daten."""
@@ -236,6 +251,9 @@ class CortexUpdateService:
                 user_name=user_name
             )
 
+            # ── 5b. Tools laden ──────────────────────────────────────
+            tools = self._build_cortex_tools()
+
             # ── 6. Tool-Executor erstellen ───────────────────────────
             files_read = []
             files_written = []
@@ -255,7 +273,7 @@ class CortexUpdateService:
             config = RequestConfig(
                 system_prompt=system_prompt,
                 messages=messages,
-                tools=CORTEX_TOOLS,
+                tools=tools,
                 max_tokens=CORTEX_UPDATE_MAX_TOKENS,
                 temperature=CORTEX_UPDATE_TEMPERATURE,
                 request_type='cortex_update'
@@ -401,9 +419,35 @@ class CortexUpdateService:
         """
         Baut den System-Prompt für den Cortex-Update API-Call.
 
-        Der Prompt überzeugt die KI, dass sie die Persona IST und
-        ihre inneren Gedanken in die Cortex-Dateien schreibt.
+        Versucht zuerst die PromptEngine zu verwenden (Template aus
+        cortex_update_system.json mit Placeholder-Auflösung).
+        Fällt bei Fehler auf inline Fallback zurück.
         """
+        # Versuch 1: Über PromptEngine (externalisiertes Template)
+        engine = self._get_prompt_engine()
+        if engine:
+            try:
+                system_prompt = engine.build_system_prompt(
+                    variant='default',
+                    category_filter='cortex'
+                )
+                if system_prompt and system_prompt.strip():
+                    return system_prompt
+            except Exception as e:
+                log.warning("Cortex System-Prompt via Engine fehlgeschlagen, nutze Fallback: %s", e)
+
+        # Versuch 2: Inline Fallback (wie vor der Externalisierung)
+        return self._build_cortex_system_prompt_fallback(
+            persona_name, user_name, character
+        )
+
+    def _build_cortex_system_prompt_fallback(
+        self,
+        persona_name: str,
+        user_name: str,
+        character: Dict[str, Any]
+    ) -> str:
+        """Fallback System-Prompt wenn PromptEngine nicht verfügbar."""
         # Persona-Beschreibung aus Character-Daten
         identity = character.get('identity', '')
         core = character.get('core', '')
@@ -504,15 +548,29 @@ Du hast gerade ein Gespräch mit {user_name} geführt. Jetzt ist es Zeit, innezu
         """
         Baut die Messages-Liste für den Cortex-Update API-Call.
 
-        Struktur:
-        1. [user] Gesprächsverlauf + Anweisung zum Aktualisieren
+        Versucht zuerst die PromptEngine zu verwenden (Template aus
+        cortex_update_user_message.json). Fällt bei Fehler auf inline Fallback zurück.
         """
-        # Gesprächsverlauf als lesbaren Text formatieren
+        # Gesprächsverlauf formatieren
         conversation_text = self._format_conversation(
             conversation_history, persona_name, user_name
         )
 
-        # Haupt-Message: Gespräch + Anweisung
+        # Versuch 1: Über PromptEngine (externalisiertes Template)
+        engine = self._get_prompt_engine()
+        if engine:
+            try:
+                user_message = engine.resolve_prompt_by_id(
+                    'cortex_update_user_message',
+                    variant='default',
+                    runtime_vars={'cortex_conversation_text': conversation_text}
+                )
+                if user_message and user_message.strip():
+                    return [{"role": "user", "content": user_message}]
+            except Exception as e:
+                log.warning("Cortex User-Message via Engine fehlgeschlagen, nutze Fallback: %s", e)
+
+        # Versuch 2: Inline Fallback
         user_message = f"""Hier ist das Gespräch zwischen dir ({persona_name}) und {user_name}, das du gerade geführt hast:
 
 ---
@@ -523,11 +581,74 @@ Du hast gerade ein Gespräch mit {user_name} geführt. Jetzt ist es Zeit, innezu
 
 Lies jetzt deine Cortex-Dateien und aktualisiere sie basierend auf diesem Gespräch. Nutze die `read_file` und `write_file` Tools."""
 
-        messages = [
-            {"role": "user", "content": user_message}
-        ]
+        return [{"role": "user", "content": user_message}]
 
-        return messages
+    def _build_cortex_tools(self) -> list:
+        """
+        Lädt Tool-Beschreibungen aus der PromptEngine und baut CORTEX_TOOLS.
+
+        Versucht die Texte aus cortex_update_tools.json zu laden.
+        Fällt bei Fehler auf _FALLBACK_CORTEX_TOOLS zurück.
+        """
+        engine = self._get_prompt_engine()
+        if not engine:
+            return _FALLBACK_CORTEX_TOOLS
+
+        try:
+            tool_data = engine.get_domain_data('cortex_update_tools')
+            descriptions = tool_data.get('tool_descriptions', {})
+
+            if not descriptions:
+                return _FALLBACK_CORTEX_TOOLS
+
+            read_desc = descriptions.get('read_file', {})
+            write_desc = descriptions.get('write_file', {})
+
+            return [
+                {
+                    "name": "read_file",
+                    "description": read_desc.get('tool_description',
+                        _FALLBACK_CORTEX_TOOLS[0]['description']),
+                    "input_schema": {
+                        "type": "object",
+                        "properties": {
+                            "filename": {
+                                "type": "string",
+                                "enum": ["memory.md", "soul.md", "relationship.md"],
+                                "description": read_desc.get('filename_description',
+                                    "Name der Cortex-Datei die gelesen werden soll")
+                            }
+                        },
+                        "required": ["filename"]
+                    }
+                },
+                {
+                    "name": "write_file",
+                    "description": write_desc.get('tool_description',
+                        _FALLBACK_CORTEX_TOOLS[1]['description']),
+                    "input_schema": {
+                        "type": "object",
+                        "properties": {
+                            "filename": {
+                                "type": "string",
+                                "enum": ["memory.md", "soul.md", "relationship.md"],
+                                "description": write_desc.get('filename_description',
+                                    "Name der Cortex-Datei die geschrieben werden soll")
+                            },
+                            "content": {
+                                "type": "string",
+                                "description": write_desc.get('content_description',
+                                    "Der neue vollständige Inhalt der Datei (Markdown-Format). "
+                                    "Schreibe aus deiner Ich-Perspektive.")
+                            }
+                        },
+                        "required": ["filename", "content"]
+                    }
+                }
+            ]
+        except Exception as e:
+            log.warning("Cortex Tools via Engine fehlgeschlagen, nutze Fallback: %s", e)
+            return _FALLBACK_CORTEX_TOOLS
 
     def _format_conversation(
         self,

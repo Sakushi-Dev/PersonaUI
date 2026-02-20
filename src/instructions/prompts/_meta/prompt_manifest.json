@@ -422,6 +422,71 @@
         "core",
         "continuity"
       ]
+    },
+    "cortex_context": {
+      "name": "Cortex-Kontext",
+      "description": "Inneres Selbstwissen der Persona — Erinnerungen, Identität, Beziehungsdynamik (aus Cortex-Dateien)",
+      "category": "context",
+      "type": "text",
+      "target": "system_prompt",
+      "position": "system_prompt",
+      "order": 2000,
+      "enabled": true,
+      "domain_file": "cortex_context.json",
+      "requires_any": ["cortex_memory", "cortex_soul", "cortex_relationship"],
+      "tags": [
+        "context",
+        "cortex",
+        "memory",
+        "identity",
+        "relationship"
+      ]
+    },
+    "cortex_update_system": {
+      "name": "Cortex Update — System-Prompt",
+      "description": "System-Prompt für den Cortex-Update API-Call. Überzeugt die KI, dass sie die Persona IST und ihre inneren Dateien aktualisieren soll.",
+      "category": "cortex",
+      "type": "text",
+      "target": "system_prompt",
+      "position": "system_prompt",
+      "order": 100,
+      "enabled": true,
+      "domain_file": "cortex_update_system.json",
+      "tags": [
+        "cortex",
+        "update",
+        "identity"
+      ]
+    },
+    "cortex_update_user_message": {
+      "name": "Cortex Update — User-Message",
+      "description": "User-Message für den Cortex-Update API-Call. Rahmt das Gespräch ein und gibt die Anweisung zum Aktualisieren.",
+      "category": "cortex",
+      "type": "text",
+      "target": "message",
+      "position": "user_message",
+      "order": 100,
+      "enabled": true,
+      "domain_file": "cortex_update_user_message.json",
+      "tags": [
+        "cortex",
+        "update"
+      ]
+    },
+    "cortex_update_tools": {
+      "name": "Cortex Update — Tool-Beschreibungen",
+      "description": "Beschreibungstexte für die read_file/write_file Tools im Cortex-Update API-Call.",
+      "category": "cortex",
+      "type": "text",
+      "target": "system_prompt",
+      "position": "system_prompt",
+      "order": 200,
+      "enabled": true,
+      "domain_file": "cortex_update_tools.json",
+      "tags": [
+        "cortex",
+        "tools"
+      ]
     }
   }
 }

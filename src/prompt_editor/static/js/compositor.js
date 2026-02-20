@@ -44,9 +44,10 @@ const Compositor = {
             'summary': 'Summary',
             'spec_autofill': 'Spec Autofill',
             'utility': 'Utility',
+            'cortex': 'Cortex Update',
         };
 
-        const REQUEST_TYPE_ORDER = ['chat', 'afterthought', 'summary', 'spec_autofill', 'utility'];
+        const REQUEST_TYPE_ORDER = ['chat', 'cortex', 'afterthought', 'summary', 'spec_autofill', 'utility'];
 
         for (const reqType of REQUEST_TYPE_ORDER) {
             const typeBlocks = blocks.filter(b => b.request_type === reqType);

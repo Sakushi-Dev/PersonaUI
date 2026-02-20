@@ -317,6 +317,52 @@
       "default": "",
       "category": "system",
       "resolve_phase": "runtime"
+    },
+    "cortex_memory": {
+      "name": "Cortex Memory",
+      "description": "Inhalt der memory.md — Faktenwissen, Vorlieben, wichtige Details über den User",
+      "source": "runtime",
+      "type": "string",
+      "default": "",
+      "category": "cortex",
+      "resolve_phase": "runtime"
+    },
+    "cortex_soul": {
+      "name": "Cortex Soul",
+      "description": "Inhalt der soul.md — Persönlichkeitsentwicklung, innere Haltung, emotionale Muster",
+      "source": "runtime",
+      "type": "string",
+      "default": "",
+      "category": "cortex",
+      "resolve_phase": "runtime"
+    },
+    "cortex_relationship": {
+      "name": "Cortex Relationship",
+      "description": "Inhalt der relationship.md — Beziehungsdynamik, gemeinsame Geschichte, Vertrauenslevel",
+      "source": "runtime",
+      "type": "string",
+      "default": "",
+      "category": "cortex",
+      "resolve_phase": "runtime"
+    },
+    "cortex_persona_context": {
+      "name": "Cortex Persona-Kontext",
+      "description": "Persona-Beschreibung für Cortex-Update (identity + core + background)",
+      "source": "computed",
+      "compute_function": "build_cortex_persona_context",
+      "type": "string",
+      "default": "",
+      "category": "cortex",
+      "resolve_phase": "computed"
+    },
+    "cortex_conversation_text": {
+      "name": "Cortex Gesprächsverlauf",
+      "description": "Formatierter Gesprächsverlauf für Cortex-Update (via runtime_vars)",
+      "source": "runtime",
+      "type": "string",
+      "default": "",
+      "category": "cortex",
+      "resolve_phase": "runtime"
     }
   }
 }

@@ -1,0 +1,14 @@
+{
+  "cortex_update_user_message": {
+    "variants": {
+      "default": {
+        "content": "Hier ist das Gespräch zwischen dir ({{char_name}}) und {{user_name}}, das du gerade geführt hast:\n\n---\n\n{{cortex_conversation_text}}\n\n---\n\nLies jetzt deine Cortex-Dateien und aktualisiere sie basierend auf diesem Gespräch. Nutze die `read_file` und `write_file` Tools."
+      }
+    },
+    "placeholders_used": [
+      "char_name",
+      "user_name",
+      "cortex_conversation_text"
+    ]
+  }
+}

@@ -377,27 +377,42 @@ class CortexService:
 
     def get_cortex_for_prompt(self, persona_id: str) -> Dict[str, str]:
         """
-        Liest Cortex-Dateien und formatiert sie als Computed-Placeholder-Werte
-        für den System-Prompt.
+        Liest Cortex-Dateien und formatiert sie als Placeholder-Werte
+        mit Sektions-Headern für den System-Prompt.
 
-        Wird von der PromptEngine aufgerufen, um {{cortex_memory}},
-        {{cortex_soul}} und {{cortex_relationship}} zu resolven.
+        Leere Dateien → leerer String (Sektion wird im Template unsichtbar).
+        Wird vom ChatService aufgerufen, um {{cortex_memory}},
+        {{cortex_soul}} und {{cortex_relationship}} als runtime_vars zu liefern.
 
         Args:
             persona_id: Persona-ID
 
         Returns:
             {
-                'cortex_memory': '...',       # Inhalt von memory.md
-                'cortex_soul': '...',         # Inhalt von soul.md
-                'cortex_relationship': '...', # Inhalt von relationship.md
+                'cortex_memory': '### Erinnerungen & Wissen\n\n...' oder '',
+                'cortex_soul': '### Identität & Innere Haltung\n\n...' oder '',
+                'cortex_relationship': '### Beziehung & Gemeinsame Geschichte\n\n...' oder '',
             }
         """
         files = self.read_all(persona_id)
+
+        def _wrap_section(content: str, header: str) -> str:
+            """Wraps content with section header, or returns empty string."""
+            stripped = content.strip()
+            if not stripped:
+                return ''
+            return f"### {header}\n\n{stripped}"
+
         return {
-            'cortex_memory': files['memory'].strip(),
-            'cortex_soul': files['soul'].strip(),
-            'cortex_relationship': files['relationship'].strip(),
+            'cortex_memory': _wrap_section(
+                files['memory'], 'Erinnerungen & Wissen'
+            ),
+            'cortex_soul': _wrap_section(
+                files['soul'], 'Identität & Innere Haltung'
+            ),
+            'cortex_relationship': _wrap_section(
+                files['relationship'], 'Beziehung & Gemeinsame Geschichte'
+            ),
         }
 
     # ─── Cortex-Update via tool_use ─────────────────────────────────────

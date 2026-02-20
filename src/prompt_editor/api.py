@@ -453,6 +453,7 @@ class EditorApi:
                 'summary': 'summary',
                 'spec_autofill': 'spec_autofill',
                 'utility': 'utility',
+                'cortex': 'cortex',
                 'custom': 'chat',
             }
 
