@@ -11,6 +11,7 @@ export function sendChatMessage(message, options = {}) {
     ...(options.apiTemperature !== undefined && { api_temperature: parseFloat(options.apiTemperature) }),
     ...(options.contextLimit !== undefined && { context_limit: parseInt(options.contextLimit, 10) }),
     ...(options.experimentalMode !== undefined && { experimental_mode: !!options.experimentalMode }),
+    ...(options.pendingAfterthought && { pending_afterthought: options.pendingAfterthought }),
   };
 
   return apiStream('/chat_stream', body, {

@@ -116,6 +116,7 @@ function ChatPageContent() {
     isThinking: afterthoughtThinking,
     onUserMessage: onAfterthoughtMessage,
     stopTimer: stopAfterthought,
+    consumePendingThought,
   } = useAfterthought();
 
   const sidebar = useSidebar();
@@ -174,11 +175,12 @@ function ChatPageContent() {
     }
   }, [avatarTarget, setUserAvatar]);
 
-  // ── Start afterthought timer after user sends message ──
+  // ── Send message + pass pending afterthought context ──
   const handleSend = useCallback((text) => {
-    sendMessage(text);
+    const pendingThought = consumePendingThought();
+    sendMessage(text, { pendingAfterthought: pendingThought });
     onAfterthoughtMessage();
-  }, [sendMessage, onAfterthoughtMessage]);
+  }, [sendMessage, onAfterthoughtMessage, consumePendingThought]);
 
   // ── New chat ──
   const handleNewChat = useCallback(async () => {

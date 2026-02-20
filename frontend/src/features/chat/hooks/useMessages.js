@@ -24,7 +24,7 @@ export function useMessages() {
 
   const hasMore = chatHistory.length < totalMessageCount;
 
-  const sendMessage = useCallback(async (text) => {
+  const sendMessage = useCallback(async (text, extra = {}) => {
     console.log('[useMessages] sendMessage called, text:', text, 'sessionId:', sessionId, 'personaId:', personaId, 'isLoading:', isLoading, 'isStreaming:', isStreaming);
     if (!text.trim() || isLoading || isStreaming) return;
 
@@ -59,6 +59,7 @@ export function useMessages() {
       apiTemperature: get('apiTemperature'),
       contextLimit: get('contextLimit'),
       experimentalMode: get('experimentalMode'),
+      pendingAfterthought: extra.pendingAfterthought || null,
       onChunk: (chunk) => {
         rawText += chunk;
         updateLastMessage({ message: formatMessage(rawText) });

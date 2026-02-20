@@ -57,7 +57,7 @@ class ChatService:
 
     def _build_chat_messages(self, user_message: str, conversation_history: list,
                               memory_context: str, char_name: str, user_name: str,
-                              nsfw_mode: bool) -> tuple:
+                              nsfw_mode: bool, pending_afterthought: str = None) -> tuple:
         """
         Baut die Messages-Liste für den Chat-Request auf.
 
@@ -198,6 +198,17 @@ class ChatService:
                 messages.append(msg)
                 history_tokens_est += len(msg.get('content', ''))
 
+        # Pending Afterthought: inject the persona's last inner dialogue (from [i_can_wait])
+        # as context before the user message so the persona remembers what it was thinking.
+        if pending_afterthought:
+            afterthought_note = f"[Dein letzter innerer Gedanke, {user_name} könnte auch aufgefallen sein das du in Gedanken warst — nutze ihn als Kontext:]\n{pending_afterthought}"
+            if messages and messages[-1]['role'] == 'assistant':
+                messages[-1]['content'] += "\n\n" + afterthought_note
+            else:
+                messages.append({'role': 'assistant', 'content': afterthought_note})
+            history_tokens_est += len(afterthought_note)
+            log.info("Pending afterthought injected (%d chars)", len(pending_afterthought))
+
         # User-Nachricht hinzufügen
         # Falls History mit user endet, zusammenführen um doppelte user-Rolle zu vermeiden
         if messages and messages[-1]['role'] == 'user':
@@ -223,7 +234,7 @@ class ChatService:
                     user_name: str = 'User', api_model: str = None,
                     api_temperature: float = None, include_memories: bool = True,
                     ip_address: str = None, experimental_mode: bool = False,
-                    persona_id: str = None) -> Generator:
+                    persona_id: str = None, pending_afterthought: str = None) -> Generator:
         """
         Haupt-Chat-Stream.
 
@@ -260,7 +271,8 @@ class ChatService:
         # 3. Messages zusammenbauen
         messages, msg_stats = self._build_chat_messages(
             user_message, conversation_history, memory_context,
-            char_name, user_name, experimental_mode
+            char_name, user_name, experimental_mode,
+            pending_afterthought=pending_afterthought
         )
 
         # Debug: Zeige was tatsächlich an die API gesendet wird

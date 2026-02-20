@@ -37,6 +37,8 @@ export function useAfterthought() {
   const lastResponseTimeRef = useRef(null);
   // Count user messages since last afterthought trigger (or session start)
   const msgCountRef = useRef(0);
+  // Last inner dialogue from a [i_can_wait] decision — sent with next user message then cleared
+  const pendingThoughtRef = useRef(null);
 
   const mode = get('nachgedankeMode', 'off');
   const enabled = mode !== 'off' && mode !== false && mode !== undefined;
@@ -70,6 +72,10 @@ export function useAfterthought() {
 
       if (!decision.success || !decision.decision) {
         setIsThinking(false);
+        // [i_can_wait] — save inner dialogue for next user message
+        if (decision.inner_dialogue) {
+          pendingThoughtRef.current = decision.inner_dialogue;
+        }
         // Advance to next phase and schedule again
         phaseRef.current = Math.min(phaseRef.current + 1, AFTERTHOUGHT_PHASES.length - 1);
         scheduleNext();
@@ -164,6 +170,13 @@ export function useAfterthought() {
     }
   }, [enabled, mode, scheduleNext]);
 
+  /** Return + clear the pending inner dialogue (for passing to next chat request). */
+  const consumePendingThought = useCallback(() => {
+    const thought = pendingThoughtRef.current;
+    pendingThoughtRef.current = null;
+    return thought;
+  }, []);
+
   const stopTimer = useCallback(() => {
     activeRef.current = false;
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -183,6 +196,7 @@ export function useAfterthought() {
   useEffect(() => {
     stopTimer();
     msgCountRef.current = 0;
+    pendingThoughtRef.current = null;
   }, [sessionId, stopTimer]);
 
   return {
@@ -191,5 +205,6 @@ export function useAfterthought() {
     onUserMessage,
     stopTimer,
     executeCheck,
+    consumePendingThought,
   };
 }
