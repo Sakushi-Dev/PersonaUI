@@ -15,6 +15,7 @@ from routes.user_profile import user_profile_bp
 from routes.onboarding import onboarding_bp
 from routes.commands import commands_bp
 from routes.react_frontend import react_bp, has_react_build
+from routes.cortex import cortex_bp
 
 
 def register_routes(app):
@@ -35,4 +36,5 @@ def register_routes(app):
     app.register_blueprint(custom_specs_bp)
     app.register_blueprint(user_profile_bp)
     app.register_blueprint(commands_bp)
+    app.register_blueprint(cortex_bp)
 

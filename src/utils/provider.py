@@ -15,6 +15,7 @@ from typing import Optional
 
 _api_client = None
 _chat_service = None
+_cortex_service = None
 _prompt_engine = None
 
 
@@ -25,12 +26,17 @@ def init_services(api_key: str = None):
     Args:
         api_key: Optionaler API-Key (sonst aus ENV)
     """
-    global _api_client, _chat_service
+    global _api_client, _chat_service, _cortex_service
     from .api_request import ApiClient
     from .services import ChatService
+    from .cortex_service import CortexService
 
     _api_client = ApiClient(api_key=api_key)
+    _cortex_service = CortexService(_api_client)
     _chat_service = ChatService(_api_client)
+
+    # Default-Cortex beim Start sicherstellen
+    _cortex_service.ensure_cortex_files('default')
 
 
 def get_api_client():
@@ -45,6 +51,13 @@ def get_chat_service():
     if _chat_service is None:
         raise RuntimeError("ChatService nicht initialisiert – init_services() in app.py aufrufen")
     return _chat_service
+
+
+def get_cortex_service():
+    """Gibt den CortexService zurück"""
+    if _cortex_service is None:
+        raise RuntimeError("CortexService nicht initialisiert – init_services() in app.py aufrufen")
+    return _cortex_service
 
 
 def get_prompt_engine():

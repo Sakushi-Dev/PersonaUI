@@ -8,6 +8,7 @@ import uuid
 import shutil
 from typing import Dict, Any, List, Optional
 from utils.database import create_persona_db, delete_persona_db
+from utils.cortex_service import create_cortex_dir, delete_cortex_dir
 from utils.logger import log
 
 # Base directory für Config-Dateien (src/)
@@ -472,6 +473,9 @@ def save_created_persona(config_data: Dict[str, Any]) -> Optional[str]:
         # Erstelle die zugehörige Persona-Datenbank
         create_persona_db(persona_id)
         
+        # Erstelle den Cortex-Ordner mit Templates
+        create_cortex_dir(persona_id)
+        
         return persona_id
     except Exception as e:
         log.error("Fehler beim Speichern der Persona: %s", e)
@@ -533,6 +537,8 @@ def delete_created_persona(persona_id: str) -> bool:
             os.remove(filepath)
             # Lösche die zugehörige Persona-Datenbank
             delete_persona_db(persona_id)
+            # Lösche den Cortex-Ordner
+            delete_cortex_dir(persona_id)
             return True
         return False
     except Exception as e:

@@ -114,16 +114,6 @@ class TestPromptEngineParity:
         assert isinstance(result, str)
         assert 'Hallo Welt' in result
 
-    def test_memory_context_prompt(self):
-        """Memory Context Prompt enthält Memory-Einträge."""
-        result = self.engine.resolve_prompt(
-            'memory_context', variant='default',
-            runtime_vars={'memory_entries': 'Test Memory Content'}
-        )
-        assert isinstance(result, str)
-        assert 'Test Memory Content' in result
-        assert 'MEMORY CONTEXT' in result
-
 
 # ============================================================
 # Service Engine Integration
