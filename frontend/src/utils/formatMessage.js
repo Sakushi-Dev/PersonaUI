@@ -32,7 +32,9 @@ export function formatCodeBlocks(text) {
 }
 
 /**
- * Convert newlines to <br> tags, but skip content inside code blocks
+ * Convert newlines to <br> tags, but skip content inside code blocks.
+ * Consecutive newlines are collapsed into a single <br> to avoid
+ * excessive blank lines (e.g. between action descriptions).
  */
 export function formatLineBreaks(text) {
   if (!text) return '';
@@ -43,8 +45,8 @@ export function formatLineBreaks(text) {
     .map((part, i) => {
       // Odd indices are code blocks — leave them alone
       if (i % 2 === 1) return part;
-      // Remove leading newlines and convert rest
-      return part.replace(/^\n+/, '').replace(/\n/g, '<br>');
+      // Remove leading newlines and collapse consecutive newlines into one space
+      return part.replace(/^\n+/, '').replace(/\n+/g, ' ');
     })
     .join('');
 }
