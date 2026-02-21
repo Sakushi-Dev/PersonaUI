@@ -17,8 +17,6 @@ DEFAULT_PROFILE = {
     "user_name": "User",
     "user_avatar": None,
     "user_avatar_type": None,
-    "user_type": None,
-    "user_type_description": None,
     "user_gender": None,
     "user_interested_in": [],
     "user_info": ""
@@ -76,7 +74,7 @@ def update_user_profile():
     current = _load_profile()
     
     # Nur erlaubte Felder aktualisieren
-    allowed_keys = {'user_name', 'user_avatar', 'user_avatar_type', 'user_type', 'user_type_description', 'user_gender', 'user_interested_in', 'user_info'}
+    allowed_keys = {'user_name', 'user_avatar', 'user_avatar_type', 'user_gender', 'user_interested_in', 'user_info'}
     for key in allowed_keys:
         if key in data:
             current[key] = data[key]

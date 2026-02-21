@@ -112,15 +112,13 @@ export default function StepCortex({ data, onChange, onNext, onBack }) {
             </div>
             <div className={`${styles.infoBox} ${styles.infoBoxCompact}`}>
               <span className={styles.infoIcon}></span>
-              <span>{FREQUENCY_INFO[data.cortexFrequency]}</span>
+              <span>
+                {FREQUENCY_INFO[data.cortexFrequency]}
+                {' '}Cortex works fully automatically in the background. You don't need to do anything – just talk.
+              </span>
             </div>
           </div>
         )}
-
-        <div className={styles.infoBox}>
-          <span className={styles.infoIcon}></span>
-          <span>Cortex works fully automatically in the background. You don't need to do anything – just talk.</span>
-        </div>
 
       </div>
       <div className={styles.cardFooter}>

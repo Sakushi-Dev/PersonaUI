@@ -1,15 +1,13 @@
 // ── Step: Profile (1/4) – Legacy 1:1 ──
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import AvatarCropper from '../../../components/AvatarCropper/AvatarCropper';
-import { getAvailableOptions } from '../../../services/personaApi';
 import { getAvailableAvatars, uploadAvatar } from '../../../services/avatarApi';
 import { API_BASE_URL } from '../../../utils/constants';
 import styles from './Steps.module.css';
 
 export default function StepProfile({ data, onChange, onNext, onBack }) {
-  const [typeOptions, setTypeOptions] = useState([]);
-  const [typeDetails, setTypeDetails] = useState({});
+
 
   // Avatar gallery state
   const [showGallery, setShowGallery] = useState(false);
@@ -17,14 +15,7 @@ export default function StepProfile({ data, onChange, onNext, onBack }) {
   const [avatars, setAvatars] = useState([]);
   const [cropFile, setCropFile] = useState(null);
 
-  useEffect(() => {
-    getAvailableOptions().then((opts) => {
-      const types = opts.options?.persona_types || opts.persona_types || [];
-      const details = opts.details?.persona_types || {};
-      setTypeOptions(types);
-      setTypeDetails(details);
-    }).catch(() => {});
-  }, []);
+
 
   const update = (field, value) => {
     onChange((prev) => ({ ...prev, [field]: value }));
@@ -105,16 +96,7 @@ export default function StepProfile({ data, onChange, onNext, onBack }) {
     }
   };
 
-  // ── Type chip handler ──
-  const toggleType = (type) => {
-    if (data.user_type === type) {
-      update('user_type', null);
-      update('user_type_description', null);
-    } else {
-      update('user_type', type);
-      update('user_type_description', typeDetails[type] || null);
-    }
-  };
+
 
   return (
     <div className={styles.card}>
@@ -221,25 +203,6 @@ export default function StepProfile({ data, onChange, onNext, onBack }) {
             placeholder="What would you like to be called?"
           />
         </div>
-
-        {/* Typ */}
-        {typeOptions.length > 0 && (
-          <div className={styles.fieldGroup}>
-            <label className={styles.label}>Your Type <span className={styles.labelOptional}>(optional)</span></label>
-            <div className={styles.typeGrid}>
-              {typeOptions.map((type) => (
-                <div
-                  key={type}
-                  className={`${styles.typeChip} ${data.user_type === type ? styles.chipActive : ''}`}
-                  title={typeDetails[type] || ''}
-                  onClick={() => toggleType(type)}
-                >
-                  {type}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Geschlecht */}
         <div className={styles.fieldGroup}>

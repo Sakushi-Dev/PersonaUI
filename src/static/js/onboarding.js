@@ -8,8 +8,6 @@
 
     const TOTAL_STEPS = 5; // 0-4
     let currentStep = 0;
-    let selectedType = null;
-    let selectedTypeDesc = null;
     let selectedGender = null;
     let selectedInterests = [];
     let darkMode = false;
@@ -36,7 +34,6 @@
 
     // ============ INIT ============
     document.addEventListener('DOMContentLoaded', async () => {
-        await loadUserTypes();
         bindEvents();
         bindAvatarEvents();
         bindGenderEvents();
@@ -519,43 +516,6 @@
         }
     }
 
-    // ============ USER TYPES ============
-    async function loadUserTypes() {
-        try {
-            const res = await fetch('/get_available_options');
-            const data = await res.json();
-            if (!data.success) return;
-
-            const types = data.options?.persona_types || [];
-            const details = data.details?.persona_types || {};
-            const grid = document.getElementById('ob-type-grid');
-            if (!grid) return;
-
-            grid.innerHTML = '';
-            types.forEach(type => {
-                const chip = document.createElement('div');
-                chip.className = 'ob-type-chip';
-                chip.textContent = type;
-                chip.title = details[type] || '';
-                chip.addEventListener('click', () => {
-                    if (selectedType === type) {
-                        selectedType = null;
-                        selectedTypeDesc = null;
-                        chip.classList.remove('active');
-                    } else {
-                        grid.querySelectorAll('.ob-type-chip').forEach(c => c.classList.remove('active'));
-                        selectedType = type;
-                        selectedTypeDesc = details[type] || null;
-                        chip.classList.add('active');
-                    }
-                });
-                grid.appendChild(chip);
-            });
-        } catch (e) {
-            console.error('Fehler beim Laden der User-Typen:', e);
-        }
-    }
-
     // ============ GENDER / INTERESTED IN ============
     function bindGenderEvents() {
         // Geschlecht (Single Select)
@@ -712,8 +672,6 @@
             // 1) Save user profile (inkl. Avatar aus Gallery-Auswahl)
             const profileData = {
                 user_name: document.getElementById('ob-user-name')?.value?.trim() || 'User',
-                user_type: selectedType || null,
-                user_type_description: selectedTypeDesc || null,
                 user_gender: selectedGender || null,
                 user_interested_in: selectedInterests.length > 0 ? selectedInterests : [],
                 user_info: document.getElementById('ob-user-info')?.value?.trim() || '',

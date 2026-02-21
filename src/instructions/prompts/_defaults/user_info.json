@@ -2,16 +2,14 @@
   "user_info": {
     "variants": {
       "default": {
-        "content": "**USER PROFILE**\n\n{{user_name}} has a {{user_gender}} gender and identifies as {{user_type}}.\nDescribes themselves: {{user_type_description}}.\n{{user_name}} is interested in the {{user_interested_in}} gender.\n\nInformation about {{user_name}} that they consider relevant in conversation with you:\n{{user_info}}\n\n**END USER PROFILE**"
+        "content": "**USER PROFILE**\n\n{{user_name}} has a {{user_gender}} gender.\n{{user_name}} is interested in the {{user_interested_in}} gender.\n\nInformation about {{user_name}} that they consider relevant in conversation with you:\n{{user_info}}\n\n**END USER PROFILE**"
       }
     },
     "placeholders_used": [
       "user_gender",
       "user_info",
       "user_interested_in",
-      "user_name",
-      "user_type",
-      "user_type_description"
+      "user_name"
     ]
   }
 }

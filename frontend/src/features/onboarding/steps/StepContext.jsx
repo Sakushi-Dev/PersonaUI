@@ -93,16 +93,11 @@ export default function StepContext({ data, onChange, onNext, onBack }) {
           {/* Dynamic Info based on range */}
           <div className={`${styles.infoBox} ${styles.infoBoxCompact}`}>
             <span className={styles.infoIcon}></span>
-            <span>{info}</span>
+            <span>
+              {info}
+              {' '}You can adjust this value anytime in the settings.
+            </span>
           </div>
-        </div>
-
-        <div className={`${styles.infoBox} ${styles.infoBoxCompact}`}>
-          <span className={styles.infoIcon}></span>
-          <span>
-            Cost differences are in the range of about 4 decimal places ($0.000x).
-            You can adjust this value anytime in the settings.
-          </span>
         </div>
 
       </div>

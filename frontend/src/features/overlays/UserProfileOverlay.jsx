@@ -11,7 +11,6 @@ import ChipSelector from '../../components/ChipSelector/ChipSelector';
 import Avatar from '../../components/Avatar/Avatar';
 import Button from '../../components/Button/Button';
 import { getUserProfile, updateUserProfile } from '../../services/userProfileApi';
-import { getAvailableOptions } from '../../services/personaApi';
 import { useOverlay } from '../../hooks/useOverlay';
 import styles from './Overlays.module.css';
 
@@ -28,23 +27,12 @@ export default function UserProfileOverlay({ open, onClose, onOpenAvatarEditor, 
   const [gender, setGender] = useState('');
   const [interestedIn, setInterestedIn] = useState([]);
   const [userInfo, setUserInfo] = useState('');
-  const [userType, setUserType] = useState(null);
-  const [userTypeDescription, setUserTypeDescription] = useState(null);
   const [saving, setSaving] = useState(false);
 
-  // Type options from backend
-  const [availableTypes, setAvailableTypes] = useState([]);
-  const [typeDetails, setTypeDetails] = useState({});
-  const [customKeys, setCustomKeys] = useState([]);
 
   useEffect(() => {
     if (open) {
-      // Load profile + available options in parallel
-      Promise.all([
-        getUserProfile(),
-        getAvailableOptions(),
-      ]).then(([profileData, optionsData]) => {
-        // Profile
+      getUserProfile().then((profileData) => {
         const p = profileData.profile || profileData;
         setName(p.user_name || 'User');
         setAvatar(p.user_avatar || null);
@@ -52,14 +40,6 @@ export default function UserProfileOverlay({ open, onClose, onOpenAvatarEditor, 
         setGender(p.user_gender || '');
         setInterestedIn(p.user_interested_in || []);
         setUserInfo(p.user_info || '');
-        setUserType(p.user_type || null);
-        setUserTypeDescription(p.user_type_description || null);
-
-        // Options
-        const opts = optionsData.options || optionsData;
-        setAvailableTypes(opts.persona_types || []);
-        setTypeDetails(optionsData.details?.persona_types || {});
-        setCustomKeys(optionsData.custom_keys?.persona_types || []);
       }).catch(() => {});
     }
   }, [open]);
@@ -85,8 +65,6 @@ export default function UserProfileOverlay({ open, onClose, onOpenAvatarEditor, 
         user_gender: gender,
         user_interested_in: interestedIn,
         user_info: userInfo,
-        user_type: userType,
-        user_type_description: userTypeDescription,
       });
       onClose();
     } catch (err) {
@@ -94,7 +72,7 @@ export default function UserProfileOverlay({ open, onClose, onOpenAvatarEditor, 
     } finally {
       setSaving(false);
     }
-  }, [name, avatar, avatarType, gender, interestedIn, userInfo, userType, userTypeDescription, onClose]);
+  }, [name, avatar, avatarType, gender, interestedIn, userInfo, onClose]);
 
   const handleAvatarClick = () => {
     onOpenAvatarEditor?.('user');
@@ -103,23 +81,6 @@ export default function UserProfileOverlay({ open, onClose, onOpenAvatarEditor, 
   const handleRemoveAvatar = () => {
     setAvatar(null);
     setAvatarType(null);
-  };
-
-  const handleSelectType = (type) => {
-    const typeName = typeof type === 'string' ? type : type.key || type.name;
-    if (userType === typeName) {
-      // Deselect
-      setUserType(null);
-      setUserTypeDescription(null);
-    } else {
-      setUserType(typeName);
-      setUserTypeDescription(typeDetails[typeName] || null);
-    }
-  };
-
-  const handleRemoveType = () => {
-    setUserType(null);
-    setUserTypeDescription(null);
   };
 
   return (
@@ -161,37 +122,6 @@ export default function UserProfileOverlay({ open, onClose, onOpenAvatarEditor, 
         </div>
 
         <div className={styles.sectionDivider} />
-
-        {/* User Type Section — pills with description only for selected */}
-        {availableTypes.length > 0 && (
-          <>
-            <FormGroup label="Mein Typ">
-              <div className={styles.typePills}>
-                {availableTypes.map((t, i) => {
-                  const typeName = typeof t === 'string' ? t : t.key || t.name;
-                  const isActive = userType === typeName;
-                  return (
-                    <button
-                      key={i}
-                      type="button"
-                      className={`${styles.typePill} ${isActive ? styles.typePillActive : ''}`}
-                      onClick={() => handleSelectType(t)}
-                    >
-                      {typeName}
-                    </button>
-                  );
-                })}
-              </div>
-              {userType && userTypeDescription && (
-                <div className={styles.typeDescBox}>
-                  <span className={styles.typeDescText}>{userTypeDescription}</span>
-                </div>
-              )}
-            </FormGroup>
-
-            <div className={styles.sectionDivider} />
-          </>
-        )}
 
         {/* Gender & Interests */}
         <FormGroup label="Geschlecht">

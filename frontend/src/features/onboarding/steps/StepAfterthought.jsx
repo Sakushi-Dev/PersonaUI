@@ -108,19 +108,14 @@ export default function StepAfterthought({ data, onChange, onNext, onBack }) {
                   <br /><strong>{currentMode.extra}</strong>
                 </>
               )}
+              {data.nachgedankeMode !== 'off' && (
+                <>
+                  {' '}Afterthought generates additional API requests in the background.
+                </>
+              )}
             </span>
           </div>
         </div>
-
-        {data.nachgedankeMode !== 'off' && (
-          <div className={`${styles.infoBox} ${styles.infoBoxCompact}`}>
-            <span className={styles.infoIcon}></span>
-            <span>
-              Afterthought generates additional API requests in the background.
-              The cost per check is in the range of about 4 decimal places ($0.000x).
-            </span>
-          </div>
-        )}
 
       </div>
       <div className={styles.cardFooter}>

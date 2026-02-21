@@ -38,8 +38,6 @@ export default function OnboardingPage() {
     user_name: '',
     user_avatar: null,
     user_avatar_type: null,
-    user_type: null,
-    user_type_description: null,
     user_gender: null,
     user_interested_in: [],
     user_info: '',

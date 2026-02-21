@@ -54,7 +54,6 @@ export default function StepWelcome({ onNext }) {
 
         <button className={styles.btnPrimary + ' ' + styles.btnLarge} onClick={onNext}>
           Start Setup
-          <span className={styles.btnArrow}>→</span>
         </button>
       </div>
     </div>

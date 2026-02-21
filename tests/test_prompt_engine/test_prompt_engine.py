@@ -299,9 +299,7 @@ def temp_instructions_dir(tmp_path):
     settings_dir = tmp_path / 'settings'
     settings_dir.mkdir(parents=True, exist_ok=True)
     user_profile = {
-        "user_name": "TestUser",
-        "user_type": "Freund",
-        "user_type_description": "Ein guter Freund"
+        "user_name": "TestUser"
     }
     (settings_dir / 'user_profile.json').write_text(
         json.dumps(user_profile, ensure_ascii=False, indent=2), encoding='utf-8'

@@ -1,5 +1,5 @@
 /**
- * UserProfileManager - Handles user profile settings (avatar, name, type, info)
+ * UserProfileManager - Handles user profile settings (avatar, name, info)
  * Updates chat bubbles live when profile is saved.
  * Avatar: clicking the avatar opens the shared AvatarManager gallery/upload overlay.
  */
@@ -8,9 +8,6 @@ export class UserProfileManager {
         this.dom = dom;
         this.avatarManager = avatarManager; // shared AvatarManager instance
         this.profile = {};
-        this.availableTypes = [];
-        this.typeDetails = {};
-        this.customKeys = {};
         this.selectedAvatar = null;
         this.selectedAvatarType = null;
     }
@@ -19,20 +16,11 @@ export class UserProfileManager {
 
     async open() {
         try {
-            const [profileRes, optionsRes] = await Promise.all([
-                fetch('/api/user-profile'),
-                fetch('/get_available_options')
-            ]);
+            const profileRes = await fetch('/api/user-profile');
             const profileData = await profileRes.json();
-            const optionsData = await optionsRes.json();
 
             if (profileData.success) {
                 this.profile = profileData.profile;
-            }
-            if (optionsData.success) {
-                this.availableTypes = optionsData.options.persona_types || [];
-                this.typeDetails = optionsData.details?.persona_types || {};
-                this.customKeys = optionsData.custom_keys || {};
             }
 
             this.selectedAvatar = null;
@@ -67,8 +55,6 @@ export class UserProfileManager {
         }
 
         this._updateAvatarPreview();
-        this._renderActiveType();
-        this._renderTypeList();
         this._renderGender();
         this._renderInterestedIn();
     }
@@ -125,68 +111,6 @@ export class UserProfileManager {
         this._updateAvatarPreview();
     }
 
-    /* ========== TYPE SELECTION (Activation Field) ========== */
-
-    _renderActiveType() {
-        const emptyEl = document.getElementById('up-active-type-empty');
-        const filledEl = document.getElementById('up-active-type-filled');
-        const nameEl = document.getElementById('up-active-type-name');
-        const descEl = document.getElementById('up-active-type-desc');
-
-        if (!this.profile.user_type) {
-            emptyEl?.classList.remove('hidden');
-            filledEl?.classList.add('hidden');
-        } else {
-            emptyEl?.classList.add('hidden');
-            filledEl?.classList.remove('hidden');
-            if (nameEl) nameEl.textContent = this.profile.user_type;
-            if (descEl) {
-                const desc = this.typeDetails[this.profile.user_type] || '';
-                descEl.textContent = desc;
-                descEl.style.display = desc ? '' : 'none';
-            }
-        }
-    }
-
-    _renderTypeList() {
-        const container = document.getElementById('up-type-list');
-        if (!container) return;
-        container.innerHTML = '';
-
-        const customTypeKeys = this.customKeys.persona_types || [];
-
-        for (const type of this.availableTypes) {
-            const isCustom = customTypeKeys.includes(type);
-            const isActive = this.profile.user_type === type;
-            const desc = this.typeDetails[type] || '';
-
-            const item = document.createElement('div');
-            item.className = 'up-type-item' + (isActive ? ' active' : '') + (isCustom ? ' custom' : '');
-
-            item.innerHTML = `
-                <div class="up-type-item-header">
-                    <span class="up-type-item-name">${type}</span>
-                    ${isCustom ? '<span class="up-type-item-badge">Custom</span>' : ''}
-                </div>
-                ${desc ? `<span class="up-type-item-desc">${desc}</span>` : ''}
-            `;
-
-            item.addEventListener('click', () => {
-                if (this.profile.user_type === type) {
-                    // Deselect
-                    this.profile.user_type = null;
-                    this.profile.user_type_description = null;
-                } else {
-                    this.profile.user_type = type;
-                    this.profile.user_type_description = desc || null;
-                }
-                this._renderActiveType();
-                this._renderTypeList();
-            });
-            container.appendChild(item);
-        }
-    }
-
     /* ========== GENDER / INTERESTED IN ========== */
 
     _renderGender() {
@@ -240,8 +164,6 @@ export class UserProfileManager {
 
         const profileData = {
             user_name: nameInput?.value?.trim() || 'User',
-            user_type: this.profile.user_type || null,
-            user_type_description: this.profile.user_type_description || null,
             user_gender: this.profile.user_gender || null,
             user_interested_in: this.profile.user_interested_in || [],
             user_info: infoInput?.value || '',
@@ -331,14 +253,6 @@ export class UserProfileManager {
 
         // Remove avatar
         document.getElementById('user-avatar-remove-btn')?.addEventListener('click', () => this.removeAvatar());
-
-        // Remove active type
-        document.getElementById('up-active-type-remove')?.addEventListener('click', () => {
-            this.profile.user_type = null;
-            this.profile.user_type_description = null;
-            this._renderActiveType();
-            this._renderTypeList();
-        });
 
         // Info char counter
         const infoInput = document.getElementById('user-info-input');

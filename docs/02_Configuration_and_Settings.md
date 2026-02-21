@@ -56,15 +56,13 @@ Same schema as `defaults.json`, but only contains values changed by the user. Ge
   "user_name": "Saiks",
   "user_avatar": "697be4bc18ac.jpeg",
   "user_avatar_type": "standard",
-  "user_type": "Menschlich",
-  "user_type_description": "Menschen kommen von der erde...",
   "user_gender": "Männlich",
   "user_interested_in": ["Weiblich"],
   "user_info": ""
 }
 ```
 
-Used by the prompt builder for `{{user_name}}`, `{{user_type}}` etc. injection into system prompts. Validations:
+Used by the prompt builder for `{{user_name}}`, `{{user_gender}}` etc. injection into system prompts. Validations:
 - `user_gender`: Only `Männlich`, `Weiblich`, `Divers` or `null`
 - `user_interested_in`: Filtered to valid genders
 - `user_info`: Max 500 characters

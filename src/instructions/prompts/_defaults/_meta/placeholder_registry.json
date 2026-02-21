@@ -121,26 +121,6 @@
       "category": "user",
       "resolve_phase": "static"
     },
-    "user_type": {
-      "name": "Benutzertyp",
-      "description": "Typ des Benutzers",
-      "source": "user_profile",
-      "source_path": "user_type",
-      "type": "string",
-      "default": "Nicht angegeben",
-      "category": "user",
-      "resolve_phase": "static"
-    },
-    "user_type_description": {
-      "name": "Benutzertyp-Beschreibung",
-      "description": "Beschreibung des Benutzertyps",
-      "source": "user_profile",
-      "source_path": "user_type_description",
-      "type": "string",
-      "default": "Keine Beschreibung",
-      "category": "user",
-      "resolve_phase": "static"
-    },
     "user_gender": {
       "name": "Benutzer-Geschlecht",
       "description": "Geschlecht des Benutzers",
