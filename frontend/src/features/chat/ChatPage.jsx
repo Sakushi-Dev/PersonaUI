@@ -34,6 +34,7 @@ import {
   AvatarEditorOverlay,
   CortexOverlay,
   CustomSpecsOverlay,
+  CustomSpecsListOverlay,
   UserProfileOverlay,
   QRCodeOverlay,
   AccessControlOverlay,
@@ -152,6 +153,7 @@ function ChatPageContent() {
   const avatarEditor = useOverlay();
   const cortex = useOverlay();
   const customSpecs = useOverlay();
+  const customSpecsList = useOverlay();
   const userProfile = useOverlay();
   const qrCode = useOverlay();
   const accessControl = useOverlay();
@@ -328,6 +330,12 @@ function ChatPageContent() {
       <CustomSpecsOverlay
         open={customSpecs.isOpen}
         onClose={customSpecs.close}
+        onOpenList={() => { customSpecs.close(); customSpecsList.open(); }}
+      />
+      <CustomSpecsListOverlay
+        open={customSpecsList.isOpen}
+        onClose={customSpecsList.close}
+        onOpenCreate={() => { customSpecsList.close(); customSpecs.open(); }}
       />
       <CortexOverlay
         open={cortex.isOpen}

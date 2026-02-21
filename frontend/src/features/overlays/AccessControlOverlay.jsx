@@ -80,76 +80,129 @@ export default function AccessControlOverlay({ open, onClose }) {
       <OverlayHeader title="Zugangskontrolle" icon={<ShieldIcon size={20} />} onClose={onClose} />
       <OverlayBody>
         {loading ? (
-          <Spinner />
+          <div className={styles.centeredContent}>
+            <Spinner />
+          </div>
         ) : (
           <>
-            {/* Pending Requests */}
-            <section className={styles.section}>
-              <h3 className={styles.sectionTitle}>
+            {/* ═══ Section: Ausstehende Anfragen ═══ */}
+            <div className={styles.ifaceSection}>
+              <h3 className={styles.ifaceSectionTitle}>
                 Ausstehende Anfragen
-                {pending.length > 0 && <span className={styles.badge}>{pending.length}</span>}
+                {pending.length > 0 && (
+                  <span className={styles.accessBadgePending}>{pending.length}</span>
+                )}
               </h3>
-              {pending.length === 0 ? (
-                <p className={styles.emptyText}>Keine ausstehenden Anfragen</p>
-              ) : (
-                <ul className={styles.ipListVertical}>
-                  {pending.map((ip) => (
-                    <li key={ip} className={styles.ipItem}>
-                      <code>{ip}</code>
-                      <div className={styles.ipActions}>
-                        <button className={styles.approveBtn} onClick={() => handleApprove(ip)} title="Genehmigen">✓</button>
-                        <button className={styles.denyBtn} onClick={() => handleDeny(ip)} title="Ablehnen">✕</button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
+              <div className={styles.ifaceCard}>
+                {pending.length === 0 ? (
+                  <div className={styles.accessEmptyState}>
+                    <span className={styles.ifaceToggleHint}>Keine ausstehenden Anfragen</span>
+                  </div>
+                ) : (
+                  <ul className={styles.accessList}>
+                    {pending.map((ip, idx) => (
+                      <li key={ip}>
+                        <div className={styles.accessRow}>
+                          <code className={styles.accessIp}>{ip}</code>
+                          <div className={styles.accessActions}>
+                            <button
+                              className={styles.accessBtnApprove}
+                              onClick={() => handleApprove(ip)}
+                              title="Genehmigen"
+                              type="button"
+                            >
+                              Genehmigen
+                            </button>
+                            <button
+                              className={styles.accessBtnDeny}
+                              onClick={() => handleDeny(ip)}
+                              title="Ablehnen"
+                              type="button"
+                            >
+                              Ablehnen
+                            </button>
+                          </div>
+                        </div>
+                        {idx < pending.length - 1 && <div className={styles.ifaceDivider} />}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
 
-            {/* Whitelist */}
-            <section className={styles.section}>
-              <h3 className={styles.sectionTitle}>
+            {/* ═══ Section: Whitelist ═══ */}
+            <div className={styles.ifaceSection}>
+              <h3 className={styles.ifaceSectionTitle}>
                 Whitelist
-                <span className={styles.badge}>{whitelist.length}</span>
+                <span className={styles.accessBadgeCount}>{whitelist.length}</span>
               </h3>
-              {whitelist.length === 0 ? (
-                <p className={styles.emptyText}>Keine Einträge</p>
-              ) : (
-                <ul className={styles.ipListVertical}>
-                  {whitelist.map((ip) => (
-                    <li key={ip} className={styles.ipItem}>
-                      <code>{ip}</code>
-                      <button className={styles.removeBtn} onClick={() => handleRemoveWhitelist(ip)} title="Entfernen">✕</button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
+              <div className={styles.ifaceCard}>
+                {whitelist.length === 0 ? (
+                  <div className={styles.accessEmptyState}>
+                    <span className={styles.ifaceToggleHint}>Keine Eintraege</span>
+                  </div>
+                ) : (
+                  <ul className={styles.accessList}>
+                    {whitelist.map((ip, idx) => (
+                      <li key={ip}>
+                        <div className={styles.accessRow}>
+                          <code className={styles.accessIp}>{ip}</code>
+                          <button
+                            className={styles.accessBtnRemove}
+                            onClick={() => handleRemoveWhitelist(ip)}
+                            title="Entfernen"
+                            type="button"
+                          >
+                            Entfernen
+                          </button>
+                        </div>
+                        {idx < whitelist.length - 1 && <div className={styles.ifaceDivider} />}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
 
-            {/* Blacklist */}
-            <section className={styles.section}>
-              <h3 className={styles.sectionTitle}>
+            {/* ═══ Section: Blacklist ═══ */}
+            <div className={styles.ifaceSection}>
+              <h3 className={styles.ifaceSectionTitle}>
                 Blacklist
-                <span className={styles.badge}>{blacklist.length}</span>
+                <span className={styles.accessBadgeCount}>{blacklist.length}</span>
               </h3>
-              {blacklist.length === 0 ? (
-                <p className={styles.emptyText}>Keine Einträge</p>
-              ) : (
-                <ul className={styles.ipListVertical}>
-                  {blacklist.map((ip) => (
-                    <li key={ip} className={styles.ipItem}>
-                      <code>{ip}</code>
-                      <button className={styles.removeBtn} onClick={() => handleRemoveBlacklist(ip)} title="Entfernen">✕</button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
+              <div className={styles.ifaceCard}>
+                {blacklist.length === 0 ? (
+                  <div className={styles.accessEmptyState}>
+                    <span className={styles.ifaceToggleHint}>Keine Eintraege</span>
+                  </div>
+                ) : (
+                  <ul className={styles.accessList}>
+                    {blacklist.map((ip, idx) => (
+                      <li key={ip}>
+                        <div className={styles.accessRow}>
+                          <code className={styles.accessIp}>{ip}</code>
+                          <button
+                            className={styles.accessBtnRemove}
+                            onClick={() => handleRemoveBlacklist(ip)}
+                            title="Entfernen"
+                            type="button"
+                          >
+                            Entfernen
+                          </button>
+                        </div>
+                        {idx < blacklist.length - 1 && <div className={styles.ifaceDivider} />}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
           </>
         )}
       </OverlayBody>
       <OverlayFooter>
-        <Button variant="secondary" onClick={onClose}>Schließen</Button>
+        <Button variant="secondary" onClick={onClose}>Schliessen</Button>
       </OverlayFooter>
     </Overlay>
   );

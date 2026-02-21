@@ -15,5 +15,5 @@ export function deleteCustomSpec(category, id) {
 }
 
 export function autofillCustomSpec(category, data) {
-  return apiPost(`/api/custom-specs/${category}/autofill`, data);
+  return apiPost('/api/custom-specs/autofill', data);
 }

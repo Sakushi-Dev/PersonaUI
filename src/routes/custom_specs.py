@@ -108,8 +108,8 @@ def add_core_trait():
     
     if not key:
         return error_response('Name ist erforderlich')
-    if len(behaviors) != 3:
-        return error_response('Genau 3 Verhaltensmuster erforderlich')
+    if not behaviors or len(behaviors) > 6:
+        return error_response('1-6 Verhaltensmuster erforderlich')
     
     specs = _load_custom_spec()
     specs['persona_spec']['core_traits_details'][key] = {
@@ -153,8 +153,8 @@ def add_scenario():
     
     if not key:
         return error_response('Key ist erforderlich')
-    if len(setting) != 4:
-        return error_response('Genau 4 Setting-Elemente erforderlich')
+    if not setting or len(setting) > 6:
+        return error_response('1-6 Setting-Elemente erforderlich')
     
     specs = _load_custom_spec()
     specs['persona_spec']['scenarios'][key] = {

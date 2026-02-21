@@ -1,139 +1,149 @@
 // ── CustomSpecsOverlay ──
-// 5 category tabs with forms for custom persona specs
+// 5 category tabs with expandable forms for custom persona specs
+// Pattern: ifaceSection / ifaceCard (like InterfaceSettingsOverlay)
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import Overlay from '../../components/Overlay/Overlay';
 import OverlayHeader from '../../components/Overlay/OverlayHeader';
 import { GearIcon } from '../../components/Icons/Icons';
 import OverlayBody from '../../components/Overlay/OverlayBody';
-import FormGroup from '../../components/FormGroup/FormGroup';
 import Button from '../../components/Button/Button';
 import Spinner from '../../components/Spinner/Spinner';
-import { getCustomSpecs, createCustomSpec, deleteCustomSpec, autofillCustomSpec } from '../../services/customSpecsApi';
+import { createCustomSpec, autofillCustomSpec } from '../../services/customSpecsApi';
 import styles from './Overlays.module.css';
 
+// ── Categories (no emojis) ──
 const CATEGORIES = [
-  { key: 'persona-type', label: '👤 Persona Typ', icon: '👤' },
-  { key: 'core-trait', label: '🧠 Core Trait', icon: '🧠' },
-  { key: 'knowledge', label: '📚 Wissen', icon: '📚' },
-  { key: 'scenario', label: '🌍 Szenario', icon: '🌍' },
-  { key: 'expression-style', label: '✍️ Schreibstil', icon: '✍️' },
+  { key: 'persona-type', label: 'Persona Typ' },
+  { key: 'core-trait', label: 'Core Trait' },
+  { key: 'knowledge', label: 'Wissen' },
+  { key: 'scenario', label: 'Szenario' },
+  { key: 'expression-style', label: 'Schreibstil' },
 ];
 
-const INITIAL_FORMS = {
-  'persona-type': { name: '', description: '' },
-  'core-trait': { name: '', description: '', behavior1: '', behavior2: '', behavior3: '' },
-  'knowledge': { name: '', description: '' },
-  'scenario': { key: '', name: '', description: '', setting1: '', setting2: '', setting3: '', setting4: '' },
-  'expression-style': { key: '', name: '', description: '', example: '', char1: '', char2: '', char3: '', char4: '' },
+// ── Helpers ──
+const toKey = (name) => (name || '').trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '').slice(0, 30);
+
+// Map frontend tab keys to backend spec_type values
+const toSpecType = (tab) => tab.replace(/-/g, '_');
+
+// Initial form state per category
+const makeInitialForm = (cat) => {
+  switch (cat) {
+    case 'persona-type':
+    case 'knowledge':
+      return { name: '', description: '' };
+    case 'core-trait':
+      return { name: '', description: '', items: [''] };
+    case 'scenario':
+      return { name: '', description: '', items: [''] };
+    case 'expression-style':
+      return { name: '', description: '', example: '', items: [''] };
+    default:
+      return { name: '', description: '' };
+  }
 };
 
-export default function CustomSpecsOverlay({ open, onClose }) {
+// Which categories have expandable items
+const HAS_ITEMS = { 'core-trait': true, scenario: true, 'expression-style': true };
+const ITEM_LABEL = {
+  'core-trait': 'Verhaltensweise',
+  scenario: 'Setting',
+  'expression-style': 'Merkmal',
+};
+const ITEM_MAX = 6;
+
+export default function CustomSpecsOverlay({ open, onClose, onOpenList }) {
   const [activeTab, setActiveTab] = useState('persona-type');
-  const [specs, setSpecs] = useState({});
-  const [forms, setForms] = useState({ ...INITIAL_FORMS });
-  const [loading, setLoading] = useState(true);
+  const [forms, setForms] = useState(() =>
+    Object.fromEntries(CATEGORIES.map((c) => [c.key, makeInitialForm(c.key)]))
+  );
   const [filling, setFilling] = useState(false);
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await getCustomSpecs();
-      setSpecs(data.specs || data || {});
-    } catch {
-      // silent
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    if (open) refresh();
-  }, [open, refresh]);
+    if (open) {
+      setActiveTab('persona-type');
+      setForms(Object.fromEntries(CATEGORIES.map((c) => [c.key, makeInitialForm(c.key)])));
+    }
+  }, [open]);
 
-  const updateForm = (cat, field, value) => {
+  // ── Form Helpers ──
+  const form = forms[activeTab] || {};
+
+  const updateField = (field, value) => {
     setForms((prev) => ({
       ...prev,
-      [cat]: { ...prev[cat], [field]: value },
+      [activeTab]: { ...prev[activeTab], [field]: value },
     }));
   };
 
-  const resetForm = (cat) => {
-    setForms((prev) => ({ ...prev, [cat]: { ...INITIAL_FORMS[cat] } }));
+  const updateItem = (index, value) => {
+    setForms((prev) => {
+      const items = [...(prev[activeTab].items || [])];
+      items[index] = value;
+      return { ...prev, [activeTab]: { ...prev[activeTab], items } };
+    });
   };
 
-  const handleCreate = async () => {
-    const form = forms[activeTab];
-    let body;
-
-    switch (activeTab) {
-      case 'persona-type':
-        body = { key: form.name, description: form.description };
-        break;
-      case 'core-trait':
-        body = { key: form.name, description: form.description, behaviors: [form.behavior1, form.behavior2, form.behavior3] };
-        break;
-      case 'knowledge':
-        body = { key: form.name, description: form.description };
-        break;
-      case 'scenario':
-        body = { key: form.key, name: form.name, description: form.description, setting: [form.setting1, form.setting2, form.setting3, form.setting4] };
-        break;
-      case 'expression-style':
-        body = { key: form.key, name: form.name, description: form.description, example: form.example, characteristics: [form.char1, form.char2, form.char3, form.char4].filter(Boolean) };
-        break;
-    }
-
-    try {
-      await createCustomSpec(activeTab, body);
-      resetForm(activeTab);
-      refresh();
-    } catch (err) {
-      console.error('Create spec failed:', err);
-    }
+  const addItem = () => {
+    setForms((prev) => {
+      const items = [...(prev[activeTab].items || [])];
+      if (items.length >= ITEM_MAX) return prev;
+      return { ...prev, [activeTab]: { ...prev[activeTab], items: [...items, ''] } };
+    });
   };
 
-  const handleDelete = async (key) => {
-    try {
-      await deleteCustomSpec(activeTab, key);
-      refresh();
-    } catch {
-      // silent
-    }
+  const removeItem = (index) => {
+    setForms((prev) => {
+      const items = [...(prev[activeTab].items || [])];
+      if (items.length <= 1) return prev;
+      items.splice(index, 1);
+      return { ...prev, [activeTab]: { ...prev[activeTab], items } };
+    });
   };
 
+  const resetForm = () => {
+    setForms((prev) => ({ ...prev, [activeTab]: makeInitialForm(activeTab) }));
+  };
+
+  // ── Auto-Fill ──
   const handleAutofill = async () => {
-    const form = forms[activeTab];
-    const input = form.name || form.key || '';
-    if (!input) return;
-
+    if (!form.name) return;
     setFilling(true);
     try {
-      const data = await autofillCustomSpec(activeTab, { type: activeTab, input });
-      if (data) {
-        const updated = { ...form };
+      const itemCount = (form.items || []).length;
+      const resp = await autofillCustomSpec(activeTab, {
+        type: toSpecType(activeTab),
+        input: form.name,
+        item_count: itemCount,
+      });
+      // API returns { result: ... , tokens: ... }
+      const data = resp?.result ?? resp;
+      if (!data) return;
+
+      const updated = { ...form };
+
+      // For simple types (persona-type, knowledge) result is a string (description)
+      if (typeof data === 'string') {
+        updated.description = data;
+      } else {
+        // Structured result for traits, scenarios, expression styles
         if (data.description) updated.description = data.description;
-        if (data.behaviors) {
-          updated.behavior1 = data.behaviors[0] || '';
-          updated.behavior2 = data.behaviors[1] || '';
-          updated.behavior3 = data.behaviors[2] || '';
-        }
         if (data.name) updated.name = data.name;
-        if (data.setting) {
-          updated.setting1 = data.setting[0] || '';
-          updated.setting2 = data.setting[1] || '';
-          updated.setting3 = data.setting[2] || '';
-          updated.setting4 = data.setting[3] || '';
-        }
         if (data.example) updated.example = data.example;
-        if (data.characteristics) {
-          updated.char1 = data.characteristics[0] || '';
-          updated.char2 = data.characteristics[1] || '';
-          updated.char3 = data.characteristics[2] || '';
-          updated.char4 = data.characteristics[3] || '';
+
+        // Map array responses into items (only fill as many slots as exist)
+        const arrayData = data.behaviors || data.setting || data.characteristics;
+        if (arrayData && updated.items) {
+          const newItems = [...updated.items];
+          for (let i = 0; i < newItems.length && i < arrayData.length; i++) {
+            if (arrayData[i]) newItems[i] = arrayData[i];
+          }
+          updated.items = newItems;
         }
-        setForms((prev) => ({ ...prev, [activeTab]: updated }));
       }
+
+      setForms((prev) => ({ ...prev, [activeTab]: updated }));
     } catch {
       // silent
     } finally {
@@ -141,142 +151,227 @@ export default function CustomSpecsOverlay({ open, onClose }) {
     }
   };
 
-  const currentList = specs[activeTab] || [];
-  const form = forms[activeTab];
+  // ── Create ──
+  const handleCreate = async () => {
+    const key = toKey(form.name);
+    if (!key) return;
 
-  const renderForm = () => {
+    let body;
+    const items = (form.items || []).filter(Boolean);
+
     switch (activeTab) {
       case 'persona-type':
       case 'knowledge':
-        return (
-          <>
-            <FormGroup label="Name" charCount={form.name?.length} maxLength={activeTab === 'knowledge' ? 30 : 40}>
-              <input className={styles.textInput} value={form.name} onChange={(e) => updateForm(activeTab, 'name', e.target.value)} maxLength={activeTab === 'knowledge' ? 30 : 40} placeholder="Name eingeben" />
-            </FormGroup>
-            <FormGroup label="Beschreibung" charCount={form.description?.length} maxLength={120}>
-              <div className={styles.inputRow}>
-                <input className={styles.textInput} value={form.description} onChange={(e) => updateForm(activeTab, 'description', e.target.value)} maxLength={120} placeholder="Beschreibung" />
-                <button className={styles.aiBtn} onClick={handleAutofill} disabled={filling || !form.name} title="KI Auto-Fill">✨</button>
-              </div>
-            </FormGroup>
-          </>
-        );
-
+        body = { key, description: form.description };
+        break;
       case 'core-trait':
-        return (
-          <>
-            <FormGroup label="Name" charCount={form.name?.length} maxLength={30}>
-              <input className={styles.textInput} value={form.name} onChange={(e) => updateForm(activeTab, 'name', e.target.value)} maxLength={30} placeholder="Trait Name" />
-            </FormGroup>
-            <FormGroup label="Beschreibung">
-              <div className={styles.inputRow}>
-                <input className={styles.textInput} value={form.description} onChange={(e) => updateForm(activeTab, 'description', e.target.value)} placeholder="Beschreibung" />
-                <button className={styles.aiBtn} onClick={handleAutofill} disabled={filling || !form.name} title="KI Auto-Fill">✨</button>
-              </div>
-            </FormGroup>
-            <FormGroup label="Verhalten 1"><input className={styles.textInput} value={form.behavior1} onChange={(e) => updateForm(activeTab, 'behavior1', e.target.value)} placeholder="Verhaltensweise 1" /></FormGroup>
-            <FormGroup label="Verhalten 2"><input className={styles.textInput} value={form.behavior2} onChange={(e) => updateForm(activeTab, 'behavior2', e.target.value)} placeholder="Verhaltensweise 2" /></FormGroup>
-            <FormGroup label="Verhalten 3"><input className={styles.textInput} value={form.behavior3} onChange={(e) => updateForm(activeTab, 'behavior3', e.target.value)} placeholder="Verhaltensweise 3" /></FormGroup>
-          </>
-        );
-
+        body = { key, description: form.description, behaviors: items };
+        break;
       case 'scenario':
-        return (
-          <>
-            <FormGroup label="Key" charCount={form.key?.length} maxLength={30}>
-              <input className={styles.textInput} value={form.key} onChange={(e) => updateForm(activeTab, 'key', e.target.value)} maxLength={30} placeholder="Eindeutiger Key" />
-            </FormGroup>
-            <FormGroup label="Anzeigename">
-              <input className={styles.textInput} value={form.name} onChange={(e) => updateForm(activeTab, 'name', e.target.value)} placeholder="Anzeigename" />
-            </FormGroup>
-            <FormGroup label="Beschreibung">
-              <div className={styles.inputRow}>
-                <input className={styles.textInput} value={form.description} onChange={(e) => updateForm(activeTab, 'description', e.target.value)} placeholder="Beschreibung" />
-                <button className={styles.aiBtn} onClick={handleAutofill} disabled={filling || !form.key} title="KI Auto-Fill">✨</button>
-              </div>
-            </FormGroup>
-            {[1, 2, 3, 4].map((n) => (
-              <FormGroup key={n} label={`Setting ${n}`}>
-                <input className={styles.textInput} value={form[`setting${n}`]} onChange={(e) => updateForm(activeTab, `setting${n}`, e.target.value)} placeholder={`Setting ${n}`} />
-              </FormGroup>
-            ))}
-          </>
-        );
-
+        body = { key, name: form.name, description: form.description, setting: items };
+        break;
       case 'expression-style':
-        return (
-          <>
-            <FormGroup label="Key" charCount={form.key?.length} maxLength={30}>
-              <input className={styles.textInput} value={form.key} onChange={(e) => updateForm(activeTab, 'key', e.target.value)} maxLength={30} placeholder="Eindeutiger Key" />
-            </FormGroup>
-            <FormGroup label="Anzeigename">
-              <input className={styles.textInput} value={form.name} onChange={(e) => updateForm(activeTab, 'name', e.target.value)} placeholder="Anzeigename" />
-            </FormGroup>
-            <FormGroup label="Beschreibung">
-              <div className={styles.inputRow}>
-                <input className={styles.textInput} value={form.description} onChange={(e) => updateForm(activeTab, 'description', e.target.value)} placeholder="Beschreibung" />
-                <button className={styles.aiBtn} onClick={handleAutofill} disabled={filling || !form.key} title="KI Auto-Fill">✨</button>
-              </div>
-            </FormGroup>
-            <FormGroup label="Beispiel-Begrüßung">
-              <input className={styles.textInput} value={form.example} onChange={(e) => updateForm(activeTab, 'example', e.target.value)} placeholder="Beispiel" />
-            </FormGroup>
-            {[1, 2, 3, 4].map((n) => (
-              <FormGroup key={n} label={`Merkmal ${n}${n === 4 ? ' (optional)' : ''}`}>
-                <input className={styles.textInput} value={form[`char${n}`]} onChange={(e) => updateForm(activeTab, `char${n}`, e.target.value)} placeholder={`Merkmal ${n}`} />
-              </FormGroup>
-            ))}
-          </>
-        );
+        body = { key, name: form.name, description: form.description, example: form.example, characteristics: items };
+        break;
+    }
+
+    try {
+      await createCustomSpec(activeTab, body);
+      resetForm();
+    } catch (err) {
+      console.error('Create spec failed:', err);
     }
   };
+
+  // ── Tab Change ──
+  const handleTabChange = (key) => {
+    setActiveTab(key);
+    setFilling(false);
+  };
+
+  const hasItems = HAS_ITEMS[activeTab];
+  const itemLabel = ITEM_LABEL[activeTab] || 'Eintrag';
+  const derivedKey = toKey(form.name);
 
   return (
     <Overlay open={open} onClose={onClose} width="600px">
       <OverlayHeader title="Custom Specs" icon={<GearIcon size={20} />} onClose={onClose} />
       <OverlayBody>
-        {/* Category Tabs */}
-        <div className={styles.tabBar}>
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat.key}
-              className={`${styles.tab} ${activeTab === cat.key ? styles.activeTab : ''}`}
-              onClick={() => setActiveTab(cat.key)}
-            >
-              {cat.label}
-            </button>
-          ))}
-        </div>
 
-        {/* Form */}
-        <div className={styles.specForm}>
-          {renderForm()}
-          <Button variant="primary" onClick={handleCreate} disabled={filling}>
-            Erstellen
-          </Button>
-        </div>
-
-        {/* Existing list */}
-        <div className={styles.specList}>
-          <h4 className={styles.sectionTitle}>Vorhandene Einträge</h4>
-          {loading ? (
-            <Spinner />
-          ) : currentList.length === 0 ? (
-            <p className={styles.emptyText}>Keine Einträge vorhanden.</p>
-          ) : (
-            <ul className={styles.ipListVertical}>
-              {currentList.map((item, i) => (
-                <li key={item.key || i} className={styles.specItem}>
-                  <div>
-                    <strong>{item.key || item.name}</strong>
-                    {item.description && <p className={styles.hint}>{item.description}</p>}
-                  </div>
-                  <button className={styles.removeBtn} onClick={() => handleDelete(item.key)} title="Löschen">✕</button>
-                </li>
+        {/* ═══ Section: Kategorie ═══ */}
+        <div className={styles.ifaceSection}>
+          <h3 className={styles.ifaceSectionTitle}>Kategorie</h3>
+          <div className={styles.ifaceCard}>
+            <div className={styles.cortexTabBar}>
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat.key}
+                  type="button"
+                  className={`${styles.cortexTab} ${activeTab === cat.key ? styles.cortexTabActive : ''}`}
+                  onClick={() => handleTabChange(cat.key)}
+                >
+                  {cat.label}
+                </button>
               ))}
-            </ul>
-          )}
+            </div>
+          </div>
         </div>
+
+        {/* ═══ Section: Neuer Eintrag ═══ */}
+        <div className={styles.ifaceSection}>
+          <h3 className={styles.ifaceSectionTitle}>Neuer Eintrag</h3>
+          <div className={styles.ifaceCard}>
+
+            {/* Name */}
+            <div className={styles.ifaceFieldGroup}>
+              <span className={styles.ifaceFieldLabel}>Name</span>
+              <input
+                className={styles.textInput}
+                value={form.name}
+                onChange={(e) => updateField('name', e.target.value)}
+                maxLength={40}
+                placeholder="Name eingeben"
+                disabled={filling}
+              />
+              {derivedKey && (
+                <span className={styles.csKeyPreview}>
+                  Key: {derivedKey}
+                </span>
+              )}
+            </div>
+
+            <div className={styles.ifaceDivider} />
+
+            {/* Description (expanded textarea with autofill overlay) */}
+            <div className={styles.ifaceFieldGroup}>
+              <span className={styles.ifaceFieldLabel}>Beschreibung</span>
+              <div className={styles.backgroundTextareaWrapper}>
+                <textarea
+                  className={styles.textarea}
+                  value={form.description}
+                  onChange={(e) => updateField('description', e.target.value)}
+                  rows={3}
+                  placeholder="Beschreibung eingeben..."
+                  disabled={filling}
+                />
+                {filling && (
+                  <div className={styles.autofillOverlay}>
+                    <Spinner />
+                    <span className={styles.autofillOverlayText}>Generiere...</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Example (expression-style only) */}
+            {activeTab === 'expression-style' && (
+              <>
+                <div className={styles.ifaceDivider} />
+                <div className={styles.ifaceFieldGroup}>
+                  <span className={styles.ifaceFieldLabel}>Beispiel</span>
+                  <span className={styles.ifaceFieldHint}>Ein typischer Satz in diesem Schreibstil</span>
+                  <textarea
+                    className={styles.textarea}
+                    value={form.example}
+                    onChange={(e) => updateField('example', e.target.value)}
+                    rows={2}
+                    placeholder="Beispiel-Text eingeben..."
+                    disabled={filling}
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Expandable Items (core-trait / scenario / expression-style) */}
+            {hasItems && (
+              <>
+                <div className={styles.ifaceDivider} />
+                <div className={styles.ifaceFieldGroup}>
+                  <div className={styles.csItemsHeader}>
+                    <span className={styles.ifaceFieldLabel}>
+                      {itemLabel === 'Verhaltensweise' ? 'Verhaltensweisen' : itemLabel === 'Setting' ? 'Settings' : 'Merkmale'}
+                    </span>
+                    <span className={styles.ifaceFieldHint} style={{ margin: 0 }}>
+                      {(form.items || []).length} / {ITEM_MAX}
+                    </span>
+                  </div>
+                  <span className={styles.ifaceFieldHint}>
+                    Nur so viele hinzufuegen, wie Auto-Fill befuellen soll
+                  </span>
+
+                  <div className={styles.csItemsList}>
+                    {(form.items || []).map((item, idx) => (
+                      <div key={idx} className={styles.csItemRow}>
+                        <textarea
+                          className={styles.textarea}
+                          value={item}
+                          onChange={(e) => updateItem(idx, e.target.value)}
+                          rows={2}
+                          placeholder={`${itemLabel} ${idx + 1}`}
+                          disabled={filling}
+                        />
+                        {(form.items || []).length > 1 && (
+                          <button
+                            type="button"
+                            className={styles.csRemoveItemBtn}
+                            onClick={() => removeItem(idx)}
+                            title="Entfernen"
+                            disabled={filling}
+                          >
+                            &minus;
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {(form.items || []).length < ITEM_MAX && (
+                    <button
+                      type="button"
+                      className={styles.csAddItemBtn}
+                      onClick={addItem}
+                      disabled={filling}
+                    >
+                      + {itemLabel} hinzufuegen
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
+
+            <div className={styles.ifaceDivider} />
+
+            {/* Actions */}
+            <div className={styles.csFormActions}>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleAutofill}
+                disabled={filling || !form.name}
+              >
+                {filling ? 'Generiert...' : 'Auto-Fill'}
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleCreate}
+                disabled={filling || !form.name}
+              >
+                Erstellen
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* ═══ Link to library ═══ */}
+        {onOpenList && (
+          <div className={styles.cslLinkRow}>
+            <button type="button" className={styles.cslLinkBtn} onClick={onOpenList}>
+              Vorhandene Specs anzeigen
+            </button>
+          </div>
+        )}
+
       </OverlayBody>
     </Overlay>
   );
