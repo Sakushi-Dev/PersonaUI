@@ -7,12 +7,10 @@ import OverlayHeader from '../../components/Overlay/OverlayHeader';
 import { UserIcon } from '../../components/Icons/Icons';
 import OverlayBody from '../../components/Overlay/OverlayBody';
 import OverlayFooter from '../../components/Overlay/OverlayFooter';
-import FormGroup from '../../components/FormGroup/FormGroup';
 import ChipSelector from '../../components/ChipSelector/ChipSelector';
 import Avatar from '../../components/Avatar/Avatar';
 import Button from '../../components/Button/Button';
 import { getUserProfile, updateUserProfile } from '../../services/userProfileApi';
-import { useOverlay } from '../../hooks/useOverlay';
 import styles from './Overlays.module.css';
 
 const GENDER_OPTIONS = [
@@ -104,89 +102,117 @@ export default function UserProfileOverlay({ open, onClose, onOpenAvatarEditor, 
     <Overlay open={open} onClose={onClose} width="480px">
       <OverlayHeader title="Mein Profil" icon={<UserIcon size={20} />} onClose={onClose} />
       <OverlayBody>
-        {/* Profile Card: Avatar + Name */}
-        <div className={styles.profileCard}>
-          <div className={styles.profileCardTop}>
-            <div className={styles.profileAvatarWrapper}>
-              <Avatar
-                src={avatar}
-                type={avatarType}
-                name={name}
-                size={88}
-                onClick={handleAvatarClick}
-                className={styles.clickableAvatar}
-              />
+
+        {/* ═══ Section: Profil ═══ */}
+        <div className={styles.ifaceSection}>
+          <h3 className={styles.ifaceSectionTitle}>Profil</h3>
+          <div className={styles.ifaceCard}>
+            <div className={styles.profileCardTop}>
+              <div className={styles.profileAvatarWrapper}>
+                <Avatar
+                  src={avatar}
+                  type={avatarType}
+                  name={name}
+                  size={88}
+                  onClick={handleAvatarClick}
+                  className={styles.clickableAvatar}
+                />
+              </div>
+              <div className={styles.profileNameArea}>
+                <input
+                  className={styles.textInput}
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  maxLength={30}
+                  placeholder="Dein Name"
+                />
+                <span className={styles.ifaceToggleHint}>Dein Anzeigename im Chat</span>
+              </div>
             </div>
-            <div className={styles.profileNameArea}>
-              <input
-                className={styles.textInput}
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                maxLength={30}
-                placeholder="Dein Name"
-              />
-              <span className={styles.hint}>Dein Anzeigename im Chat</span>
-            </div>
+            {avatar && (
+              <>
+                <div className={styles.ifaceDivider} />
+                <div className={styles.profileAvatarAction}>
+                  <Button variant="ghost" size="sm" onClick={handleRemoveAvatar}>
+                    Avatar entfernen
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
-          {avatar && (
-            <div className={styles.avatarActions}>
-              <Button variant="danger" size="sm" onClick={handleRemoveAvatar}>
-                Avatar entfernen
-              </Button>
-            </div>
-          )}
         </div>
 
-        <div className={styles.sectionDivider} />
+        {/* ═══ Section: Persoenliches ═══ */}
+        <div className={styles.ifaceSection}>
+          <h3 className={styles.ifaceSectionTitle}>Persoenliches</h3>
+          <div className={styles.ifaceCard}>
+            <div className={styles.ifaceFieldGroup}>
+              <span className={styles.ifaceFieldLabel}>Geschlecht</span>
+              <ChipSelector
+                options={GENDER_OPTIONS}
+                value={gender}
+                onChange={setGender}
+              />
+            </div>
 
-        {/* Gender & Interests */}
-        <FormGroup label="Geschlecht">
-          <ChipSelector
-            options={GENDER_OPTIONS}
-            value={gender}
-            onChange={setGender}
-          />
-        </FormGroup>
+            <div className={styles.ifaceDivider} />
 
-        <div style={{ height: 12 }} />
+            <div className={styles.ifaceFieldGroup}>
+              <span className={styles.ifaceFieldLabel}>Interessiert an</span>
+              <span className={styles.ifaceFieldHint}>Mehrfachauswahl moeglich</span>
+              <ChipSelector
+                options={GENDER_OPTIONS}
+                value={interestedIn}
+                onChange={setInterestedIn}
+                multiple
+              />
+            </div>
+          </div>
+        </div>
 
-        <FormGroup label="Interessiert an">
-          <ChipSelector
-            options={GENDER_OPTIONS}
-            value={interestedIn}
-            onChange={setInterestedIn}
-            multiple
-          />
-        </FormGroup>
+        {/* ═══ Section: Ueber mich ═══ */}
+        <div className={styles.ifaceSection}>
+          <h3 className={styles.ifaceSectionTitle}>Ueber mich</h3>
+          <div className={styles.ifaceCard}>
+            <div className={styles.ifaceFieldGroup}>
+              <div className={styles.profileAboutHeader}>
+                <span className={styles.ifaceFieldLabel}>Beschreibung</span>
+                <span className={styles.profileCharCount}>{userInfo.length}/500</span>
+              </div>
+              <span className={styles.ifaceFieldHint}>Interessen, Besonderheiten, Kontext fuer die KI</span>
+              <textarea
+                className={styles.textarea}
+                value={userInfo}
+                onChange={(e) => setUserInfo(e.target.value)}
+                maxLength={500}
+                rows={3}
+                placeholder="Schreibe etwas ueber dich..."
+              />
+            </div>
+          </div>
+        </div>
 
-        <div className={styles.sectionDivider} />
+        {/* ═══ Section: Sprache ═══ */}
+        <div className={styles.ifaceSection}>
+          <h3 className={styles.ifaceSectionTitle}>Sprache</h3>
+          <div className={styles.ifaceCard}>
+            <div className={styles.ifaceFieldGroup}>
+              <span className={styles.ifaceFieldLabel}>Persona-Sprache</span>
+              <span className={styles.ifaceFieldHint}>In welcher Sprache sollen deine Personas antworten?</span>
+              <select
+                className={styles.select}
+                value={personaLanguage}
+                onChange={(e) => setPersonaLanguage(e.target.value)}
+              >
+                {PERSONA_LANGUAGE_OPTIONS.map((lang) => (
+                  <option key={lang.value} value={lang.value}>{lang.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
 
-        {/* About */}
-        <FormGroup label="Über mich" charCount={userInfo.length} maxLength={500}>
-          <textarea
-            className={styles.textarea}
-            value={userInfo}
-            onChange={(e) => setUserInfo(e.target.value)}
-            maxLength={500}
-            rows={3}
-            placeholder="Schreibe etwas über dich... Interessen, Besonderheiten, Kontext für die KI"
-          />
-        </FormGroup>
-        <div className={styles.sectionDivider} />
-
-        {/* Persona Language */}
-        <FormGroup label="Persona-Sprache" hint="In welcher Sprache sollen deine Personas antworten?">
-          <select
-            className={styles.select}
-            value={personaLanguage}
-            onChange={(e) => setPersonaLanguage(e.target.value)}
-          >
-            {PERSONA_LANGUAGE_OPTIONS.map((lang) => (
-              <option key={lang.value} value={lang.value}>{lang.label}</option>
-            ))}
-          </select>
-        </FormGroup>
       </OverlayBody>
       <OverlayFooter>
         <Button variant="primary" onClick={handleSave} disabled={saving}>

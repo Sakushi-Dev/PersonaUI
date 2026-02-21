@@ -936,6 +936,7 @@
   display: flex;
   align-items: center;
   gap: 20px;
+  padding: 14px 0;
 }
 
 .profileAvatarWrapper {
@@ -947,6 +948,24 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.profileAvatarAction {
+  display: flex;
+  gap: 8px;
+  padding: 10px 0;
+}
+
+.profileAboutHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.profileCharCount {
+  font-size: 12px;
+  color: var(--overlay-text-muted, rgba(0, 0, 0, 0.45));
+  font-variant-numeric: tabular-nums;
 }
 
 .avatarActions {
@@ -2033,11 +2052,6 @@
   border-radius: 3px 3px 0 0;
 }
 
-.cortexFrequencyEmoji {
-  font-size: 20px;
-  line-height: 1;
-}
-
 .cortexFrequencyLabel {
   font-size: 13px;
   font-weight: 600;
@@ -2046,6 +2060,36 @@
 .cortexFrequencyPercent {
   font-size: 11px;
   opacity: 0.7;
+}
+
+/* ═══ Cortex Overlay – Tab Bar (inside card) ═══ */
+
+.cortexTabBar {
+  display: flex;
+  gap: 4px;
+}
+
+.cortexTab {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: var(--overlay-text-secondary, #666);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: var(--radius-sm, 6px);
+  transition: background 0.15s, color 0.15s;
+}
+
+.cortexTab:hover {
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.cortexTabActive {
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--overlay-accent, #6366f1);
+  font-weight: 600;
 }
 
 /* ═══ Cortex Overlay – Persona Badge ═══ */
@@ -2122,10 +2166,29 @@
   text-align: center;
 }
 
+/* ═══ Cortex Overlay – Reset All Row ═══ */
+
+.cortexResetAllRow {
+  margin-top: 16px;
+  text-align: right;
+}
+
 /* ═══ Cortex Overlay – Dark Mode ═══ */
 
 :root[data-theme="dark"] .cortexFrequencyOption {
   color: rgba(255, 255, 255, 0.6);
+}
+
+:root[data-theme="dark"] .cortexTab {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+:root[data-theme="dark"] .cortexTab:hover {
+  background: rgba(99, 102, 241, 0.08);
+}
+
+:root[data-theme="dark"] .cortexTabActive {
+  background: rgba(99, 102, 241, 0.15);
 }
 
 :root[data-theme="dark"] .cortexFrequencyActive {

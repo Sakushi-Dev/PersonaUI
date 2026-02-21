@@ -17,16 +17,16 @@ import styles from './Overlays.module.css';
 
 // ── Tab-Konfiguration ──
 const TABS = [
-  { key: 'memory',       label: '🧠 Memory',     fileType: 'memory' },
-  { key: 'soul',         label: '💜 Seele',       fileType: 'soul' },
-  { key: 'relationship', label: '💞 Beziehung',   fileType: 'relationship' },
+  { key: 'memory',       label: 'Memory',     fileType: 'memory' },
+  { key: 'soul',         label: 'Seele',       fileType: 'soul' },
+  { key: 'relationship', label: 'Beziehung',   fileType: 'relationship' },
 ];
 
 // ── Frequenz-Optionen ──
 const FREQUENCY_OPTIONS = [
-  { value: 'frequent', label: 'Häufig',  emoji: '🔥', percent: 50, hint: 'Update alle 50% des Kontexts' },
-  { value: 'medium',   label: 'Mittel',  emoji: '⚡', percent: 75, hint: 'Update alle 75% des Kontexts' },
-  { value: 'rare',     label: 'Selten',  emoji: '🌙', percent: 95, hint: 'Update alle 95% des Kontexts' },
+  { value: 'frequent', label: 'Häufig',  percent: 50, hint: 'Update alle 50% des Kontexts' },
+  { value: 'medium',   label: 'Mittel',  percent: 75, hint: 'Update alle 75% des Kontexts' },
+  { value: 'rare',     label: 'Selten',  percent: 95, hint: 'Update alle 95% des Kontexts' },
 ];
 const DEFAULT_FREQUENCY = 'medium';
 
@@ -206,40 +206,42 @@ export default function CortexOverlay({ open, onClose }) {
           </div>
         </div>
 
-        {/* ═══ Section: Frequenz-Auswahl ═══ */}
+        {/* ═══ Section: Update-Frequenz ═══ */}
         <div className={styles.ifaceSection}>
           <h3 className={styles.ifaceSectionTitle}>Update-Frequenz</h3>
           <div className={styles.ifaceCard}>
-            <span className={styles.ifaceFieldHint}>
-              Wie oft soll Cortex seine Dateien aktualisieren?
-              Der Prozentsatz bezieht sich auf dein Kontext-Limit.
-            </span>
+            <div className={styles.ifaceFieldGroup}>
+              <span className={styles.ifaceFieldLabel}>Aktualisierungsintervall</span>
+              <span className={styles.ifaceFieldHint}>
+                Wie oft soll Cortex seine Dateien aktualisieren?
+                Der Prozentsatz bezieht sich auf dein Kontext-Limit.
+              </span>
 
-            {/* Segmented Control / Radio Group */}
-            <div className={styles.cortexFrequencySelector}>
-              {FREQUENCY_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  className={`${styles.cortexFrequencyOption} ${
-                    frequency === opt.value ? styles.cortexFrequencyActive : ''
-                  }`}
-                  onClick={() => setFrequency(opt.value)}
-                  type="button"
-                  role="radio"
-                  aria-checked={frequency === opt.value}
-                  aria-label={`${opt.label} – Update alle ${opt.percent}% des Kontexts`}
-                >
-                  <span className={styles.cortexFrequencyEmoji}>{opt.emoji}</span>
-                  <span className={styles.cortexFrequencyLabel}>{opt.label}</span>
-                  <span className={styles.cortexFrequencyPercent}>{opt.percent}%</span>
-                </button>
-              ))}
+              {/* Segmented Control / Radio Group */}
+              <div className={styles.cortexFrequencySelector}>
+                {FREQUENCY_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    className={`${styles.cortexFrequencyOption} ${
+                      frequency === opt.value ? styles.cortexFrequencyActive : ''
+                    }`}
+                    onClick={() => setFrequency(opt.value)}
+                    type="button"
+                    role="radio"
+                    aria-checked={frequency === opt.value}
+                    aria-label={`${opt.label} – Update alle ${opt.percent}% des Kontexts`}
+                  >
+                    <span className={styles.cortexFrequencyLabel}>{opt.label}</span>
+                    <span className={styles.cortexFrequencyPercent}>{opt.percent}%</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Hint for active selection */}
+              <span className={styles.ifaceInfoNote}>
+                {FREQUENCY_OPTIONS.find((o) => o.value === frequency)?.hint}
+              </span>
             </div>
-
-            {/* Hint für aktive Auswahl */}
-            <span className={styles.ifaceInfoNote}>
-              {FREQUENCY_OPTIONS.find((o) => o.value === frequency)?.hint}
-            </span>
           </div>
         </div>
 
@@ -254,94 +256,99 @@ export default function CortexOverlay({ open, onClose }) {
             )}
           </h3>
 
-          {/* Tab Bar */}
-          <div className={styles.tabBar}>
-            {TABS.map((tab) => (
-              <button
-                key={tab.key}
-                className={`${styles.tab} ${activeTab === tab.key ? styles.activeTab : ''}`}
-                onClick={() => handleTabChange(tab.key)}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* File Content Area */}
-          {loading ? (
-            <div className={styles.centeredContent}>
-              <Spinner />
+          <div className={styles.ifaceCard}>
+            {/* Tab Bar */}
+            <div className={styles.cortexTabBar}>
+              {TABS.map((tab) => (
+                <button
+                  key={tab.key}
+                  type="button"
+                  className={`${styles.cortexTab} ${activeTab === tab.key ? styles.cortexTabActive : ''}`}
+                  onClick={() => handleTabChange(tab.key)}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
-          ) : !personaId ? (
-            <p className={styles.emptyText}>
-              Keine Persona ausgewählt. Bitte erstelle zuerst eine Persona.
-            </p>
-          ) : currentContent === '' && !editing ? (
-            /* Empty State */
-            <div className={styles.cortexEmptyState}>
+
+            <div className={styles.ifaceDivider} />
+
+            {/* File Content Area */}
+            {loading ? (
+              <div className={styles.centeredContent}>
+                <Spinner />
+              </div>
+            ) : !personaId ? (
               <p className={styles.emptyText}>
-                Diese Datei ist noch leer. Cortex wird sie automatisch befüllen,
-                oder du kannst sie manuell bearbeiten.
+                Keine Persona ausgewählt. Bitte erstelle zuerst eine Persona.
               </p>
-              <Button variant="secondary" size="sm" onClick={handleStartEdit}>
-                ✏️ Manuell bearbeiten
-              </Button>
-            </div>
-          ) : editing ? (
-            /* Edit Mode */
-            <div className={styles.cortexEditArea}>
-              <textarea
-                className={styles.textarea}
-                value={editContent}
-                onChange={(e) => setEditContent(e.target.value)}
-                rows={12}
-                placeholder="Markdown-Inhalt eingeben..."
-                disabled={saving}
-              />
-              <div className={styles.cortexEditActions}>
-                <Button variant="secondary" size="sm" onClick={handleCancelEdit} disabled={saving}>
-                  Abbrechen
-                </Button>
-                <Button variant="ghost" size="sm" onClick={handleResetFile} disabled={saving}>
-                  Zurücksetzen
-                </Button>
-                <Button variant="primary" size="sm" onClick={handleSaveFile} disabled={saving}>
-                  {saving ? 'Speichert...' : 'Datei speichern'}
-                </Button>
-              </div>
-            </div>
-          ) : (
-            /* Read-Only View */
-            <div className={styles.cortexFileView}>
-              <pre className={styles.cortexFileContent}>
-                {currentContent}
-              </pre>
-              <div className={styles.cortexFileActions}>
+            ) : currentContent === '' && !editing ? (
+              /* Empty State */
+              <div className={styles.cortexEmptyState}>
+                <p className={styles.emptyText}>
+                  Diese Datei ist noch leer. Cortex wird sie automatisch befüllen,
+                  oder du kannst sie manuell bearbeiten.
+                </p>
                 <Button variant="secondary" size="sm" onClick={handleStartEdit}>
-                  ✏️ Bearbeiten
-                </Button>
-                <Button variant="ghost" size="sm" onClick={handleResetFile} disabled={saving}>
-                  🔄 Zurücksetzen
+                  Manuell bearbeiten
                 </Button>
               </div>
-            </div>
-          )}
+            ) : editing ? (
+              /* Edit Mode */
+              <div className={styles.cortexEditArea}>
+                <textarea
+                  className={styles.textarea}
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  rows={12}
+                  placeholder="Markdown-Inhalt eingeben..."
+                  disabled={saving}
+                />
+                <div className={styles.cortexEditActions}>
+                  <Button variant="secondary" size="sm" onClick={handleCancelEdit} disabled={saving}>
+                    Abbrechen
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={handleResetFile} disabled={saving}>
+                    Zurücksetzen
+                  </Button>
+                  <Button variant="primary" size="sm" onClick={handleSaveFile} disabled={saving}>
+                    {saving ? 'Speichert...' : 'Datei speichern'}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              /* Read-Only View */
+              <div className={styles.cortexFileView}>
+                <pre className={styles.cortexFileContent}>
+                  {currentContent}
+                </pre>
+                <div className={styles.cortexFileActions}>
+                  <Button variant="secondary" size="sm" onClick={handleStartEdit}>
+                    Bearbeiten
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={handleResetFile} disabled={saving}>
+                    Zurücksetzen
+                  </Button>
+                </div>
+              </div>
+            )}
 
-          {/* Error Display */}
-          {error && (
-            <div className={`${styles.statusArea} ${styles.error}`}>
-              {error}
-            </div>
-          )}
+            {/* Error Display */}
+            {error && (
+              <div className={`${styles.statusArea} ${styles.error}`}>
+                {error}
+              </div>
+            )}
 
-          {/* Reset All Button */}
-          {personaId && !loading && (
-            <div style={{ marginTop: 16, textAlign: 'right' }}>
-              <Button variant="ghost" size="sm" onClick={handleResetAll} disabled={saving}>
-                🗑️ Alle Cortex-Dateien zurücksetzen
-              </Button>
-            </div>
-          )}
+            {/* Reset All Button */}
+            {personaId && !loading && (
+              <div className={styles.cortexResetAllRow}>
+                <Button variant="ghost" size="sm" onClick={handleResetAll} disabled={saving}>
+                  Alle Cortex-Dateien zurücksetzen
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
 
       </OverlayBody>

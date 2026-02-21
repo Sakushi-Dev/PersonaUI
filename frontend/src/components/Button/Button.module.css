@@ -74,9 +74,12 @@
 
 .ghost {
   background: transparent;
-  color: var(--overlay-text);
+  color: var(--overlay-text-secondary, #666);
+  border: 1px solid transparent;
 }
 
 .ghost:hover:not(:disabled) {
-  background: var(--overlay-hover-bg);
+  background: rgba(99, 102, 241, 0.08);
+  color: var(--overlay-accent, #6366f1);
+  border-color: rgba(99, 102, 241, 0.2);
 }
