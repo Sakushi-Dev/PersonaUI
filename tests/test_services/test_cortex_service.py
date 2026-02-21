@@ -168,7 +168,7 @@ class TestCortexServiceReadFile:
     def test_read_existing_file(self, cortex_service, temp_cortex_dir):
         ensure_cortex_dir('default')
         content = cortex_service.read_file('default', 'memory.md')
-        assert '# Erinnerungen' in content
+        assert '# Memories' in content
 
     def test_read_invalid_filename_raises(self, cortex_service):
         with pytest.raises(ValueError, match="Ungültige Cortex-Datei"):
@@ -178,9 +178,9 @@ class TestCortexServiceReadFile:
         ensure_cortex_dir('default')
         result = cortex_service.read_all('default')
         assert set(result.keys()) == {'memory', 'soul', 'relationship'}
-        assert '# Erinnerungen' in result['memory']
-        assert '# Seelen-Entwicklung' in result['soul']
-        assert '# Beziehungsdynamik' in result['relationship']
+        assert '# Memories' in result['memory']
+        assert '# Soul Development' in result['soul']
+        assert '# Relationship Dynamics' in result['relationship']
 
 
 class TestCortexServiceWriteFile:
@@ -205,7 +205,7 @@ class TestCortexServicePromptIntegration:
         ensure_cortex_dir('default')
         cortex_service.write_file('default', 'memory.md', '# Test Memory Content')
         result = cortex_service.get_cortex_for_prompt('default')
-        assert result['cortex_memory'] == '### Erinnerungen & Wissen\n\n# Test Memory Content'
+        assert result['cortex_memory'] == '### Memories & Knowledge\n\n# Test Memory Content'
 
 
 class TestCortexServiceFilenameValidation:
@@ -232,7 +232,7 @@ class TestCortexServiceToolCallHandler:
         result = cortex_service._handle_tool_call(
             'default', 'cortex_read_file', {'filename': 'memory.md'}
         )
-        assert '# Erinnerungen' in result
+        assert '# Memories' in result
 
     def test_handle_write_tool_call(self, cortex_service, temp_cortex_dir):
         ensure_cortex_dir('default')

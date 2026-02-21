@@ -128,7 +128,7 @@ class TestToolExecutor:
         )
 
         assert success is True
-        assert 'erfolgreich' in result
+        assert 'successfully updated' in result
         assert 'memory.md' in files_written
         mock_cortex.write_file.assert_called_once()
 
@@ -141,7 +141,7 @@ class TestToolExecutor:
         )
 
         assert success is False
-        assert 'Unbekanntes Tool' in result
+        assert 'Unknown tool' in result
 
     def test_value_error_caught(self, service):
         mock_cortex = MagicMock()
@@ -175,7 +175,7 @@ class TestSystemPromptBuilder:
 
     def test_contains_persona_name(self, service, mock_character):
         prompt = service._build_cortex_system_prompt_fallback('Mia', 'Alex', mock_character)
-        assert 'Du bist Mia' in prompt
+        assert 'You are Mia' in prompt
 
     def test_contains_user_name(self, service, mock_character):
         prompt = service._build_cortex_system_prompt_fallback('Mia', 'Alex', mock_character)
@@ -200,7 +200,7 @@ class TestSystemPromptBuilder:
     def test_minimal_character(self, service):
         """Leere Character-Daten crashen nicht."""
         prompt = service._build_cortex_system_prompt_fallback('Bot', 'User', {})
-        assert 'Du bist Bot' in prompt
+        assert 'You are Bot' in prompt
 
 
 # ─── Message-Builder ────────────────────────────────────────────────────────

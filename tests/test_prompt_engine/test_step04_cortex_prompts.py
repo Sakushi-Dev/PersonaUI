@@ -330,19 +330,19 @@ class TestCortexServiceSectionHeaders:
         """Befüllte Datei bekommt Section-Header."""
         cortex_setup.write_file('default', 'memory.md', 'Max liebt Katzen')
         result = cortex_setup.get_cortex_for_prompt('default')
-        assert result['cortex_memory'] == '### Erinnerungen & Wissen\n\nMax liebt Katzen'
+        assert result['cortex_memory'] == '### Memories & Knowledge\n\nMax liebt Katzen'
 
     def test_soul_header(self, cortex_setup):
         """Soul-Datei bekommt richtigen Header."""
         cortex_setup.write_file('default', 'soul.md', 'Ich bin ehrlich')
         result = cortex_setup.get_cortex_for_prompt('default')
-        assert result['cortex_soul'] == '### Identität & Innere Haltung\n\nIch bin ehrlich'
+        assert result['cortex_soul'] == '### Identity & Inner Self\n\nIch bin ehrlich'
 
     def test_relationship_header(self, cortex_setup):
         """Relationship-Datei bekommt richtigen Header."""
         cortex_setup.write_file('default', 'relationship.md', 'Wir verstehen uns')
         result = cortex_setup.get_cortex_for_prompt('default')
-        assert result['cortex_relationship'] == '### Beziehung & Gemeinsame Geschichte\n\nWir verstehen uns'
+        assert result['cortex_relationship'] == '### Relationship & Shared History\n\nWir verstehen uns'
 
     def test_mixed_empty_and_filled(self, cortex_setup):
         """Nur befüllte Dateien bekommen Header, leere bleiben leer."""
@@ -486,7 +486,7 @@ class TestCortexUpdateServiceEngine:
         }
         with patch.object(service, '_get_prompt_engine', return_value=None):
             prompt = service._build_cortex_system_prompt('Bot', 'User', mock_character)
-        assert 'Du bist Bot' in prompt
+        assert 'You are Bot' in prompt
 
     def test_system_prompt_with_engine(self, service):
         """Mit PromptEngine wird System-Prompt über build_system_prompt gebaut."""
