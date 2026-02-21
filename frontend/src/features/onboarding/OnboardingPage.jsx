@@ -42,6 +42,7 @@ export default function OnboardingPage() {
     user_gender: null,
     user_interested_in: [],
     user_info: '',
+    persona_language: 'english',
   });
 
   const [interfaceData, setInterfaceData] = useState({

@@ -74,6 +74,7 @@ def chat_stream():
     # User-Name aus Profil
     user_profile = get_user_profile_data()
     user_name = user_profile.get('user_name', 'User') or 'User'
+    persona_language = user_profile.get('persona_language', 'english') or 'english'
     
     # Context Limit
     context_limit = data.get('context_limit', 25)
@@ -94,7 +95,7 @@ def chat_stream():
                 user_message=user_message,
                 conversation_history=conversation_history,
                 character_data=character,
-                language='Deutsch',
+                language=persona_language,
                 user_name=user_name,
                 api_model=api_model,
                 api_temperature=api_temperature,
@@ -247,6 +248,7 @@ def api_regenerate():
     character_name = character.get('char_name', 'Assistant')
     user_profile = get_user_profile_data()
     user_name = user_profile.get('user_name', 'User') or 'User'
+    persona_language = user_profile.get('persona_language', 'english') or 'english'
 
     # Konversationskontext holen (endet jetzt mit der User-Nachricht)
     conversation_history = get_conversation_context(
@@ -267,7 +269,7 @@ def api_regenerate():
                 user_message=user_message,
                 conversation_history=conversation_history,
                 character_data=character,
-                language='Deutsch',
+                language=persona_language,
                 user_name=user_name,
                 api_model=api_model,
                 api_temperature=api_temperature,
@@ -356,6 +358,7 @@ def afterthought():
     # User-Name aus Profil
     afterthought_profile = get_user_profile_data()
     afterthought_user_name = afterthought_profile.get('user_name', 'User') or 'User'
+    afterthought_persona_language = afterthought_profile.get('persona_language', 'english') or 'english'
     
     # Konversationskontext holen (aus Persona-DB)
     conversation_history = get_conversation_context(limit=context_limit, session_id=session_id, persona_id=persona_id)
@@ -368,7 +371,7 @@ def afterthought():
             conversation_history=conversation_history,
             character_data=character,
             elapsed_time=elapsed_time,
-            language='Deutsch',
+            language=afterthought_persona_language,
             user_name=afterthought_user_name,
             api_model=api_model,
             api_temperature=api_temperature,
@@ -395,7 +398,7 @@ def afterthought():
                     character_data=character,
                     inner_dialogue=inner_dialogue,
                     elapsed_time=elapsed_time,
-                    language='Deutsch',
+                    language=afterthought_persona_language,
                     user_name=afterthought_user_name,
                     api_model=api_model,
                     api_temperature=api_temperature,

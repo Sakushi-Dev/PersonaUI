@@ -154,11 +154,12 @@
     "language": {
       "name": "Sprache",
       "description": "Sprache für die Konversation",
-      "source": "runtime",
+      "source": "user_profile",
+      "source_path": "persona_language",
       "type": "string",
-      "default": "de",
-      "category": "system",
-      "resolve_phase": "runtime"
+      "default": "english",
+      "category": "user",
+      "resolve_phase": "static"
     },
     "current_date": {
       "name": "Aktuelles Datum",

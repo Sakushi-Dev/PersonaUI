@@ -101,6 +101,22 @@ export default function StepProfile({ data, onChange, onNext, onBack, language }
 
 
 
+  // ── Persona language options ──
+  const personaLanguages = [
+    { value: 'english', label: 'English' },
+    { value: 'german', label: 'Deutsch' },
+    { value: 'french', label: 'Français' },
+    { value: 'spanish', label: 'Español' },
+    { value: 'italian', label: 'Italiano' },
+    { value: 'portuguese', label: 'Português' },
+    { value: 'russian', label: 'Русский' },
+    { value: 'japanese', label: '日本語' },
+    { value: 'chinese', label: '中文' },
+    { value: 'korean', label: '한국어' },
+  ];
+
+
+
   return (
     <div className={styles.card}>
       <div className={styles.cardHeader}>
@@ -193,6 +209,7 @@ export default function StepProfile({ data, onChange, onNext, onBack, language }
             </div>
           </div>
         )}
+        
 
         {/* Name */}
         <div className={styles.fieldGroup}>
@@ -237,6 +254,20 @@ export default function StepProfile({ data, onChange, onNext, onBack, language }
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Persona Language */}
+        <div className={styles.fieldGroup}>
+          <label className={styles.label}>{s.personaLanguageLabel} <span className={styles.labelOptional}>{s.personaLanguageHint}</span></label>
+          <select
+            className={styles.input}
+            value={data.persona_language || 'english'}
+            onChange={(e) => update('persona_language', e.target.value)}
+          >
+            {personaLanguages.map((lang) => (
+              <option key={lang.value} value={lang.value}>{lang.label}</option>
+            ))}
+          </select>
         </div>
 
         {/* Über mich */}

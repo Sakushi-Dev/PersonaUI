@@ -40,6 +40,8 @@
       "interestedHint": "(you can select multiple, optional)",
       "aboutLabel": "About Me",
       "aboutPlaceholder": "Tell us something about yourself... interests, quirks – the more your personas know about you, the better.",
+      "personaLanguageLabel": "Persona Language",
+      "personaLanguageHint": "In which language should your personas respond?",
       "fileTooLarge": "File too large (max 10MB)",
       "uploadError": "Connection error"
     },
@@ -203,6 +205,8 @@
       "interestedHint": "(Mehrfachauswahl möglich, optional)",
       "aboutLabel": "Über mich",
       "aboutPlaceholder": "Erzähle etwas über dich... Interessen, Eigenheiten – je mehr deine Personas über dich wissen, desto besser.",
+      "personaLanguageLabel": "Persona-Sprache",
+      "personaLanguageHint": "In welcher Sprache sollen deine Personas antworten?",
       "fileTooLarge": "Datei zu groß (max. 10 MB)",
       "uploadError": "Verbindungsfehler"
     },

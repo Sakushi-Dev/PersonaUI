@@ -19,7 +19,8 @@ DEFAULT_PROFILE = {
     "user_avatar_type": None,
     "user_gender": None,
     "user_interested_in": [],
-    "user_info": ""
+    "user_info": "",
+    "persona_language": "english"
 }
 
 
@@ -74,7 +75,7 @@ def update_user_profile():
     current = _load_profile()
     
     # Nur erlaubte Felder aktualisieren
-    allowed_keys = {'user_name', 'user_avatar', 'user_avatar_type', 'user_gender', 'user_interested_in', 'user_info'}
+    allowed_keys = {'user_name', 'user_avatar', 'user_avatar_type', 'user_gender', 'user_interested_in', 'user_info', 'persona_language'}
     for key in allowed_keys:
         if key in data:
             current[key] = data[key]
@@ -100,7 +101,21 @@ def update_user_profile():
     if not current.get('user_name'):
         current['user_name'] = 'User'
     
+    # Validierung: persona_language – muss ein nicht-leerer String sein
+    if not current.get('persona_language') or not isinstance(current['persona_language'], str):
+        current['persona_language'] = 'english'
+    else:
+        current['persona_language'] = current['persona_language'].strip().lower()
+    
     if _save_profile(current):
+        # PromptEngine-Cache invalidieren (user_profile-Werte wie language sind gecached)
+        try:
+            from utils.provider import get_prompt_engine
+            engine = get_prompt_engine()
+            if engine:
+                engine.invalidate_cache()
+        except Exception:
+            pass
         return success_response(profile=current)
     else:
         return error_response('Speichern fehlgeschlagen', 500)

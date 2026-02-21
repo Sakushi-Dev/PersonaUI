@@ -277,7 +277,7 @@ class ChatService:
         }
 
     def chat_stream(self, user_message: str, conversation_history: list,
-                    character_data: dict, language: str = 'de',
+                    character_data: dict, language: str = 'english',
                     user_name: str = 'User', api_model: str = None,
                     api_temperature: float = None,
                     ip_address: str = None, experimental_mode: bool = False,
@@ -299,7 +299,7 @@ class ChatService:
         variant = 'experimental' if experimental_mode else 'default'
         system_prompt = ''
         if self._engine:
-            runtime_vars = {'language': language}
+            runtime_vars = {}
             if ip_address:
                 runtime_vars['ip_address'] = ip_address
             # Cortex-Daten laden und als runtime_vars hinzufügen
@@ -360,7 +360,7 @@ class ChatService:
                 yield ('error', event.data)
 
     def afterthought_decision(self, conversation_history: list, character_data: dict,
-                               elapsed_time: str, language: str = 'de', user_name: str = 'User',
+                               elapsed_time: str, language: str = 'english', user_name: str = 'User',
                                api_model: str = None, api_temperature: float = None,
                                ip_address: str = None, nsfw_mode: bool = False,
                                persona_id: str = None) -> dict:
@@ -384,7 +384,6 @@ class ChatService:
             # Baue den inneren Dialog Prompt via Engine
             variant = 'experimental' if nsfw_mode else 'default'
             runtime_vars = {
-                'language': language,
                 'elapsed_time': elapsed_time,
             }
             if ip_address:
@@ -454,7 +453,7 @@ class ChatService:
 
     def afterthought_followup(self, conversation_history: list, character_data: dict,
                                inner_dialogue: str, elapsed_time: str,
-                               language: str = 'de', user_name: str = 'User',
+                               language: str = 'english', user_name: str = 'User',
                                api_model: str = None, api_temperature: float = None,
                                ip_address: str = None, nsfw_mode: bool = False,
                                persona_id: str = None) -> Generator:
@@ -479,7 +478,6 @@ class ChatService:
             # Baue den Followup-Prompt via Engine
             variant = 'experimental' if nsfw_mode else 'default'
             runtime_vars = {
-                'language': language,
                 'elapsed_time': elapsed_time,
                 'inner_dialogue': inner_dialogue,
             }
