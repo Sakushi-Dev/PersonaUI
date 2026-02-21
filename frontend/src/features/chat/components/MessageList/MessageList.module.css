@@ -197,35 +197,6 @@
   animation: fadeInSlide 0.6s ease-out;
 }
 
-/* ── Welcome ── */
-
-.welcome {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  text-align: center;
-  padding: 40px;
-  gap: 16px;
-  animation: fadeInSlide 0.6s ease-out;
-}
-
-.welcomeTitle {
-  font-size: 1.6em;
-  font-weight: 600;
-  color: #1a1a2e;
-  margin-bottom: 12px;
-}
-
-.welcomeText {
-  max-width: 500px;
-  margin-bottom: 40px;
-  color: #555566;
-  line-height: 1.6;
-  font-size: 1em;
-}
-
 /* ── Dark Mode ── */
 
 :root[data-theme="dark"] .userBubble {
@@ -252,13 +223,7 @@
   background: rgba(255, 255, 255, 0.15);
 }
 
-:root[data-theme="dark"] .welcomeTitle {
-  color: rgba(255, 255, 255, 0.9);
-}
 
-:root[data-theme="dark"] .welcomeText {
-  color: rgba(255, 255, 255, 0.7);
-}
 
 /* ── Fade-In Animation ── */
 

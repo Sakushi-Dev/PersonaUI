@@ -279,7 +279,6 @@ function ChatPageContent() {
         afterthoughtStreaming={afterthoughtThinking}
         hasMore={hasMore}
         onLoadMore={loadMore}
-        onNewChat={handleNewChat}
         onDeleteLast={deleteLastMsg}
         onEditLast={editLastMsg}
         onRegenerateLast={regenerateLastMsg}

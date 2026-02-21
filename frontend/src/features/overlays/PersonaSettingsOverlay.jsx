@@ -240,7 +240,7 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
               <div className={styles.personaListHeader}>
                 <h3 className={styles.personaListTitle}>Meine Personas</h3>
                 <button className={styles.specsBtn} onClick={() => onOpenCustomSpecs?.()}>
-                  <span className={styles.specsBtnIcon}>✦</span> Custom Specs
+                  Custom Specs
                 </button>
               </div>
 
@@ -393,21 +393,15 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
                 <label className={styles.configDescription} style={{ marginBottom: 0 }}>Geschlecht:</label>
                 <div style={{ display: 'flex', gap: 8 }}>
                   {['männlich', 'weiblich', 'divers'].map((g) => (
-                    <label
+                    <button
                       key={g}
+                      type="button"
                       className={styles.tagButton + (gender === g ? ` ${styles.tagButtonActive}` : '')}
-                      style={{ flex: 1, textAlign: 'center', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                      style={{ flex: 1, textAlign: 'center' }}
+                      onClick={() => setGender(g)}
                     >
-                      <input
-                        type="radio"
-                        name="persona-gender"
-                        value={g}
-                        checked={gender === g}
-                        onChange={() => setGender(g)}
-                        style={{ display: 'none' }}
-                      />
                       {g.charAt(0).toUpperCase() + g.slice(1)}
-                    </label>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -421,25 +415,18 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
               <div className={styles.configDescription}>Art der Persona:</div>
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                 {typeOptions.map((t) => (
-                  <label
+                  <button
                     key={t.key}
+                    type="button"
                     className={styles.tagButton + (personaType === t.key ? ` ${styles.tagButtonActive}` : '')}
-                    style={{ flex: '1 1 120px', textAlign: 'center', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '12px 16px' }}
+                    style={{ flex: '1 1 120px', textAlign: 'center', padding: '12px 16px' }}
+                    onClick={() => {
+                      setPersonaType(t.key);
+                      if (t.key === 'KI') setScenarios([]);
+                    }}
                   >
-                    <input
-                      type="radio"
-                      name="persona-type"
-                      value={t.key}
-                      checked={personaType === t.key}
-                      onChange={() => {
-                        setPersonaType(t.key);
-                        // Clear scenarios when switching to KI (matches legacy behavior)
-                        if (t.key === 'KI') setScenarios([]);
-                      }}
-                      style={{ display: 'none' }}
-                    />
                     {t.label}
-                  </label>
+                  </button>
                 ))}
               </div>
             </div>
@@ -579,14 +566,23 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
             <h3 className={styles.configSectionTitle}>Background</h3>
             <div className={styles.configDescription}>Hintergrundgeschichte der Persona (optional):</div>
             <div className={styles.backgroundInputArea}>
-              <textarea
-                className={styles.textarea}
-                value={background}
-                onChange={(e) => setBackground(e.target.value)}
-                placeholder="Beschreibe die Hintergrundgeschichte deiner Persona oder nutze Auto-Fill..."
-                maxLength={1500}
-                rows={4}
-              />
+              <div className={styles.backgroundTextareaWrapper}>
+                <textarea
+                  className={styles.textarea}
+                  value={background}
+                  onChange={(e) => setBackground(e.target.value)}
+                  placeholder="Beschreibe die Hintergrundgeschichte deiner Persona oder nutze Auto-Fill..."
+                  maxLength={1500}
+                  rows={4}
+                  disabled={filling}
+                />
+                {filling && (
+                  <div className={styles.autofillOverlay}>
+                    <Spinner />
+                    <span className={styles.autofillOverlayText}>Generiere Hintergrundgeschichte...</span>
+                  </div>
+                )}
+              </div>
               <div className={styles.backgroundFooter}>
                 <span className={styles.charCounter}>
                   {background.length} / 1500
@@ -598,7 +594,7 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
                   disabled={filling || !name}
                   title="KI generiert eine Hintergrundgeschichte basierend auf den Persona-Einstellungen"
                 >
-                  ✨ Auto-Fill
+                  {filling ? 'Generiert...' : 'Auto-Fill'}
                 </Button>
               </div>
             </div>
@@ -624,7 +620,7 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
         {/* Creator Footer */}
         <div className={styles.personaCreatorFooter}>
           <Button variant="secondary" onClick={resetEditor}>Reset</Button>
-          <Button variant="primary" onClick={handleSave} disabled={saving || !name.trim()}>
+          <Button variant="primary" onClick={handleSave} disabled={saving || filling || !name.trim()}>
             {saving ? 'Speichert...' : 'Persona speichern'}
           </Button>
         </div>

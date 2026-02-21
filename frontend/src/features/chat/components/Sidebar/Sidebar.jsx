@@ -51,6 +51,7 @@ export default function Sidebar({
             <SessionList
               personaId={selectedPersonaId}
               onNewChat={onNewChat}
+              onClose={onClose}
             />
           )}
         </div>

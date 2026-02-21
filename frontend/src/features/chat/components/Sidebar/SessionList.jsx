@@ -7,7 +7,7 @@ import { useSession } from '../../../../hooks/useSession';
 import SessionItem from './SessionItem';
 import styles from './Sidebar.module.css';
 
-export default function SessionList({ personaId, onNewChat }) {
+export default function SessionList({ personaId, onNewChat, onClose }) {
   const { sessionId: activeSessionId, switchSession, deleteSession, switchPersona } = useSession();
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -24,8 +24,14 @@ export default function SessionList({ personaId, onNewChat }) {
   }, [personaId]);
 
   const handleSelect = async (session) => {
+    // If already active session, just close the sidebar
+    if (session.id === activeSessionId) {
+      onClose?.();
+      return;
+    }
     await switchPersona(personaId);
     await switchSession(session.id, personaId);
+    onClose?.();
   };
 
   const handleDelete = async (session) => {

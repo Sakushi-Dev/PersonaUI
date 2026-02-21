@@ -6,7 +6,6 @@
 import { useRef, useEffect, useCallback } from 'react';
 import { useSession } from '../../../../hooks/useSession';
 import MessageBubble from './MessageBubble';
-import WelcomeMessage from './WelcomeMessage';
 import LoadMoreButton from './LoadMoreButton';
 import Spinner from '../../../../components/Spinner/Spinner';
 import styles from './MessageList.module.css';
@@ -16,7 +15,6 @@ export default function MessageList({
   afterthoughtStreaming,
   hasMore,
   onLoadMore,
-  onNewChat,
   onDeleteLast,
   onEditLast,
   onRegenerateLast,
@@ -49,20 +47,13 @@ export default function MessageList({
     shouldScroll.current = scrollHeight - scrollTop - clientHeight < 100;
   };
 
-  const isEmpty = chatHistory.length === 0 && !isStreaming;
-
   return (
     <div
       ref={containerRef}
       className={styles.container}
       onScroll={handleScroll}
     >
-      {isEmpty ? (
-        <WelcomeMessage
-          characterName={character?.char_name}
-          onNewChat={onNewChat}
-        />
-      ) : (
+      {chatHistory.length === 0 && !isStreaming ? null : (
         <>
           {hasMore && <LoadMoreButton onClick={onLoadMore} />}
 

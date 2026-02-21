@@ -151,93 +151,6 @@ export function useMessages() {
     }
   }, [sessionId, personaId, isStreaming, isLoading, updateLastMessage]);
 
-  // ── Regenerate last bot message ──
-  const regenerateLastMsg = useCallback(async () => {
-    if (isStreaming || isLoading || chatHistory.length === 0) return;
-
-    const lastMsg = chatHistory[chatHistory.length - 1];
-    if (lastMsg.is_user || lastMsg._streaming) return;
-
-    // Remove the old bot message from frontend
-    removeLastMessage();
-
-    // Add streaming placeholder
-    setIsLoading(true);
-    setIsStreaming(true);
-    setError(null);
-
-    addMessage({
-      message: '',
-      is_user: false,
-      character_name: character?.char_name,
-      _streaming: true,
-      timestamp: new Date().toISOString(),
-    });
-
-    let rawText = '';
-
-    abortRef.current = regenerateMessage({
-      sessionId,
-      personaId,
-      apiModel: get('apiModel'),
-      apiTemperature: get('apiTemperature'),
-      contextLimit: get('contextLimit'),
-      experimentalMode: get('experimentalMode'),
-      onChunk: (chunk) => {
-        rawText += chunk;
-        updateLastMessage({ message: formatMessage(rawText) });
-      },
-      onDone: (data) => {
-        setIsStreaming(false);
-        setIsLoading(false);
-        setStreamingStats(data.stats || null);
-
-        updateLastMessage({
-          message: data.response,
-          _streaming: false,
-          character_name: data.character_name,
-          timestamp: new Date().toISOString(),
-          stats: data.stats,
-        });
-
-        if (get('notificationSound', false)) {
-          playNotificationSound();
-        }
-      },
-      onError: (err) => {
-        setIsStreaming(false);
-        setIsLoading(false);
-        removeLastMessage();
-        setError(err);
-      },
-    });
-  }, [sessionId, personaId, isStreaming, isLoading, chatHistory, character, addMessage, updateLastMessage, removeLastMessage, get]);
-
-  // ── Resend last user message (delete from DB, then send again) ──
-  const resendLastMsg = useCallback(async () => {
-    if (isStreaming || isLoading || chatHistory.length === 0) return;
-
-    const lastMsg = chatHistory[chatHistory.length - 1];
-    if (!lastMsg.is_user || lastMsg._streaming) return;
-
-    const text = lastMsg.message;
-
-    // Delete from DB
-    try {
-      const result = await apiDeleteLastMessage(sessionId, personaId);
-      if (!result.success) return;
-    } catch (err) {
-      console.error('Failed to delete message before resend:', err);
-      return;
-    }
-
-    // Remove from frontend state
-    removeLastMessage();
-
-    // Send as new input (will add user msg + bot streaming placeholder)
-    sendMessage(text);
-  }, [sessionId, personaId, isStreaming, isLoading, chatHistory, removeLastMessage, sendMessage]);
-
   // ── Auto First Message: KI generiert Eröffnungsnachricht für neuen Chat ──
   const triggerAutoFirstMessage = useCallback(async (targetSessionId, targetPersonaId) => {
     if (isLoading || isStreaming) return;
@@ -297,6 +210,110 @@ export function useMessages() {
       },
     });
   }, [sessionId, personaId, isLoading, isStreaming, character, addMessage, updateLastMessage, removeLastMessage, get]);
+
+  // ── Regenerate last bot message ──
+  const regenerateLastMsg = useCallback(async () => {
+    if (isStreaming || isLoading || chatHistory.length === 0) return;
+
+    const lastMsg = chatHistory[chatHistory.length - 1];
+    if (lastMsg.is_user || lastMsg._streaming) return;
+
+    // If this is the only message (auto first message), delete it and re-trigger first message
+    const isOnlyMessage = chatHistory.length === 1;
+    if (isOnlyMessage) {
+      try {
+        const result = await apiDeleteLastMessage(sessionId, personaId);
+        if (result.success) {
+          removeLastMessage();
+        }
+      } catch (err) {
+        console.error('Failed to delete first message for regeneration:', err);
+        return;
+      }
+      // Trigger auto first message generation (re-uses the same flow as initial creation)
+      await triggerAutoFirstMessage(sessionId, personaId);
+      return;
+    }
+
+    // Remove the old bot message from frontend
+    removeLastMessage();
+
+    // Add streaming placeholder
+    setIsLoading(true);
+    setIsStreaming(true);
+    setError(null);
+
+    addMessage({
+      message: '',
+      is_user: false,
+      character_name: character?.char_name,
+      _streaming: true,
+      timestamp: new Date().toISOString(),
+    });
+
+    let rawText = '';
+
+    abortRef.current = regenerateMessage({
+      sessionId,
+      personaId,
+      apiModel: get('apiModel'),
+      apiTemperature: get('apiTemperature'),
+      contextLimit: get('contextLimit'),
+      experimentalMode: get('experimentalMode'),
+      onChunk: (chunk) => {
+        rawText += chunk;
+        updateLastMessage({ message: formatMessage(rawText) });
+      },
+      onDone: (data) => {
+        setIsStreaming(false);
+        setIsLoading(false);
+        setStreamingStats(data.stats || null);
+
+        updateLastMessage({
+          message: data.response,
+          _streaming: false,
+          character_name: data.character_name,
+          timestamp: new Date().toISOString(),
+          stats: data.stats,
+        });
+
+        if (get('notificationSound', false)) {
+          playNotificationSound();
+        }
+      },
+      onError: (err) => {
+        setIsStreaming(false);
+        setIsLoading(false);
+        removeLastMessage();
+        setError(err);
+      },
+    });
+  }, [sessionId, personaId, isStreaming, isLoading, chatHistory, character, addMessage, updateLastMessage, removeLastMessage, get, triggerAutoFirstMessage]);
+
+  // ── Resend last user message (delete from DB, then send again) ──
+  const resendLastMsg = useCallback(async () => {
+    if (isStreaming || isLoading || chatHistory.length === 0) return;
+
+    const lastMsg = chatHistory[chatHistory.length - 1];
+    if (!lastMsg.is_user || lastMsg._streaming) return;
+
+    const text = lastMsg.message;
+
+    // Delete from DB
+    try {
+      const result = await apiDeleteLastMessage(sessionId, personaId);
+      if (!result.success) return;
+    } catch (err) {
+      console.error('Failed to delete message before resend:', err);
+      return;
+    }
+
+    // Remove from frontend state
+    removeLastMessage();
+
+    // Send as new input (will add user msg + bot streaming placeholder)
+    sendMessage(text);
+  }, [sessionId, personaId, isStreaming, isLoading, chatHistory, removeLastMessage, sendMessage]);
 
   return {
     isLoading,

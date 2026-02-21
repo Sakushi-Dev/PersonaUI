@@ -1589,6 +1589,45 @@
   gap: 8px;
 }
 
+/* Background textarea wrapper for loading overlay */
+.backgroundTextareaWrapper {
+  position: relative;
+}
+
+.autofillOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(4px);
+  border-radius: 8px;
+  z-index: 2;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.autofillOverlayText {
+  font-size: 13px;
+  font-weight: 500;
+  color: #667eea;
+}
+
+:root[data-theme="dark"] .autofillOverlay {
+  background: rgba(20, 20, 30, 0.85);
+}
+
+:root[data-theme="dark"] .autofillOverlayText {
+  color: #8b9cf7;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 .backgroundFooter {
   display: flex;
   justify-content: space-between;
@@ -1901,6 +1940,19 @@
 :root[data-theme="dark"] .tagButton:hover {
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.15);
+}
+
+:root[data-theme="dark"] .tagButtonActive {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: #667eea;
+  color: #fff;
+  box-shadow: 0 0 12px rgba(102, 126, 234, 0.4);
+}
+
+:root[data-theme="dark"] .tagButtonActive:hover {
+  background: linear-gradient(135deg, #7b8ff0 0%, #8a5fb8 100%);
+  border-color: #7b8ff0;
+  box-shadow: 0 0 16px rgba(102, 126, 234, 0.55);
 }
 
 :root[data-theme="dark"] .tagsActive {
