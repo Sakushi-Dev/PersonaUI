@@ -17,22 +17,22 @@ export default function StepApi({ data, onChange, onNext, onBack }) {
 
   const handleTest = useCallback(async () => {
     if (!data.apiKey?.trim()) {
-      setTestResult({ success: false, message: 'Bitte API-Key eingeben' });
+      setTestResult({ success: false, message: 'Please enter an API key' });
       return;
     }
     setTesting(true);
-    setTestResult({ success: false, message: 'Teste API-Key...' });
+    setTestResult({ success: false, message: 'Testing API key...' });
 
     try {
       const result = await testApiKey(data.apiKey.trim());
       const valid = result.success;
       setTestResult({
         success: valid,
-        message: valid ? '✓ API-Key ist gültig!' : `✗ ${result.error || 'API-Key ungültig'}`,
+        message: valid ? '✓ API key is valid!' : `✗ ${result.error || 'API key invalid'}`,
       });
       update('apiKeyValid', valid);
     } catch (err) {
-      setTestResult({ success: false, message: '✗ Verbindungsfehler' });
+      setTestResult({ success: false, message: '✗ Connection error' });
       update('apiKeyValid', false);
     } finally {
       setTesting(false);
@@ -77,8 +77,8 @@ export default function StepApi({ data, onChange, onNext, onBack }) {
       // Permission denied or not available
     }
     apiInputRef.current?.focus();
-    setTestResult({ success: false, message: 'Bitte mit Ctrl+V einfügen' });
-    setTimeout(() => setTestResult((r) => r?.message === 'Bitte mit Ctrl+V einfügen' ? null : r), 3000);
+    setTestResult({ success: false, message: 'Please paste with Ctrl+V' });
+    setTimeout(() => setTestResult((r) => r?.message === 'Please paste with Ctrl+V' ? null : r), 3000);
   };
 
   return (
@@ -86,7 +86,7 @@ export default function StepApi({ data, onChange, onNext, onBack }) {
       <div className={styles.cardHeader}>
         <span className={styles.cardStep}>6 / 6</span>
         <h2>API-Key</h2>
-        <p className={styles.cardDesc}>Verbinde PersonaUI mit der Anthropic API.</p>
+        <p className={styles.cardDesc}>Connect PersonaUI with the Anthropic API.</p>
       </div>
       <div className={styles.cardBody}>
 
@@ -108,7 +108,7 @@ export default function StepApi({ data, onChange, onNext, onBack }) {
               <button
                 className={styles.eyeBtn}
                 onClick={() => setShowPassword(!showPassword)}
-                title="Key anzeigen/verbergen"
+                title="Show/hide key"
                 type="button"
               >
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
@@ -119,7 +119,7 @@ export default function StepApi({ data, onChange, onNext, onBack }) {
               <button
                 className={`${styles.eyeBtn} ${styles.pasteBtn}`}
                 onClick={handlePasteClick}
-                title="Einfügen (Ctrl+V)"
+                title="Paste (Ctrl+V)"
                 type="button"
               >
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -129,7 +129,7 @@ export default function StepApi({ data, onChange, onNext, onBack }) {
               </button>
             </div>
             <button className={styles.btnSecondary} onClick={handleTest} disabled={testing}>
-              Testen
+              Test
             </button>
           </div>
           {testResult && (
@@ -138,27 +138,27 @@ export default function StepApi({ data, onChange, onNext, onBack }) {
             </div>
           )}
           <div className={`${styles.infoBox} ${styles.infoBoxCompact}`}>
-            <span className={styles.infoIcon}>🔑</span>
-            <span>Du benötigst einen Anthropic API-Key. Diesen erhältst du unter <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer">console.anthropic.com</a>. Der Test-Request verursacht keine nennenswerten Kosten.</span>
+            <span className={styles.infoIcon}></span>
+            <span>You need an Anthropic API key. You can get one at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer">console.anthropic.com</a>. The test request incurs no notable costs.</span>
           </div>
         </div>
       </div>
       <div className={styles.cardFooter}>
-        <button className={styles.btnGhost} onClick={onBack}>Zurück</button>
-        <button className={styles.btnPrimary} onClick={handleNext}>Weiter</button>
+        <button className={styles.btnGhost} onClick={onBack}>Back</button>
+        <button className={styles.btnPrimary} onClick={handleNext}>Next</button>
       </div>
 
       {/* API Key Warning Modal */}
       {showWarning && (
         <div className={styles.warningOverlay} onClick={(e) => { if (e.target === e.currentTarget) setShowWarning(false); }}>
           <div className={styles.warningCard}>
-            <div className={styles.warningIcon}>⚠️</div>
-            <h3>Kein gültiger API-Key</h3>
-            <p>Ohne API-Key kannst du nicht mit deinen Personas chatten.</p>
-            <p className={styles.warningHint}>Du kannst den Key jederzeit nachträglich über das Menü unter <strong>Set API-Key</strong> eingeben.</p>
+            <div className={styles.warningIcon}>!</div>
+            <h3>No Valid API Key</h3>
+            <p>Without an API key you won't be able to chat with your personas.</p>
+            <p className={styles.warningHint}>You can always add the key later via the menu under <strong>Set API-Key</strong>.</p>
             <div className={styles.warningActions}>
-              <button className={styles.btnGhost} onClick={() => setShowWarning(false)}>Zurück &amp; Key eingeben</button>
-              <button className={styles.btnSecondary} onClick={() => { setShowWarning(false); onNext(); }}>Trotzdem fortfahren</button>
+              <button className={styles.btnGhost} onClick={() => setShowWarning(false)}>Back &amp; Enter Key</button>
+              <button className={styles.btnSecondary} onClick={() => { setShowWarning(false); onNext(); }}>Continue Anyway</button>
             </div>
           </div>
         </div>

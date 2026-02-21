@@ -112,7 +112,7 @@ def get_fun_messages():
 # Startup-Sequenz
 # ---------------------------------------------------------------------------
 
-def startup_sequence(window, server_mode, server_port, start_flask_fn, host):
+def startup_sequence(window, server_mode, server_port, start_flask_fn, host, dev_mode=False):
     """Initialisiert alles und tippt Output ins Splash-Fenster.
 
     Args:
@@ -121,6 +121,7 @@ def startup_sequence(window, server_mode, server_port, start_flask_fn, host):
         server_port:     Port-Nummer
         start_flask_fn:  Callable zum Starten des Flask-Servers
         host:            Host-Adresse
+        dev_mode:        True wenn --dev Flag gesetzt (Vite Dev-Server)
     """
     # Tippe Startmeldungen
     splash_type(window, '> Starte PersonaUI...', 'info')
@@ -218,10 +219,40 @@ def startup_sequence(window, server_mode, server_port, start_flask_fn, host):
     if ready:
         splash_type(window, '', 'default')
         splash_type(window, '> Server bereit!', 'info')
-        splash_type(window, '> Lade Oberflaeche...', 'info')
-        time.sleep(0.5)
-        # App im selben Fenster laden
-        window.load_url(f"http://127.0.0.1:{server_port}")
+
+        if dev_mode:
+            # Dev-Modus: Auf Vite Dev-Server warten und laden
+            vite_port = 5173
+            splash_type(window, '> Warte auf Vite Dev-Server (Port 5173)...', 'info')
+            vite_waited = 0
+            vite_ready = False
+            vite_max_wait = 30  # npm + Vite brauchen auf Windows oft >15s
+            while vite_waited < vite_max_wait:
+                try:
+                    # Echten HTTP-Request statt nur Socket-Check
+                    from urllib.request import urlopen
+                    resp = urlopen(f'http://localhost:{vite_port}/', timeout=2)
+                    resp.close()
+                    vite_ready = True
+                    break
+                except Exception:
+                    time.sleep(0.5)
+                    vite_waited += 0.5
+                    if vite_waited % 5 < 0.6:
+                        splash_type(window, f'  Vite startet... ({int(vite_waited)}s)', 'default')
+            if vite_ready:
+                splash_type(window, '> Vite Dev-Server bereit! (HMR aktiv)', 'info')
+                time.sleep(0.5)
+                window.load_url(f"http://localhost:{vite_port}")
+            else:
+                splash_type(window, '> Vite Dev-Server nicht erreichbar nach 30s, lade Flask-UI...', 'warn')
+                time.sleep(0.5)
+                window.load_url(f"http://127.0.0.1:{server_port}")
+        else:
+            splash_type(window, '> Lade Oberflaeche...', 'info')
+            time.sleep(0.5)
+            # App im selben Fenster laden
+            window.load_url(f"http://127.0.0.1:{server_port}")
     else:
         splash_type(window, '> Server konnte nicht gestartet werden!', 'error')
         splash_type(window, f'  Timeout nach {max_wait} Sekunden.', 'error')

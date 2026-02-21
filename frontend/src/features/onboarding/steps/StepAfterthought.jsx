@@ -1,34 +1,30 @@
-// ── Step: Afterthought / Nachgedanke (5/6) ──
+// ── Step: Afterthought (5/6) ──
 
 import styles from './Steps.module.css';
 
 const MODES = [
-  { value: 'off',    label: 'Aus' },
-  { value: 'selten', label: 'Selten' },
-  { value: 'mittel', label: 'Mittel' },
-  { value: 'hoch',   label: 'Hoch' },
+  { value: 'off',    label: 'Off' },
+  { value: 'selten', label: 'Rare' },
+  { value: 'mittel', label: 'Medium' },
+  { value: 'hoch',   label: 'High' },
 ];
 
 const MODE_INFO = {
   off: {
-    icon: '🔇',
-    text: 'Deine Persona antwortet nur, wenn du schreibst. Kein innerer Dialog, keine spontanen Nachrichten.',
+    text: 'Your persona only responds when you write. No inner dialogue, no spontaneous messages.',
     extra: null,
   },
   selten: {
-    icon: '💭',
-    text: 'Jede 3. Nachricht löst einen inneren Dialog aus. Die Persona meldet sich gelegentlich von selbst – wenn ihr wirklich etwas auf dem Herzen liegt.',
-    extra: 'Niedrige zusätzliche API-Kosten. Gut zum Einstieg.',
+    text: 'Every 3rd message triggers an inner dialogue. The persona occasionally reaches out on its own – when something is truly on its mind.',
+    extra: 'Low additional API costs. Good for getting started.',
   },
   mittel: {
-    icon: '💬',
-    text: 'Jede 2. Nachricht löst einen inneren Dialog aus. Die Persona ergänzt häufiger eigene Gedanken, Fragen oder Impulse.',
-    extra: 'Moderate zusätzliche API-Kosten. Guter Kompromiss zwischen Lebendigkeit und Kosten.',
+    text: 'Every 2nd message triggers an inner dialogue. The persona adds its own thoughts, questions, or impulses more frequently.',
+    extra: 'Moderate additional API costs. Good balance between liveliness and costs.',
   },
   hoch: {
-    icon: '🗣️',
-    text: 'Jede Nachricht löst einen inneren Dialog aus. Die Persona lebt ihr Innenleben voll aus – spontan, impulsiv und nahbar.',
-    extra: 'Höhere zusätzliche API-Kosten. Für das intensivste Erlebnis.',
+    text: 'Every message triggers an inner dialogue. The persona fully lives out its inner world – spontaneous, impulsive, and approachable.',
+    extra: 'Higher additional API costs. For the most intense experience.',
   },
 };
 
@@ -43,52 +39,52 @@ export default function StepAfterthought({ data, onChange, onNext, onBack }) {
     <div className={styles.card}>
       <div className={styles.cardHeader}>
         <span className={styles.cardStep}>5 / 6</span>
-        <h2>💭 Nachgedanke</h2>
-        <p className={styles.cardDesc}>Spontane Gedanken deiner Persona.</p>
+        <h2>Afterthought</h2>
+        <p className={styles.cardDesc}>Spontaneous thoughts from your persona.</p>
       </div>
       <div className={styles.cardBody}>
 
         {/* Intro */}
         <div className={styles.featureIntro}>
           <p>
-            Manchmal hat man nach einem Gespräch noch einen Gedanken – etwas, das einem erst
-            danach einfällt. <strong>Nachgedanke</strong> gibt deinen Personas genau diese Fähigkeit.
+            Sometimes after a conversation you have another thought – something that only
+            comes to mind afterwards. <strong>Afterthought</strong> gives your personas exactly this ability.
           </p>
           <p>
-            Nach deiner Nachricht führt die Persona einen inneren Dialog mit sich selbst.
-            Wenn ihr etwas wichtig genug erscheint, schreibt sie dir von sich aus –
-            mit eskalierenden Zeitabständen, wie ein echtes Nachdenken.
+            After your message, the persona has an inner dialogue with itself.
+            If something seems important enough, it writes to you on its own –
+            with escalating time intervals, like real pondering.
           </p>
         </div>
 
         {/* How it works */}
         <div className={styles.featureHighlights}>
-          <div className={styles.featureHighlight}>
-            <span className={styles.featureHighlightIcon}>🤔</span>
-            <div>
-              <strong>Innerer Dialog</strong>
-              <span>Die Persona überlegt still, ob sie noch etwas sagen möchte</span>
+          <div className={styles.feature}>
+            <span className={styles.featureTag}>01</span>
+            <div className={styles.featureText}>
+              <strong>Inner Dialogue</strong>
+              <span className={styles.featureTyped}>The persona quietly considers whether it wants to say something more</span>
             </div>
           </div>
-          <div className={styles.featureHighlight}>
-            <span className={styles.featureHighlightIcon}>⏱️</span>
-            <div>
-              <strong>Natürliches Timing</strong>
-              <span>Eskalierende Pausen – von kurz bis lang, wie echtes Nachdenken</span>
+          <div className={styles.feature}>
+            <span className={styles.featureTag}>02</span>
+            <div className={styles.featureText}>
+              <strong>Natural Timing</strong>
+              <span className={styles.featureTyped}>Escalating pauses – from short to long, like real pondering</span>
             </div>
           </div>
-          <div className={styles.featureHighlight}>
-            <span className={styles.featureHighlightIcon}>✉️</span>
-            <div>
-              <strong>Spontane Nachricht</strong>
-              <span>Nur wenn die Persona wirklich etwas zu sagen hat</span>
+          <div className={styles.feature}>
+            <span className={styles.featureTag}>03</span>
+            <div className={styles.featureText}>
+              <strong>Spontaneous Message</strong>
+              <span className={styles.featureTyped}>Only when the persona truly has something to say</span>
             </div>
           </div>
         </div>
 
         {/* Mode Selector */}
         <div className={styles.fieldGroup}>
-          <label className={styles.label}>Häufigkeit <span className={styles.betaBadge}>Beta</span></label>
+          <label className={styles.label}>Frequency <span className={styles.betaBadge}>Beta</span></label>
           <div className={styles.typeGrid} style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
             {MODES.map((opt) => (
               <button
@@ -104,7 +100,7 @@ export default function StepAfterthought({ data, onChange, onNext, onBack }) {
 
           {/* Dynamic Info per Mode */}
           <div className={`${styles.infoBox} ${styles.infoBoxCompact}`}>
-            <span className={styles.infoIcon}>{currentMode.icon}</span>
+            <span className={styles.infoIcon}></span>
             <span>
               {currentMode.text}
               {currentMode.extra && (
@@ -118,18 +114,18 @@ export default function StepAfterthought({ data, onChange, onNext, onBack }) {
 
         {data.nachgedankeMode !== 'off' && (
           <div className={`${styles.infoBox} ${styles.infoBoxCompact}`}>
-            <span className={styles.infoIcon}>⚠️</span>
+            <span className={styles.infoIcon}></span>
             <span>
-              Nachgedanke erzeugt zusätzliche API-Anfragen im Hintergrund.
-              Die Kosten pro Check bewegen sich im Bereich von ca. 4 Nachkommastellen ($0.000x).
+              Afterthought generates additional API requests in the background.
+              The cost per check is in the range of about 4 decimal places ($0.000x).
             </span>
           </div>
         )}
 
       </div>
       <div className={styles.cardFooter}>
-        <button className={styles.btnGhost} onClick={onBack}>Zurück</button>
-        <button className={styles.btnPrimary} onClick={onNext}>Weiter</button>
+        <button className={styles.btnGhost} onClick={onBack}>Back</button>
+        <button className={styles.btnPrimary} onClick={onNext}>Next</button>
       </div>
     </div>
   );

@@ -1,11 +1,11 @@
-// ── Step: Kontext (3/6) ──
+// ── Step: Context (3/6) ──
 
 import styles from './Steps.module.css';
 
 const RANGE_INFO = {
-  low:    'Ein niedriges Kontext-Limit hält die Kosten gering. Die Persona vergisst ältere Nachrichten schneller, reagiert aber nur auf das Wesentliche.',
-  medium: 'Ein mittleres Limit ist ein guter Kompromiss – die Persona behält genug Gesprächsverlauf, um den Faden nicht zu verlieren, ohne die Kosten stark zu erhöhen.',
-  high:   'Ein hohes Kontext-Limit gibt der Persona umfangreichen Zugang zum bisherigen Gespräch. Ideal für tiefgehende Unterhaltungen – aber API-Kosten steigen merklich.',
+  low:    'A low context limit keeps costs down. The persona forgets older messages faster but focuses only on what matters.',
+  medium: 'A medium limit is a good compromise – the persona retains enough conversation history to stay on track without significantly increasing costs.',
+  high:   'A high context limit gives the persona extensive access to the conversation so far. Ideal for deep conversations – but API costs increase noticeably.',
 };
 
 function getRange(value) {
@@ -27,46 +27,45 @@ export default function StepContext({ data, onChange, onNext, onBack }) {
     <div className={styles.card}>
       <div className={styles.cardHeader}>
         <span className={styles.cardStep}>3 / 6</span>
-        <h2>📏 Kontext</h2>
-        <p className={styles.cardDesc}>Wie viel soll sich deine Persona merken?</p>
+        <h2>Context</h2>
+        <p className={styles.cardDesc}>How much should your persona remember?</p>
       </div>
       <div className={styles.cardBody}>
 
         {/* Intro */}
         <div className={styles.featureIntro}>
           <p>
-            Das <strong>Kontext-Limit</strong> bestimmt, wie viele vergangene Nachrichten die KI bei jeder
-            Antwort berücksichtigt. Je höher der Wert, desto mehr Gesprächsverlauf fließt in die
-            Antwort ein – aber desto mehr kostet jede Nachricht.
+            The <strong>context limit</strong> determines how many past messages the AI considers
+            for each response. The higher the value, the more conversation history flows into
+            the response – but each message costs more.
           </p>
           <p>
-            Stell dir das wie ein Kurzzeitgedächtnis vor: Ein niedriger Wert bedeutet, die Persona
-            konzentriert sich auf das Hier und Jetzt. Ein hoher Wert lässt sie tiefer in eure
-            Unterhaltung eintauchen.
+            Think of it as short-term memory: A low value means the persona focuses on
+            the here and now. A high value lets it dive deeper into your conversation.
           </p>
         </div>
 
         {/* How it affects things */}
         <div className={styles.featureHighlights}>
-          <div className={styles.featureHighlight}>
-            <span className={styles.featureHighlightIcon}>💬</span>
-            <div>
-              <strong>Gesprächstiefe</strong>
-              <span>Mehr Kontext = die Persona erinnert sich an weiter zurückliegende Nachrichten</span>
+          <div className={styles.feature}>
+            <span className={styles.featureTag}>01</span>
+            <div className={styles.featureText}>
+              <strong>Conversation Depth</strong>
+              <span className={styles.featureTyped}>More context = the persona remembers messages further back</span>
             </div>
           </div>
-          <div className={styles.featureHighlight}>
-            <span className={styles.featureHighlightIcon}>💰</span>
-            <div>
-              <strong>API-Kosten</strong>
-              <span>Jede Nachricht sendet den gesamten Kontext an die API – mehr Kontext kostet mehr</span>
+          <div className={styles.feature}>
+            <span className={styles.featureTag}>02</span>
+            <div className={styles.featureText}>
+              <strong>API Costs</strong>
+              <span className={styles.featureTyped}>Each message sends the entire context to the API – more context costs more</span>
             </div>
           </div>
-          <div className={styles.featureHighlight}>
-            <span className={styles.featureHighlightIcon}>🧠</span>
-            <div>
-              <strong>Cortex-Trigger</strong>
-              <span>Die Cortex-Frequenz basiert auf deinem Kontext-Limit – beides hängt zusammen</span>
+          <div className={styles.feature}>
+            <span className={styles.featureTag}>03</span>
+            <div className={styles.featureText}>
+              <strong>Cortex Trigger</strong>
+              <span className={styles.featureTyped}>The Cortex frequency is based on your context limit – both are linked</span>
             </div>
           </div>
         </div>
@@ -74,7 +73,7 @@ export default function StepContext({ data, onChange, onNext, onBack }) {
         {/* Slider */}
         <div className={styles.fieldGroup}>
           <label className={styles.label}>
-            Kontext-Limit: <strong>{data.contextLimit}</strong> Nachrichten
+            Context Limit: <strong>{data.contextLimit}</strong> messages
           </label>
           <input
             type="range"
@@ -87,29 +86,29 @@ export default function StepContext({ data, onChange, onNext, onBack }) {
           />
           <div className={styles.sliderLabels}>
             <span>50</span>
-            <span className={styles.sliderRec}>Empfohlen: 200</span>
+            <span className={styles.sliderRec}>Recommended: 200</span>
             <span>400</span>
           </div>
 
           {/* Dynamic Info based on range */}
           <div className={`${styles.infoBox} ${styles.infoBoxCompact}`}>
-            <span className={styles.infoIcon}>💡</span>
+            <span className={styles.infoIcon}></span>
             <span>{info}</span>
           </div>
         </div>
 
         <div className={`${styles.infoBox} ${styles.infoBoxCompact}`}>
-          <span className={styles.infoIcon}>⚠️</span>
+          <span className={styles.infoIcon}></span>
           <span>
-            Die Kostenunterschiede bewegen sich im Bereich von Variationen um ca. 4 Nachkommastellen ($0.000x).
-            Du kannst den Wert jederzeit in den Einstellungen anpassen.
+            Cost differences are in the range of about 4 decimal places ($0.000x).
+            You can adjust this value anytime in the settings.
           </span>
         </div>
 
       </div>
       <div className={styles.cardFooter}>
-        <button className={styles.btnGhost} onClick={onBack}>Zurück</button>
-        <button className={styles.btnPrimary} onClick={onNext}>Weiter</button>
+        <button className={styles.btnGhost} onClick={onBack}>Back</button>
+        <button className={styles.btnPrimary} onClick={onNext}>Next</button>
       </div>
     </div>
   );

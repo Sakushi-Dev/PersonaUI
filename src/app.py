@@ -1,5 +1,6 @@
 ﻿import os
 import sys
+import subprocess
 import threading
 
 # WICHTIG: Wechsle ins src Verzeichnis für korrekte Pfade
@@ -113,6 +114,113 @@ def start_flask_server(host, port):
     app.run(host=host, port=port, debug=False, use_reloader=False)
 
 
+# ═══════════════════════════════════════════════════════════════════════════
+#  Vite Dev-Server (--dev Modus)
+# ═══════════════════════════════════════════════════════════════════════════
+
+_vite_process = None
+
+def _get_dev_env():
+    """Gibt ein environ-Dict zurück, in dem bin/node/ im PATH liegt."""
+    root_dir = os.path.dirname(script_dir)
+    local_node = os.path.join(root_dir, 'bin', 'node')
+    env = os.environ.copy()
+    if os.path.isdir(local_node):
+        node_bin = local_node if sys.platform == 'win32' else os.path.join(local_node, 'bin')
+        env['PATH'] = node_bin + os.pathsep + env.get('PATH', '')
+    return env
+
+
+def _find_npm():
+    """Findet npm (System-PATH oder lokales bin/node/)."""
+    root_dir = os.path.dirname(script_dir)
+    local_node = os.path.join(root_dir, 'bin', 'node')
+    # Lokales npm prüfen
+    npm_local = os.path.join(local_node, 'npm.cmd' if sys.platform == 'win32' else 'bin/npm')
+    if os.path.isfile(npm_local):
+        return npm_local
+    # System npm
+    npm_name = 'npm.cmd' if sys.platform == 'win32' else 'npm'
+    result = subprocess.run(
+        ['where' if sys.platform == 'win32' else 'which', npm_name],
+        capture_output=True, text=True
+    )
+    if result.returncode == 0:
+        return result.stdout.strip().splitlines()[0]
+    return None
+
+
+def _kill_port(port):
+    """Beendet alle Prozesse, die den angegebenen Port belegen (Windows)."""
+    if sys.platform != 'win32':
+        return
+    try:
+        result = subprocess.run(
+            ['netstat', '-ano'],
+            capture_output=True, text=True
+        )
+        pids = set()
+        for line in result.stdout.splitlines():
+            if f':{port}' in line and 'LISTENING' in line:
+                parts = line.split()
+                if parts:
+                    try:
+                        pids.add(int(parts[-1]))
+                    except ValueError:
+                        pass
+        for pid in pids:
+            try:
+                subprocess.run(
+                    ['taskkill', '/F', '/PID', str(pid)],
+                    capture_output=True
+                )
+                log.info("Port %s: Prozess %s beendet.", port, pid)
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+
+def start_vite_dev_server():
+    """Startet den Vite Dev-Server (npm run dev) in einem eigenen Konsolenfenster."""
+    global _vite_process
+    root_dir = os.path.dirname(script_dir)
+    frontend_dir = os.path.join(root_dir, 'frontend')
+    npm_path = _find_npm()
+    if not npm_path:
+        log.warning("npm nicht gefunden – Vite Dev-Server kann nicht gestartet werden.")
+        return False
+
+    # Port 5173 freigeben falls noch ein alter Prozess läuft
+    _kill_port(5173)
+
+    log.info("Starte Vite Dev-Server (npm run dev) in separater Konsole...")
+    kwargs = {
+        'cwd': frontend_dir,
+        'env': _get_dev_env(),
+    }
+    if sys.platform == 'win32':
+        # Eigenes Konsolenfenster öffnen
+        kwargs['creationflags'] = subprocess.CREATE_NEW_CONSOLE
+    _vite_process = subprocess.Popen(
+        [npm_path, 'run', 'dev'],
+        **kwargs,
+    )
+    return True
+
+
+def stop_vite_dev_server():
+    """Stoppt den Vite Dev-Server, falls er läuft."""
+    global _vite_process
+    if _vite_process and _vite_process.poll() is None:
+        _vite_process.terminate()
+        try:
+            _vite_process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            _vite_process.kill()
+        _vite_process = None
+
+
 if __name__ == '__main__':
     # Settings nur für Port vorladen (damit pywebview weiß welchen Port es braucht)
     import json
@@ -133,6 +241,11 @@ if __name__ == '__main__':
     
     # Prüfe ob PyWebView genutzt werden soll (--no-gui deaktiviert es)
     use_webview = '--no-gui' not in sys.argv
+    dev_mode = '--dev' in sys.argv
+    
+    # Im Dev-Modus: Vite Dev-Server starten
+    if dev_mode:
+        start_vite_dev_server()
     
     if use_webview:
         try:
@@ -198,7 +311,7 @@ if __name__ == '__main__':
             # Startup im Hintergrund-Thread, startet wenn Fenster sichtbar wird
             boot_thread = threading.Thread(
                 target=startup_sequence,
-                args=(window, server_mode, server_port, start_flask_server, host),
+                args=(window, server_mode, server_port, start_flask_server, host, dev_mode),
                 daemon=True,
             )
             
@@ -228,6 +341,8 @@ if __name__ == '__main__':
             
             # Fenster geschlossen → Konsole wieder zeigen und alles beenden
             show_console_window()
+            if dev_mode:
+                stop_vite_dev_server()
             sys.stdout = sys.__stdout__
             sys.stderr = sys.__stderr__
             log.info("Fenster geschlossen. Server wird beendet.")
@@ -251,6 +366,11 @@ if __name__ == '__main__':
         ensure_cortex_dirs()
         from utils.settings_migration import migrate_settings
         migrate_settings()
+        if dev_mode:
+            log.info("Dev-Modus: Vite Dev-Server läuft auf http://localhost:5173")
+            log.info("Flask-Backend auf http://%s:%s", host, server_port)
+        else:
+            log.info("Server running at: http://%s:%s", host, server_port)
         app.run(host=host, port=server_port, debug=False)
 
 

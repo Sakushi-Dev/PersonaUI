@@ -1,4 +1,4 @@
-// ── Step: Welcome (Legacy 1:1) ──
+// ── Step: Welcome ──
 
 import styles from './Steps.module.css';
 
@@ -7,37 +7,53 @@ export default function StepWelcome({ onNext }) {
     <div className={styles.card}>
       <div className={styles.welcomeCard}>
         <div className={styles.logo}>
-          <span className={styles.logoIcon}>✦</span>
+          <div className={styles.logoInner}>
+            <img src="/persona_ui.ico" alt="PersonaUI" className={styles.logoIcon} />
+          </div>
         </div>
-        <h1 className={styles.welcomeTitle}>Willkommen bei PersonaUI</h1>
-        <p className={styles.welcomeSubtitle}>Dein persönlicher Begleiter für KI-Personas</p>
+        <h1 className={styles.welcomeTitle}>Welcome to PersonaUI</h1>
+        <p className={styles.welcomeSubtitle}>
+          Create AI characters with their own personality, memories, and quirks –
+          local, private, and entirely on your machine.
+        </p>
 
         <div className={styles.welcomeFeatures}>
           <div className={styles.feature}>
-            <span className={styles.featureIcon}>🧩</span>
+            <span className={styles.featureTag}>01</span>
             <div className={styles.featureText}>
-              <strong>Modulare Personas</strong>
-              <span>Erstelle und kombiniere KI-Persönlichkeiten ganz einfach selbst – ohne kompliziertes Prompting oder stundenlanges Suchen nach Konfigurationsdateien.</span>
+              <strong>Living Personas</strong>
+              <span className={styles.featureTyped}>Each persona has unique character traits, knowledge areas, and an individual expression style. You decide who you talk to.</span>
             </div>
           </div>
           <div className={styles.feature}>
-            <span className={styles.featureIcon}>⚡</span>
+            <span className={styles.featureTag}>02</span>
             <div className={styles.featureText}>
-              <strong>Perks mit KI generieren</strong>
-              <span>Neue Perks bequem mit KI erzeugen und sofort nutzen – PersonaUI übernimmt die Konfiguration für dich.</span>
+              <strong>Cortex – Real Memory</strong>
+              <span className={styles.featureTyped}>Your personas remember your conversations, evolve over time, and build a genuine relationship with you.</span>
             </div>
           </div>
           <div className={styles.feature}>
-            <span className={styles.featureIcon}>💬</span>
+            <span className={styles.featureTag}>03</span>
             <div className={styles.featureText}>
-              <strong>Sofort loslegen</strong>
-              <span>Du richtest nur ein paar Einstellungen ein und kannst direkt losschreiben oder neue Personas erfinden – keine komplizierten Konfigurationen nötig.</span>
+              <strong>Afterthought</strong>
+              <span className={styles.featureTyped}>Sometimes your persona reaches out on its own when something comes to mind – just like a real conversation partner.</span>
+            </div>
+          </div>
+          <div className={styles.feature}>
+            <span className={styles.featureTag}>04</span>
+            <div className={styles.featureText}>
+              <strong>100% Local & Private</strong>
+              <span className={styles.featureTyped}>No cloud, no tracking. All data stays on your machine – only the API communication goes out.</span>
             </div>
           </div>
         </div>
 
+        <p className={styles.welcomeHint}>
+          6 quick steps to set everything up – takes just a few minutes.
+        </p>
+
         <button className={styles.btnPrimary + ' ' + styles.btnLarge} onClick={onNext}>
-          Einrichtung starten
+          Start Setup
           <span className={styles.btnArrow}>→</span>
         </button>
       </div>
