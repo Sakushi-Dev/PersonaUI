@@ -102,7 +102,7 @@ export default function CortexOverlay({ open, onClose }) {
     setSaving(true);
     setError(null);
     try {
-      await saveCortexFile(personaId, currentFileType, editContent);
+      await saveCortexFile(personaId, `${currentFileType}.md`, editContent);
       setFiles((prev) => ({ ...prev, [currentFileType]: editContent }));
       setEditing(false);
     } catch (err) {
@@ -117,7 +117,7 @@ export default function CortexOverlay({ open, onClose }) {
     setSaving(true);
     setError(null);
     try {
-      const data = await resetCortexFile(personaId, currentFileType);
+      const data = await resetCortexFile(personaId, `${currentFileType}.md`);
       setFiles((prev) => ({ ...prev, [currentFileType]: data.content || '' }));
       setEditing(false);
     } catch (err) {

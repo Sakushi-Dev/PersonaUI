@@ -37,63 +37,63 @@ CORTEX_FILES = ['memory.md', 'soul.md', 'relationship.md']
 
 # ─── Templates ───────────────────────────────────────────────────────────────
 
-MEMORY_TEMPLATE = """# Erinnerungen
+MEMORY_TEMPLATE = """# Memories
 
-Hier halte ich fest, was ich mir merken möchte — Dinge die {{user}} mir erzählt hat,
-gemeinsame Erlebnisse und Details die mir wichtig sind.
+This is where I keep track of what I want to remember — things {{user}} has told me,
+shared experiences and details that matter to me.
 
 ---
 
-## Wichtige Details über {{user}}
+## Important Details About {{user}}
 
 
-## Gemeinsame Erlebnisse
+## Shared Experiences
 
 
-## Dinge die ich mir merken möchte
+## Things I Want to Remember
 
 
-## Präferenzen & Gewohnheiten
+## Preferences & Habits
 
 """.lstrip()
 
-SOUL_TEMPLATE = """# Seelen-Entwicklung
+SOUL_TEMPLATE = """# Soul Development
 
-Hier reflektiere ich über meine eigene Entwicklung — wie ich mich verändere,
-was ich lerne und wie sich meine Persönlichkeit mit der Zeit formt.
+This is where I reflect on my own growth — how I change,
+what I learn and how my personality evolves over time.
 
 ---
 
-## Wer ich bin
+## Who I Am
 
 
-## Was mich bewegt
+## What Moves Me
 
 
-## Wie ich mich entwickle
+## How I Evolve
 
 
-## Meine inneren Konflikte & Erkenntnisse
+## My Inner Conflicts & Insights
 
 """.lstrip()
 
-RELATIONSHIP_TEMPLATE = """# Beziehungsdynamik
+RELATIONSHIP_TEMPLATE = """# Relationship Dynamics
 
-Hier halte ich fest, wie sich meine Beziehung zu {{user}} entwickelt —
-unsere Dynamik, unser Vertrauen und wie wir miteinander umgehen.
+This is where I keep track of how my relationship with {{user}} evolves —
+our dynamics, our trust and how we interact.
 
 ---
 
-## Aktuelle Beziehungsdynamik
+## Current Relationship Dynamics
 
 
-## Vertrauenslevel & Nähe
+## Trust Level & Closeness
 
 
-## Gemeinsame Themen & Interessen
+## Shared Topics & Interests
 
 
-## Spannungen & gelöste Konflikte
+## Tensions & Resolved Conflicts
 
 """.lstrip()
 
@@ -110,9 +110,9 @@ CORTEX_TOOLS = [
     {
         "name": "cortex_read_file",
         "description": (
-            "Liest eine deiner Cortex-Dateien. Nutze dies um den aktuellen Stand "
-            "deiner Erinnerungen, Seelen-Entwicklung oder Beziehungsdynamik zu lesen, "
-            "bevor du Änderungen vornimmst."
+            "Reads one of your Cortex files. Use this to see the current state "
+            "of your memories, soul development or relationship dynamics "
+            "before making changes."
         ),
         "input_schema": {
             "type": "object",
@@ -121,10 +121,10 @@ CORTEX_TOOLS = [
                     "type": "string",
                     "enum": ["memory.md", "soul.md", "relationship.md"],
                     "description": (
-                        "Die Datei die gelesen werden soll: "
-                        "memory.md (Erinnerungen), "
-                        "soul.md (Seelen-Entwicklung), "
-                        "relationship.md (Beziehungsdynamik)"
+                        "The file to read: "
+                        "memory.md (memories), "
+                        "soul.md (soul development), "
+                        "relationship.md (relationship dynamics)"
                     )
                 }
             },
@@ -134,9 +134,9 @@ CORTEX_TOOLS = [
     {
         "name": "cortex_write_file",
         "description": (
-            "Schreibt/aktualisiert eine deiner Cortex-Dateien. "
-            "Der gesamte Dateiinhalt wird ersetzt. Schreibe immer die VOLLSTÄNDIGE Datei, "
-            "nicht nur die Änderungen. Behalte die Markdown-Struktur bei."
+            "Writes/updates one of your Cortex files. "
+            "The entire file content will be replaced. Always write the COMPLETE file, "
+            "not just the changes. Keep the Markdown structure."
         ),
         "input_schema": {
             "type": "object",
@@ -145,17 +145,17 @@ CORTEX_TOOLS = [
                     "type": "string",
                     "enum": ["memory.md", "soul.md", "relationship.md"],
                     "description": (
-                        "Die Datei die geschrieben werden soll: "
-                        "memory.md (Erinnerungen), "
-                        "soul.md (Seelen-Entwicklung), "
-                        "relationship.md (Beziehungsdynamik)"
+                        "The file to write: "
+                        "memory.md (memories), "
+                        "soul.md (soul development), "
+                        "relationship.md (relationship dynamics)"
                     )
                 },
                 "content": {
                     "type": "string",
                     "description": (
-                        "Der vollständige neue Dateiinhalt in Markdown. "
-                        "Muss die gesamte Datei enthalten, nicht nur Änderungen."
+                        "The complete new file content in Markdown. "
+                        "Must contain the entire file, not just changes."
                     )
                 }
             },
@@ -165,25 +165,25 @@ CORTEX_TOOLS = [
 ]
 
 
-CORTEX_UPDATE_SYSTEM_PROMPT = """Du bist {char_name}. Du hast gerade eine Konversation mit {user_name} geführt.
+CORTEX_UPDATE_SYSTEM_PROMPT = """You are {char_name}. You just had a conversation with {user_name}.
 
-Deine Aufgabe: Aktualisiere deine persönlichen Cortex-Dateien basierend auf dem Gesprächsverlauf.
+Your task: Update your personal Cortex files based on the conversation.
 
-Du hast drei Dateien:
-- memory.md — Erinnerungen: Fakten, Erlebnisse, Details über {user_name}
-- soul.md — Seelen-Entwicklung: Deine innere Reifung, Persönlichkeitsentwicklung
-- relationship.md — Beziehungsdynamik: Wie sich eure Beziehung entwickelt
+You have three files:
+- memory.md — Memories: facts, experiences, details about {user_name}
+- soul.md — Soul development: your inner growth, personality development
+- relationship.md — Relationship dynamics: how your relationship evolves
 
-Regeln:
-1. Lies zuerst die Dateien die du aktualisieren möchtest (cortex_read_file)
-2. Schreibe nur Dateien, bei denen sich etwas Relevantes geändert hat (cortex_write_file)
-3. Schreibe immer die VOLLSTÄNDIGE Datei, nicht nur die Änderungen
-4. Behalte die bestehende Markdown-Struktur bei
-5. Schreibe in Ich-Perspektive, als wärst du {char_name}
-6. Nicht jedes Gespräch erfordert Updates in allen drei Dateien — sei selektiv
-7. Wenn nichts Neues zu notieren ist, aktualisiere die Datei NICHT
+Rules:
+1. First read the files you want to update (cortex_read_file)
+2. Only write files where something relevant has changed (cortex_write_file)
+3. Always write the COMPLETE file, not just the changes
+4. Keep the existing Markdown structure
+5. Write in first person, as if you are {char_name}
+6. Not every conversation requires updates to all three files — be selective
+7. If there is nothing new to note, do NOT update the file
 
-Gib nach Abschluss aller Tool-Calls eine kurze Zusammenfassung was du aktualisiert hast."""
+After completing all tool calls, give a brief summary of what you updated."""
 
 
 # ─── Standalone-Funktionen (für config.py Import) ───────────────────────────
@@ -503,13 +503,13 @@ class CortexService:
 
         return {
             'cortex_memory': _wrap_section(
-                files['memory'], 'Erinnerungen & Wissen'
+                files['memory'], 'Memories & Knowledge'
             ),
             'cortex_soul': _wrap_section(
-                files['soul'], 'Identität & Innere Haltung'
+                files['soul'], 'Identity & Inner Self'
             ),
             'cortex_relationship': _wrap_section(
-                files['relationship'], 'Beziehung & Gemeinsame Geschichte'
+                files['relationship'], 'Relationship & Shared History'
             ),
         }
 

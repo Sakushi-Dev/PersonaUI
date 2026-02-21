@@ -20,6 +20,19 @@ const GENDER_OPTIONS = [
   { value: 'Divers', label: 'Divers' },
 ];
 
+const PERSONA_LANGUAGE_OPTIONS = [
+  { value: 'english', label: 'English' },
+  { value: 'german', label: 'Deutsch' },
+  { value: 'french', label: 'Français' },
+  { value: 'spanish', label: 'Español' },
+  { value: 'italian', label: 'Italiano' },
+  { value: 'portuguese', label: 'Português' },
+  { value: 'russian', label: 'Русский' },
+  { value: 'japanese', label: '日本語' },
+  { value: 'chinese', label: '中文' },
+  { value: 'korean', label: '한국어' },
+];
+
 export default function UserProfileOverlay({ open, onClose, onOpenAvatarEditor, avatarRefreshKey }) {
   const [name, setName] = useState('User');
   const [avatar, setAvatar] = useState(null);
@@ -27,6 +40,7 @@ export default function UserProfileOverlay({ open, onClose, onOpenAvatarEditor, 
   const [gender, setGender] = useState('');
   const [interestedIn, setInterestedIn] = useState([]);
   const [userInfo, setUserInfo] = useState('');
+  const [personaLanguage, setPersonaLanguage] = useState('english');
   const [saving, setSaving] = useState(false);
 
 
@@ -40,6 +54,7 @@ export default function UserProfileOverlay({ open, onClose, onOpenAvatarEditor, 
         setGender(p.user_gender || '');
         setInterestedIn(p.user_interested_in || []);
         setUserInfo(p.user_info || '');
+        setPersonaLanguage(p.persona_language || 'english');
       }).catch(() => {});
     }
   }, [open]);
@@ -65,6 +80,7 @@ export default function UserProfileOverlay({ open, onClose, onOpenAvatarEditor, 
         user_gender: gender,
         user_interested_in: interestedIn,
         user_info: userInfo,
+        persona_language: personaLanguage,
       });
       onClose();
     } catch (err) {
@@ -72,7 +88,7 @@ export default function UserProfileOverlay({ open, onClose, onOpenAvatarEditor, 
     } finally {
       setSaving(false);
     }
-  }, [name, avatar, avatarType, gender, interestedIn, userInfo, onClose]);
+  }, [name, avatar, avatarType, gender, interestedIn, userInfo, personaLanguage, onClose]);
 
   const handleAvatarClick = () => {
     onOpenAvatarEditor?.('user');
@@ -155,6 +171,20 @@ export default function UserProfileOverlay({ open, onClose, onOpenAvatarEditor, 
             rows={3}
             placeholder="Schreibe etwas über dich... Interessen, Besonderheiten, Kontext für die KI"
           />
+        </FormGroup>
+        <div className={styles.sectionDivider} />
+
+        {/* Persona Language */}
+        <FormGroup label="Persona-Sprache" hint="In welcher Sprache sollen deine Personas antworten?">
+          <select
+            className={styles.select}
+            value={personaLanguage}
+            onChange={(e) => setPersonaLanguage(e.target.value)}
+          >
+            {PERSONA_LANGUAGE_OPTIONS.map((lang) => (
+              <option key={lang.value} value={lang.value}>{lang.label}</option>
+            ))}
+          </select>
         </FormGroup>
       </OverlayBody>
       <OverlayFooter>

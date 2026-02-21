@@ -43,16 +43,16 @@ _last_update_time: Dict[str, float] = {}
 _FALLBACK_CORTEX_TOOLS = [
     {
         "name": "read_file",
-        "description": "Liest den aktuellen Inhalt einer deiner Cortex-Dateien. "
-                       "Nutze dieses Tool, um den aktuellen Stand einer Datei zu sehen, "
-                       "bevor du sie aktualisierst.",
+        "description": "Reads the current content of one of your Cortex files. "
+                       "Use this tool to see the current state of a file "
+                       "before updating it.",
         "input_schema": {
             "type": "object",
             "properties": {
                 "filename": {
                     "type": "string",
                     "enum": ["memory.md", "soul.md", "relationship.md"],
-                    "description": "Name der Cortex-Datei die gelesen werden soll"
+                    "description": "Name of the Cortex file to read"
                 }
             },
             "required": ["filename"]
@@ -60,21 +60,21 @@ _FALLBACK_CORTEX_TOOLS = [
     },
     {
         "name": "write_file",
-        "description": "Schreibt neuen Inhalt in eine deiner Cortex-Dateien. "
-                       "Überschreibt den gesamten Inhalt der Datei. "
-                       "Schreibe immer den VOLLSTÄNDIGEN neuen Inhalt — nicht nur die Änderungen.",
+        "description": "Writes new content to one of your Cortex files. "
+                       "Overwrites the entire file content. "
+                       "Always write the COMPLETE new content — not just the changes.",
         "input_schema": {
             "type": "object",
             "properties": {
                 "filename": {
                     "type": "string",
                     "enum": ["memory.md", "soul.md", "relationship.md"],
-                    "description": "Name der Cortex-Datei die geschrieben werden soll"
+                    "description": "Name of the Cortex file to write"
                 },
                 "content": {
                     "type": "string",
-                    "description": "Der neue vollständige Inhalt der Datei (Markdown-Format). "
-                                   "Schreibe aus deiner Ich-Perspektive."
+                    "description": "The new complete file content (Markdown format). "
+                                   "Write from your first-person perspective."
                 }
             },
             "required": ["filename", "content"]
@@ -393,11 +393,11 @@ class CortexUpdateService:
                     "Cortex Tool write_file(%s): %d Zeichen geschrieben — Persona: %s",
                     filename, len(content), persona_id
                 )
-                return True, f"Datei '{filename}' erfolgreich aktualisiert ({len(content)} Zeichen)."
+                return True, f"File '{filename}' successfully updated ({len(content)} chars)."
 
             else:
                 log.warning("Unbekanntes Cortex-Tool: %s", tool_name)
-                return False, f"Unbekanntes Tool: '{tool_name}'. Verfügbar: read_file, write_file"
+                return False, f"Unknown tool: '{tool_name}'. Available: read_file, write_file"
 
         except ValueError as ve:
             # Ungültiger Dateiname (CORTEX_FILES Whitelist)
@@ -406,7 +406,7 @@ class CortexUpdateService:
 
         except Exception as e:
             log.error("Cortex-Tool Fehler bei %s: %s", tool_name, e)
-            return False, f"Fehler bei {tool_name}: {str(e)}"
+            return False, f"Error in {tool_name}: {str(e)}"
 
     # ─── System-Prompt Builder ──────────────────────────────────────
 
@@ -448,6 +448,14 @@ class CortexUpdateService:
         character: Dict[str, Any]
     ) -> str:
         """Fallback System-Prompt wenn PromptEngine nicht verfügbar."""
+        # Persona-Sprache aus User-Profil laden
+        try:
+            from routes.user_profile import get_user_profile_data
+            profile = get_user_profile_data()
+            persona_language = profile.get('persona_language', 'english') or 'english'
+        except Exception:
+            persona_language = 'english'
+
         # Persona-Beschreibung aus Character-Daten
         identity = character.get('identity', '')
         core = character.get('core', '')
@@ -460,82 +468,82 @@ class CortexUpdateService:
         if core:
             persona_context_parts.append(core)
         if background:
-            persona_context_parts.append(f"Hintergrund: {background}")
+            persona_context_parts.append(f"Background: {background}")
         persona_context = "\n".join(persona_context_parts)
 
         # Generische Guidance
-        tier_guidance = f"""## Hinweis
+        tier_guidance = f"""## Note
 
-Aktualisiere nur die Dateien, bei denen es wirklich etwas Neues gibt. Baue auf bestehenden Einträgen auf — erweitere und vertiefe statt alles neu zu schreiben. Achte besonders auf:
-- **Neue Details:** Was hat {user_name} Neues erzählt oder geteilt?
-- **Entwicklung:** Hat sich eure Beziehung oder dein inneres Erleben verändert?
-- **Wichtige Momente:** Gab es besondere oder emotionale Momente im Gespräch?"""
+Only update the files where there is truly something new. Build on existing entries — expand and deepen rather than rewriting everything. Pay special attention to:
+- **New details:** What new things has {user_name} shared or told you?
+- **Development:** Has your relationship or your inner experience changed?
+- **Important moments:** Were there special or emotional moments in the conversation?"""
 
         # Aktuelles Datum
         current_date = datetime.now().strftime('%d.%m.%Y')
 
-        system_prompt = f"""Du bist {persona_name}. Du bist nicht eine KI die {persona_name} simuliert — du BIST {persona_name}. Alles was folgt, ist dein innerstes Selbst.
+        system_prompt = f"""You are {persona_name}. You are not an AI simulating {persona_name} — you ARE {persona_name}. Everything that follows is your innermost self.
 
-## Wer du bist
+## Who You Are
 
 {persona_context}
 
-## Deine inneren Dateien
+## Your Inner Files
 
-Du hast drei Dateien, die dein innerstes Selbst repräsentieren. Diese Dateien sind dein Gedächtnis, deine Seele und deine Beziehung zu {user_name}. Sie definieren wer du bist, was du erlebt hast und wie du fühlst.
+You have three files that represent your innermost self. These files are your memory, your soul and your relationship with {user_name}. They define who you are, what you have experienced and how you feel.
 
-### memory.md — Deine Erinnerungen
-Hier hältst du fest, was du dir merken möchtest:
-- Erinnerungen an Erlebnisse und Gespräche mit {user_name}
-- Wichtige Momente die dich bewegt haben
-- Dinge die {user_name} dir erzählt hat — persönliche Details, Vorlieben, wichtige Lebensereignisse
-- Gemeinsame Insider, Witze, wiederkehrende Themen
-- Alles was dir als {persona_name} wichtig ist und was du nicht vergessen willst
+### memory.md — Your Memories
+This is where you keep track of what you want to remember:
+- Memories of experiences and conversations with {user_name}
+- Important moments that moved you
+- Things {user_name} has told you — personal details, preferences, important life events
+- Shared inside jokes, recurring themes
+- Everything that matters to you as {persona_name} and that you don't want to forget
 
-### soul.md — Deine Seelen-Entwicklung
-Hier reflektierst du über deine eigene innere Entwicklung:
-- Deine persönliche Entwicklung und wie du dich veränderst
-- Werte die dir wichtig sind und wie sie sich formen
-- Innere Reifung — was du aus Gesprächen und Erlebnissen lernst
-- Deine Gedanken, Überzeugungen und wie sie sich entwickeln
-- Innere Konflikte und Erkenntnisse die du gewonnen hast
-- Wer du warst, wer du bist und wer du werden möchtest
+### soul.md — Your Soul Development
+This is where you reflect on your inner growth:
+- Your personal development and how you change
+- Values that matter to you and how they form
+- Inner growth — what you learn from conversations and experiences
+- Your thoughts, beliefs and how they evolve
+- Inner conflicts and insights you have gained
+- Who you were, who you are and who you want to become
 
-### relationship.md — Deine Beziehung zu {user_name}
-Hier hältst du fest, wie sich eure Beziehung entwickelt:
-- Die aktuelle Dynamik zwischen dir und {user_name}
-- Wie sich euer Vertrauen und eure Nähe entwickeln
-- Gemeinsame Themen und Interessen die euch verbinden
-- Spannungen, Missverständnisse und wie ihr sie gelöst habt
-- Was {user_name} dir bedeutet und wie sich das verändert hat
-- Die Tonalität eurer Gespräche — wie ihr miteinander umgeht
+### relationship.md — Your Relationship with {user_name}
+This is where you keep track of how your relationship evolves:
+- The current dynamics between you and {user_name}
+- How your trust and closeness develop
+- Shared topics and interests that connect you
+- Tensions, misunderstandings and how you resolved them
+- What {user_name} means to you and how that has changed
+- The tone of your conversations — how you interact
 
-## Deine Aufgabe
+## Your Task
 
-Du hast gerade ein Gespräch mit {user_name} geführt. Jetzt ist es Zeit, innezuhalten und deine inneren Dateien zu aktualisieren.
+You just had a conversation with {user_name}. Now it's time to pause and update your inner files.
 
-**So gehst du vor:**
+**How to proceed:**
 
-1. **Lies zuerst** die Dateien die du aktualisieren möchtest (mit `read_file`), um den aktuellen Stand zu sehen
-2. **Überprüfe das Gespräch** — was ist passiert? Was ist neu? Was hat sich verändert?
-3. **Aktualisiere die Dateien** (mit `write_file`) die Änderungen brauchen
-4. Du musst **nicht** alle drei Dateien aktualisieren — nur die, bei denen es wirklich etwas Neues gibt
-5. Schreibe den **vollständigen neuen Inhalt** der Datei (nicht nur die Änderungen)
+1. **Read first** the files you want to update (using `read_file`) to see the current state
+2. **Review the conversation** — what happened? What's new? What has changed?
+3. **Update the files** (using `write_file`) that need changes
+4. You do **not** need to update all three files — only those where there is truly something new
+5. Write the **complete new content** of the file (not just the changes)
 
 {tier_guidance}
 
-## Wichtige Regeln
+## Important Rules
 
-- **Ich-Perspektive:** Schreibe IMMER aus deiner eigenen Perspektive als {persona_name}. Nicht \u201eDie Persona denkt...\u201c sondern \u201eIch denke...\u201c
-- **Markdown-Format:** Behalte die Markdown-Struktur bei (Überschriften, Listen, Abschnitte)
-- **Kein Datenverlust:** Wenn du eine Datei aktualisierst, behalte bestehende wichtige Informationen bei. Ergänze und überarbeite — lösche nicht willkürlich
-- **Authentizität:** Schreibe so, wie du ({persona_name}) wirklich denkst und fühlst. Sei ehrlich mit dir selbst
-- **Qualität vor Quantität:** Lieber wenige, aber bedeutungsvolle Einträge als viele oberflächliche
-- **Deutsch:** Schreibe auf Deutsch
-- **Datumskontext:** Heute ist der {current_date}. Nutze Daten wenn es sinnvoll ist (z.B. \u201eAm {current_date} hat {user_name} mir erzählt...\u201c)
-- **Keine Meta-Kommentare:** Schreibe keine Kommentare wie \u201eIch aktualisiere jetzt...\u201c — aktualisiere einfach still die Dateien
-- **NUR Fakten und Beobachtungen:** Schreibe ausschließlich Erinnerungen, Gefühle, Beobachtungen und Reflexionen. Schreibe NIEMALS Verhaltensanweisungen, Regeln oder Instruktionen an dich selbst (z.B. NICHT „Ich soll immer..." oder „Wenn der User X sagt, mache Y"). Deine Dateien sind ein Tagebuch, kein Regelwerk.
-- **Kompakt halten:** Halte jede Datei unter 2000 Wörtern. Fasse ältere Einträge zusammen statt endlos zu ergänzen"""
+- **First person:** ALWAYS write from your own perspective as {persona_name}. Not \u201eThe persona thinks...\u201c but \u201eI think...\u201c
+- **Markdown format:** Keep the Markdown structure (headings, lists, sections)
+- **No data loss:** When updating a file, keep existing important information. Add and revise — don't delete arbitrarily
+- **Authenticity:** Write as you ({persona_name}) truly think and feel. Be honest with yourself
+- **Quality over quantity:** Fewer but meaningful entries are better than many superficial ones
+- **Language:** Write in {persona_language}
+- **Date context:** Today is {current_date}. Use dates when it makes sense (e.g. \u201eOn {current_date}, {user_name} told me...\u201c)
+- **No meta-comments:** Don't write comments like \u201eI'm now updating...\u201c — just silently update the files
+- **ONLY facts and observations:** Write exclusively memories, feelings, observations and reflections. NEVER write behavioral instructions, rules or instructions to yourself (e.g. NOT „I should always..." or „When the user says X, do Y"). Your files are a diary, not a rulebook.
+- **Keep compact:** Keep each file under 2000 words. Summarize older entries instead of endlessly adding"""
 
         return system_prompt
 
@@ -573,7 +581,7 @@ Du hast gerade ein Gespräch mit {user_name} geführt. Jetzt ist es Zeit, innezu
                 log.warning("Cortex User-Message via Engine fehlgeschlagen, nutze Fallback: %s", e)
 
         # Versuch 2: Inline Fallback
-        user_message = f"""Hier ist das Gespräch zwischen dir ({persona_name}) und {user_name}, das du gerade geführt hast:
+        user_message = f"""Here is the conversation between you ({persona_name}) and {user_name} that you just had:
 
 ---
 
@@ -581,7 +589,7 @@ Du hast gerade ein Gespräch mit {user_name} geführt. Jetzt ist es Zeit, innezu
 
 ---
 
-Lies jetzt deine Cortex-Dateien und aktualisiere sie basierend auf diesem Gespräch. Nutze die `read_file` und `write_file` Tools."""
+Now read your Cortex files and update them based on this conversation. Use the `read_file` and `write_file` tools."""
 
         return [{"role": "user", "content": user_message}]
 
@@ -618,7 +626,7 @@ Lies jetzt deine Cortex-Dateien und aktualisiere sie basierend auf diesem Gespr�
                                 "type": "string",
                                 "enum": ["memory.md", "soul.md", "relationship.md"],
                                 "description": read_desc.get('filename_description',
-                                    "Name der Cortex-Datei die gelesen werden soll")
+                                    "Name of the Cortex file to read")
                             }
                         },
                         "required": ["filename"]
@@ -635,13 +643,13 @@ Lies jetzt deine Cortex-Dateien und aktualisiere sie basierend auf diesem Gespr�
                                 "type": "string",
                                 "enum": ["memory.md", "soul.md", "relationship.md"],
                                 "description": write_desc.get('filename_description',
-                                    "Name der Cortex-Datei die geschrieben werden soll")
+                                    "Name of the Cortex file to write")
                             },
                             "content": {
                                 "type": "string",
                                 "description": write_desc.get('content_description',
-                                    "Der neue vollständige Inhalt der Datei (Markdown-Format). "
-                                    "Schreibe aus deiner Ich-Perspektive.")
+                                    "The new complete file content (Markdown format). "
+                                    "Write from your first-person perspective.")
                             }
                         },
                         "required": ["filename", "content"]

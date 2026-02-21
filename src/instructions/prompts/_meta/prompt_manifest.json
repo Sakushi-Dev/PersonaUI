@@ -433,7 +433,11 @@
       "order": 2000,
       "enabled": true,
       "domain_file": "cortex_context.json",
-      "requires_any": ["cortex_memory", "cortex_soul", "cortex_relationship"],
+      "requires_any": [
+        "cortex_memory",
+        "cortex_soul",
+        "cortex_relationship"
+      ],
       "tags": [
         "context",
         "cortex",
