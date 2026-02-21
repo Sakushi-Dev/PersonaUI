@@ -1,34 +1,26 @@
 // ── Step: Afterthought (5/6) ──
 
+import { t } from '../useTranslation';
 import styles from './Steps.module.css';
 
-const MODES = [
-  { value: 'off',    label: 'Off' },
-  { value: 'selten', label: 'Rare' },
-  { value: 'mittel', label: 'Medium' },
-  { value: 'hoch',   label: 'High' },
-];
+export default function StepAfterthought({ data, onChange, onNext, onBack, language }) {
+  const s = t(language, 'afterthought');
+  const c = t(language, 'common');
 
-const MODE_INFO = {
-  off: {
-    text: 'Your persona only responds when you write. No inner dialogue, no spontaneous messages.',
-    extra: null,
-  },
-  selten: {
-    text: 'Every 3rd message triggers an inner dialogue. The persona occasionally reaches out on its own – when something is truly on its mind.',
-    extra: 'Low additional API costs. Good for getting started.',
-  },
-  mittel: {
-    text: 'Every 2nd message triggers an inner dialogue. The persona adds its own thoughts, questions, or impulses more frequently.',
-    extra: 'Moderate additional API costs. Good balance between liveliness and costs.',
-  },
-  hoch: {
-    text: 'Every message triggers an inner dialogue. The persona fully lives out its inner world – spontaneous, impulsive, and approachable.',
-    extra: 'Higher additional API costs. For the most intense experience.',
-  },
-};
+  const MODES = [
+    { value: 'off',    label: s.modeOff },
+    { value: 'selten', label: s.modeRare },
+    { value: 'mittel', label: s.modeMedium },
+    { value: 'hoch',   label: s.modeHigh },
+  ];
 
-export default function StepAfterthought({ data, onChange, onNext, onBack }) {
+  const MODE_INFO = {
+    off:    { text: s.modeInfoOff,    extra: null },
+    selten: { text: s.modeInfoRare,   extra: s.modeInfoRareExtra },
+    mittel: { text: s.modeInfoMedium, extra: s.modeInfoMediumExtra },
+    hoch:   { text: s.modeInfoHigh,   extra: s.modeInfoHighExtra },
+  };
+
   const update = (field, value) => {
     onChange((prev) => ({ ...prev, [field]: value }));
   };
@@ -39,22 +31,15 @@ export default function StepAfterthought({ data, onChange, onNext, onBack }) {
     <div className={styles.card}>
       <div className={styles.cardHeader}>
         <span className={styles.cardStep}>5 / 6</span>
-        <h2>Afterthought</h2>
-        <p className={styles.cardDesc}>Spontaneous thoughts from your persona.</p>
+        <h2>{s.title}</h2>
+        <p className={styles.cardDesc}>{s.desc}</p>
       </div>
       <div className={styles.cardBody}>
 
         {/* Intro */}
         <div className={styles.featureIntro}>
-          <p>
-            Sometimes after a conversation you have another thought – something that only
-            comes to mind afterwards. <strong>Afterthought</strong> gives your personas exactly this ability.
-          </p>
-          <p>
-            After your message, the persona has an inner dialogue with itself.
-            If something seems important enough, it writes to you on its own –
-            with escalating time intervals, like real pondering.
-          </p>
+          <p dangerouslySetInnerHTML={{ __html: s.introP1 }} />
+          <p>{s.introP2}</p>
         </div>
 
         {/* How it works */}
@@ -62,29 +47,29 @@ export default function StepAfterthought({ data, onChange, onNext, onBack }) {
           <div className={styles.feature}>
             <span className={styles.featureTag}>01</span>
             <div className={styles.featureText}>
-              <strong>Inner Dialogue</strong>
-              <span className={styles.featureTyped}>The persona quietly considers whether it wants to say something more</span>
+              <strong>{s.feature1Title}</strong>
+              <span className={styles.featureTyped}>{s.feature1Desc}</span>
             </div>
           </div>
           <div className={styles.feature}>
             <span className={styles.featureTag}>02</span>
             <div className={styles.featureText}>
-              <strong>Natural Timing</strong>
-              <span className={styles.featureTyped}>Escalating pauses – from short to long, like real pondering</span>
+              <strong>{s.feature2Title}</strong>
+              <span className={styles.featureTyped}>{s.feature2Desc}</span>
             </div>
           </div>
           <div className={styles.feature}>
             <span className={styles.featureTag}>03</span>
             <div className={styles.featureText}>
-              <strong>Spontaneous Message</strong>
-              <span className={styles.featureTyped}>Only when the persona truly has something to say</span>
+              <strong>{s.feature3Title}</strong>
+              <span className={styles.featureTyped}>{s.feature3Desc}</span>
             </div>
           </div>
         </div>
 
         {/* Mode Selector */}
         <div className={styles.fieldGroup}>
-          <label className={styles.label}>Frequency <span className={styles.betaBadge}>Beta</span></label>
+          <label className={styles.label}>{s.frequencyLabel} <span className={styles.betaBadge}>Beta</span></label>
           <div className={styles.typeGrid} style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
             {MODES.map((opt) => (
               <button
@@ -110,7 +95,7 @@ export default function StepAfterthought({ data, onChange, onNext, onBack }) {
               )}
               {data.nachgedankeMode !== 'off' && (
                 <>
-                  {' '}Afterthought generates additional API requests in the background.
+                  {' '}{s.apiNote}
                 </>
               )}
             </span>
@@ -119,8 +104,8 @@ export default function StepAfterthought({ data, onChange, onNext, onBack }) {
 
       </div>
       <div className={styles.cardFooter}>
-        <button className={styles.btnGhost} onClick={onBack}>Back</button>
-        <button className={styles.btnPrimary} onClick={onNext}>Next</button>
+        <button className={styles.btnGhost} onClick={onBack}>{c.back}</button>
+        <button className={styles.btnPrimary} onClick={onNext}>{c.next}</button>
       </div>
     </div>
   );

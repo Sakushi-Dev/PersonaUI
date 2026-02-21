@@ -1,12 +1,7 @@
 // ── Step: Context (3/6) ──
 
+import { t } from '../useTranslation';
 import styles from './Steps.module.css';
-
-const RANGE_INFO = {
-  low:    'A low context limit keeps costs down. The persona forgets older messages faster but focuses only on what matters.',
-  medium: 'A medium limit is a good compromise – the persona retains enough conversation history to stay on track without significantly increasing costs.',
-  high:   'A high context limit gives the persona extensive access to the conversation so far. Ideal for deep conversations – but API costs increase noticeably.',
-};
 
 function getRange(value) {
   const n = parseInt(value, 10);
@@ -15,34 +10,31 @@ function getRange(value) {
   return 'high';
 }
 
-export default function StepContext({ data, onChange, onNext, onBack }) {
+export default function StepContext({ data, onChange, onNext, onBack, language }) {
+  const s = t(language, 'context');
+  const c = t(language, 'common');
+
   const update = (field, value) => {
     onChange((prev) => ({ ...prev, [field]: value }));
   };
 
   const range = getRange(data.contextLimit);
-  const info = RANGE_INFO[range];
+  const rangeInfo = { low: s.rangeLow, medium: s.rangeMedium, high: s.rangeHigh };
+  const info = rangeInfo[range];
 
   return (
     <div className={styles.card}>
       <div className={styles.cardHeader}>
         <span className={styles.cardStep}>3 / 6</span>
-        <h2>Context</h2>
-        <p className={styles.cardDesc}>How much should your persona remember?</p>
+        <h2>{s.title}</h2>
+        <p className={styles.cardDesc}>{s.desc}</p>
       </div>
       <div className={styles.cardBody}>
 
         {/* Intro */}
         <div className={styles.featureIntro}>
-          <p>
-            The <strong>context limit</strong> determines how many past messages the AI considers
-            for each response. The higher the value, the more conversation history flows into
-            the response – but each message costs more.
-          </p>
-          <p>
-            Think of it as short-term memory: A low value means the persona focuses on
-            the here and now. A high value lets it dive deeper into your conversation.
-          </p>
+          <p dangerouslySetInnerHTML={{ __html: s.introP1 }} />
+          <p>{s.introP2}</p>
         </div>
 
         {/* How it affects things */}
@@ -50,22 +42,22 @@ export default function StepContext({ data, onChange, onNext, onBack }) {
           <div className={styles.feature}>
             <span className={styles.featureTag}>01</span>
             <div className={styles.featureText}>
-              <strong>Conversation Depth</strong>
-              <span className={styles.featureTyped}>More context = the persona remembers messages further back</span>
+              <strong>{s.feature1Title}</strong>
+              <span className={styles.featureTyped}>{s.feature1Desc}</span>
             </div>
           </div>
           <div className={styles.feature}>
             <span className={styles.featureTag}>02</span>
             <div className={styles.featureText}>
-              <strong>API Costs</strong>
-              <span className={styles.featureTyped}>Each message sends the entire context to the API – more context costs more</span>
+              <strong>{s.feature2Title}</strong>
+              <span className={styles.featureTyped}>{s.feature2Desc}</span>
             </div>
           </div>
           <div className={styles.feature}>
             <span className={styles.featureTag}>03</span>
             <div className={styles.featureText}>
-              <strong>Cortex Trigger</strong>
-              <span className={styles.featureTyped}>The Cortex frequency is based on your context limit – both are linked</span>
+              <strong>{s.feature3Title}</strong>
+              <span className={styles.featureTyped}>{s.feature3Desc}</span>
             </div>
           </div>
         </div>
@@ -73,7 +65,7 @@ export default function StepContext({ data, onChange, onNext, onBack }) {
         {/* Slider */}
         <div className={styles.fieldGroup}>
           <label className={styles.label}>
-            Context Limit: <strong>{data.contextLimit}</strong> messages
+            {s.sliderLabel} <strong>{data.contextLimit}</strong> {s.sliderUnit}
           </label>
           <input
             type="range"
@@ -86,7 +78,7 @@ export default function StepContext({ data, onChange, onNext, onBack }) {
           />
           <div className={styles.sliderLabels}>
             <span>50</span>
-            <span className={styles.sliderRec}>Recommended: 200</span>
+            <span className={styles.sliderRec}>{s.sliderRec}</span>
             <span>400</span>
           </div>
 
@@ -95,15 +87,15 @@ export default function StepContext({ data, onChange, onNext, onBack }) {
             <span className={styles.infoIcon}></span>
             <span>
               {info}
-              {' '}You can adjust this value anytime in the settings.
+              {' '}{s.adjustAnytime}
             </span>
           </div>
         </div>
 
       </div>
       <div className={styles.cardFooter}>
-        <button className={styles.btnGhost} onClick={onBack}>Back</button>
-        <button className={styles.btnPrimary} onClick={onNext}>Next</button>
+        <button className={styles.btnGhost} onClick={onBack}>{c.back}</button>
+        <button className={styles.btnPrimary} onClick={onNext}>{c.next}</button>
       </div>
     </div>
   );

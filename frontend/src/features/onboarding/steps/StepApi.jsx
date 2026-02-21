@@ -2,9 +2,13 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { testApiKey } from '../../../services/serverApi';
+import { t } from '../useTranslation';
 import styles from './Steps.module.css';
 
-export default function StepApi({ data, onChange, onNext, onBack }) {
+export default function StepApi({ data, onChange, onNext, onBack, language }) {
+  const s = t(language, 'api');
+  const c = t(language, 'common');
+
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState(null);
   const [showWarning, setShowWarning] = useState(false);
@@ -17,27 +21,27 @@ export default function StepApi({ data, onChange, onNext, onBack }) {
 
   const handleTest = useCallback(async () => {
     if (!data.apiKey?.trim()) {
-      setTestResult({ success: false, message: 'Please enter an API key' });
+      setTestResult({ success: false, message: s.errorEmpty });
       return;
     }
     setTesting(true);
-    setTestResult({ success: false, message: 'Testing API key...' });
+    setTestResult({ success: false, message: s.testing });
 
     try {
       const result = await testApiKey(data.apiKey.trim());
       const valid = result.success;
       setTestResult({
         success: valid,
-        message: valid ? '✓ API key is valid!' : `✗ ${result.error || 'API key invalid'}`,
+        message: valid ? s.valid : `✗ ${result.error || s.fallbackInvalid}`,
       });
       update('apiKeyValid', valid);
     } catch (err) {
-      setTestResult({ success: false, message: '✗ Connection error' });
+      setTestResult({ success: false, message: s.connError });
       update('apiKeyValid', false);
     } finally {
       setTesting(false);
     }
-  }, [data.apiKey]);
+  }, [data.apiKey, s]);
 
   const handleNext = () => {
     if (data.apiKeyValid) {
@@ -77,22 +81,22 @@ export default function StepApi({ data, onChange, onNext, onBack }) {
       // Permission denied or not available
     }
     apiInputRef.current?.focus();
-    setTestResult({ success: false, message: 'Please paste with Ctrl+V' });
-    setTimeout(() => setTestResult((r) => r?.message === 'Please paste with Ctrl+V' ? null : r), 3000);
+    setTestResult({ success: false, message: s.pasteHint });
+    setTimeout(() => setTestResult((r) => r?.message === s.pasteHint ? null : r), 3000);
   };
 
   return (
     <div className={styles.card}>
       <div className={styles.cardHeader}>
         <span className={styles.cardStep}>6 / 6</span>
-        <h2>API-Key</h2>
-        <p className={styles.cardDesc}>Connect PersonaUI with the Anthropic API.</p>
+        <h2>{s.title}</h2>
+        <p className={styles.cardDesc}>{s.desc}</p>
       </div>
       <div className={styles.cardBody}>
 
         {/* API Key */}
         <div className={styles.fieldGroup}>
-          <label className={styles.label}>API-Key</label>
+          <label className={styles.label}>{s.keyLabel}</label>
           <div className={styles.apiInputRow}>
             <div className={styles.passwordWrapper}>
               <input
@@ -102,13 +106,13 @@ export default function StepApi({ data, onChange, onNext, onBack }) {
                 value={data.apiKey}
                 onChange={(e) => { update('apiKey', e.target.value); update('apiKeyValid', false); setTestResult(null); }}
                 onPaste={handleNativePaste}
-                placeholder="sk-ant-api03-..."
+                placeholder={s.keyPlaceholder}
                 style={{ paddingRight: '72px' }}
               />
               <button
                 className={styles.eyeBtn}
                 onClick={() => setShowPassword(!showPassword)}
-                title="Show/hide key"
+                title={s.showHideTitle}
                 type="button"
               >
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
@@ -119,7 +123,7 @@ export default function StepApi({ data, onChange, onNext, onBack }) {
               <button
                 className={`${styles.eyeBtn} ${styles.pasteBtn}`}
                 onClick={handlePasteClick}
-                title="Paste (Ctrl+V)"
+                title={s.pasteTitle}
                 type="button"
               >
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -129,7 +133,7 @@ export default function StepApi({ data, onChange, onNext, onBack }) {
               </button>
             </div>
             <button className={styles.btnSecondary} onClick={handleTest} disabled={testing}>
-              Test
+              {s.testBtn}
             </button>
           </div>
           {testResult && (
@@ -139,13 +143,13 @@ export default function StepApi({ data, onChange, onNext, onBack }) {
           )}
           <div className={`${styles.infoBox} ${styles.infoBoxCompact}`}>
             <span className={styles.infoIcon}></span>
-            <span>You need an Anthropic API key. You can get one at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer">console.anthropic.com</a>. The test request incurs no notable costs.</span>
+            <span dangerouslySetInnerHTML={{ __html: s.infoText }} />
           </div>
         </div>
       </div>
       <div className={styles.cardFooter}>
-        <button className={styles.btnGhost} onClick={onBack}>Back</button>
-        <button className={styles.btnPrimary} onClick={handleNext}>Next</button>
+        <button className={styles.btnGhost} onClick={onBack}>{c.back}</button>
+        <button className={styles.btnPrimary} onClick={handleNext}>{c.next}</button>
       </div>
 
       {/* API Key Warning Modal */}
@@ -153,12 +157,12 @@ export default function StepApi({ data, onChange, onNext, onBack }) {
         <div className={styles.warningOverlay} onClick={(e) => { if (e.target === e.currentTarget) setShowWarning(false); }}>
           <div className={styles.warningCard}>
             <div className={styles.warningIcon}>!</div>
-            <h3>No Valid API Key</h3>
-            <p>Without an API key you won't be able to chat with your personas.</p>
-            <p className={styles.warningHint}>You can always add the key later via the menu under <strong>Set API-Key</strong>.</p>
+            <h3>{s.warningTitle}</h3>
+            <p>{s.warningText}</p>
+            <p className={styles.warningHint} dangerouslySetInnerHTML={{ __html: s.warningHint }} />
             <div className={styles.warningActions}>
-              <button className={styles.btnGhost} onClick={() => setShowWarning(false)}>Back &amp; Enter Key</button>
-              <button className={styles.btnSecondary} onClick={() => { setShowWarning(false); onNext(); }}>Continue Anyway</button>
+              <button className={styles.btnGhost} onClick={() => setShowWarning(false)}>{s.warningBack}</button>
+              <button className={styles.btnSecondary} onClick={() => { setShowWarning(false); onNext(); }}>{s.warningContinue}</button>
             </div>
           </div>
         </div>

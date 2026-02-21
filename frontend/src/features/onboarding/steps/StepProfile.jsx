@@ -1,12 +1,15 @@
-// ── Step: Profile (1/4) – Legacy 1:1 ──
+// ── Step: Profile (1/6) ──
 
 import { useState, useCallback } from 'react';
 import AvatarCropper from '../../../components/AvatarCropper/AvatarCropper';
 import { getAvailableAvatars, uploadAvatar } from '../../../services/avatarApi';
 import { API_BASE_URL } from '../../../utils/constants';
+import { t } from '../useTranslation';
 import styles from './Steps.module.css';
 
-export default function StepProfile({ data, onChange, onNext, onBack }) {
+export default function StepProfile({ data, onChange, onNext, onBack, language }) {
+  const s = t(language, 'profile');
+  const c = t(language, 'common');
 
 
   // Avatar gallery state
@@ -60,7 +63,7 @@ export default function StepProfile({ data, onChange, onNext, onBack }) {
   const handleFileSelect = (files) => {
     const file = files?.[0];
     if (!file || !file.type.startsWith('image/')) return;
-    if (file.size > 10 * 1024 * 1024) { alert('File too large (max 10MB)'); return; }
+    if (file.size > 10 * 1024 * 1024) { alert(s.fileTooLarge); return; }
     setCropFile(file);
     setGalleryView('crop');
   };
@@ -77,7 +80,7 @@ export default function StepProfile({ data, onChange, onNext, onBack }) {
       closeGallery();
     } catch (err) {
       console.error('Upload error:', err);
-      alert('Connection error');
+      alert(s.uploadError);
     }
   }, []);
 
@@ -102,8 +105,8 @@ export default function StepProfile({ data, onChange, onNext, onBack }) {
     <div className={styles.card}>
       <div className={styles.cardHeader}>
         <span className={styles.cardStep}>1 / 6</span>
-        <h2>Your Profile</h2>
-        <p className={styles.cardDesc}>This is how your personas get to know you.</p>
+        <h2>{s.title}</h2>
+        <p className={styles.cardDesc}>{s.desc}</p>
       </div>
       <div className={styles.cardBody}>
         {/* Avatar */}
@@ -119,7 +122,7 @@ export default function StepProfile({ data, onChange, onNext, onBack }) {
           </div>
           {avatarSrc && (
             <button className={styles.avatarRemoveBtn} onClick={(e) => { e.stopPropagation(); removeAvatar(); }}>
-              Remove Avatar
+              {s.removeAvatar}
             </button>
           )}
         </div>
@@ -129,7 +132,7 @@ export default function StepProfile({ data, onChange, onNext, onBack }) {
           <div className={styles.galleryOverlay} onClick={(e) => { if (e.target === e.currentTarget) closeGallery(); }}>
             <div className={styles.galleryCard}>
               <div className={styles.galleryHeader}>
-                <h3>Choose Avatar</h3>
+                <h3>{s.chooseAvatar}</h3>
                 <button className={styles.galleryClose} onClick={closeGallery}>&times;</button>
               </div>
 
@@ -147,8 +150,8 @@ export default function StepProfile({ data, onChange, onNext, onBack }) {
                       <polyline points="17 8 12 3 7 8" />
                       <line x1="12" y1="3" x2="12" y2="15" />
                     </svg>
-                    <span className={styles.dropzoneText}>Drag your own image here</span>
-                    <span className={styles.dropzoneHint}>or click to browse</span>
+                    <span className={styles.dropzoneText}>{s.dropzoneText}</span>
+                    <span className={styles.dropzoneHint}>{s.dropzoneHint}</span>
                   </div>
                   <input
                     type="file"
@@ -158,7 +161,7 @@ export default function StepProfile({ data, onChange, onNext, onBack }) {
                     onChange={(e) => handleFileSelect(e.target.files)}
                   />
 
-                  <div className={styles.avatarDivider}><span>or choose from gallery</span></div>
+                  <div className={styles.avatarDivider}><span>{s.galleryDivider}</span></div>
 
                   <div className={styles.avatarGrid}>
                     {avatars.map((av, i) => (
@@ -193,28 +196,28 @@ export default function StepProfile({ data, onChange, onNext, onBack }) {
 
         {/* Name */}
         <div className={styles.fieldGroup}>
-          <label className={styles.label}>Your Name *</label>
+          <label className={styles.label}>{s.nameLabel}</label>
           <input
             className={styles.input}
             type="text"
             value={data.user_name}
             onChange={(e) => update('user_name', e.target.value)}
             maxLength={30}
-            placeholder="What would you like to be called?"
+            placeholder={s.namePlaceholder}
           />
         </div>
 
         {/* Geschlecht */}
         <div className={styles.fieldGroup}>
-          <label className={styles.label}>Your Gender <span className={styles.labelOptional}>(optional)</span></label>
+          <label className={styles.label}>{s.genderLabel} <span className={styles.labelOptional}>{c.optional}</span></label>
           <div className={styles.genderGrid}>
-            {['Male', 'Female', 'Other'].map((g) => (
+            {[{ value: 'Male', label: s.genderMale }, { value: 'Female', label: s.genderFemale }, { value: 'Other', label: s.genderOther }].map((g) => (
               <div
-                key={g}
-                className={`${styles.typeChip} ${data.user_gender === g ? styles.chipActive : ''}`}
-                onClick={() => toggleGender(g)}
+                key={g.value}
+                className={`${styles.typeChip} ${data.user_gender === g.value ? styles.chipActive : ''}`}
+                onClick={() => toggleGender(g.value)}
               >
-                {g}
+                {g.label}
               </div>
             ))}
           </div>
@@ -222,15 +225,15 @@ export default function StepProfile({ data, onChange, onNext, onBack }) {
 
         {/* Interessiere mich für */}
         <div className={styles.fieldGroup}>
-          <label className={styles.label}>Interested In <span className={styles.labelOptional}>(you can select multiple, optional)</span></label>
+          <label className={styles.label}>{s.interestedLabel} <span className={styles.labelOptional}>{s.interestedHint}</span></label>
           <div className={styles.genderGrid}>
-            {['Male', 'Female', 'Other'].map((g) => (
+            {[{ value: 'Male', label: s.genderMale }, { value: 'Female', label: s.genderFemale }, { value: 'Other', label: s.genderOther }].map((g) => (
               <div
-                key={g}
-                className={`${styles.typeChip} ${(data.user_interested_in || []).includes(g) ? styles.chipActive : ''}`}
-                onClick={() => toggleInterest(g)}
+                key={g.value}
+                className={`${styles.typeChip} ${(data.user_interested_in || []).includes(g.value) ? styles.chipActive : ''}`}
+                onClick={() => toggleInterest(g.value)}
               >
-                {g}
+                {g.label}
               </div>
             ))}
           </div>
@@ -238,14 +241,14 @@ export default function StepProfile({ data, onChange, onNext, onBack }) {
 
         {/* Über mich */}
         <div className={styles.fieldGroup}>
-          <label className={styles.label}>About Me <span className={styles.labelOptional}>(optional)</span></label>
+          <label className={styles.label}>{s.aboutLabel} <span className={styles.labelOptional}>{c.optional}</span></label>
           <textarea
             className={styles.textarea}
             value={data.user_info}
             onChange={(e) => update('user_info', e.target.value)}
             maxLength={500}
             rows={3}
-            placeholder="Tell us something about yourself... interests, quirks – the more your personas know about you, the better."
+            placeholder={s.aboutPlaceholder}
           />
           <div className={styles.charCounter}>
             <span>{(data.user_info || '').length}</span>/500
@@ -253,8 +256,8 @@ export default function StepProfile({ data, onChange, onNext, onBack }) {
         </div>
       </div>
       <div className={styles.cardFooter}>
-        <button className={styles.btnGhost} onClick={onBack}>Back</button>
-        <button className={styles.btnPrimary} onClick={onNext} disabled={!data.user_name?.trim()}>Next</button>
+        <button className={styles.btnGhost} onClick={onBack}>{c.back}</button>
+        <button className={styles.btnPrimary} onClick={onNext} disabled={!data.user_name?.trim()}>{c.next}</button>
       </div>
     </div>
   );

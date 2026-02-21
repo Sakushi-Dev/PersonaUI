@@ -1,4 +1,5 @@
 {
+    "language": "en",
     "apiModel": "claude-sonnet-4-5-20250929",
     "apiAutofillModel": "claude-sonnet-4-5-20250929",
     "apiTemperature": "0.7",

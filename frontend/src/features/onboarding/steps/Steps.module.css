@@ -126,8 +126,48 @@
 /* ===== Welcome Card ===== */
 
 .welcomeCard {
+  position: relative;
   text-align: center;
   padding: 48px 40px;
+}
+
+/* ── Language Toggle ── */
+.langToggle {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  gap: 4px;
+  z-index: 2;
+}
+
+.langBtn {
+  padding: 5px 10px;
+  border: 1px solid var(--ob-card-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ob-text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  letter-spacing: 0.03em;
+}
+
+.langBtn:hover {
+  border-color: var(--ob-accent);
+  color: var(--ob-text);
+}
+
+.langBtnActive {
+  background: var(--ob-accent);
+  border-color: var(--ob-accent);
+  color: #fff;
+}
+
+.langBtnActive:hover {
+  color: #fff;
 }
 
 .logo {

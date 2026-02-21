@@ -15,10 +15,11 @@ import StepFinish from './steps/StepFinish';
 import ProgressBar from './components/ProgressBar';
 import StepIndicator from './components/StepIndicator';
 import { updateUserProfile } from '../../services/userProfileApi';
-import { updateSettings } from '../../services/settingsApi';
+import { updateSettings, getSettings } from '../../services/settingsApi';
 import { saveApiKey } from '../../services/serverApi';
 import { completeOnboarding } from '../../services/onboardingApi';
 import * as storage from '../../utils/storage';
+import { DEFAULT_LANGUAGE } from '../../utils/languages';
 import styles from './OnboardingPage.module.css';
 
 const TOTAL_STEPS = 8;
@@ -66,6 +67,21 @@ export default function OnboardingPage() {
     apiKeyValid: false,
   });
 
+  const [language, setLanguage] = useState(DEFAULT_LANGUAGE);
+
+  // Load saved language from user_settings on mount
+  useEffect(() => {
+    getSettings()
+      .then((data) => { if (data?.language) setLanguage(data.language); })
+      .catch(() => {});
+  }, []);
+
+  // Save language immediately when changed
+  const handleLanguageChange = useCallback((lang) => {
+    setLanguage(lang);
+    updateSettings({ language: lang }).catch(() => {});
+  }, []);
+
   const goTo = useCallback((s) => {
     if (s >= 0 && s < TOTAL_STEPS) setStep(s);
   }, []);
@@ -85,6 +101,7 @@ export default function OnboardingPage() {
       await updateUserProfile(profileData);
 
       await updateSettings({
+        language,
         darkMode: interfaceData.darkMode,
         nonverbalColor: interfaceData.nonverbalColor,
         contextLimit: contextData.contextLimit,
@@ -105,7 +122,7 @@ export default function OnboardingPage() {
     } finally {
       setSaving(false);
     }
-  }, [profileData, interfaceData, contextData, cortexData, afterthoughtData, apiData]);
+  }, [profileData, interfaceData, contextData, cortexData, afterthoughtData, apiData, language]);
 
   const progress = (step / (TOTAL_STEPS - 1)) * 100;
 
@@ -127,13 +144,14 @@ export default function OnboardingPage() {
       {/* Step Container */}
       <div className={styles.container}>
         <div className={styles.stepWrapper} key={step}>
-          {step === 0 && <StepWelcome onNext={handleNext} />}
+          {step === 0 && <StepWelcome onNext={handleNext} language={language} onLanguageChange={handleLanguageChange} />}
           {step === 1 && (
             <StepProfile
               data={profileData}
               onChange={setProfileData}
               onNext={handleNext}
               onBack={handleBack}
+              language={language}
             />
           )}
           {step === 2 && (
@@ -143,6 +161,7 @@ export default function OnboardingPage() {
               onDarkModeChange={handleDarkModeChange}
               onNext={handleNext}
               onBack={handleBack}
+              language={language}
             />
           )}
           {step === 3 && (
@@ -151,6 +170,7 @@ export default function OnboardingPage() {
               onChange={setContextData}
               onNext={handleNext}
               onBack={handleBack}
+              language={language}
             />
           )}
           {step === 4 && (
@@ -159,6 +179,7 @@ export default function OnboardingPage() {
               onChange={setCortexData}
               onNext={handleNext}
               onBack={handleBack}
+              language={language}
             />
           )}
           {step === 5 && (
@@ -167,6 +188,7 @@ export default function OnboardingPage() {
               onChange={setAfterthoughtData}
               onNext={handleNext}
               onBack={handleBack}
+              language={language}
             />
           )}
           {step === 6 && (
@@ -175,6 +197,7 @@ export default function OnboardingPage() {
               onChange={setApiData}
               onNext={handleNext}
               onBack={handleBack}
+              language={language}
             />
           )}
           {step === 7 && (
@@ -182,6 +205,7 @@ export default function OnboardingPage() {
               hasApiKey={apiData.apiKeyValid}
               onFinish={handleFinish}
               saving={saving}
+              language={language}
             />
           )}
         </div>

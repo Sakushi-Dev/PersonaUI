@@ -1,10 +1,14 @@
-// ── Step: Interface (2/4) ──
+// ── Step: Interface (2/6) ──
 
 import InterfacePreview from '../../../components/InterfacePreview/InterfacePreview';
 import { NONVERBAL_PRESETS } from '../../../utils/constants';
+import { t } from '../useTranslation';
 import styles from './Steps.module.css';
 
-export default function StepInterface({ data, onChange, onDarkModeChange, onNext, onBack }) {
+export default function StepInterface({ data, onChange, onDarkModeChange, onNext, onBack, language }) {
+  const s = t(language, 'interface');
+  const c = t(language, 'common');
+
   const update = (field, value) => {
     onChange((prev) => ({ ...prev, [field]: value }));
   };
@@ -22,8 +26,8 @@ export default function StepInterface({ data, onChange, onDarkModeChange, onNext
     <div className={styles.card}>
       <div className={styles.cardHeader}>
         <span className={styles.cardStep}>2 / 6</span>
-        <h2>Interface</h2>
-        <p className={styles.cardDesc}>Customize the look to your taste.</p>
+        <h2>{s.title}</h2>
+        <p className={styles.cardDesc}>{s.desc}</p>
       </div>
       <div className={styles.cardBody}>
 
@@ -37,9 +41,9 @@ export default function StepInterface({ data, onChange, onDarkModeChange, onNext
 
         {/* Dark/Light Toggle */}
         <div className={styles.fieldGroup}>
-          <label className={styles.label}>Design Mode</label>
+          <label className={styles.label}>{s.designMode}</label>
           <div className={styles.modeSwitch}>
-            <span className={styles.modeLabel}>Light</span>
+            <span className={styles.modeLabel}>{s.light}</span>
             <label className={styles.toggle}>
               <input
                 type="checkbox"
@@ -48,13 +52,13 @@ export default function StepInterface({ data, onChange, onDarkModeChange, onNext
               />
               <span className={styles.toggleSlider} />
             </label>
-            <span className={styles.modeLabel}>Dark</span>
+            <span className={styles.modeLabel}>{s.dark}</span>
           </div>
         </div>
 
         {/* Nonverbal Color Presets */}
         <div className={styles.fieldGroup}>
-          <label className={styles.label}>Nonverbal Text Color</label>
+          <label className={styles.label}>{s.nonverbalColor}</label>
           <div className={styles.colorPresets}>
             {NONVERBAL_PRESETS.map((preset) => (
               <button
@@ -69,17 +73,17 @@ export default function StepInterface({ data, onChange, onDarkModeChange, onNext
               </button>
             ))}
           </div>
-          <span className={styles.hint}>Color for text between asterisks (*nonverbal*) – e.g. actions, emotions</span>
+          <span className={styles.hint}>{s.nonverbalHint}</span>
         </div>
 
         <div className={styles.infoBox}>
           <span className={styles.infoIcon}></span>
-          <span>More interface settings like colors, font, and size can be found later under <strong>Settings</strong>.</span>
+          <span dangerouslySetInnerHTML={{ __html: s.infoText }} />
         </div>
       </div>
       <div className={styles.cardFooter}>
-        <button className={styles.btnGhost} onClick={onBack}>Back</button>
-        <button className={styles.btnPrimary} onClick={onNext}>Next</button>
+        <button className={styles.btnGhost} onClick={onBack}>{c.back}</button>
+        <button className={styles.btnPrimary} onClick={onNext}>{c.next}</button>
       </div>
     </div>
   );
