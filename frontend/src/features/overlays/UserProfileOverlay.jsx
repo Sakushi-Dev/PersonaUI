@@ -4,6 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Overlay from '../../components/Overlay/Overlay';
 import OverlayHeader from '../../components/Overlay/OverlayHeader';
+import { UserIcon } from '../../components/Icons/Icons';
 import OverlayBody from '../../components/Overlay/OverlayBody';
 import OverlayFooter from '../../components/Overlay/OverlayFooter';
 import FormGroup from '../../components/FormGroup/FormGroup';
@@ -101,7 +102,7 @@ export default function UserProfileOverlay({ open, onClose, onOpenAvatarEditor, 
 
   return (
     <Overlay open={open} onClose={onClose} width="480px">
-      <OverlayHeader title="Mein Profil" onClose={onClose} />
+      <OverlayHeader title="Mein Profil" icon={<UserIcon size={20} />} onClose={onClose} />
       <OverlayBody>
         {/* Profile Card: Avatar + Name */}
         <div className={styles.profileCard}>

@@ -2,6 +2,8 @@
   position: fixed;
   inset: 0;
   background: var(--overlay-backdrop);
+  -webkit-backdrop-filter: var(--overlay-backdrop-blur, blur(8px));
+  backdrop-filter: var(--overlay-backdrop-blur, blur(8px));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -16,7 +18,8 @@
 
 .panel {
   background: var(--overlay-bg);
-  background: var(--overlay-bg-gradient);
+  -webkit-backdrop-filter: blur(25px);
+  backdrop-filter: blur(25px);
   border: 1px solid var(--overlay-border);
   border-radius: var(--border-radius-lg);
   box-shadow: var(--overlay-shadow);
@@ -40,10 +43,20 @@
 }
 
 .title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 18px;
   font-weight: var(--font-weight-semibold);
   color: var(--overlay-heading);
   margin: 0;
+}
+
+.titleIcon {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  opacity: 0.7;
 }
 
 .body {

@@ -44,6 +44,25 @@
   cursor: pointer;
 }
 
+/* ── Header Avatar ring + hover/click effects ── */
+.characterInfo > div:first-child {
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.25s ease,
+              border-color 0.25s ease;
+}
+
+.characterInfo > div:first-child:hover {
+  border-color: var(--nonverbal-color) !important;
+  transform: scale(1.08);
+  box-shadow: 0 0 10px var(--nonverbal-color), 0 0 20px rgba(228, 186, 0, 0.2);
+}
+
+.characterInfo > div:first-child:active {
+  transform: scale(0.93);
+  box-shadow: 0 0 6px var(--nonverbal-color);
+  transition-duration: 0.1s;
+}
+
 .characterName {
   font-size: 18px;
   font-weight: 600;
@@ -91,65 +110,65 @@
 
 /* ── Sound Toggle Button ── */
 .soundToggle {
-  background: rgba(100, 149, 237, 0.15);
-  border: 1px solid rgba(100, 149, 237, 0.35);
-  padding: 6px 8px;
+  background: none;
+  border: none;
+  font-size: 18px;
+  padding: 8px;
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(50, 90, 180, 1);
-}
-
-.soundToggle:hover {
-  background: rgba(100, 149, 237, 0.25);
-  border-color: rgba(100, 149, 237, 0.5);
-}
-
-.soundMuted {
-  background: rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  color: rgba(0, 0, 0, 0.35);
-}
-
-:global(body.dark-mode) .soundToggle {
-  background: rgba(100, 149, 237, 0.2);
-  border-color: rgba(100, 149, 237, 0.4);
-  color: rgba(130, 170, 255, 1);
-}
-
-:global(body.dark-mode) .soundToggle:hover {
-  background: rgba(100, 149, 237, 0.3);
-  border-color: rgba(100, 149, 237, 0.6);
-}
-
-:global(body.dark-mode) .soundMuted {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.3);
-}
-
-/* ── QR Code Button ── */
-.qrCodeBtn {
-  background: rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  padding: 8px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background-color 0.2s, color 0.25s;
   display: flex;
   align-items: center;
   justify-content: center;
   color: rgba(0, 0, 0, 0.6);
-  height: 34px;
+  opacity: 0.8;
+}
+
+.soundToggle:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+  color: var(--nonverbal-color);
+  opacity: 1;
+}
+
+.soundMuted {
+  color: rgba(0, 0, 0, 0.35);
+  opacity: 0.5;
+}
+
+:global(body.dark-mode) .soundToggle {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+:global(body.dark-mode) .soundToggle:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--nonverbal-color);
+}
+
+:global(body.dark-mode) .soundMuted {
+  color: rgba(255, 255, 255, 0.3);
+  opacity: 0.5;
+}
+
+/* ── QR Code Button ── */
+.qrCodeBtn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.25s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(0, 0, 0, 0.6);
+  opacity: 0.8;
 }
 
 .qrCodeBtn:hover {
-  background: rgba(0, 0, 0, 0.1);
-  border-color: rgba(0, 0, 0, 0.2);
-  color: rgba(0, 0, 0, 0.85);
+  background-color: rgba(0, 0, 0, 0.08);
+  color: var(--nonverbal-color);
+  opacity: 1;
 }
 
 .qrCodeBtn svg {
@@ -158,15 +177,12 @@
 }
 
 :global(body.dark-mode) .qrCodeBtn {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.15);
   color: rgba(255, 255, 255, 0.6);
 }
 
 :global(body.dark-mode) .qrCodeBtn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.25);
-  color: rgba(255, 255, 255, 0.9);
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--nonverbal-color);
 }
 
 /* ── API Status Indicator ── */
@@ -206,14 +222,19 @@
   cursor: pointer;
   padding: 8px;
   border-radius: 8px;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, color 0.25s;
   color: rgba(0, 0, 0, 0.6);
   opacity: 0.8;
 }
 
 .dropdownToggle:hover {
   background-color: rgba(0, 0, 0, 0.08);
-  color: rgba(0, 0, 0, 0.85);
+  color: var(--nonverbal-color);
+  opacity: 1;
+}
+
+.dropdownToggleActive {
+  color: var(--nonverbal-color);
   opacity: 1;
 }
 
@@ -223,7 +244,174 @@
 
 :global(body.dark-mode) .dropdownToggle:hover {
   background-color: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--nonverbal-color);
+}
+
+:global(body.dark-mode) .dropdownToggleActive {
+  color: var(--nonverbal-color);
+}
+
+/* ══════════════════════════════════════
+   Toolbar – centered icon bar below header
+   ══════════════════════════════════════ */
+.toolbar {
+  display: flex;
+  justify-content: center;
+  padding: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.3s ease, opacity 0.25s ease, padding 0.3s ease;
+}
+
+.toolbarVisible {
+  max-height: 80px;
+  opacity: 1;
+  padding: 6px 0 4px;
+  overflow: visible;
+}
+
+:global(body.dark-mode) .toolbar {
+  border-top-color: rgba(255, 255, 255, 0.06);
+}
+
+.toolbarInner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── Single toolbar button ── */
+.toolbarBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  padding: 6px 14px;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  color: rgba(0, 0, 0, 0.50);
+  transition: color 0.25s ease, filter 0.25s ease;
+  position: relative;
+}
+
+.toolbarBtn:hover {
+  color: var(--nonverbal-color);
+  filter: drop-shadow(0 0 6px var(--nonverbal-color));
+}
+
+:global(body.dark-mode) .toolbarBtn {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+:global(body.dark-mode) .toolbarBtn:hover {
+  color: var(--nonverbal-color);
+  filter: drop-shadow(0 0 8px var(--nonverbal-color));
+}
+
+.toolbarLabel {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  line-height: 1;
+  pointer-events: none;
+  opacity: 0.7;
+  transition: opacity 0.25s ease;
+}
+
+.toolbarBtn:hover .toolbarLabel {
+  opacity: 1;
+}
+
+/* ── Settings group (with hover submenu) ── */
+.settingsGroup {
+  position: relative;
+}
+
+/* Portal-based submenu – rendered on document.body, outside header's backdrop-filter */
+.settingsPortal {
+  position: absolute;
+  transform: translateX(-50%);
+  padding-top: 10px;
+  min-width: 160px;
+  z-index: var(--z-dropdown, 300);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+}
+
+.settingsSubmenuInner {
+  position: relative;
+  border-radius: var(--border-radius-md, 10px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+:global(body.dark-mode) .settingsSubmenuInner {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+}
+
+/* Dedicated blur element – now truly outside header, backdrop-filter works */
+.submenuBackdrop {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  -webkit-backdrop-filter: blur(25px);
+  backdrop-filter: blur(25px);
+  pointer-events: none;
+}
+
+:global(body.dark-mode) .submenuBackdrop {
+  background: rgba(17, 17, 22, 0.8);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Actual button content above the backdrop */
+.submenuContent {
+  position: relative;
+  padding: 6px;
+}
+
+.submenuBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border: none;
+  background: none;
+  color: rgba(0, 0, 0, 0.7);
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: var(--border-radius-sm);
+  transition: color 0.2s ease, background 0.2s ease, filter 0.2s ease;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.submenuBtn:hover {
+  color: var(--nonverbal-color);
+  background: rgba(0, 0, 0, 0.04);
+  filter: drop-shadow(0 0 4px var(--nonverbal-color));
+}
+
+:global(body.dark-mode) .submenuBtn {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+:global(body.dark-mode) .submenuBtn:hover {
+  color: var(--nonverbal-color);
+  background: rgba(255, 255, 255, 0.06);
+  filter: drop-shadow(0 0 5px var(--nonverbal-color));
+}
+
+@keyframes toolbarFadeIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-4px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
 /* ── Responsive (Mobile ≤768px) ── */
@@ -252,5 +440,28 @@
 
   .qrCodeBtn {
     display: none !important;
+  }
+
+  .toolbarInner {
+    gap: 2px;
+  }
+
+  .toolbarBtn {
+    padding: 6px 8px;
+  }
+
+  .toolbarLabel {
+    display: none;
+  }
+
+  .settingsPortal {
+    transform: none;
+    left: auto !important;
+    right: 8px;
+  }
+
+  @keyframes toolbarFadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 }

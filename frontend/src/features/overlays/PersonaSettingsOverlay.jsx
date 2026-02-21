@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useSession } from '../../hooks/useSession';
 import Overlay from '../../components/Overlay/Overlay';
 import OverlayHeader from '../../components/Overlay/OverlayHeader';
+import { PersonaIcon } from '../../components/Icons/Icons';
 import OverlayBody from '../../components/Overlay/OverlayBody';
 import Avatar from '../../components/Avatar/Avatar';
 import Button from '../../components/Button/Button';
@@ -233,7 +234,7 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
   if (view === 'list') {
     return (
       <Overlay open={open} onClose={onClose} width="1200px">
-        <OverlayHeader title="Persona Einstellungen" onClose={onClose} />
+        <OverlayHeader title="Persona Einstellungen" icon={<PersonaIcon size={20} />} onClose={onClose} />
         <OverlayBody>
           {loading ? (
             <Spinner />
@@ -320,6 +321,7 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
     <Overlay open={open} onClose={onClose} width="1200px">
       <OverlayHeader
         title={editingId ? `${name || 'Persona'} bearbeiten` : 'Persona Creator'}
+        icon={<PersonaIcon size={20} />}
         onClose={onClose}
       />
       <OverlayBody>

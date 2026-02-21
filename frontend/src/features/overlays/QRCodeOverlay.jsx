@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import Overlay from '../../components/Overlay/Overlay';
 import OverlayHeader from '../../components/Overlay/OverlayHeader';
+import { SmartphoneIcon } from '../../components/Icons/Icons';
 import OverlayBody from '../../components/Overlay/OverlayBody';
 import OverlayFooter from '../../components/Overlay/OverlayFooter';
 import Button from '../../components/Button/Button';
@@ -58,7 +59,7 @@ export default function QRCodeOverlay({ open, onClose, onOpenServerSettings }) {
 
   return (
     <Overlay open={open} onClose={onClose} width="420px">
-      <OverlayHeader title="📱 Netzwerk-Zugriff" onClose={onClose} />
+      <OverlayHeader title="Netzwerk-Zugriff" icon={<SmartphoneIcon size={20} />} onClose={onClose} />
       <OverlayBody>
         {loading ? (
           <Spinner />

@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useSettings } from '../../hooks/useSettings';
 import Overlay from '../../components/Overlay/Overlay';
 import OverlayHeader from '../../components/Overlay/OverlayHeader';
+import { ChatIcon } from '../../components/Icons/Icons';
 import OverlayBody from '../../components/Overlay/OverlayBody';
 import OverlayFooter from '../../components/Overlay/OverlayFooter';
 import FormGroup from '../../components/FormGroup/FormGroup';
@@ -56,7 +57,7 @@ export default function ApiSettingsOverlay({ open, onClose }) {
 
   return (
     <Overlay open={open} onClose={onClose} width="540px">
-      <OverlayHeader title="API / Chat Einstellungen" onClose={onClose} />
+      <OverlayHeader title="API / Chat Einstellungen" icon={<ChatIcon size={20} />} onClose={onClose} />
       <OverlayBody>
 
         {/* ═══ Section: Modell ═══ */}

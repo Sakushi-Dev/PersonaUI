@@ -5,6 +5,7 @@
 import { useState, useCallback, useRef } from 'react';
 import Overlay from '../../components/Overlay/Overlay';
 import OverlayHeader from '../../components/Overlay/OverlayHeader';
+import { KeyIcon } from '../../components/Icons/Icons';
 import OverlayBody from '../../components/Overlay/OverlayBody';
 import OverlayFooter from '../../components/Overlay/OverlayFooter';
 import FormGroup from '../../components/FormGroup/FormGroup';
@@ -150,7 +151,7 @@ export default function ApiKeyOverlay({ open, onClose }) {
 
   return (
     <Overlay open={open} onClose={handleClose} width="480px">
-      <OverlayHeader title="Anthropic API-Key Verwaltung" onClose={handleClose} />
+      <OverlayHeader title="Anthropic API-Key Verwaltung" icon={<KeyIcon size={20} />} onClose={handleClose} />
       <OverlayBody>
         <FormGroup label="API-Key:" hint="Geben Sie Ihren Anthropic API-Key ein">
           <div className={styles.passwordWrapper}>

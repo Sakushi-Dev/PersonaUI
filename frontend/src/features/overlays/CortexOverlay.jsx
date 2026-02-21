@@ -6,6 +6,7 @@ import { useSession } from '../../hooks/useSession';
 import { useSettings } from '../../hooks/useSettings';
 import Overlay from '../../components/Overlay/Overlay';
 import OverlayHeader from '../../components/Overlay/OverlayHeader';
+import { CortexIcon } from '../../components/Icons/Icons';
 import OverlayBody from '../../components/Overlay/OverlayBody';
 import OverlayFooter from '../../components/Overlay/OverlayFooter';
 import Toggle from '../../components/Toggle/Toggle';
@@ -162,7 +163,7 @@ export default function CortexOverlay({ open, onClose }) {
   // ══════════════════════════════════════════
   return (
     <Overlay open={open} onClose={onClose} width="580px">
-      <OverlayHeader title="🧬 Cortex" onClose={onClose} />
+      <OverlayHeader title="Cortex" icon={<CortexIcon size={20} />} onClose={onClose} />
       <OverlayBody>
 
         {/* ═══ Section: Cortex Aktivierung ═══ */}

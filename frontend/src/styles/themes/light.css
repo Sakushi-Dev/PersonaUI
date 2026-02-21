@@ -8,11 +8,12 @@
   --bg-gradient-2: #f0c6ff;
 
   /* Overlay */
-  --overlay-backdrop: rgba(0, 0, 0, 0.5);
-  --overlay-bg: #f5f7fa;
-  --overlay-bg-gradient: linear-gradient(145deg, #f5f7fa, #e8edf2);
-  --overlay-border: rgba(0, 0, 0, 0.15);
-  --overlay-shadow: 0 20px 60px rgba(0, 0, 0, 0.2), 0 4px 16px rgba(0, 0, 0, 0.12);
+  --overlay-backdrop: rgba(0, 0, 0, 0.18);
+  --overlay-backdrop-blur: blur(8px);
+  --overlay-bg: rgba(255, 255, 255, 0.6);
+  --overlay-bg-gradient: rgba(255, 255, 255, 0.6);
+  --overlay-border: rgba(0, 0, 0, 0.1);
+  --overlay-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
   --overlay-text: #1a1a2e;
   --overlay-text-color: #1a1a2e;
   --overlay-text-secondary: #3a3a4a;
@@ -22,7 +23,7 @@
   --overlay-border-color: rgba(0, 0, 0, 0.12);
 
   /* Overlay Inputs */
-  --overlay-input-bg: #ffffff;
+  --overlay-input-bg: rgba(255, 255, 255, 0.55);
   --overlay-input-border: rgba(0, 0, 0, 0.2);
   --overlay-input-text: #1a1a2e;
   --overlay-input-focus-border: rgba(79, 120, 230, 0.6);

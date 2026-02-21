@@ -4,6 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Overlay from '../../components/Overlay/Overlay';
 import OverlayHeader from '../../components/Overlay/OverlayHeader';
+import { GearIcon } from '../../components/Icons/Icons';
 import OverlayBody from '../../components/Overlay/OverlayBody';
 import FormGroup from '../../components/FormGroup/FormGroup';
 import Button from '../../components/Button/Button';
@@ -232,7 +233,7 @@ export default function CustomSpecsOverlay({ open, onClose }) {
 
   return (
     <Overlay open={open} onClose={onClose} width="600px">
-      <OverlayHeader title="Custom Specs" onClose={onClose} />
+      <OverlayHeader title="Custom Specs" icon={<GearIcon size={20} />} onClose={onClose} />
       <OverlayBody>
         {/* Category Tabs */}
         <div className={styles.tabBar}>

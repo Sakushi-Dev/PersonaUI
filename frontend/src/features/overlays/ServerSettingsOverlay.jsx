@@ -4,6 +4,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Overlay from '../../components/Overlay/Overlay';
 import OverlayHeader from '../../components/Overlay/OverlayHeader';
+import { ServerIcon } from '../../components/Icons/Icons';
 import OverlayBody from '../../components/Overlay/OverlayBody';
 import OverlayFooter from '../../components/Overlay/OverlayFooter';
 import FormGroup from '../../components/FormGroup/FormGroup';
@@ -101,7 +102,7 @@ export default function ServerSettingsOverlay({ open, onClose }) {
 
   return (
     <Overlay open={open} onClose={onClose} width="460px">
-      <OverlayHeader title="Server-Einstellungen" onClose={onClose} />
+      <OverlayHeader title="Server-Einstellungen" icon={<ServerIcon size={20} />} onClose={onClose} />
       <OverlayBody>
         <FormGroup label="Server-Modus">
           <select

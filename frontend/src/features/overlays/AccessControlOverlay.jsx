@@ -4,6 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Overlay from '../../components/Overlay/Overlay';
 import OverlayHeader from '../../components/Overlay/OverlayHeader';
+import { ShieldIcon } from '../../components/Icons/Icons';
 import OverlayBody from '../../components/Overlay/OverlayBody';
 import OverlayFooter from '../../components/Overlay/OverlayFooter';
 import Button from '../../components/Button/Button';
@@ -76,7 +77,7 @@ export default function AccessControlOverlay({ open, onClose }) {
 
   return (
     <Overlay open={open} onClose={onClose} width="500px">
-      <OverlayHeader title="🛡️ Zugangskontrolle" onClose={onClose} />
+      <OverlayHeader title="Zugangskontrolle" icon={<ShieldIcon size={20} />} onClose={onClose} />
       <OverlayBody>
         {loading ? (
           <Spinner />

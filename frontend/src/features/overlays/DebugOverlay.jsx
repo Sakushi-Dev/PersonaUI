@@ -6,6 +6,7 @@ import { useSession } from '../../hooks/useSession';
 import { useToast } from '../../components/Toast/ToastContainer';
 import Overlay from '../../components/Overlay/Overlay';
 import OverlayHeader from '../../components/Overlay/OverlayHeader';
+import { WrenchIcon } from '../../components/Icons/Icons';
 import OverlayBody from '../../components/Overlay/OverlayBody';
 import OverlayFooter from '../../components/Overlay/OverlayFooter';
 import Button from '../../components/Button/Button';
@@ -35,7 +36,7 @@ export default function DebugOverlay({ open, onClose }) {
 
   return (
     <Overlay open={open} onClose={onClose} width="520px">
-      <OverlayHeader title="🛠 Debug Panel" onClose={onClose} />
+      <OverlayHeader title="Debug Panel" icon={<WrenchIcon size={20} />} onClose={onClose} />
       <OverlayBody>
         {/* Toast Notifications */}
         <section className={styles.section}>

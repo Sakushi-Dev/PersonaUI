@@ -3,6 +3,7 @@
 
 import Overlay from '../../components/Overlay/Overlay';
 import OverlayHeader from '../../components/Overlay/OverlayHeader';
+import { WarningIcon } from '../../components/Icons/Icons';
 import OverlayBody from '../../components/Overlay/OverlayBody';
 import OverlayFooter from '../../components/Overlay/OverlayFooter';
 import Button from '../../components/Button/Button';
@@ -11,7 +12,7 @@ import styles from './Overlays.module.css';
 export default function ApiWarningOverlay({ open, onClose, onOpenApiKey }) {
   return (
     <Overlay open={open} onClose={onClose} width="420px">
-      <OverlayHeader title="⚠️ Kein API-Key konfiguriert" onClose={onClose} />
+      <OverlayHeader title="Kein API-Key konfiguriert" icon={<WarningIcon size={20} />} onClose={onClose} />
       <OverlayBody>
         <div className={styles.infoContent}>
           <p>Um PersonaUI nutzen zu können, benötigst du einen Anthropic API-Key.</p>

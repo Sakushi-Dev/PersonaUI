@@ -4,6 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Overlay from '../../components/Overlay/Overlay';
 import OverlayHeader from '../../components/Overlay/OverlayHeader';
+import { UserIcon } from '../../components/Icons/Icons';
 import OverlayBody from '../../components/Overlay/OverlayBody';
 import OverlayFooter from '../../components/Overlay/OverlayFooter';
 import Button from '../../components/Button/Button';
@@ -96,6 +97,7 @@ export default function AvatarEditorOverlay({ open, onClose, personaId, target =
     <Overlay open={open} onClose={onClose} width="560px" stacked={stacked}>
       <OverlayHeader
         title={view === 'crop' ? 'Avatar zuschneiden' : 'Avatar auswählen'}
+        icon={<UserIcon size={20} />}
         onClose={onClose}
       />
       <OverlayBody>

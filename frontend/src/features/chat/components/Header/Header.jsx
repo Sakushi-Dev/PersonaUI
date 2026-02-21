@@ -1,51 +1,19 @@
 // ── Header Component ──
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useSession } from '../../../../hooks/useSession';
 import { useSettings } from '../../../../hooks/useSettings';
 import Avatar from '../../../../components/Avatar/Avatar';
-import Dropdown from '../../../../components/Dropdown/Dropdown';
-import DropdownItem from '../../../../components/Dropdown/DropdownItem';
-import DropdownSubmenu from '../../../../components/Dropdown/DropdownSubmenu';
 import { checkApiStatus } from '../../../../services/serverApi';
 import styles from './Header.module.css';
 
 // ── SVG Icons ──
-function SoundOnIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-      <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-      <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-    </svg>
-  );
-}
-
-function SoundOffIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-      <line x1="23" y1="9" x2="17" y2="15" />
-      <line x1="17" y1="9" x2="23" y2="15" />
-    </svg>
-  );
-}
-
-function QRCodeIcon() {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="3" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2" />
-      <rect x="14" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2" />
-      <rect x="3" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2" />
-      <rect x="5" y="5" width="3" height="3" fill="currentColor" />
-      <rect x="16" y="5" width="3" height="3" fill="currentColor" />
-      <rect x="5" y="16" width="3" height="3" fill="currentColor" />
-      <rect x="14" y="14" width="3" height="3" fill="currentColor" />
-      <rect x="18" y="14" width="3" height="3" fill="currentColor" />
-      <rect x="14" y="18" width="3" height="3" fill="currentColor" />
-    </svg>
-  );
-}
+import {
+  SoundOnIcon, SoundOffIcon, QRCodeIcon,
+  UserIcon, KeyIcon, CortexIcon, PersonaIcon, GearIcon,
+  MonitorIcon, ChatIcon, ServerIcon, ShieldIcon,
+} from '../../../../components/Icons/Icons';
 
 export default function Header({
   onToggleSidebar,
@@ -72,6 +40,76 @@ export default function Header({
     set('notificationSound', !soundEnabled);
   }, [soundEnabled, set]);
 
+  // ── Toolbar visibility (hamburger toggle) ──
+  const [toolbarVisible, setToolbarVisible] = useState(false);
+  const headerRef = useRef(null);
+  const hideTimerRef = useRef(null);
+
+  const toggleToolbar = useCallback(() => {
+    setToolbarVisible(prev => !prev);
+  }, []);
+
+  // Auto-hide: start 2s timer when mouse leaves the entire header area
+  const handleHeaderMouseEnter = useCallback(() => {
+    if (hideTimerRef.current) {
+      clearTimeout(hideTimerRef.current);
+      hideTimerRef.current = null;
+    }
+  }, []);
+
+  const handleHeaderMouseLeave = useCallback(() => {
+    if (toolbarVisible) {
+      hideTimerRef.current = setTimeout(() => {
+        setToolbarVisible(false);
+        setSettingsOpen(false);
+      }, 2000);
+    }
+  }, [toolbarVisible]);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+      if (settingsTimerRef.current) clearTimeout(settingsTimerRef.current);
+    };
+  }, []);
+
+  // ── Click outside header → close toolbar ──
+  const portalRef = useRef(null);
+  useEffect(() => {
+    if (!toolbarVisible) return;
+    const handleClickOutside = (e) => {
+      if (
+        headerRef.current && !headerRef.current.contains(e.target) &&
+        (!portalRef.current || !portalRef.current.contains(e.target))
+      ) {
+        setToolbarVisible(false);
+        setSettingsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [toolbarVisible]);
+
+  // ── Settings submenu state (with hover delay) ──
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsRef = useRef(null);
+  const settingsTimerRef = useRef(null);
+
+  const handleSettingsEnter = useCallback(() => {
+    if (settingsTimerRef.current) {
+      clearTimeout(settingsTimerRef.current);
+      settingsTimerRef.current = null;
+    }
+    setSettingsOpen(true);
+  }, []);
+
+  const handleSettingsLeave = useCallback(() => {
+    settingsTimerRef.current = setTimeout(() => {
+      setSettingsOpen(false);
+    }, 400);
+  }, []);
+
   // ── API Status ──
   const [apiConnected, setApiConnected] = useState(null); // null=loading, true=connected, false=disconnected
 
@@ -91,7 +129,12 @@ export default function Header({
   }, []);
 
   return (
-    <header className={styles.header}>
+    <header
+      className={styles.header}
+      ref={headerRef}
+      onMouseEnter={handleHeaderMouseEnter}
+      onMouseLeave={handleHeaderMouseLeave}
+    >
       <div className={styles.headerContent}>
         {/* ── Left: Avatar + Name ── */}
         <div className={styles.left}>
@@ -139,31 +182,114 @@ export default function Header({
             <span className={styles.statusDot} />
           </div>
 
-          {/* Settings Dropdown (☰ hamburger like legacy) */}
-          <Dropdown
-            trigger={
-              <button className={styles.dropdownToggle} title="Einstellungen">
-                ☰
-              </button>
-            }
+          {/* Hamburger toggle for toolbar */}
+          <button
+            className={`${styles.dropdownToggle} ${toolbarVisible ? styles.dropdownToggleActive : ''}`}
+            onClick={toggleToolbar}
+            title="Menü"
           >
-            {(close) => (
-              <>
-                <DropdownItem label="Mein Profil" onClick={() => { close(); onOpenUserProfile?.(); }} />
-                <DropdownItem label="Set API-Key" onClick={() => { close(); onOpenApiKey?.(); }} />
-                <DropdownItem label="Cortex" onClick={() => { close(); onOpenCortex?.(); }} />
-                <DropdownItem label="Persona" onClick={() => { close(); onOpenPersonaSettings?.(); }} />
-                <DropdownSubmenu label="Einstellungen">
-                  <DropdownItem label="Interface" onClick={() => { close(); onOpenInterfaceSettings?.(); }} />
-                  <DropdownItem label="API / Chat" onClick={() => { close(); onOpenApiSettings?.(); }} />
-                  <DropdownItem label="Server" onClick={() => { close(); onOpenServerSettings?.(); }} />
-                  <DropdownItem label="Zugangskontrolle" onClick={() => { close(); onOpenAccessControl?.(); }} />
-                </DropdownSubmenu>
-              </>
-            )}
-          </Dropdown>
+            ☰
+          </button>
         </div>
       </div>
+
+      {/* ── Toolbar: Centered icon bar below header ── */}
+      <nav className={`${styles.toolbar} ${toolbarVisible ? styles.toolbarVisible : ''}`}>
+        <div className={styles.toolbarInner}>
+          <button
+            className={styles.toolbarBtn}
+            onClick={onOpenUserProfile}
+            title="Mein Profil"
+          >
+            <UserIcon />
+            <span className={styles.toolbarLabel}>Profil</span>
+          </button>
+
+          <button
+            className={styles.toolbarBtn}
+            onClick={onOpenApiKey}
+            title="Set API-Key"
+          >
+            <KeyIcon />
+            <span className={styles.toolbarLabel}>API-Key</span>
+          </button>
+
+          <button
+            className={styles.toolbarBtn}
+            onClick={onOpenCortex}
+            title="Cortex"
+          >
+            <CortexIcon />
+            <span className={styles.toolbarLabel}>Cortex</span>
+          </button>
+
+          <button
+            className={styles.toolbarBtn}
+            onClick={onOpenPersonaSettings}
+            title="Persona"
+          >
+            <PersonaIcon />
+            <span className={styles.toolbarLabel}>Persona</span>
+          </button>
+
+          {/* Settings with hover submenu */}
+          <div
+            className={styles.settingsGroup}
+            ref={settingsRef}
+            onMouseEnter={handleSettingsEnter}
+            onMouseLeave={handleSettingsLeave}
+          >
+            <button
+              className={styles.toolbarBtn}
+              title="Einstellungen"
+            >
+              <GearIcon />
+              <span className={styles.toolbarLabel}>Settings</span>
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Portal: Submenu rendered outside header to allow backdrop-filter */}
+      {settingsOpen && createPortal(
+        <div
+          ref={portalRef}
+          className={styles.settingsPortal}
+          style={{
+            top: settingsRef.current
+              ? settingsRef.current.getBoundingClientRect().bottom + window.scrollY + 'px'
+              : '0px',
+            left: settingsRef.current
+              ? settingsRef.current.getBoundingClientRect().left + settingsRef.current.offsetWidth / 2 + 'px'
+              : '0px',
+          }}
+          onMouseEnter={handleSettingsEnter}
+          onMouseLeave={handleSettingsLeave}
+        >
+          <div className={styles.settingsSubmenuInner}>
+            <div className={styles.submenuBackdrop} aria-hidden="true" />
+            <div className={styles.submenuContent}>
+              <button className={styles.submenuBtn} onClick={() => { setSettingsOpen(false); onOpenInterfaceSettings?.(); }}>
+                <MonitorIcon />
+                <span>Interface</span>
+              </button>
+              <button className={styles.submenuBtn} onClick={() => { setSettingsOpen(false); onOpenApiSettings?.(); }}>
+                <ChatIcon />
+                <span>API / Chat</span>
+              </button>
+              <button className={styles.submenuBtn} onClick={() => { setSettingsOpen(false); onOpenServerSettings?.(); }}>
+                <ServerIcon />
+                <span>Server</span>
+              </button>
+              <button className={styles.submenuBtn} onClick={() => { setSettingsOpen(false); onOpenAccessControl?.(); }}>
+                <ShieldIcon />
+                <span>Zugang</span>
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </header>
   );
 }

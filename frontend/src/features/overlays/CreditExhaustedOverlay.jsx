@@ -3,6 +3,7 @@
 
 import Overlay from '../../components/Overlay/Overlay';
 import OverlayHeader from '../../components/Overlay/OverlayHeader';
+import { CreditCardIcon } from '../../components/Icons/Icons';
 import OverlayBody from '../../components/Overlay/OverlayBody';
 import OverlayFooter from '../../components/Overlay/OverlayFooter';
 import Button from '../../components/Button/Button';
@@ -15,7 +16,7 @@ export default function CreditExhaustedOverlay({ open, onClose }) {
 
   return (
     <Overlay open={open} onClose={onClose} width="420px">
-      <OverlayHeader title="💳 API-Guthaben erschöpft" onClose={onClose} />
+      <OverlayHeader title="API-Guthaben erschöpft" icon={<CreditCardIcon size={20} />} onClose={onClose} />
       <OverlayBody>
         <div className={styles.infoContent}>
           <p className={styles.highlight}>

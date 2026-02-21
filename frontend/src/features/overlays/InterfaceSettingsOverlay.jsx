@@ -7,6 +7,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { resolveFontFamily, adjustedFontSize, hueToColors, DEFAULT_HUE, NONVERBAL_PRESETS } from '../../utils/constants';
 import Overlay from '../../components/Overlay/Overlay';
 import OverlayHeader from '../../components/Overlay/OverlayHeader';
+import { MonitorIcon } from '../../components/Icons/Icons';
 import OverlayBody from '../../components/Overlay/OverlayBody';
 import OverlayFooter from '../../components/Overlay/OverlayFooter';
 import Toggle from '../../components/Toggle/Toggle';
@@ -36,6 +37,7 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
     setDynamicBackground: setThemeDynBg,
   } = useTheme();
 
+  const [language, setLanguage] = useState('en');
   const [darkMode, setDarkMode] = useState(false);
   const [dynamicBg, setDynamicBg] = useState(true);
   const [notificationSound, setNotificationSound] = useState(true);
@@ -51,6 +53,7 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
   useEffect(() => {
     if (!open) return;
 
+    setLanguage(get('language', 'en'));
     setDarkMode(get('darkMode', false));
     setDynamicBg(get('dynamicBackground', true));
     setNotificationSound(get('notificationSound', true));
@@ -71,6 +74,7 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
     const darkColors = hueToColors(colorHue, true);
 
     setMany({
+      language,
       darkMode,
       dynamicBackground: dynamicBg,
       notificationSound,
@@ -102,7 +106,7 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
     setThemeDynBg(dynamicBg);
 
     onClose();
-  }, [darkMode, dynamicBg, notificationSound, colorHue, nonverbalColor, fontSize, fontFamily, setMany, setIsDark, updateColors, setThemeFontSize, setThemeFontFamily, setThemeFontKey, setThemeDynBg, onClose]);
+  }, [language, darkMode, dynamicBg, notificationSound, colorHue, nonverbalColor, fontSize, fontFamily, setMany, setIsDark, updateColors, setThemeFontSize, setThemeFontFamily, setThemeFontKey, setThemeDynBg, onClose]);
 
   // ── Close without saving ──
   const handleClose = useCallback(() => {
@@ -119,6 +123,7 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
     const darkColors = hueToColors(DEFAULT_HUE, true);
 
     setMany({
+      language: 'en',
       darkMode: false,
       dynamicBackground: true,
       notificationSound: true,
@@ -149,6 +154,7 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
     setThemeFontKey('ubuntu');
     setThemeDynBg(true);
 
+    setLanguage('en');
     setDarkMode(false);
     setDynamicBg(true);
     setNotificationSound(true);
@@ -160,7 +166,7 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
 
   return (
     <Overlay open={open} onClose={handleClose} width="540px">
-      <OverlayHeader title="Interface-Einstellungen" onClose={handleClose} />
+      <OverlayHeader title="Interface-Einstellungen" icon={<MonitorIcon size={20} />} onClose={handleClose} />
       <OverlayBody>
 
         {/* ═══ Sticky Live Preview ═══ */}
@@ -183,6 +189,35 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
             Darstellung
           </h3>
           <div className={styles.ifaceCard}>
+
+            {/* Language Selector */}
+            <div className={styles.ifaceToggleRow}>
+              <div className={styles.ifaceToggleInfo}>
+                <span className={styles.ifaceToggleLabel}>Sprache / Language</span>
+                <span className={styles.ifaceToggleHint}>
+                  {language === 'de' ? 'Deutsch' : 'English'}
+                </span>
+              </div>
+              <div className={styles.langSelector}>
+                <button
+                  type="button"
+                  className={`${styles.langOption} ${language === 'de' ? styles.langOptionActive : ''}`}
+                  onClick={() => setLanguage('de')}
+                >
+                  DE
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.langOption} ${language === 'en' ? styles.langOptionActive : ''}`}
+                  onClick={() => setLanguage('en')}
+                >
+                  EN
+                </button>
+              </div>
+            </div>
+
+            <div className={styles.ifaceDivider} />
+
             <div className={styles.ifaceToggleRow}>
               <div className={styles.ifaceToggleInfo}>
                 <span className={styles.ifaceToggleLabel}>Design-Modus</span>
