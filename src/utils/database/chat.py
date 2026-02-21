@@ -137,8 +137,8 @@ def get_conversation_context(limit: int = 10, session_id: int = None,
                 'content': row[0]
             })
     
-    # Leading assistant messages (e.g. Greeting) are NOT removed,
-    # so the AI knows it has already greeted.
+    # Leading assistant messages (e.g. Auto First Message) are NOT removed,
+    # so the AI knows it has already opened the conversation.
     # Claude API accepts messages that start with assistant,
     # when the system parameter is passed separately.
 

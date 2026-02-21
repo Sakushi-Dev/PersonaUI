@@ -14,6 +14,7 @@ export function SessionProvider({ children }) {
   const [chatHistory, setChatHistory] = useState([]);
   const [totalMessageCount, setTotalMessageCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [pendingAutoFirstMessage, setPendingAutoFirstMessage] = useState(false);
   const initialized = useRef(false);
 
   // Load personas
@@ -92,6 +93,10 @@ export function SessionProvider({ children }) {
         setChatHistory(newSession.chat_history || []);
         setTotalMessageCount(newSession.total_message_count || 0);
         updateUrl(newSession.session_id, newSession.persona_id || activePid);
+        // Signal auto first message if enabled
+        if (newSession.auto_first_message) {
+          setPendingAutoFirstMessage(true);
+        }
       } else {
         // Last resort: just load character config
         try {
@@ -144,6 +149,10 @@ export function SessionProvider({ children }) {
           setSessionId(targetSessionId);
           setPersonaId(newPersonaId);
           updateUrl(targetSessionId, newPersonaId);
+          // Signal auto first message if enabled
+          if (newSession.auto_first_message) {
+            setPendingAutoFirstMessage(true);
+          }
           return;
         }
       }
@@ -266,6 +275,8 @@ export function SessionProvider({ children }) {
     chatHistory,
     totalMessageCount,
     loading,
+    pendingAutoFirstMessage,
+    setPendingAutoFirstMessage,
     setLoading,
     setCharacter,
     setPersonas,

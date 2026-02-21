@@ -168,10 +168,3 @@ class TestGenerateSessionTitle:
         result = chat_service.generate_session_title('Test')
         assert isinstance(result, str)
         assert result == 'Neue Konversation'
-
-
-class TestGetGreeting:
-    def test_returns_greeting(self, chat_service, test_character_data):
-        result = chat_service.get_greeting(test_character_data)
-        assert isinstance(result, str)
-        assert 'TestPersona' in result

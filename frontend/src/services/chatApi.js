@@ -21,6 +21,26 @@ export function sendChatMessage(message, options = {}) {
   });
 }
 
+/**
+ * Triggers auto-generated first message for a new chat session.
+ * The backend sends an internal prompt to the API and streams the persona's opening message.
+ */
+export function sendAutoFirstMessage(options = {}) {
+  const body = {
+    session_id: options.sessionId,
+    persona_id: options.personaId || 'default',
+    ...(options.apiModel && { api_model: options.apiModel }),
+    ...(options.apiTemperature !== undefined && { api_temperature: parseFloat(options.apiTemperature) }),
+    ...(options.experimentalMode !== undefined && { experimental_mode: !!options.experimentalMode }),
+  };
+
+  return apiStream('/chat/auto_first_message', body, {
+    onChunk: options.onChunk,
+    onDone: options.onDone,
+    onError: options.onError,
+  });
+}
+
 export function sendAfterthought(options = {}) {
   const body = {
     session_id: options.sessionId,

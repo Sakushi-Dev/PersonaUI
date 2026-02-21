@@ -5,7 +5,7 @@ from flask import Blueprint, render_template, request, redirect, url_for
 import os
 
 from utils.database import (
-    get_chat_history, save_message, get_current_session_id,
+    get_chat_history, get_current_session_id,
     get_all_sessions, get_message_count, get_session_persona_id
 )
 from utils.config import load_character, load_char_config, get_active_persona_id, activate_persona
@@ -102,14 +102,8 @@ def index():
     chat_history = get_chat_history(session_id=session_id, persona_id=active_persona_id) if session_id else []
     total_count = get_message_count(session_id=session_id, persona_id=active_persona_id) if session_id else 0
     
-    # Wenn Session vorhanden aber keine Chat-Historie, speichere Greeting (falls aktiviert)
-    if session_id and not chat_history:
-        greeting = character.get('greeting')
-        if greeting:
-            character_name = character.get('char_name', 'Assistant')
-            save_message(greeting, False, character_name, session_id, persona_id=active_persona_id)
-            chat_history = get_chat_history(session_id=session_id, persona_id=active_persona_id)
-            total_count = get_message_count(session_id=session_id, persona_id=active_persona_id)
+    # Wenn Session vorhanden aber keine Chat-Historie, nichts vorbelegen
+    # (Auto-First-Message wird vom Frontend per API-Request ausgelöst)
     
     return render_template('chat.html', 
                          character=character,

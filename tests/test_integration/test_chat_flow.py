@@ -298,11 +298,11 @@ class TestPromptReachesApi:
         assert len(done_events) == 1
 
 
-class TestGreetingInHistory:
-    """Prüft, dass die Greeting-Nachricht als eigene Assistant-Message erhalten bleibt."""
+class TestAutoFirstMessageInHistory:
+    """Prüft, dass die Auto-First-Message als eigene Assistant-Message erhalten bleibt."""
 
-    def test_greeting_is_standalone_assistant_message(self, mock_api_client, test_character_data, mock_engine):
-        """Greeting muss als eigene Assistant-Message erhalten bleiben."""
+    def test_auto_first_msg_is_standalone_assistant_message(self, mock_api_client, test_character_data, mock_engine):
+        """Auto-First-Message muss als eigene Assistant-Message erhalten bleiben."""
         from utils.api_request.types import StreamEvent
 
         service = _make_chat_service(mock_api_client, mock_engine)
@@ -310,35 +310,35 @@ class TestGreetingInHistory:
             StreamEvent('done', {'response': 'ok', 'api_input_tokens': 10, 'output_tokens': 5}),
         ])
 
-        greeting_text = 'Hallo, wie kann ich dir heute helfen?'
+        first_msg_text = 'Hallo, wie kann ich dir heute helfen?'
 
-        # History wie aus DB: Greeting als erste assistant-Nachricht
-        history_with_greeting = [
-            {'role': 'assistant', 'content': greeting_text},
+        # History wie aus DB: Auto-First-Message als erste assistant-Nachricht
+        history_with_first_msg = [
+            {'role': 'assistant', 'content': first_msg_text},
             {'role': 'user', 'content': 'hey'},
         ]
 
         list(service.chat_stream(
             user_message='wie gehts dir?',
-            conversation_history=history_with_greeting,
+            conversation_history=history_with_first_msg,
             character_data=test_character_data,
             persona_id='default',
         ))
 
         config = mock_api_client.stream.call_args[0][0]
 
-        # Greeting muss als eigene Assistant-Message existieren
+        # Auto-First-Message muss als eigene Assistant-Message existieren
         assistant_messages = [m for m in config.messages if m['role'] == 'assistant']
-        greeting_found_standalone = any(
-            m['content'] == greeting_text for m in assistant_messages
+        first_msg_found_standalone = any(
+            m['content'] == first_msg_text for m in assistant_messages
         )
-        assert greeting_found_standalone, (
-            f"Greeting '{greeting_text}' ist keine eigene Assistant-Message!\n"
+        assert first_msg_found_standalone, (
+            f"Auto-First-Message '{first_msg_text}' ist keine eigene Assistant-Message!\n"
             f"Messages: {[(m['role'], m['content'][:60]) for m in config.messages]}"
         )
 
-    def test_greeting_visible_on_second_turn(self, mock_api_client, test_character_data, mock_engine):
-        """Beim zweiten User-Turn muss die gesamte bisherige Konversation inkl. Greeting sichtbar sein."""
+    def test_first_msg_visible_on_second_turn(self, mock_api_client, test_character_data, mock_engine):
+        """Beim zweiten User-Turn muss die gesamte bisherige Konversation inkl. First-Message sichtbar sein."""
         from utils.api_request.types import StreamEvent
 
         service = _make_chat_service(mock_api_client, mock_engine)
@@ -346,7 +346,7 @@ class TestGreetingInHistory:
             StreamEvent('done', {'response': 'ok', 'api_input_tokens': 10, 'output_tokens': 5}),
         ])
 
-        # History nach erstem Austausch: Greeting + 1. Frage + 1. Antwort
+        # History nach erstem Austausch: Auto-First-Message + 1. Frage + 1. Antwort
         history = [
             {'role': 'assistant', 'content': 'Hallo, wie kann ich dir heute helfen?'},
             {'role': 'user', 'content': 'hey'},
@@ -369,8 +369,8 @@ class TestGreetingInHistory:
                 f"History '{msg['content']}' fehlt im API-Request"
             )
 
-    def test_no_consecutive_same_roles_with_greeting(self, mock_api_client, test_character_data, mock_engine):
-        """Keine doppelten gleichen Rollen — auch mit Greeting."""
+    def test_no_consecutive_same_roles_with_first_msg(self, mock_api_client, test_character_data, mock_engine):
+        """Keine doppelten gleichen Rollen — auch mit Auto-First-Message."""
         from utils.api_request.types import StreamEvent
 
         service = _make_chat_service(mock_api_client, mock_engine)

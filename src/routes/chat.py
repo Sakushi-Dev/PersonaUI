@@ -430,3 +430,100 @@ def afterthought():
         
     else:
         return error_response(f'Unbekannte Phase: {phase}')
+
+
+@chat_bp.route('/chat/auto_first_message', methods=['POST'])
+@handle_route_error('auto_first_message')
+def auto_first_message():
+    """
+    Generiert automatisch die erste Nachricht für einen neuen Chat.
+    Wird aufgerufen wenn start_msg_enabled=True und ein neuer Chat geöffnet wird.
+    Sendet einen internen Prompt an die API und streamt die Antwort als SSE.
+    """
+    data = request.get_json()
+    session_id = data.get('session_id')
+    api_model = data.get('api_model')
+    api_temperature = data.get('api_temperature')
+    experimental_mode = data.get('experimental_mode', False)
+
+    # Persona-ID bestimmen
+    persona_id = resolve_persona_id(session_id=session_id)
+
+    log.info("Auto-First-Message: session=%s, persona=%s", session_id, persona_id)
+
+    # API-Key Check
+    if not get_api_client().is_ready:
+        return error_response('Kein API-Key konfiguriert', error_type='api_key_missing')
+
+    # Lade Charakterdaten
+    character = load_character()
+    character_name = character.get('char_name', 'Assistant')
+
+    # Prüfe ob Auto-First-Message aktiviert ist
+    if not character.get('start_msg_enabled', False):
+        return error_response('Auto First Message ist nicht aktiviert')
+
+    # User-Name und Sprache aus Profil
+    user_profile = get_user_profile_data()
+    user_name = user_profile.get('user_name', 'User') or 'User'
+    persona_language = user_profile.get('persona_language', 'english') or 'english'
+
+    # IP-Adresse ermitteln
+    user_ip = get_client_ip()
+
+    # Interner Prompt für die erste Nachricht (wird NICHT als User-Message gespeichert)
+    internal_prompt = (
+        f"A new conversation has been opened. Write how {character_name} "
+        f"would open this conversation or scenario. Stay fully in character. "
+        f"Do not mention that this is a new conversation explicitly. "
+        f"Just start naturally as {character_name} would."
+    )
+
+    # Leere Konversationshistorie (es ist ein neuer Chat)
+    conversation_history = []
+
+    def generate():
+        chat_service = get_chat_service()
+        try:
+            for event_type, event_data in chat_service.chat_stream(
+                user_message=internal_prompt,
+                conversation_history=conversation_history,
+                character_data=character,
+                language=persona_language,
+                user_name=user_name,
+                api_model=api_model,
+                api_temperature=api_temperature,
+                ip_address=user_ip,
+                experimental_mode=experimental_mode,
+                persona_id=persona_id
+            ):
+                if event_type == 'chunk':
+                    yield f"data: {json.dumps({'type': 'chunk', 'text': event_data})}\n\n"
+                elif event_type == 'done':
+                    # Speichere NUR die Bot-Antwort als erste Nachricht (kein User-Message)
+                    save_message(event_data['response'], False, character_name, session_id, persona_id=persona_id)
+
+                    done_payload = {
+                        'type': 'done',
+                        'response': event_data['response'],
+                        'stats': event_data['stats'],
+                        'character_name': character_name,
+                        'is_auto_first_message': True
+                    }
+                    yield f"data: {json.dumps(done_payload)}\n\n"
+                elif event_type == 'error':
+                    error_payload = {'type': 'error', 'error': event_data}
+                    yield f"data: {json.dumps(error_payload)}\n\n"
+        except Exception as e:
+            log.error("Auto-First-Message Stream-Fehler: %s", e)
+            yield f"data: {json.dumps({'type': 'error', 'error': str(e)})}\n\n"
+
+    return Response(
+        stream_with_context(generate()),
+        mimetype='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache',
+            'X-Accel-Buffering': 'no',
+            'Connection': 'keep-alive'
+        }
+    )

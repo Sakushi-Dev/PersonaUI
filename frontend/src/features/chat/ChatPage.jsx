@@ -72,7 +72,7 @@ export default function ChatPage() {
 }
 
 function ChatPageContent() {
-  const { sessionId, personaId, character, switchPersona, switchSession, createSession } = useSession();
+  const { sessionId, personaId, character, switchPersona, switchSession, createSession, pendingAutoFirstMessage, setPendingAutoFirstMessage } = useSession();
   const { get } = useSettings();
   const { setIsDark, updateColors, setFontSize: setThemeFontSize, setFontFamily: setThemeFontFamily, setDynamicBackground: setThemeDynBg } = useTheme();
 
@@ -111,7 +111,16 @@ function ChatPageContent() {
     editLastMsg,
     regenerateLastMsg,
     resendLastMsg,
+    triggerAutoFirstMessage,
   } = useMessages();
+
+  // ── Auto First Message: consume pending signal from SessionContext ──
+  useEffect(() => {
+    if (pendingAutoFirstMessage && sessionId && !isLoading && !isStreaming) {
+      setPendingAutoFirstMessage(false);
+      triggerAutoFirstMessage(sessionId, personaId);
+    }
+  }, [pendingAutoFirstMessage, sessionId, isLoading, isStreaming, personaId, triggerAutoFirstMessage, setPendingAutoFirstMessage]);
 
   const {
     isThinking: afterthoughtThinking,
@@ -206,12 +215,17 @@ function ChatPageContent() {
   // ── New chat ──
   const handleNewChat = useCallback(async () => {
     try {
-      await createSession(personaId);
+      const result = await createSession(personaId);
       sidebar.close();
+      
+      // Trigger auto first message if enabled
+      if (result?.auto_first_message) {
+        triggerAutoFirstMessage(result.session_id, result.persona_id || personaId);
+      }
     } catch (err) {
       console.error('Failed to create session:', err);
     }
-  }, [personaId, createSession, sidebar]);
+  }, [personaId, createSession, sidebar, triggerAutoFirstMessage]);
 
   // ── Sidebar persona actions ──
   // Matches legacy openPersonaLatestSession: switch to persona's latest session

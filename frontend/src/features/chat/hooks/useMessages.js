@@ -7,7 +7,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { useSession } from '../../../hooks/useSession';
 import { useSettings } from '../../../hooks/useSettings';
-import { sendChatMessage, deleteLastMessage as apiDeleteLastMessage, editLastMessage as apiEditLastMessage, regenerateMessage } from '../../../services/chatApi';
+import { sendChatMessage, sendAutoFirstMessage, deleteLastMessage as apiDeleteLastMessage, editLastMessage as apiEditLastMessage, regenerateMessage } from '../../../services/chatApi';
 import { loadMoreMessages } from '../../../services/sessionApi';
 import { playNotificationSound } from '../../../utils/audioUtils';
 import { formatMessage } from '../../../utils/formatMessage';
@@ -238,6 +238,66 @@ export function useMessages() {
     sendMessage(text);
   }, [sessionId, personaId, isStreaming, isLoading, chatHistory, removeLastMessage, sendMessage]);
 
+  // ── Auto First Message: KI generiert Eröffnungsnachricht für neuen Chat ──
+  const triggerAutoFirstMessage = useCallback(async (targetSessionId, targetPersonaId) => {
+    if (isLoading || isStreaming) return;
+
+    const sid = targetSessionId || sessionId;
+    const pid = targetPersonaId || personaId;
+
+    setIsLoading(true);
+    setIsStreaming(true);
+    setError(null);
+
+    // Add streaming placeholder for bot's opening message
+    addMessage({
+      message: '',
+      is_user: false,
+      character_name: character?.char_name,
+      _streaming: true,
+      timestamp: new Date().toISOString(),
+    });
+
+    let rawText = '';
+
+    abortRef.current = sendAutoFirstMessage({
+      sessionId: sid,
+      personaId: pid,
+      apiModel: get('apiModel'),
+      apiTemperature: get('apiTemperature'),
+      experimentalMode: get('experimentalMode'),
+      onChunk: (chunk) => {
+        rawText += chunk;
+        updateLastMessage({ message: formatMessage(rawText) });
+      },
+      onDone: (data) => {
+        setIsStreaming(false);
+        setIsLoading(false);
+        setStreamingStats(data.stats || null);
+
+        // Finalize the streaming message
+        updateLastMessage({
+          message: data.response,
+          _streaming: false,
+          character_name: data.character_name,
+          timestamp: new Date().toISOString(),
+          stats: data.stats,
+        });
+
+        if (get('notificationSound', false)) {
+          playNotificationSound();
+        }
+      },
+      onError: (err) => {
+        setIsStreaming(false);
+        setIsLoading(false);
+        removeLastMessage(); // Remove the streaming placeholder
+        console.warn('Auto first message failed:', err);
+        // Don't set error state for auto first message - it's not critical
+      },
+    });
+  }, [sessionId, personaId, isLoading, isStreaming, character, addMessage, updateLastMessage, removeLastMessage, get]);
+
   return {
     isLoading,
     isStreaming,
@@ -251,5 +311,6 @@ export function useMessages() {
     editLastMsg,
     regenerateLastMsg,
     resendLastMsg,
+    triggerAutoFirstMessage,
   };
 }

@@ -1609,23 +1609,6 @@
   padding-left: 0;
 }
 
-.startMsgInputArea {
-  margin-top: 10px;
-}
-
-.startMsgFooter {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 6px;
-}
-
-.configHintInline {
-  font-size: 11px;
-  color: var(--overlay-text-muted, rgba(0, 0, 0, 0.45));
-  font-style: italic;
-}
-
 .charCounter {
   font-size: 11px;
   color: var(--overlay-text-muted, rgba(0, 0, 0, 0.45));

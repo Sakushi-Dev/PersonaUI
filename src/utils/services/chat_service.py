@@ -112,7 +112,7 @@ class ChatService:
 
         Die Reihenfolge wird durch die PromptEngine-Sequenz bestimmt:
         - first_assistant: Prefill-Impersonation
-        - history: Konversationsverlauf ({{history}}) – Greeting ist bereits in DB gespeichert
+        - history: Konversationsverlauf ({{history}})
         - prefill: Remember als letzte Assistant-Message
 
         Returns:
@@ -193,14 +193,12 @@ class ChatService:
                 history_processed = True
                 if effective_history:
                     # Wenn History mit assistant beginnt und letzte Message auch assistant ist
-                    # (z.B. Greeting), Bridge einfügen statt zu mergen.
-                    # Sonst wird das Greeting im Memory-Text versteckt und die KI
-                    # erkennt nicht, dass sie bereits begrüßt hat.
+                    # (z.B. Auto-First-Message), Bridge einfügen statt zu mergen.
                     if messages and effective_history[0]['role'] == messages[-1]['role']:
                         if effective_history[0]['role'] == 'assistant':
-                            # Bridge-Message damit Greeting als eigene Nachricht bleibt
+                            # Bridge-Message damit erste Nachricht als eigene Nachricht bleibt
                             messages.append({'role': 'user', 'content': '[Beginn der Konversation]'})
-                            log.debug("History-Bridge eingefügt (Greeting)")
+                            log.debug("History-Bridge eingefügt (Auto-First-Message)")
                         else:
                             # Seltener Fall: beide user → zusammenführen
                             messages[-1]['content'] += "\n\n" + effective_history[0]['content']
@@ -554,8 +552,3 @@ class ChatService:
         response = self.api_client.request(config)
         return response.content if response.success else 'Neue Konversation'
 
-    def get_greeting(self, character_data: dict = None) -> str | None:
-        """Gibt die Begrüßungsnachricht zurück, oder None wenn deaktiviert"""
-        if character_data is None:
-            character_data = load_character()
-        return character_data.get('greeting')

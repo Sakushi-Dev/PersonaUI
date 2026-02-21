@@ -44,7 +44,6 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
   const [expression, setExpression] = useState('normal');
   const [background, setBackground] = useState('');
   const [startMsgEnabled, setStartMsgEnabled] = useState(false);
-  const [startMessage, setStartMessage] = useState('');
   const [avatar, setAvatar] = useState(null);
   const [avatarType, setAvatarType] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -101,7 +100,6 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
     setExpression('normal');
     setBackground('');
     setStartMsgEnabled(false);
-    setStartMessage('');
     setAvatar(null);
     setAvatarType(null);
   };
@@ -119,7 +117,6 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
       setExpression(persona.expression || 'normal');
       setBackground(persona.background || '');
       setStartMsgEnabled(persona.start_msg_enabled || false);
-      setStartMessage(persona.start_msg || '');
       setAvatar(persona.avatar || null);
       setAvatarType(persona.avatar_type || null);
     } else {
@@ -143,7 +140,6 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
       background,
       scenarios,
       start_msg_enabled: startMsgEnabled,
-      start_msg: startMsgEnabled ? startMessage : '',
       avatar,
       avatar_type: avatarType,
       tools_enabled: true,
@@ -608,40 +604,20 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
             </div>
           </div>
 
-          {/* ── First Message Section ── */}
+          {/* ── Auto First Message Section ── */}
           <div className={styles.configSection}>
-            <h3 className={styles.configSectionTitle}>First Message</h3>
+            <h3 className={styles.configSectionTitle}>Auto First Message</h3>
             <div className={styles.firstMessageToggle}>
               <Toggle
-                label="First Message aktivieren"
+                label="Auto First Message aktivieren"
                 checked={startMsgEnabled}
                 onChange={setStartMsgEnabled}
                 id="start-msg-toggle"
               />
               <p className={styles.configHint}>
-                Die First Message wird in jeder neuen Session als erste Nachricht der Persona gesendet, sodass das Gespräch immer auf dieser Sequenz aufbaut.
+                Wenn aktiviert, generiert die Persona automatisch eine Eröffnungsnachricht per KI wenn ein neuer Chat gestartet wird. Die Nachricht wird passend zum Charakter und Szenario generiert.
               </p>
             </div>
-            {startMsgEnabled && (
-              <div className={styles.startMsgInputArea}>
-                <textarea
-                  className={styles.textarea}
-                  value={startMessage}
-                  onChange={(e) => setStartMessage(e.target.value)}
-                  placeholder="z.B. *lächelt freundlich* Hey! Schön dich zu sehen..."
-                  maxLength={1000}
-                  rows={3}
-                />
-                <div className={styles.startMsgFooter}>
-                  <span className={styles.charCounter}>
-                    {startMessage.length} / 1000
-                  </span>
-                  <span className={styles.configHintInline}>
-                    Für nonverbale Formatierung RAW verwenden (z.B. *Aktion*)
-                  </span>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 

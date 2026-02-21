@@ -26,7 +26,6 @@ def test_character_data():
     return {
         'char_name': 'TestPersona',
         'desc': 'Eine Test-Persona für Unit-Tests.',
-        'greeting': 'Hallo, ich bin TestPersona!',
         'start_msg_enabled': True,
         'background': 'TestPersona wurde in einer kleinen Stadt geboren.',
         'identity': 'TestPersona, 25, weiblich',
@@ -43,7 +42,6 @@ def minimal_character_data():
     return {
         'char_name': 'Mini',
         'desc': '',
-        'greeting': None,
         'start_msg_enabled': False,
         'background': '',
         'identity': '',

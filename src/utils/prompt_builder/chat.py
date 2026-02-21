@@ -8,7 +8,6 @@ Chat Prompt Builder – Prompt-Generierung für Chat-Requests.
 - build_prefill()
 - get_prefill_impersonation()
 - get_consent_dialog()
-- get_greeting()
 
 Phase 2: Optionale Engine-Delegation via set_engine().
 """
@@ -366,15 +365,3 @@ class ChatPromptBuilder(PromptBase):
         # Legacy Fallback: consent_dialog als einzige Injection
         legacy = self._load_consent_dialog()
         return legacy if legacy else []
-
-    def get_greeting(self, character_data: Dict[str, str]) -> Optional[str]:
-        """
-        Gibt die Begrüßungsnachricht des Charakters zurück, oder None wenn deaktiviert.
-
-        Args:
-            character_data: Dictionary mit Charakterinformationen
-
-        Returns:
-            Die Begrüßungsnachricht oder None
-        """
-        return character_data.get('greeting')

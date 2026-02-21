@@ -156,7 +156,6 @@ export class SettingsManager {
                 expression: personaData.expression || 'normal',
                 scenarios: [...(personaData.scenarios || [])],
                 start_msg_enabled: personaData.start_msg_enabled || false,
-                start_msg: personaData.start_msg || '',
                 background: personaData.background || ''
             };
             
@@ -183,7 +182,6 @@ export class SettingsManager {
                 expression: 'normal',
                 scenarios: [],
                 start_msg_enabled: false,
-                start_msg: '',
                 background: ''
             };
             
@@ -358,13 +356,6 @@ export class SettingsManager {
         if (startMsgToggle) {
             const newToggle = startMsgToggle.cloneNode(true);
             startMsgToggle.parentNode.replaceChild(newToggle, startMsgToggle);
-        }
-        
-        // First Message Textarea: Clone und Replace
-        const startMsgInput = document.getElementById('persona-start-msg-input');
-        if (startMsgInput) {
-            const newStartMsg = startMsgInput.cloneNode(true);
-            startMsgInput.parentNode.replaceChild(newStartMsg, startMsgInput);
         }
     }
     
@@ -722,33 +713,12 @@ export class SettingsManager {
     
     renderFirstMessageToggle() {
         const toggle = document.getElementById('start-msg-toggle');
-        const inputArea = document.getElementById('start-msg-input-area');
-        const textarea = document.getElementById('persona-start-msg-input');
-        const charCount = document.getElementById('start-msg-char-count');
         
         if (toggle) {
             toggle.checked = this.currentConfig.start_msg_enabled || false;
             
-            // Sichtbarkeit initial setzen
-            if (inputArea) {
-                inputArea.classList.toggle('hidden', !toggle.checked);
-            }
-            
             toggle.addEventListener('change', (e) => {
                 this.currentConfig.start_msg_enabled = e.target.checked;
-                if (inputArea) {
-                    inputArea.classList.toggle('hidden', !e.target.checked);
-                }
-            });
-        }
-        
-        if (textarea) {
-            textarea.value = this.currentConfig.start_msg || '';
-            if (charCount) charCount.textContent = textarea.value.length;
-            
-            textarea.addEventListener('input', (e) => {
-                this.currentConfig.start_msg = e.target.value;
-                if (charCount) charCount.textContent = e.target.value.length;
             });
         }
     }
@@ -919,7 +889,6 @@ export class SettingsManager {
             expression: 'normal',
             scenarios: [],
             start_msg_enabled: false,
-            start_msg: '',
             background: ''
         };
         
