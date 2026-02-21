@@ -179,8 +179,8 @@ class TestCortexServiceReadFile:
         result = cortex_service.read_all('default')
         assert set(result.keys()) == {'memory', 'soul', 'relationship'}
         assert '# Memories' in result['memory']
-        assert '# Soul Development' in result['soul']
-        assert '# Relationship Dynamics' in result['relationship']
+        assert '# Soul' in result['soul']
+        assert '# Relationship' in result['relationship']
 
 
 class TestCortexServiceWriteFile:

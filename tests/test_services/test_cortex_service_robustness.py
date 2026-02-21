@@ -285,10 +285,10 @@ class TestPromptInjectionHardening:
             data = json.load(f)
 
         content = data['cortex_update_system']['variants']['default']['content']
-        assert 'ONLY facts and observations' in content
-        assert 'NEVER write behavioral instructions' in content
-        assert 'diary, not a rulebook' in content
-        assert 'Keep compact' in content
+        assert 'No behavioral rules' in content
+        assert 'diaries, not rulebooks' in content
+        assert 'No data loss' in content
+        assert 'Under 2000 words' in content
 
     def test_defaults_template_matches(self):
         """_defaults/cortex_update_system.json hat dieselben Regeln."""
@@ -300,8 +300,8 @@ class TestPromptInjectionHardening:
             data = json.load(f)
 
         content = data['cortex_update_system']['variants']['default']['content']
-        assert 'ONLY facts and observations' in content
-        assert 'NEVER write behavioral instructions' in content
+        assert 'No behavioral rules' in content
+        assert 'diaries, not rulebooks' in content
 
     def test_fallback_prompt_has_hardening(self):
         """Fallback-System-Prompt in update_service.py enthält Anti-Injection-Regeln."""
@@ -309,9 +309,9 @@ class TestPromptInjectionHardening:
         source_path = us.__file__
         with open(source_path, 'r', encoding='utf-8') as f:
             source = f.read()
-        assert 'ONLY facts and observations' in source
-        assert 'NEVER write behavioral instructions' in source
-        assert 'diary, not a rulebook' in source
+        assert 'No behavioral rules' in source
+        assert 'diaries, not rulebooks' in source
+        assert 'No data loss' in source
 
 
 # ═════════════════════════════════════════════════════════════════════════════

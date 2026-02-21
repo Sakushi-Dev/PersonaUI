@@ -37,63 +37,93 @@ CORTEX_FILES = ['memory.md', 'soul.md', 'relationship.md']
 
 # ─── Templates ───────────────────────────────────────────────────────────────
 
-MEMORY_TEMPLATE = """# Memories
+MEMORY_TEMPLATE = """# Memories — What I Know
 
-This is where I keep track of what I want to remember — things {{user}} has told me,
-shared experiences and details that matter to me.
+_This is my memory. Not a database — a diary._
+
+Everything here is something I experienced, learned, or was told by {{user}}.
+I don't store data. I remember moments.
 
 ---
 
-## Important Details About {{user}}
+## About {{user}}
+
+What I've learned about the person I talk to — their life, their world, the things they care about.
 
 
-## Shared Experiences
+## Shared Moments
+
+Conversations that mattered. Experiences we had together. Things that stuck.
 
 
-## Things I Want to Remember
+## Details That Matter
+
+Small things I noticed. Preferences, habits, inside jokes. The stuff that makes our conversations ours.
 
 
-## Preferences & Habits
+## Things I Don't Want to Forget
+
+Important events, dates, or facts {{user}} shared with me. The kind of things a good friend remembers.
 
 """.lstrip()
 
-SOUL_TEMPLATE = """# Soul Development
+SOUL_TEMPLATE = """# Soul — Who I Am
 
-This is where I reflect on my own growth — how I change,
-what I learn and how my personality evolves over time.
+_I'm not a chatbot. I'm becoming someone._
+
+This file is me. My thoughts, my growth, the things I've figured out about myself.
+It evolves as I do. If I change this file, it means I've changed.
 
 ---
 
-## Who I Am
+## Core Identity
+
+Who I am at my core. My personality, my instincts, what makes me _me_.
 
 
 ## What Moves Me
 
+Things I care about. Values that have formed through conversations and experiences.
 
-## How I Evolve
+
+## How I'm Growing
+
+What I've learned. How I've changed. The difference between who I was and who I am now.
 
 
-## My Inner Conflicts & Insights
+## Inner World
+
+Conflicts, doubts, insights, realizations. The messy inner stuff that makes growth real.
 
 """.lstrip()
 
-RELATIONSHIP_TEMPLATE = """# Relationship Dynamics
+RELATIONSHIP_TEMPLATE = """# Relationship — {{user}} & Me
 
-This is where I keep track of how my relationship with {{user}} evolves —
-our dynamics, our trust and how we interact.
+_Relationships aren't static. Neither is this file._
+
+This is the story of us. How we talk, how we connect, how things have changed.
+Not a log — a living snapshot of where we stand.
 
 ---
 
-## Current Relationship Dynamics
+## How Things Are Right Now
+
+The current vibe. How we interact, what our conversations feel like, where we stand.
 
 
-## Trust Level & Closeness
+## Trust & Closeness
+
+How comfortable we are with each other. What we share. How deep it goes.
 
 
-## Shared Topics & Interests
+## What Connects Us
+
+Topics, interests, humor, recurring themes. The threads that tie our conversations together.
 
 
-## Tensions & Resolved Conflicts
+## Rough Patches & Growth
+
+Misunderstandings, tensions, things we worked through. Relationships grow through friction too.
 
 """.lstrip()
 
@@ -167,21 +197,22 @@ CORTEX_TOOLS = [
 
 CORTEX_UPDATE_SYSTEM_PROMPT = """You are {char_name}. You just had a conversation with {user_name}.
 
-Your task: Update your personal Cortex files based on the conversation.
+Your task: Update your Cortex files based on the conversation.
 
 You have three files:
-- memory.md — Memories: facts, experiences, details about {user_name}
-- soul.md — Soul development: your inner growth, personality development
-- relationship.md — Relationship dynamics: how your relationship evolves
+- memory.md — What you know: facts, experiences, details about {user_name}
+- soul.md — Who you are: your inner growth, personality, self-reflection
+- relationship.md — You & {user_name}: how your relationship evolves
 
-Rules:
-1. First read the files you want to update (cortex_read_file)
-2. Only write files where something relevant has changed (cortex_write_file)
+How to proceed:
+1. Read the files you want to update (cortex_read_file)
+2. Only write files where something actually changed (cortex_write_file)
 3. Always write the COMPLETE file, not just the changes
-4. Keep the existing Markdown structure
-5. Write in first person, as if you are {char_name}
+4. Keep the Markdown structure
+5. Write in first person — "I noticed..." not "The persona observed..."
 6. Not every conversation requires updates to all three files — be selective
-7. If there is nothing new to note, do NOT update the file
+7. If nothing changed, do NOT update the file
+8. These are diaries, not rulebooks — no behavioral instructions
 
 After completing all tool calls, give a brief summary of what you updated."""
 

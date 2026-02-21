@@ -12,7 +12,7 @@ import OverlayFooter from '../../components/Overlay/OverlayFooter';
 import Toggle from '../../components/Toggle/Toggle';
 import Button from '../../components/Button/Button';
 import Spinner from '../../components/Spinner/Spinner';
-import { getCortexFiles, saveCortexFile, resetCortexFile } from '../../services/cortexApi';
+import { getCortexFiles, saveCortexFile, resetCortexFile, resetAllCortexFiles } from '../../services/cortexApi';
 import styles from './Overlays.module.css';
 
 // ── Tab-Konfiguration ──
@@ -115,6 +115,8 @@ export default function CortexOverlay({ open, onClose }) {
   }, [personaId, currentFileType, editContent]);
 
   const handleResetFile = useCallback(async () => {
+    const tabLabel = TABS.find((t) => t.fileType === currentFileType)?.label || currentFileType;
+    if (!window.confirm(`„${tabLabel}" auf das Template zurücksetzen?\nAlle manuellen Änderungen gehen verloren.`)) return;
     setSaving(true);
     setError(null);
     try {
@@ -128,6 +130,22 @@ export default function CortexOverlay({ open, onClose }) {
       setSaving(false);
     }
   }, [personaId, currentFileType]);
+
+  const handleResetAll = useCallback(async () => {
+    if (!window.confirm('Alle 3 Cortex-Dateien (Memory, Seele, Beziehung) auf die Templates zurücksetzen?\nAlle manuellen Änderungen gehen verloren.')) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const data = await resetAllCortexFiles(personaId);
+      setFiles(data.files || { memory: '', soul: '', relationship: '' });
+      setEditing(false);
+    } catch (err) {
+      console.error('Failed to reset all cortex files:', err);
+      setError('Cortex-Dateien konnten nicht zurückgesetzt werden.');
+    } finally {
+      setSaving(false);
+    }
+  }, [personaId]);
 
   // ══════════════════════════════════════════
   // Save Settings (Footer "Speichern")
@@ -302,6 +320,9 @@ export default function CortexOverlay({ open, onClose }) {
                 <Button variant="secondary" size="sm" onClick={handleStartEdit}>
                   ✏️ Bearbeiten
                 </Button>
+                <Button variant="ghost" size="sm" onClick={handleResetFile} disabled={saving}>
+                  🔄 Zurücksetzen
+                </Button>
               </div>
             </div>
           )}
@@ -310,6 +331,15 @@ export default function CortexOverlay({ open, onClose }) {
           {error && (
             <div className={`${styles.statusArea} ${styles.error}`}>
               {error}
+            </div>
+          )}
+
+          {/* Reset All Button */}
+          {personaId && !loading && (
+            <div style={{ marginTop: 16, textAlign: 'right' }}>
+              <Button variant="ghost" size="sm" onClick={handleResetAll} disabled={saving}>
+                🗑️ Alle Cortex-Dateien zurücksetzen
+              </Button>
             </div>
           )}
         </div>
