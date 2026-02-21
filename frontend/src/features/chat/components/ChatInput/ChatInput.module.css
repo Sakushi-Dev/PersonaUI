@@ -60,6 +60,10 @@
   cursor: not-allowed;
 }
 
+.inputStreaming {
+  opacity: 0.7;
+}
+
 .sendBtn {
   width: 45px;
   height: 45px;

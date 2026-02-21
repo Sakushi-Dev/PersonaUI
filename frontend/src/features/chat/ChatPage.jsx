@@ -287,7 +287,7 @@ function ChatPageContent() {
 
       <ChatInput
         onSend={handleSend}
-        disabled={isLoading || !sessionId}
+        disabled={!sessionId}
         isStreaming={isStreaming}
         onCancel={cancelStream}
         placeholder={!sessionId ? 'Bitte erstelle zuerst einen neuen Chat...' : 'Deine Nachricht...'}

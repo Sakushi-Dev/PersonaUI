@@ -50,6 +50,18 @@ export default function ChatInput({ onSend, disabled, isStreaming, onCancel, pla
     resize();
   }, [text, resize]);
 
+  // ── Refocus textarea when streaming ends ──
+  const wasStreaming = useRef(false);
+  useEffect(() => {
+    if (isStreaming) {
+      wasStreaming.current = true;
+    } else if (wasStreaming.current) {
+      wasStreaming.current = false;
+      // Refocus after SSE completes so user can type immediately
+      textareaRef.current?.focus();
+    }
+  }, [isStreaming]);
+
   // ── Execute a slash command ──
   const executeCommand = useCallback((cmd) => {
     // args = everything after "/commandName "
@@ -70,8 +82,8 @@ export default function ChatInput({ onSend, disabled, isStreaming, onCancel, pla
   // ── Send normal message ──
   const handleSend = useCallback(() => {
     const trimmed = text.trim();
-    console.log('[ChatInput] handleSend called, text:', trimmed, 'disabled:', disabled);
-    if (!trimmed || disabled) return;
+    console.log('[ChatInput] handleSend called, text:', trimmed, 'disabled:', disabled, 'isStreaming:', isStreaming);
+    if (!trimmed || disabled || isStreaming) return;
 
     // Check if it's a complete slash command
     if (trimmed.startsWith('/')) {
@@ -90,7 +102,7 @@ export default function ChatInput({ onSend, disabled, isStreaming, onCancel, pla
     if (textareaRef.current) {
       textareaRef.current.style.height = '42px';
     }
-  }, [text, disabled, onSend, executeCommand]);
+  }, [text, disabled, isStreaming, onSend, executeCommand]);
 
   // ── Keyboard handling ──
   const handleKeyDown = useCallback((e) => {
@@ -153,18 +165,18 @@ export default function ChatInput({ onSend, disabled, isStreaming, onCancel, pla
         />
         <textarea
           ref={textareaRef}
-          className={styles.input}
+          className={`${styles.input} ${isStreaming ? styles.inputStreaming : ''}`}
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder || 'Deine Nachricht...'}
+          placeholder={isStreaming ? 'Antwort wird generiert...' : (placeholder || 'Deine Nachricht...')}
           rows={1}
           disabled={disabled}
         />
         <button
           className={`${styles.sendBtn} ${isStreaming ? styles.cancel : ''}`}
           onClick={handleClick}
-          disabled={disabled && !isStreaming}
+          disabled={disabled}
           title={isStreaming ? 'Abbrechen' : 'Nachricht senden'}
           type="button"
         >
