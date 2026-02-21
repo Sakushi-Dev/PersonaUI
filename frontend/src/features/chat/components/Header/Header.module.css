@@ -108,6 +108,13 @@
   z-index: 1;
 }
 
+/* ── Sound Toggle Wrapper ── */
+.soundToggleWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 /* ── Sound Toggle Button ── */
 .soundToggle {
   background: none;
@@ -147,6 +154,95 @@
 :global(body.dark-mode) .soundMuted {
   color: rgba(255, 255, 255, 0.3);
   opacity: 0.5;
+}
+
+/* ── Volume Slider Popup ── */
+.volumePopup {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding-top: 6px;
+  z-index: var(--z-dropdown, 300);
+  animation: volumeFadeIn 0.15s ease-out;
+}
+
+@keyframes volumeFadeIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-4px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.volumePopupInner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  white-space: nowrap;
+}
+
+:global(body.dark-mode) .volumePopupInner {
+  background: rgba(17, 17, 22, 0.85);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+.volumeSlider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.15);
+  outline: none;
+  cursor: pointer;
+}
+
+.volumeSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--nonverbal-color, #e4ba00);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease;
+}
+
+.volumeSlider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.volumeSlider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--nonverbal-color, #e4ba00);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
+}
+
+:global(body.dark-mode) .volumeSlider {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.volumeLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.5);
+  min-width: 30px;
+  text-align: right;
+}
+
+:global(body.dark-mode) .volumeLabel {
+  color: rgba(255, 255, 255, 0.5);
 }
 
 /* ── QR Code Button ── */

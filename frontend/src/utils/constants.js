@@ -93,6 +93,7 @@ export const DEFAULTS = {
   experimentalMode: false,
   nachgedankeMode: 'off',
   notificationSound: true,
+  notificationVolume: 0.5,
 };
 
 export const LIMITS = {

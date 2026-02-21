@@ -120,7 +120,7 @@ export function useAfterthought() {
           });
 
           if (get('notificationSound', false)) {
-            playNotificationSound();
+            playNotificationSound(get('notificationVolume', 0.5));
           }
 
           lastResponseTimeRef.current = Date.now();

@@ -11,17 +11,19 @@ function getAudioContext() {
 
 /**
  * Play a "blop blop" notification sound using Web Audio API
+ * @param {number} volume - Volume level between 0 and 1 (default: 0.5)
  */
-export function playNotificationSound() {
+export function playNotificationSound(volume = 0.5) {
   try {
     const ctx = getAudioContext();
+    const vol = Math.max(0, Math.min(1, volume));
 
     // First tone (D5 - 587Hz)
     const osc1 = ctx.createOscillator();
     const gain1 = ctx.createGain();
     osc1.type = 'sine';
     osc1.frequency.value = 587;
-    gain1.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain1.gain.setValueAtTime(vol * 0.6, ctx.currentTime);
     gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
     osc1.connect(gain1);
     gain1.connect(ctx.destination);
@@ -33,7 +35,7 @@ export function playNotificationSound() {
     const gain2 = ctx.createGain();
     osc2.type = 'sine';
     osc2.frequency.value = 784;
-    gain2.gain.setValueAtTime(0.3, ctx.currentTime + 0.12);
+    gain2.gain.setValueAtTime(vol * 0.6, ctx.currentTime + 0.12);
     gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.27);
     osc2.connect(gain2);
     gain2.connect(ctx.destination);

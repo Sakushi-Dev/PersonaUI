@@ -91,7 +91,7 @@ export function useMessages() {
 
         // Play notification sound if enabled
         if (get('notificationSound', false)) {
-          playNotificationSound();
+          playNotificationSound(get('notificationVolume', 0.5));
         }
       },
       onError: (err) => {
@@ -198,7 +198,7 @@ export function useMessages() {
         });
 
         if (get('notificationSound', false)) {
-          playNotificationSound();
+          playNotificationSound(get('notificationVolume', 0.5));
         }
       },
       onError: (err) => {
@@ -278,7 +278,7 @@ export function useMessages() {
         });
 
         if (get('notificationSound', false)) {
-          playNotificationSound();
+          playNotificationSound(get('notificationVolume', 0.5));
         }
       },
       onError: (err) => {

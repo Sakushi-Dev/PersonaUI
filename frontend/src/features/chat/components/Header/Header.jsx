@@ -6,6 +6,7 @@ import { useSession } from '../../../../hooks/useSession';
 import { useSettings } from '../../../../hooks/useSettings';
 import Avatar from '../../../../components/Avatar/Avatar';
 import { checkApiStatus } from '../../../../services/serverApi';
+import { playNotificationSound } from '../../../../utils/audioUtils';
 import styles from './Header.module.css';
 
 // ── SVG Icons ──
@@ -36,9 +37,63 @@ export default function Header({
 
   // ── Sound toggle state ──
   const soundEnabled = get('notificationSound', false);
+  const notificationVolume = get('notificationVolume', 0.5);
   const toggleSound = useCallback(() => {
-    set('notificationSound', !soundEnabled);
-  }, [soundEnabled, set]);
+    const newState = !soundEnabled;
+    set('notificationSound', newState);
+    // Play preview sound when turning ON
+    if (newState) {
+      playNotificationSound(notificationVolume);
+    }
+  }, [soundEnabled, notificationVolume, set]);
+
+  // ── Volume slider (long-hover popup) ──
+  const [volumeSliderVisible, setVolumeSliderVisible] = useState(false);
+  const volumeHoverTimerRef = useRef(null);
+  const volumeHideTimerRef = useRef(null);
+  const soundBtnRef = useRef(null);
+
+  const handleSoundMouseEnter = useCallback(() => {
+    if (volumeHideTimerRef.current) {
+      clearTimeout(volumeHideTimerRef.current);
+      volumeHideTimerRef.current = null;
+    }
+    // Show slider after 600ms hover ("long hover")
+    volumeHoverTimerRef.current = setTimeout(() => {
+      setVolumeSliderVisible(true);
+    }, 600);
+  }, []);
+
+  const handleSoundMouseLeave = useCallback(() => {
+    if (volumeHoverTimerRef.current) {
+      clearTimeout(volumeHoverTimerRef.current);
+      volumeHoverTimerRef.current = null;
+    }
+    // Hide slider after a short delay
+    volumeHideTimerRef.current = setTimeout(() => {
+      setVolumeSliderVisible(false);
+    }, 400);
+  }, []);
+
+  const handleVolumeChange = useCallback((e) => {
+    const newVol = parseFloat(e.target.value);
+    set('notificationVolume', newVol);
+    // Enable sound if adjusting volume
+    if (!soundEnabled) set('notificationSound', true);
+  }, [set, soundEnabled]);
+
+  const handleVolumeSliderMouseUp = useCallback(() => {
+    // Play preview on release so user hears the new level
+    playNotificationSound(get('notificationVolume', 0.5));
+  }, [get]);
+
+  // Cleanup volume timers
+  useEffect(() => {
+    return () => {
+      if (volumeHoverTimerRef.current) clearTimeout(volumeHoverTimerRef.current);
+      if (volumeHideTimerRef.current) clearTimeout(volumeHideTimerRef.current);
+    };
+  }, []);
 
   // ── Toolbar visibility (hamburger toggle) ──
   const [toolbarVisible, setToolbarVisible] = useState(false);
@@ -156,14 +211,50 @@ export default function Header({
 
         {/* ── Right: Actions ── */}
         <div className={styles.right}>
-          {/* Sound Toggle */}
-          <button
-            className={`${styles.soundToggle} ${!soundEnabled ? styles.soundMuted : ''}`}
-            onClick={toggleSound}
-            title="Benachrichtigungston an/aus"
+          {/* Sound Toggle with Volume Slider */}
+          <div
+            className={styles.soundToggleWrap}
+            onMouseEnter={handleSoundMouseEnter}
+            onMouseLeave={handleSoundMouseLeave}
+            ref={soundBtnRef}
           >
-            {soundEnabled ? <SoundOnIcon /> : <SoundOffIcon />}
-          </button>
+            <button
+              className={`${styles.soundToggle} ${!soundEnabled ? styles.soundMuted : ''}`}
+              onClick={toggleSound}
+              title="Benachrichtigungston an/aus"
+            >
+              {soundEnabled ? <SoundOnIcon /> : <SoundOffIcon />}
+            </button>
+
+            {/* Volume slider popup (long-hover) */}
+            {volumeSliderVisible && (
+              <div
+                className={styles.volumePopup}
+                onMouseEnter={() => {
+                  if (volumeHideTimerRef.current) {
+                    clearTimeout(volumeHideTimerRef.current);
+                    volumeHideTimerRef.current = null;
+                  }
+                }}
+                onMouseLeave={handleSoundMouseLeave}
+              >
+                <div className={styles.volumePopupInner}>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={notificationVolume}
+                    onChange={handleVolumeChange}
+                    onMouseUp={handleVolumeSliderMouseUp}
+                    className={styles.volumeSlider}
+                    title={`Lautstärke: ${Math.round(notificationVolume * 100)}%`}
+                  />
+                  <span className={styles.volumeLabel}>{Math.round(notificationVolume * 100)}%</span>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* QR Code Button */}
           <button
