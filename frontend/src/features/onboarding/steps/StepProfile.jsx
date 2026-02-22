@@ -1,6 +1,6 @@
 // ── Step: Profile (1/6) ──
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import AvatarCropper from '../../../components/AvatarCropper/AvatarCropper';
 import { getAvailableAvatars, uploadAvatar } from '../../../services/avatarApi';
 import { API_BASE_URL } from '../../../utils/constants';
@@ -13,6 +13,7 @@ export default function StepProfile({ data, onChange, onNext, onBack, language }
 
 
   // Avatar gallery state
+  const galleryMouseDown = useRef(false);
   const [showGallery, setShowGallery] = useState(false);
   const [galleryView, setGalleryView] = useState('select'); // 'select' | 'crop'
   const [avatars, setAvatars] = useState([]);
@@ -145,7 +146,11 @@ export default function StepProfile({ data, onChange, onNext, onBack, language }
 
         {/* Avatar Gallery Overlay */}
         {showGallery && (
-          <div className={styles.galleryOverlay} onClick={(e) => { if (e.target === e.currentTarget) closeGallery(); }}>
+          <div
+            className={styles.galleryOverlay}
+            onMouseDown={(e) => { galleryMouseDown.current = e.target === e.currentTarget; }}
+            onMouseUp={(e) => { if (galleryMouseDown.current && e.target === e.currentTarget) closeGallery(); galleryMouseDown.current = false; }}
+          >
             <div className={styles.galleryCard}>
               <div className={styles.galleryHeader}>
                 <h3>{s.chooseAvatar}</h3>

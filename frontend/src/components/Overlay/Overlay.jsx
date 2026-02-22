@@ -5,6 +5,7 @@ import styles from './Overlay.module.css';
 
 export default function Overlay({ open, onClose, className = '', width, stacked, children }) {
   const overlayRef = useRef(null);
+  const mouseDownOnBackdrop = useRef(false);
 
   // Close on Escape key
   useEffect(() => {
@@ -16,11 +17,16 @@ export default function Overlay({ open, onClose, className = '', width, stacked,
     return () => document.removeEventListener('keydown', handleKey);
   }, [open, onClose]);
 
-  // Close on backdrop click
-  const handleBackdropClick = (e) => {
-    if (e.target === overlayRef.current) {
+  // Only close when both mousedown AND mouseup happen on the backdrop
+  const handleMouseDown = (e) => {
+    mouseDownOnBackdrop.current = e.target === overlayRef.current;
+  };
+
+  const handleMouseUp = (e) => {
+    if (mouseDownOnBackdrop.current && e.target === overlayRef.current) {
       onClose?.();
     }
+    mouseDownOnBackdrop.current = false;
   };
 
   if (!open) return null;
@@ -29,7 +35,8 @@ export default function Overlay({ open, onClose, className = '', width, stacked,
     <div
       ref={overlayRef}
       className={`${styles.backdrop} ${stacked ? styles.stacked : ''}`}
-      onClick={handleBackdropClick}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
     >
       <div
         className={`${styles.panel} ${className}`}

@@ -1,7 +1,7 @@
 // ── PromptInfoOverlay ──
 // Full token breakdown matching the legacy overlay
 
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { useSettings } from '../../../../hooks/useSettings';
 import styles from './PromptInfoOverlay.module.css';
 
@@ -55,8 +55,14 @@ export default function PromptInfoOverlay({ open, onClose, stats }) {
     return `rgb(${r}, ${g}, ${b})`;
   }, [percentage]);
 
+  const mouseDownOnBackdrop = useRef(false);
+
   return (
-    <div className={styles.overlay} onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div
+      className={styles.overlay}
+      onMouseDown={(e) => { mouseDownOnBackdrop.current = e.target === e.currentTarget; }}
+      onMouseUp={(e) => { if (mouseDownOnBackdrop.current && e.target === e.currentTarget) onClose(); mouseDownOnBackdrop.current = false; }}
+    >
       <div className={styles.content}>
         {/* Header */}
         <div className={styles.header}>
