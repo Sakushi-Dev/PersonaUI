@@ -27,7 +27,7 @@ const PERSONA_LANGUAGE_OPTIONS = [
   { value: 'korean', label: '한국어' },
 ];
 
-export default function UserProfileOverlay({ open, onClose, onOpenAvatarEditor, avatarRefreshKey }) {
+export default function UserProfileOverlay({ open, onClose, onOpenAvatarEditor, avatarRefreshKey, panelOnly }) {
   const { t } = useLanguage();
   const s = t('userProfile');
   const sc = t('common');
@@ -104,7 +104,7 @@ export default function UserProfileOverlay({ open, onClose, onOpenAvatarEditor, 
   };
 
   return (
-    <Overlay open={open} onClose={onClose} width="480px">
+    <Overlay open={open} onClose={onClose} width="480px" panelOnly={panelOnly}>
       <OverlayHeader title={s.title} icon={<UserIcon size={20} />} onClose={onClose} />
       <OverlayBody>
 

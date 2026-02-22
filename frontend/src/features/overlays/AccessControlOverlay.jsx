@@ -21,7 +21,7 @@ import {
 import { useLanguage } from '../../hooks/useLanguage';
 import styles from './Overlays.module.css';
 
-export default function AccessControlOverlay({ open, onClose }) {
+export default function AccessControlOverlay({ open, onClose, panelOnly }) {
   const { t } = useLanguage();
   const s = t('accessControl');
 
@@ -80,7 +80,7 @@ export default function AccessControlOverlay({ open, onClose }) {
   };
 
   return (
-    <Overlay open={open} onClose={onClose} width="500px">
+    <Overlay open={open} onClose={onClose} width="500px" panelOnly={panelOnly}>
       <OverlayHeader title={s.title} icon={<ShieldIcon size={20} />} onClose={onClose} />
       <OverlayBody>
         {loading ? (

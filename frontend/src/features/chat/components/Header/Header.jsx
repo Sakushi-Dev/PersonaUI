@@ -19,6 +19,8 @@ import {
 } from '../../../../components/Icons/Icons';
 
 export default function Header({
+  anyOverlayOpen = false,
+  activeOverlayId = null,
   onToggleSidebar,
   onOpenPersonaSettings,
   onOpenInterfaceSettings,
@@ -219,7 +221,7 @@ export default function Header({
       onMouseEnter={handleHeaderMouseEnter}
       onMouseLeave={handleHeaderMouseLeave}
     >
-      <div className={styles.headerContent}>
+      <div className={`${styles.headerContent} ${(toolbarVisible || anyOverlayOpen) ? styles.headerContentCollapsed : ''}`}>
         {/* ── Left: Avatar + Name ── */}
         <div className={styles.left}>
           <div className={styles.characterInfo} onClick={onToggleSidebar}>
@@ -314,10 +316,10 @@ export default function Header({
       </div>
 
       {/* ── Toolbar: Centered icon bar below header ── */}
-      <nav className={`${styles.toolbar} ${toolbarVisible ? styles.toolbarVisible : ''}`}>
+      <nav className={`${styles.toolbar} ${(toolbarVisible || anyOverlayOpen) ? styles.toolbarVisible : ''}`}>
         <div className={styles.toolbarInner}>
           <button
-            className={styles.toolbarBtn}
+            className={`${styles.toolbarBtn} ${activeOverlayId === 'userProfile' ? styles.toolbarBtnActive : ''}`}
             onClick={onOpenUserProfile}
             title={h.profileBtn}
           >
@@ -326,7 +328,7 @@ export default function Header({
           </button>
 
           <button
-            className={styles.toolbarBtn}
+            className={`${styles.toolbarBtn} ${activeOverlayId === 'apiKey' ? styles.toolbarBtnActive : ''}`}
             onClick={onOpenApiKey}
             title="Set API-Key"
           >
@@ -335,7 +337,7 @@ export default function Header({
           </button>
 
           <button
-            className={styles.toolbarBtn}
+            className={`${styles.toolbarBtn} ${activeOverlayId === 'cortex' ? styles.toolbarBtnActive : ''}`}
             onClick={onOpenCortex}
             title="Cortex"
           >
@@ -344,7 +346,7 @@ export default function Header({
           </button>
 
           <button
-            className={styles.toolbarBtn}
+            className={`${styles.toolbarBtn} ${activeOverlayId === 'personaSettings' ? styles.toolbarBtnActive : ''}`}
             onClick={onOpenPersonaSettings}
             title="Persona"
           >
@@ -360,7 +362,7 @@ export default function Header({
             onMouseLeave={handleSettingsLeave}
           >
             <button
-              className={styles.toolbarBtn}
+              className={`${styles.toolbarBtn} ${['interfaceSettings', 'apiSettings', 'serverSettings', 'accessControl'].includes(activeOverlayId) ? styles.toolbarBtnActive : ''}`}
               title="Settings"
             >
               <GearIcon />
@@ -376,7 +378,7 @@ export default function Header({
             onMouseLeave={handleCommunityLeave}
           >
             <button
-              className={styles.toolbarBtn}
+              className={`${styles.toolbarBtn} ${['support', 'patchNotes'].includes(activeOverlayId) ? styles.toolbarBtnActive : ''}`}
               title="Community & Support"
             >
               <GitHubIcon />

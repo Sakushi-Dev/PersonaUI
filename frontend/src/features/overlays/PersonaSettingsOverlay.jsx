@@ -23,7 +23,7 @@ import {
 import { useLanguage } from '../../hooks/useLanguage';
 import styles from './Overlays.module.css';
 
-export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEditor, onOpenCustomSpecs, avatarCallbackRef }) {
+export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEditor, onOpenCustomSpecs, avatarCallbackRef, panelOnly }) {
   const { loadPersonas: refreshSidebarPersonas } = useSession();
   const { t } = useLanguage();
   const s = t('personaSettings');
@@ -251,7 +251,7 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
   // ── List View ──────────────────────────────────────────
   if (view === 'list') {
     return (
-      <Overlay open={open} onClose={onClose} width="1200px">
+      <Overlay open={open} onClose={onClose} width="1200px" panelOnly={panelOnly}>
         <OverlayHeader title={s.title} icon={<PersonaIcon size={20} />} onClose={onClose} />
         <OverlayBody>
           {loading ? (
@@ -336,7 +336,7 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
 
   // ── Editor / Creator View ──────────────────────────────
   return (
-    <Overlay open={open} onClose={onClose} width="1200px">
+    <Overlay open={open} onClose={onClose} width="1200px" panelOnly={panelOnly}>
       <OverlayHeader
         title={editingId ? s.editingTitle.replace('{name}', name || 'Persona') : s.creatorTitle}
         icon={<PersonaIcon size={20} />}

@@ -425,5 +425,10 @@
   .sidebar {
     width: 100%;
     max-width: 100%;
+    z-index: calc(var(--z-overlay) + 20);
+  }
+
+  .backdrop {
+    z-index: calc(var(--z-overlay) + 15);
   }
 }

@@ -15,7 +15,7 @@ import Slider from '../../components/Slider/Slider';
 import Button from '../../components/Button/Button';
 import styles from './Overlays.module.css';
 
-export default function ApiSettingsOverlay({ open, onClose }) {
+export default function ApiSettingsOverlay({ open, onClose, panelOnly }) {
   const { get, setMany, reset, defaults, loaded } = useSettings();
   const { t } = useLanguage();
   const s = t('apiSettings');
@@ -60,7 +60,7 @@ export default function ApiSettingsOverlay({ open, onClose }) {
   }, []);
 
   return (
-    <Overlay open={open} onClose={onClose} width="540px">
+    <Overlay open={open} onClose={onClose} width="540px" panelOnly={panelOnly}>
       <OverlayHeader title={s.title} icon={<ChatIcon size={20} />} onClose={onClose} />
       <OverlayBody>
 

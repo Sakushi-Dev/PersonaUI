@@ -31,7 +31,7 @@ const FREQ_KEYS = [
 ];
 const DEFAULT_FREQUENCY = 'medium';
 
-export default function CortexOverlay({ open, onClose }) {
+export default function CortexOverlay({ open, onClose, panelOnly }) {
   const { personaId, character } = useSession();
   const { get, setMany } = useSettings();
   const { t } = useLanguage();
@@ -194,7 +194,7 @@ export default function CortexOverlay({ open, onClose }) {
   // Render
   // ══════════════════════════════════════════
   return (
-    <Overlay open={open} onClose={onClose} width="580px">
+    <Overlay open={open} onClose={onClose} width="580px" panelOnly={panelOnly}>
       <OverlayHeader title={s.title} icon={<CortexIcon size={20} />} onClose={onClose} />
       <OverlayBody>
 

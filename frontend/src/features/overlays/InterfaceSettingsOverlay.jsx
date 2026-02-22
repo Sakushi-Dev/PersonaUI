@@ -27,7 +27,7 @@ const FONT_OPTION_KEYS = [
   { value: 'console', label: 'Console',          descKey: 'fontTerminal',  icon: '>' },
 ];
 
-export default function InterfaceSettingsOverlay({ open, onClose }) {
+export default function InterfaceSettingsOverlay({ open, onClose, panelOnly }) {
   const { get, setMany } = useSettings();
   const { t } = useLanguage();
   const s = t('interfaceSettings');
@@ -175,7 +175,7 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
   }, [setMany, setIsDark, updateColors, setThemeFontSize, setThemeFontFamily, setThemeFontKey, setThemeDynBg]);
 
   return (
-    <Overlay open={open} onClose={handleClose} width="540px">
+    <Overlay open={open} onClose={handleClose} width="540px" panelOnly={panelOnly}>
       <OverlayHeader title={s.title} icon={<MonitorIcon size={20} />} onClose={handleClose} />
       <OverlayBody>
 

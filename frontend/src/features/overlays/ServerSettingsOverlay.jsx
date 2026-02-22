@@ -15,7 +15,7 @@ import { getAccessLists, toggleAccessControl } from '../../services/accessApi';
 import { useLanguage } from '../../hooks/useLanguage';
 import styles from './Overlays.module.css';
 
-export default function ServerSettingsOverlay({ open, onClose }) {
+export default function ServerSettingsOverlay({ open, onClose, panelOnly }) {
   const { t } = useLanguage();
   const s = t('serverSettings');
   const sc = t('common');
@@ -106,7 +106,7 @@ export default function ServerSettingsOverlay({ open, onClose }) {
   }
 
   return (
-    <Overlay open={open} onClose={onClose} width="460px">
+    <Overlay open={open} onClose={onClose} width="460px" panelOnly={panelOnly}>
       <OverlayHeader title={s.title} icon={<ServerIcon size={20} />} onClose={onClose} />
       <OverlayBody>
         <FormGroup label={s.serverMode}>

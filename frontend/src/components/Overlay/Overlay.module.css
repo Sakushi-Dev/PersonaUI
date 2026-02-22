@@ -90,3 +90,33 @@
     transform: scale(1);
   }
 }
+
+/* ── Carousel panel mode: no backdrop, fullscreen, no animations ── */
+.carouselPanel {
+  animation: none;
+  border-radius: 0;
+  border: none;
+  max-width: 100% !important;
+  width: 100% !important;
+  max-height: 100% !important;
+  height: 100% !important;
+  box-shadow: none;
+  z-index: auto;
+}
+
+/* ── Responsive: fullscreen overlays on mobile ── */
+@media (max-width: 768px) {
+  .backdrop {
+    padding: 0;
+    top: var(--toolbar-height-mobile, 50px);
+  }
+
+  .panel {
+    max-width: 100% !important;
+    width: 100% !important;
+    max-height: 100%;
+    height: 100%;
+    border-radius: 0;
+    border: none;
+  }
+}

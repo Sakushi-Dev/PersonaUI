@@ -15,7 +15,7 @@ import { useSettings } from '../../hooks/useSettings';
 import { useLanguage } from '../../hooks/useLanguage';
 import styles from './Overlays.module.css';
 
-export default function ApiKeyOverlay({ open, onClose }) {
+export default function ApiKeyOverlay({ open, onClose, panelOnly }) {
   const [apiKey, setApiKey] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -154,7 +154,7 @@ export default function ApiKeyOverlay({ open, onClose }) {
   };
 
   return (
-    <Overlay open={open} onClose={handleClose} width="480px">
+    <Overlay open={open} onClose={handleClose} width="480px" panelOnly={panelOnly}>
       <OverlayHeader title={s.title} icon={<KeyIcon size={20} />} onClose={handleClose} />
       <OverlayBody>
         <FormGroup label={s.label} hint={s.hint}>

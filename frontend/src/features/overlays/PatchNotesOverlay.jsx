@@ -79,7 +79,7 @@ const CATEGORY_ICONS = {
 // versions array — index 0 is the latest
 const ALL_VERSIONS = patchData.versions || [];
 
-export default function PatchNotesOverlay({ open, onClose }) {
+export default function PatchNotesOverlay({ open, onClose, panelOnly }) {
   const { t, language } = useLanguage();
   const s = t('patchNotes');
   const lang = language || 'en';
@@ -104,7 +104,7 @@ export default function PatchNotesOverlay({ open, onClose }) {
   const isLatest = selectedIdx === 0;
 
   return (
-    <Overlay open={open} onClose={handleClose} width="560px">
+    <Overlay open={open} onClose={handleClose} width="560px" panelOnly={panelOnly}>
       <OverlayHeader
         title={s.title || 'Patch Notes'}
         icon={<PatchNotesIcon size={20} />}

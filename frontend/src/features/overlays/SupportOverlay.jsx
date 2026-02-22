@@ -10,12 +10,12 @@ import { HeartIcon } from '../../components/Icons/Icons';
 import { useLanguage } from '../../hooks/useLanguage';
 import styles from './SupportOverlay.module.css';
 
-export default function SupportOverlay({ open, onClose }) {
+export default function SupportOverlay({ open, onClose, panelOnly }) {
   const { t } = useLanguage();
   const s = t('support');
 
   return (
-    <Overlay open={open} onClose={onClose} width="480px">
+    <Overlay open={open} onClose={onClose} width="480px" panelOnly={panelOnly}>
       <OverlayHeader
         title={s.title}
         icon={<HeartIcon size={20} />}
