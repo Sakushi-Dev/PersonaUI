@@ -8,7 +8,7 @@
   --bg-gradient-2: #f0c6ff;
 
   /* Overlay */
-  --overlay-backdrop: rgba(0, 0, 0, 0.18);
+  --overlay-backdrop: transparent;
   --overlay-backdrop-blur: blur(8px);
   --overlay-bg: rgba(255, 255, 255, 0.6);
   --overlay-bg-gradient: rgba(255, 255, 255, 0.6);
