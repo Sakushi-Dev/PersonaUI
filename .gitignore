@@ -36,6 +36,7 @@ src/settings/user_settings.json
 src/settings/server_settings.json
 src/settings/user_profile.json
 src/settings/window_settings.json
+src/settings/emoji_usage.json
 
 # Benutzer-erstellte Personas
 src/instructions/created_personas/

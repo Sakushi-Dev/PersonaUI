@@ -4,11 +4,15 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import styles from './ChatInput.module.css';
 import SlashCommandMenu from './SlashCommandMenu';
+import EmojiPicker from './EmojiPicker';
 import { getCommands, findCommand } from '../../slashCommands';
 
 export default function ChatInput({ onSend, disabled, isStreaming, onCancel, placeholder, sessionId }) {
   const [text, setText] = useState('');
   const textareaRef = useRef(null);
+
+  // ── Emoji picker state ──
+  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
 
   // ── Slash-command state ──
   const [cmdMenuOpen, setCmdMenuOpen] = useState(false);
@@ -153,6 +157,34 @@ export default function ChatInput({ onSend, disabled, isStreaming, onCancel, pla
     }
   }, [isStreaming, onCancel, handleSend]);
 
+  // ── Emoji picker handlers ──
+  const toggleEmojiPicker = useCallback(() => {
+    setEmojiPickerOpen((prev) => !prev);
+  }, []);
+
+  const closeEmojiPicker = useCallback(() => {
+    setEmojiPickerOpen(false);
+  }, []);
+
+  const handleEmojiSelect = useCallback((emoji) => {
+    const el = textareaRef.current;
+    if (el) {
+      const start = el.selectionStart;
+      const end = el.selectionEnd;
+      const before = text.slice(0, start);
+      const after = text.slice(end);
+      const newText = before + emoji + after;
+      setText(newText);
+      // Set cursor position after emoji
+      requestAnimationFrame(() => {
+        el.selectionStart = el.selectionEnd = start + emoji.length;
+        el.focus();
+      });
+    } else {
+      setText((prev) => prev + emoji);
+    }
+  }, [text]);
+
   return (
     <div className={styles.container}>
       <div className={styles.wrapper}>
@@ -163,16 +195,38 @@ export default function ChatInput({ onSend, disabled, isStreaming, onCancel, pla
           onHover={setCmdSelectedIdx}
           visible={cmdMenuOpen}
         />
-        <textarea
-          ref={textareaRef}
-          className={`${styles.input} ${isStreaming ? styles.inputStreaming : ''}`}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={isStreaming ? 'Antwort wird generiert...' : (placeholder || 'Deine Nachricht...')}
-          rows={1}
-          disabled={disabled}
-        />
+        <div className={styles.inputAdornmentWrapper}>
+          <button
+            className={`${styles.emojiBtn} ${emojiPickerOpen ? styles.emojiBtnActive : ''}`}
+            onClick={toggleEmojiPicker}
+            title="Emojis"
+            type="button"
+            data-emoji-toggle
+            tabIndex={-1}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+              <line x1="9" y1="9" x2="9.01" y2="9" />
+              <line x1="15" y1="9" x2="15.01" y2="9" />
+            </svg>
+          </button>
+          <textarea
+            ref={textareaRef}
+            className={`${styles.input} ${isStreaming ? styles.inputStreaming : ''}`}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={isStreaming ? 'Antwort wird generiert...' : (placeholder || 'Deine Nachricht...')}
+            rows={1}
+            disabled={disabled}
+          />
+          <EmojiPicker
+            visible={emojiPickerOpen}
+            onSelect={handleEmojiSelect}
+            onClose={closeEmojiPicker}
+          />
+        </div>
         <button
           className={`${styles.sendBtn} ${isStreaming ? styles.cancel : ''}`}
           onClick={handleClick}

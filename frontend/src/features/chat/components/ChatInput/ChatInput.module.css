@@ -21,9 +21,18 @@
   pointer-events: auto;
 }
 
-.input {
+/* ── Input + Emoji Adornment Wrapper ── */
+
+.inputAdornmentWrapper {
+  position: relative;
   flex: 1;
-  padding: 10px;
+  display: flex;
+  align-items: flex-end;
+}
+
+.input {
+  width: 100%;
+  padding: 10px 14px 10px 44px; /* left: space for emoji button */
   border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.65);
@@ -63,6 +72,43 @@
 .inputStreaming {
   opacity: 0.7;
 }
+
+/* ── Emoji Toggle (inside input, left) ── */
+
+.emojiBtn {
+  position: absolute;
+  left: 5px;
+  bottom: 4px;
+  z-index: 2;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+  color: rgba(0, 0, 0, 0.45);
+  transition: color 0.25s ease, filter 0.25s ease;
+}
+
+.emojiBtn:hover {
+  color: var(--nonverbal-color, #e4ba00);
+  filter: drop-shadow(0 0 6px var(--nonverbal-color, #e4ba00));
+}
+
+.emojiBtn:active {
+  transform: scale(0.92);
+}
+
+.emojiBtnActive {
+  color: var(--nonverbal-color, #e4ba00);
+  filter: drop-shadow(0 0 8px var(--nonverbal-color, #e4ba00));
+}
+
+/* ── Send Button ── */
 
 .sendBtn {
   width: 45px;
@@ -129,6 +175,20 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
+:root[data-theme="dark"] .emojiBtn {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+:root[data-theme="dark"] .emojiBtn:hover {
+  color: var(--nonverbal-color, #e4ba00);
+  filter: drop-shadow(0 0 8px var(--nonverbal-color, #e4ba00));
+}
+
+:root[data-theme="dark"] .emojiBtnActive {
+  color: var(--nonverbal-color, #e4ba00);
+  filter: drop-shadow(0 0 10px var(--nonverbal-color, #e4ba00));
+}
+
 /* ── Responsive ── */
 
 @media (max-width: 768px) {
@@ -138,10 +198,18 @@
 
   .input {
     font-size: 16px;
+    padding-left: 40px;
   }
 
   .sendBtn {
     width: 42px;
     height: 42px;
+  }
+
+  .emojiBtn {
+    width: 30px;
+    height: 30px;
+    left: 4px;
+    bottom: 6px;
   }
 }
