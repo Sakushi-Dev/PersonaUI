@@ -15,3 +15,4 @@ export { default as UserProfileOverlay } from './UserProfileOverlay';
 export { default as QRCodeOverlay } from './QRCodeOverlay';
 export { default as AccessControlOverlay } from './AccessControlOverlay';
 export { default as DebugOverlay } from './DebugOverlay';
+export { default as SupportOverlay } from './SupportOverlay';

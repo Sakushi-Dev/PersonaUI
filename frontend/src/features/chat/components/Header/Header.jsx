@@ -14,6 +14,7 @@ import {
   SoundOnIcon, SoundOffIcon, QRCodeIcon,
   UserIcon, KeyIcon, CortexIcon, PersonaIcon, GearIcon,
   MonitorIcon, ChatIcon, ServerIcon, ShieldIcon,
+  GitHubIcon, ExternalLinkIcon, HeartIcon, BugIcon,
 } from '../../../../components/Icons/Icons';
 
 export default function Header({
@@ -27,6 +28,7 @@ export default function Header({
   onOpenUserProfile,
   onOpenQRCode,
   onOpenAccessControl,
+  onOpenSupport,
 }) {
   const { character, sessionId } = useSession();
   const { get, set } = useSettings();
@@ -126,6 +128,7 @@ export default function Header({
     return () => {
       if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
       if (settingsTimerRef.current) clearTimeout(settingsTimerRef.current);
+      if (communityTimerRef.current) clearTimeout(communityTimerRef.current);
     };
   }, []);
 
@@ -136,10 +139,12 @@ export default function Header({
     const handleClickOutside = (e) => {
       if (
         headerRef.current && !headerRef.current.contains(e.target) &&
-        (!portalRef.current || !portalRef.current.contains(e.target))
+        (!portalRef.current || !portalRef.current.contains(e.target)) &&
+        (!communityPortalRef.current || !communityPortalRef.current.contains(e.target))
       ) {
         setToolbarVisible(false);
         setSettingsOpen(false);
+        setCommunityOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -162,6 +167,26 @@ export default function Header({
   const handleSettingsLeave = useCallback(() => {
     settingsTimerRef.current = setTimeout(() => {
       setSettingsOpen(false);
+    }, 400);
+  }, []);
+
+  // ── Community submenu state (with hover delay) ──
+  const [communityOpen, setCommunityOpen] = useState(false);
+  const communityRef = useRef(null);
+  const communityTimerRef = useRef(null);
+  const communityPortalRef = useRef(null);
+
+  const handleCommunityEnter = useCallback(() => {
+    if (communityTimerRef.current) {
+      clearTimeout(communityTimerRef.current);
+      communityTimerRef.current = null;
+    }
+    setCommunityOpen(true);
+  }, []);
+
+  const handleCommunityLeave = useCallback(() => {
+    communityTimerRef.current = setTimeout(() => {
+      setCommunityOpen(false);
     }, 400);
   }, []);
 
@@ -338,10 +363,26 @@ export default function Header({
               <span className={styles.toolbarLabel}>Settings</span>
             </button>
           </div>
+
+          {/* Community with hover submenu */}
+          <div
+            className={styles.settingsGroup}
+            ref={communityRef}
+            onMouseEnter={handleCommunityEnter}
+            onMouseLeave={handleCommunityLeave}
+          >
+            <button
+              className={styles.toolbarBtn}
+              title="Community & Support"
+            >
+              <GitHubIcon />
+              <span className={styles.toolbarLabel}>Community</span>
+            </button>
+          </div>
         </div>
       </nav>
 
-      {/* Portal: Submenu rendered outside header to allow backdrop-filter */}
+      {/* Portal: Settings submenu */}
       {settingsOpen && createPortal(
         <div
           ref={portalRef}
@@ -375,6 +416,43 @@ export default function Header({
               <button className={styles.submenuBtn} onClick={() => { setSettingsOpen(false); onOpenAccessControl?.(); }}>
                 <ShieldIcon />
                 <span>Zugang</span>
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Portal: Community submenu */}
+      {communityOpen && createPortal(
+        <div
+          ref={communityPortalRef}
+          className={styles.settingsPortal}
+          style={{
+            top: communityRef.current
+              ? communityRef.current.getBoundingClientRect().bottom + window.scrollY + 'px'
+              : '0px',
+            left: communityRef.current
+              ? communityRef.current.getBoundingClientRect().left + communityRef.current.offsetWidth / 2 + 'px'
+              : '0px',
+          }}
+          onMouseEnter={handleCommunityEnter}
+          onMouseLeave={handleCommunityLeave}
+        >
+          <div className={styles.settingsSubmenuInner}>
+            <div className={styles.submenuBackdrop} aria-hidden="true" />
+            <div className={styles.submenuContent}>
+              <button className={styles.submenuBtn} onClick={() => { setCommunityOpen(false); window.open('https://github.com/Sakushi-Dev/PersonaUI', '_blank'); }}>
+                <ExternalLinkIcon />
+                <span>GitHub</span>
+              </button>
+              <button className={styles.submenuBtn} onClick={() => { setCommunityOpen(false); window.open('https://github.com/Sakushi-Dev/PersonaUI/issues', '_blank'); }}>
+                <BugIcon />
+                <span>Issues</span>
+              </button>
+              <button className={styles.submenuBtn} onClick={() => { setCommunityOpen(false); onOpenSupport?.(); }}>
+                <HeartIcon />
+                <span>Support</span>
               </button>
             </div>
           </div>

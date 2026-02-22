@@ -41,6 +41,7 @@ import {
   DebugOverlay,
   CreditExhaustedOverlay,
   ApiWarningOverlay,
+  SupportOverlay,
 } from '../overlays';
 
 import styles from './ChatPage.module.css';
@@ -160,6 +161,7 @@ function ChatPageContent() {
   const debug = useOverlay();
   const creditExhausted = useOverlay();
   const apiWarning = useOverlay();
+  const support = useOverlay();
 
   // ── Cortex update indicator ──
   const [cortexUpdating, setCortexUpdating] = useState(false);
@@ -259,6 +261,7 @@ function ChatPageContent() {
         onOpenUserProfile={userProfile.open}
         onOpenQRCode={qrCode.open}
         onOpenAccessControl={accessControl.open}
+        onOpenSupport={support.open}
       />
 
       <div style={{ position: 'relative', height: 0, zIndex: 50 }}>
@@ -371,6 +374,10 @@ function ChatPageContent() {
         onOpenApiKey={() => { apiWarning.close(); apiKey.open(); }}
       />
       <AccessNotification polling={qrCode.isOpen} />
+      <SupportOverlay
+        open={support.isOpen}
+        onClose={support.close}
+      />
     </div>
   );
 }

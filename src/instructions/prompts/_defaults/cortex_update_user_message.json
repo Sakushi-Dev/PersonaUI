@@ -2,7 +2,7 @@
   "cortex_update_user_message": {
     "variants": {
       "default": {
-        "content": "Here is the conversation between you ({{char_name}}) and {{user_name}} that you just had:\n\n---\n\n{{cortex_conversation_text}}\n\n---\n\nNow read your Cortex files and update them based on this conversation. Use the `read_file` and `write_file` tools."
+        "content": "Here is the conversation you just had with {{user_name}}:\n\n---\n\n{{cortex_conversation_text}}\n\n---\n\nRead your files. Update what needs updating. Skip what does not."
       }
     },
     "placeholders_used": [
