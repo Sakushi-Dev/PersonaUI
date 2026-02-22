@@ -33,9 +33,9 @@
   --overlay-hover-bg: rgba(0, 0, 0, 0.05);
   --overlay-section-bg: rgba(0, 0, 0, 0.04);
   --overlay-section-border: rgba(0, 0, 0, 0.12);
-  --overlay-close-color: rgba(0, 0, 0, 0.5);
-  --overlay-close-hover-bg: rgba(0, 0, 0, 0.1);
-  --overlay-close-hover-color: #222;
+  --overlay-close-color: rgba(220, 38, 38, 0.7);
+  --overlay-close-hover-bg: rgba(220, 38, 38, 0.1);
+  --overlay-close-hover-color: #dc2626;
 
   /* Overlay Scrollbar */
   --overlay-scrollbar-track: rgba(0, 0, 0, 0.08);

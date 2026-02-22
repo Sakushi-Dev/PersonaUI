@@ -2,7 +2,10 @@
 
 .container {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   padding: 15px;
   padding-top: 70px;
   padding-bottom: 120px;

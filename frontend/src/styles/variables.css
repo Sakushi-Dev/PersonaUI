@@ -52,10 +52,14 @@
   /* Z-Index Scale */
   --z-background: -1;
   --z-default: 1;
+  --z-fixed: 100;
   --z-sidebar: 250;
   --z-header: 200;
   --z-dropdown: 300;
   --z-overlay-backdrop: 900;
   --z-overlay: 1000;
   --z-toast: 1100;
+
+  /* Mobile Layout */
+  --toolbar-height-mobile: 58px;
 }

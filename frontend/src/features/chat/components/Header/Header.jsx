@@ -157,12 +157,18 @@ export default function Header({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [toolbarVisible]);
 
+  // ── Hover capability detection (no hover = touch device) ──
+  const canHover = useRef(
+    typeof window !== 'undefined' && window.matchMedia('(hover: hover)').matches
+  );
+
   // ── Settings submenu state (with hover delay) ──
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef(null);
   const settingsTimerRef = useRef(null);
 
   const handleSettingsEnter = useCallback(() => {
+    if (!canHover.current) return;
     if (settingsTimerRef.current) {
       clearTimeout(settingsTimerRef.current);
       settingsTimerRef.current = null;
@@ -171,9 +177,17 @@ export default function Header({
   }, []);
 
   const handleSettingsLeave = useCallback(() => {
+    if (!canHover.current) return;
     settingsTimerRef.current = setTimeout(() => {
       setSettingsOpen(false);
     }, 400);
+  }, []);
+
+  const handleSettingsClick = useCallback(() => {
+    setSettingsOpen(prev => {
+      if (!prev) setCommunityOpen(false);
+      return !prev;
+    });
   }, []);
 
   // ── Community submenu state (with hover delay) ──
@@ -183,6 +197,7 @@ export default function Header({
   const communityPortalRef = useRef(null);
 
   const handleCommunityEnter = useCallback(() => {
+    if (!canHover.current) return;
     if (communityTimerRef.current) {
       clearTimeout(communityTimerRef.current);
       communityTimerRef.current = null;
@@ -191,10 +206,18 @@ export default function Header({
   }, []);
 
   const handleCommunityLeave = useCallback(() => {
+    if (!canHover.current) return;
     communityTimerRef.current = setTimeout(() => {
       setCommunityOpen(false);
     }, 400);
   }, []);
+
+  const handleCommunityClick = useCallback(() => {
+    setCommunityOpen(prev => {
+      if (!prev) setSettingsOpen(false);
+      return !prev;
+    });
+  }, [])
 
   // ── API Status ──
   const [apiConnected, setApiConnected] = useState(null); // null=loading, true=connected, false=disconnected
@@ -362,8 +385,9 @@ export default function Header({
             onMouseLeave={handleSettingsLeave}
           >
             <button
-              className={`${styles.toolbarBtn} ${['interfaceSettings', 'apiSettings', 'serverSettings', 'accessControl'].includes(activeOverlayId) ? styles.toolbarBtnActive : ''}`}
+              className={`${styles.toolbarBtn} ${settingsOpen ? styles.toolbarBtnActive : ''} ${['interfaceSettings', 'apiSettings', 'serverSettings', 'accessControl'].includes(activeOverlayId) ? styles.toolbarBtnActive : ''}`}
               title="Settings"
+              onClick={handleSettingsClick}
             >
               <GearIcon />
               <span className={styles.toolbarLabel}>{h.settingsBtn}</span>
@@ -378,8 +402,9 @@ export default function Header({
             onMouseLeave={handleCommunityLeave}
           >
             <button
-              className={`${styles.toolbarBtn} ${['support', 'patchNotes'].includes(activeOverlayId) ? styles.toolbarBtnActive : ''}`}
+              className={`${styles.toolbarBtn} ${communityOpen ? styles.toolbarBtnActive : ''} ${['support', 'patchNotes'].includes(activeOverlayId) ? styles.toolbarBtnActive : ''}`}
               title="Community & Support"
+              onClick={handleCommunityClick}
             >
               <GitHubIcon />
               <span className={styles.toolbarLabel}>{h.communityBtn}</span>
