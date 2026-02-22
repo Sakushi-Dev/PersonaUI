@@ -437,7 +437,11 @@ class ChatService:
                 words[-1] if words else '', last_word,
                 response.stop_reason
             )
-            log.info("Nachgedanke-Entscheidung: %s", '[afterthought_OK] → Ergänzung' if decision else '[i_can_wait] → Schweigen')
+            log.info(
+                "Nachgedanke-Entscheidung: %s (letztes Wort: '%s')",
+                '[afterthought_OK] → Ergänzung' if decision else '[i_can_wait] → Schweigen',
+                last_word
+            )
 
             return {
                 'decision': decision,
