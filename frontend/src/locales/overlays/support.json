@@ -2,7 +2,7 @@
   "en": {
     "title": "Support Project",
     "aboutTitle": "About PersonaUI",
-    "aboutText1": "PersonaUI is a passionate solo project by <strong>Sakushi</strong> — an open-source AI companion that runs completely locally, respects your data, and offers unique persona experiences.",
+    "aboutText1": "PersonaUI is a passionate solo project by <a href=\"https://github.com/Sakushi-Dev\" target=\"_blank\" rel=\"noopener noreferrer\"><strong>Sakushi-Dev</strong></a> — an open-source AI companion that runs completely locally, respects your data, and offers unique persona experiences.",
     "aboutText2": "My goal is to continuously develop PersonaUI — with better personas, intelligent memory (Cortex), and a UI that feels like a real conversation. Every bit of support helps me invest more time in this project.",
     "noteTitle": "<strong>A word on transparency:</strong> PersonaUI is and will remain open source and free. This option exists only for those who want to voluntarily support the project — no features are unlocked, no content is withheld. Promise. 🤝",
     "kofiText": "If you enjoy PersonaUI, you can buy me a coffee:",
@@ -14,7 +14,7 @@
   "de": {
     "title": "Projekt unterstützen",
     "aboutTitle": "Über PersonaUI",
-    "aboutText1": "PersonaUI ist ein leidenschaftliches Solo-Projekt von <strong>Sakushi</strong> — ein Open-Source AI-Companion, der komplett lokal läuft, deine Daten respektiert und dir einzigartige Persona-Erlebnisse bietet.",
+    "aboutText1": "PersonaUI ist ein leidenschaftliches Solo-Projekt von <a href=\"https://github.com/Sakushi-Dev\" target=\"_blank\" rel=\"noopener noreferrer\"><strong>Sakushi-Dev</strong></a> — ein Open-Source AI-Companion, der komplett lokal läuft, deine Daten respektiert und dir einzigartige Persona-Erlebnisse bietet.",
     "aboutText2": "Mein Ziel ist es, PersonaUI kontinuierlich weiterzuentwickeln — mit besseren Personas, intelligentem Gedächtnis (Cortex), und einer UI, die sich wie eine echte Unterhaltung anfühlt. Jede Unterstützung hilft mir, mehr Zeit in dieses Projekt zu investieren.",
     "noteTitle": "<strong>Ein Wort zur Transparenz:</strong> PersonaUI ist und bleibt Open Source und kostenlos. Diese Option existiert nur für diejenigen, die das Projekt freiwillig unterstützen möchten — keine Features werden dadurch freigeschaltet, keine Inhalte zurückgehalten. Versprochen. 🤝",
     "kofiText": "Wenn dir PersonaUI gefällt, kannst du mir einen Kaffee spendieren:",

@@ -20,6 +20,15 @@
   margin: 0 0 4px;
 }
 
+.aboutText a {
+  color: var(--nonverbal-color, #e4ba00);
+  text-decoration: none;
+}
+
+.aboutText a:hover {
+  text-decoration: underline;
+}
+
 .aboutText {
   font-size: 13.5px;
   line-height: 1.65;
