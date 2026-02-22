@@ -84,6 +84,7 @@ def add_persona_type():
     """Fügt einen neuen Persona-Typ hinzu"""
     data = request.get_json()
     key = data.get('key', '').strip()
+    name = data.get('name', '').strip()
     description = data.get('description', '').strip()
     
     if not key:
@@ -93,6 +94,9 @@ def add_persona_type():
     
     specs = _load_custom_spec()
     specs['persona_spec']['persona_type'][key] = description
+    # Save display title
+    titles = specs.setdefault('_titles', {}).setdefault('persona_type', {})
+    titles[key] = name or key
     
     if _save_custom_spec(specs):
         return success_response()
@@ -105,6 +109,7 @@ def add_core_trait():
     """Fügt ein neues Core Trait hinzu"""
     data = request.get_json()
     key = data.get('key', '').strip()
+    name = data.get('name', '').strip()
     description = data.get('description', '').strip()
     behaviors = data.get('behaviors', [])
     
@@ -118,6 +123,9 @@ def add_core_trait():
         "description": description,
         "behaviors": behaviors
     }
+    # Save display title
+    titles = specs.setdefault('_titles', {}).setdefault('core_traits_details', {})
+    titles[key] = name or key
     
     if _save_custom_spec(specs):
         return success_response()
@@ -130,6 +138,7 @@ def add_knowledge():
     """Fügt ein neues Wissensgebiet hinzu"""
     data = request.get_json()
     key = data.get('key', '').strip()
+    name = data.get('name', '').strip()
     description = data.get('description', '').strip()
     
     if not key:
@@ -137,6 +146,9 @@ def add_knowledge():
     
     specs = _load_custom_spec()
     specs['persona_spec']['knowledge_areas'][key] = description
+    # Save display title
+    titles = specs.setdefault('_titles', {}).setdefault('knowledge_areas', {})
+    titles[key] = name or key
     
     if _save_custom_spec(specs):
         return success_response()
@@ -216,6 +228,9 @@ def delete_custom_spec(category, key):
     specs = _load_custom_spec()
     if key in specs['persona_spec'].get(spec_key, {}):
         del specs['persona_spec'][spec_key][key]
+        # Also remove stored title if present
+        if '_titles' in specs and spec_key in specs['_titles']:
+            specs['_titles'][spec_key].pop(key, None)
         if _save_custom_spec(specs):
             return success_response()
         return error_response('Speichern fehlgeschlagen', 500)

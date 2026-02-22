@@ -30,6 +30,7 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
   const [options, setOptions] = useState({});       // options.persona_types, .core_traits, etc.
   const [details, setDetails] = useState({});       // option label details
   const [customKeys, setCustomKeys] = useState({}); // custom spec highlighting
+  const [customTitles, setCustomTitles] = useState({}); // custom spec display titles
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
 
@@ -61,6 +62,7 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
       setOptions(optData.options || {});
       setDetails(optData.details || {});
       setCustomKeys(optData.custom_keys || {});
+      setCustomTitles(optData.custom_titles || {});
     } catch (err) {
       console.error('Persona refresh failed:', err);
     } finally {
@@ -199,22 +201,35 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
   };
 
   // Get option arrays from loaded options (options now correctly contains persona_types, core_traits, etc.)
-  const typeOptions = (options.persona_types || []).map((t) =>
-    typeof t === 'string' ? { key: t, label: t } : { key: t.key || t, label: t.name || t.key || t }
-  );
-  const traitOptions = (options.core_traits || []).map((t) => typeof t === 'string' ? t : t.key || t);
-  const knowledgeOptions = (options.knowledge || []).map((k) => typeof k === 'string' ? k : k.key || k);
+  const typeOptions = (options.persona_types || []).map((t) => {
+    const key = typeof t === 'string' ? t : t.key || t;
+    const title = customTitles?.persona_types?.[key];
+    const label = title || (typeof t === 'string' ? t : t.name || t.key || t);
+    return { key, label };
+  });
+  const traitOptions = (options.core_traits || []).map((t) => {
+    const key = typeof t === 'string' ? t : t.key || t;
+    const title = customTitles?.core_traits?.[key] || key;
+    return { key, label: title };
+  });
+  const knowledgeOptions = (options.knowledge || []).map((k) => {
+    const key = typeof k === 'string' ? k : k.key || k;
+    const title = customTitles?.knowledge?.[key] || key;
+    return { key, label: title };
+  });
   const expressionOptions = (options.expression_styles || []).map((e) => {
     if (typeof e === 'string') {
       const detail = details?.expression_styles?.[e];
-      return { key: e, label: detail?.name || e };
+      const title = customTitles?.expression_styles?.[e];
+      return { key: e, label: title || detail?.name || e };
     }
     return { key: e.key || e, label: e.name || e.key || e };
   });
   const scenarioOptions = (options.scenarios || []).map((s) => {
     if (typeof s === 'string') {
       const detail = details?.scenarios?.[s];
-      return { key: s, label: detail?.name || s };
+      const title = customTitles?.scenarios?.[s];
+      return { key: s, label: title || detail?.name || s };
     }
     return { key: s.key || s, label: s.name || s.key || s };
   });
@@ -223,6 +238,9 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
   const toggleTag = (list, setList, tag) => {
     setList((prev) => prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]);
   };
+
+  // Check if a key is a custom spec
+  const isCustom = (category, key) => (customKeys[category] || []).includes(key);
 
   const showScenario = personaType !== 'KI' && scenarioOptions.length > 0;
 
@@ -418,7 +436,7 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
                   <button
                     key={t.key}
                     type="button"
-                    className={styles.tagButton + (personaType === t.key ? ` ${styles.tagButtonActive}` : '')}
+                    className={styles.tagButton + (personaType === t.key ? ` ${styles.tagButtonActive}` : '') + (isCustom('persona_types', t.key) ? ` ${styles.tagButtonCustom}` : '')}
                     style={{ flex: '1 1 120px', textAlign: 'center', padding: '12px 16px' }}
                     onClick={() => {
                       setPersonaType(t.key);
@@ -440,7 +458,7 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
               {scenarioOptions.map((opt) => (
                 <button
                   key={opt.key}
-                  className={styles.tagButton + (scenarios.includes(opt.key) ? ` ${styles.tagButtonActive}` : '')}
+                  className={styles.tagButton + (scenarios.includes(opt.key) ? ` ${styles.tagButtonActive}` : '') + (isCustom('scenarios', opt.key) ? ` ${styles.tagButtonCustom}` : '')}
                   onClick={() => toggleTag(scenarios, setScenarios, opt.key)}
                 >
                   {opt.label}
@@ -453,7 +471,7 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
                 {scenarios.map((key) => (
                   <button
                     key={key}
-                    className={`${styles.tagButton} ${styles.tagButtonActive}`}
+                    className={`${styles.tagButton} ${styles.tagButtonActive}` + (isCustom('scenarios', key) ? ` ${styles.tagButtonCustom}` : '')}
                     onClick={() => toggleTag(scenarios, setScenarios, key)}
                   >
                     {scenarioOptions.find((o) => o.key === key)?.label || key}
@@ -469,26 +487,26 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
               <h3 className={styles.configSectionTitle}>Core Traits</h3>
               <div className={styles.configDescription}>Wähle Persönlichkeitsmerkmale:</div>
               <div className={styles.tagsAvailable}>
-                {traitOptions.map((tag) => (
+                {traitOptions.map((opt) => (
                   <button
-                    key={tag}
-                    className={styles.tagButton + (coreTraits.includes(tag) ? ` ${styles.tagButtonActive}` : '')}
-                    onClick={() => toggleTag(coreTraits, setCoreTraits, tag)}
+                    key={opt.key}
+                    className={styles.tagButton + (coreTraits.includes(opt.key) ? ` ${styles.tagButtonActive}` : '') + (isCustom('core_traits', opt.key) ? ` ${styles.tagButtonCustom}` : '')}
+                    onClick={() => toggleTag(coreTraits, setCoreTraits, opt.key)}
                   >
-                    {tag}
+                    {opt.label}
                   </button>
                 ))}
               </div>
               <div className={styles.tagsActiveContainer}>
                 <h4 className={styles.tagsActiveTitle}>Aktiv ({coreTraits.length}):</h4>
                 <div className={styles.tagsActive}>
-                  {coreTraits.map((tag) => (
+                  {coreTraits.map((key) => (
                     <button
-                      key={tag}
-                      className={`${styles.tagButton} ${styles.tagButtonActive}`}
-                      onClick={() => toggleTag(coreTraits, setCoreTraits, tag)}
+                      key={key}
+                      className={`${styles.tagButton} ${styles.tagButtonActive}` + (isCustom('core_traits', key) ? ` ${styles.tagButtonCustom}` : '')}
+                      onClick={() => toggleTag(coreTraits, setCoreTraits, key)}
                     >
-                      {tag}
+                      {traitOptions.find((o) => o.key === key)?.label || key}
                     </button>
                   ))}
                 </div>
@@ -502,26 +520,26 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
               <h3 className={styles.configSectionTitle}>Knowledge</h3>
               <div className={styles.configDescription}>Wähle Wissensgebiete:</div>
               <div className={styles.tagsAvailable}>
-                {knowledgeOptions.map((tag) => (
+                {knowledgeOptions.map((opt) => (
                   <button
-                    key={tag}
-                    className={styles.tagButton + (knowledge.includes(tag) ? ` ${styles.tagButtonActive}` : '')}
-                    onClick={() => toggleTag(knowledge, setKnowledge, tag)}
+                    key={opt.key}
+                    className={styles.tagButton + (knowledge.includes(opt.key) ? ` ${styles.tagButtonActive}` : '') + (isCustom('knowledge', opt.key) ? ` ${styles.tagButtonCustom}` : '')}
+                    onClick={() => toggleTag(knowledge, setKnowledge, opt.key)}
                   >
-                    {tag}
+                    {opt.label}
                   </button>
                 ))}
               </div>
               <div className={styles.tagsActiveContainer}>
                 <h4 className={styles.tagsActiveTitle}>Aktiv ({knowledge.length}):</h4>
                 <div className={styles.tagsActive}>
-                  {knowledge.map((tag) => (
+                  {knowledge.map((key) => (
                     <button
-                      key={tag}
-                      className={`${styles.tagButton} ${styles.tagButtonActive}`}
-                      onClick={() => toggleTag(knowledge, setKnowledge, tag)}
+                      key={key}
+                      className={`${styles.tagButton} ${styles.tagButtonActive}` + (isCustom('knowledge', key) ? ` ${styles.tagButtonCustom}` : '')}
+                      onClick={() => toggleTag(knowledge, setKnowledge, key)}
                     >
-                      {tag}
+                      {knowledgeOptions.find((o) => o.key === key)?.label || key}
                     </button>
                   ))}
                 </div>
@@ -538,7 +556,7 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
                 {expressionOptions.map((opt) => (
                   <button
                     key={opt.key}
-                    className={styles.tagButton + (expression === opt.key ? ` ${styles.tagButtonActive}` : '')}
+                    className={styles.tagButton + (expression === opt.key ? ` ${styles.tagButtonActive}` : '') + (isCustom('expression_styles', opt.key) ? ` ${styles.tagButtonCustom}` : '')}
                     onClick={() => setExpression(opt.key)}
                   >
                     {opt.label}
@@ -550,7 +568,7 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
                 <div className={styles.tagsActive}>
                   {expression && (
                     <button
-                      className={`${styles.tagButton} ${styles.tagButtonActive}`}
+                      className={`${styles.tagButton} ${styles.tagButtonActive}` + (isCustom('expression_styles', expression) ? ` ${styles.tagButtonCustom}` : '')}
                       onClick={() => setExpression('')}
                     >
                       {expressionOptions.find((o) => o.key === expression)?.label || expression}

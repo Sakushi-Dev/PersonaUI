@@ -164,10 +164,10 @@ export default function CustomSpecsOverlay({ open, onClose, onOpenList }) {
     switch (activeTab) {
       case 'persona-type':
       case 'knowledge':
-        body = { key, description: form.description };
+        body = { key, name: form.name, description: form.description };
         break;
       case 'core-trait':
-        body = { key, description: form.description, behaviors: items };
+        body = { key, name: form.name, description: form.description, behaviors: items };
         break;
       case 'scenario':
         body = { key, name: form.name, description: form.description, setting: items };

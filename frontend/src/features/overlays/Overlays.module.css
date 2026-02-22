@@ -1736,6 +1736,42 @@
   transform: translateY(-1px);
 }
 
+/* Custom Spec Highlight */
+.tagButtonCustom {
+  border-color: rgba(100, 149, 237, 0.45);
+  box-shadow: 0 0 0 1px rgba(100, 149, 237, 0.18);
+  position: relative;
+}
+
+.tagButtonCustom::after {
+  content: '★';
+  position: absolute;
+  top: -4px;
+  right: -2px;
+  font-size: 9px;
+  color: #6495ed;
+  line-height: 1;
+}
+
+.tagButtonCustom:not(.tagButtonActive) {
+  border-color: rgba(100, 149, 237, 0.5);
+  background: rgba(100, 149, 237, 0.08);
+}
+
+.tagButtonCustom:not(.tagButtonActive):hover {
+  border-color: rgba(100, 149, 237, 0.7);
+  background: rgba(100, 149, 237, 0.14);
+}
+
+.tagButtonCustom.tagButtonActive {
+  background: linear-gradient(135deg, #5b8def 0%, #4a7adb 100%);
+  border-color: #5b8def;
+}
+
+.tagButtonCustom.tagButtonActive:hover {
+  background: linear-gradient(135deg, #4f7fe0 0%, #3e6dcc 100%);
+}
+
 /* Background Section */
 .backgroundInputArea {
   display: flex;
