@@ -11,13 +11,8 @@ import ChipSelector from '../../components/ChipSelector/ChipSelector';
 import Avatar from '../../components/Avatar/Avatar';
 import Button from '../../components/Button/Button';
 import { getUserProfile, updateUserProfile } from '../../services/userProfileApi';
+import { useLanguage } from '../../hooks/useLanguage';
 import styles from './Overlays.module.css';
-
-const GENDER_OPTIONS = [
-  { value: 'Männlich', label: 'Männlich' },
-  { value: 'Weiblich', label: 'Weiblich' },
-  { value: 'Divers', label: 'Divers' },
-];
 
 const PERSONA_LANGUAGE_OPTIONS = [
   { value: 'english', label: 'English' },
@@ -33,6 +28,16 @@ const PERSONA_LANGUAGE_OPTIONS = [
 ];
 
 export default function UserProfileOverlay({ open, onClose, onOpenAvatarEditor, avatarRefreshKey }) {
+  const { t } = useLanguage();
+  const s = t('userProfile');
+  const sc = t('common');
+
+  const GENDER_OPTIONS = [
+    { value: 'Männlich', label: s.male },
+    { value: 'Weiblich', label: s.female },
+    { value: 'Divers', label: s.diverse },
+  ];
+
   const [name, setName] = useState('User');
   const [avatar, setAvatar] = useState(null);
   const [avatarType, setAvatarType] = useState(null);
@@ -100,12 +105,12 @@ export default function UserProfileOverlay({ open, onClose, onOpenAvatarEditor, 
 
   return (
     <Overlay open={open} onClose={onClose} width="480px">
-      <OverlayHeader title="Mein Profil" icon={<UserIcon size={20} />} onClose={onClose} />
+      <OverlayHeader title={s.title} icon={<UserIcon size={20} />} onClose={onClose} />
       <OverlayBody>
 
         {/* ═══ Section: Profil ═══ */}
         <div className={styles.ifaceSection}>
-          <h3 className={styles.ifaceSectionTitle}>Profil</h3>
+          <h3 className={styles.ifaceSectionTitle}>{s.profile}</h3>
           <div className={styles.ifaceCard}>
             <div className={styles.profileCardTop}>
               <div className={styles.profileAvatarWrapper}>
@@ -125,9 +130,9 @@ export default function UserProfileOverlay({ open, onClose, onOpenAvatarEditor, 
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   maxLength={30}
-                  placeholder="Dein Name"
+                  placeholder={s.namePlaceholder}
                 />
-                <span className={styles.ifaceToggleHint}>Dein Anzeigename im Chat</span>
+                <span className={styles.ifaceToggleHint}>{s.displayNameHint}</span>
               </div>
             </div>
             {avatar && (
@@ -135,7 +140,7 @@ export default function UserProfileOverlay({ open, onClose, onOpenAvatarEditor, 
                 <div className={styles.ifaceDivider} />
                 <div className={styles.profileAvatarAction}>
                   <Button variant="ghost" size="sm" onClick={handleRemoveAvatar}>
-                    Avatar entfernen
+                    {s.removeAvatar}
                   </Button>
                 </div>
               </>
@@ -145,10 +150,10 @@ export default function UserProfileOverlay({ open, onClose, onOpenAvatarEditor, 
 
         {/* ═══ Section: Persoenliches ═══ */}
         <div className={styles.ifaceSection}>
-          <h3 className={styles.ifaceSectionTitle}>Persoenliches</h3>
+          <h3 className={styles.ifaceSectionTitle}>{s.personal}</h3>
           <div className={styles.ifaceCard}>
             <div className={styles.ifaceFieldGroup}>
-              <span className={styles.ifaceFieldLabel}>Geschlecht</span>
+              <span className={styles.ifaceFieldLabel}>{s.gender}</span>
               <ChipSelector
                 options={GENDER_OPTIONS}
                 value={gender}
@@ -159,8 +164,8 @@ export default function UserProfileOverlay({ open, onClose, onOpenAvatarEditor, 
             <div className={styles.ifaceDivider} />
 
             <div className={styles.ifaceFieldGroup}>
-              <span className={styles.ifaceFieldLabel}>Interessiert an</span>
-              <span className={styles.ifaceFieldHint}>Mehrfachauswahl moeglich</span>
+              <span className={styles.ifaceFieldLabel}>{s.interestedIn}</span>
+              <span className={styles.ifaceFieldHint}>{s.multiSelect}</span>
               <ChipSelector
                 options={GENDER_OPTIONS}
                 value={interestedIn}
@@ -173,21 +178,21 @@ export default function UserProfileOverlay({ open, onClose, onOpenAvatarEditor, 
 
         {/* ═══ Section: Ueber mich ═══ */}
         <div className={styles.ifaceSection}>
-          <h3 className={styles.ifaceSectionTitle}>Ueber mich</h3>
+          <h3 className={styles.ifaceSectionTitle}>{s.aboutMe}</h3>
           <div className={styles.ifaceCard}>
             <div className={styles.ifaceFieldGroup}>
               <div className={styles.profileAboutHeader}>
-                <span className={styles.ifaceFieldLabel}>Beschreibung</span>
+                <span className={styles.ifaceFieldLabel}>{s.aboutDesc}</span>
                 <span className={styles.profileCharCount}>{userInfo.length}/500</span>
               </div>
-              <span className={styles.ifaceFieldHint}>Interessen, Besonderheiten, Kontext fuer die KI</span>
+              <span className={styles.ifaceFieldHint}>{s.aboutHint}</span>
               <textarea
                 className={styles.textarea}
                 value={userInfo}
                 onChange={(e) => setUserInfo(e.target.value)}
                 maxLength={500}
                 rows={3}
-                placeholder="Schreibe etwas ueber dich..."
+                placeholder={s.aboutPlaceholder}
               />
             </div>
           </div>
@@ -195,11 +200,11 @@ export default function UserProfileOverlay({ open, onClose, onOpenAvatarEditor, 
 
         {/* ═══ Section: Sprache ═══ */}
         <div className={styles.ifaceSection}>
-          <h3 className={styles.ifaceSectionTitle}>Sprache</h3>
+          <h3 className={styles.ifaceSectionTitle}>{s.personaLanguage}</h3>
           <div className={styles.ifaceCard}>
             <div className={styles.ifaceFieldGroup}>
-              <span className={styles.ifaceFieldLabel}>Persona-Sprache</span>
-              <span className={styles.ifaceFieldHint}>In welcher Sprache sollen deine Personas antworten?</span>
+              <span className={styles.ifaceFieldLabel}>{s.personaLanguage}</span>
+              <span className={styles.ifaceFieldHint}>{s.personaLanguageHint}</span>
               <select
                 className={styles.select}
                 value={personaLanguage}
@@ -216,7 +221,7 @@ export default function UserProfileOverlay({ open, onClose, onOpenAvatarEditor, 
       </OverlayBody>
       <OverlayFooter>
         <Button variant="primary" onClick={handleSave} disabled={saving}>
-          {saving ? 'Speichert...' : 'Profil speichern'}
+          {saving ? sc.saving : sc.save}
         </Button>
       </OverlayFooter>
     </Overlay>

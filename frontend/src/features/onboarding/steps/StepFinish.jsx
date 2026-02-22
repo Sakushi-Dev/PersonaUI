@@ -1,11 +1,12 @@
 // ── Step: Finish ──
 
-import { t } from '../useTranslation';
+import { useLanguage } from '../../../hooks/useLanguage';
 import styles from './Steps.module.css';
 
-export default function StepFinish({ hasApiKey, onFinish, saving, language }) {
-  const s = t(language, 'finish');
-  const c = t(language, 'common');
+export default function StepFinish({ hasApiKey, onFinish, saving }) {
+  const { t } = useLanguage();
+  const s = t('onboardingFinish');
+  const c = t('onboardingCommon');
 
   return (
     <div className={styles.card}>

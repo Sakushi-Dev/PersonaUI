@@ -1,6 +1,6 @@
 // ── Step: Context (3/6) ──
 
-import { t } from '../useTranslation';
+import { useLanguage } from '../../../hooks/useLanguage';
 import styles from './Steps.module.css';
 
 function getRange(value) {
@@ -10,9 +10,10 @@ function getRange(value) {
   return 'high';
 }
 
-export default function StepContext({ data, onChange, onNext, onBack, language }) {
-  const s = t(language, 'context');
-  const c = t(language, 'common');
+export default function StepContext({ data, onChange, onNext, onBack }) {
+  const { t } = useLanguage();
+  const s = t('onboardingContext');
+  const c = t('onboardingCommon');
 
   const update = (field, value) => {
     onChange((prev) => ({ ...prev, [field]: value }));

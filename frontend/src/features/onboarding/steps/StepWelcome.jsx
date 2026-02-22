@@ -1,11 +1,13 @@
 // ── Step: Welcome ──
 
 import { LANGUAGES } from '../../../utils/languages';
-import { t } from '../useTranslation';
+import { useLanguage } from '../../../hooks/useLanguage';
+import { useSettings } from '../../../hooks/useSettings';
 import styles from './Steps.module.css';
 
-export default function StepWelcome({ onNext, language, onLanguageChange }) {
-  const s = t(language, 'welcome');
+export default function StepWelcome({ onNext, onLanguageChange }) {
+  const { language, t } = useLanguage();
+  const s = t('onboardingWelcome');
 
   return (
     <div className={styles.card}>

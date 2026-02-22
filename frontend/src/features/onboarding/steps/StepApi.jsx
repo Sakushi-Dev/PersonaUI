@@ -2,12 +2,13 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { testApiKey } from '../../../services/serverApi';
-import { t } from '../useTranslation';
+import { useLanguage } from '../../../hooks/useLanguage';
 import styles from './Steps.module.css';
 
-export default function StepApi({ data, onChange, onNext, onBack, language }) {
-  const s = t(language, 'api');
-  const c = t(language, 'common');
+export default function StepApi({ data, onChange, onNext, onBack }) {
+  const { t } = useLanguage();
+  const s = t('onboardingApi');
+  const c = t('onboardingCommon');
 
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState(null);

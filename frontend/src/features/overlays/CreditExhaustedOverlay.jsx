@@ -7,33 +7,38 @@ import { CreditCardIcon } from '../../components/Icons/Icons';
 import OverlayBody from '../../components/Overlay/OverlayBody';
 import OverlayFooter from '../../components/Overlay/OverlayFooter';
 import Button from '../../components/Button/Button';
+import { useLanguage } from '../../hooks/useLanguage';
 import styles from './Overlays.module.css';
 
 export default function CreditExhaustedOverlay({ open, onClose }) {
+  const { t } = useLanguage();
+  const s = t('creditExhausted');
+  const sc = t('common');
+
   const handleRecharge = () => {
     window.open('https://console.anthropic.com/settings/billing', '_blank');
   };
 
   return (
     <Overlay open={open} onClose={onClose} width="420px">
-      <OverlayHeader title="API-Guthaben erschöpft" icon={<CreditCardIcon size={20} />} onClose={onClose} />
+      <OverlayHeader title={s.title} icon={<CreditCardIcon size={20} />} onClose={onClose} />
       <OverlayBody>
         <div className={styles.infoContent}>
           <p className={styles.highlight}>
-            Dein Anthropic API-Guthaben ist aufgebraucht.
+            {s.text}
           </p>
-          <p>Um weiter chatten zu können:</p>
+          <p>{s.instruction}</p>
           <ol className={styles.stepList}>
-            <li>Öffne das Anthropic Dashboard</li>
-            <li>Gehe zu <strong>Settings → Billing</strong></li>
-            <li>Lade dein Guthaben auf</li>
+            <li>{s.step1}</li>
+            <li dangerouslySetInnerHTML={{ __html: s.step2 }} />
+            <li>{s.step3}</li>
           </ol>
         </div>
       </OverlayBody>
       <OverlayFooter>
-        <Button variant="secondary" onClick={onClose}>Schließen</Button>
+        <Button variant="secondary" onClick={onClose}>{sc.close}</Button>
         <Button variant="primary" onClick={handleRecharge}>
-          Guthaben aufladen
+          {s.rechargeBtn}
         </Button>
       </OverlayFooter>
     </Overlay>

@@ -11,6 +11,7 @@ import Button from '../../components/Button/Button';
 import AvatarCropper from '../../components/AvatarCropper/AvatarCropper';
 import Spinner from '../../components/Spinner/Spinner';
 import { getAvailableAvatars, uploadAvatar, saveAvatar, saveUserAvatar } from '../../services/avatarApi';
+import { useLanguage } from '../../hooks/useLanguage';
 import styles from './Overlays.module.css';
 
 export default function AvatarEditorOverlay({ open, onClose, personaId, target = 'persona', onSaved, stacked }) {
@@ -19,6 +20,9 @@ export default function AvatarEditorOverlay({ open, onClose, personaId, target =
   const [view, setView] = useState('gallery'); // 'gallery' | 'crop'
   const [selectedFile, setSelectedFile] = useState(null);
   const [saving, setSaving] = useState(false);
+  const { t } = useLanguage();
+  const s = t('avatarEditor');
+  const sc = t('common');
 
   useEffect(() => {
     if (open) {
@@ -96,7 +100,7 @@ export default function AvatarEditorOverlay({ open, onClose, personaId, target =
   return (
     <Overlay open={open} onClose={onClose} width="560px" stacked={stacked}>
       <OverlayHeader
-        title={view === 'crop' ? 'Avatar zuschneiden' : 'Avatar auswählen'}
+        title={view === 'crop' ? s.titleCrop : s.titleSelect}
         icon={<UserIcon size={20} />}
         onClose={onClose}
       />
@@ -111,8 +115,8 @@ export default function AvatarEditorOverlay({ open, onClose, personaId, target =
               onClick={() => document.getElementById('avatar-file-input')?.click()}
             >
               <span className={styles.bigIcon}>📷</span>
-              <p>Bild hierher ziehen oder klicken zum Hochladen</p>
-              <p className={styles.hint}>.png, .jpg, .webp</p>
+              <p>{s.dropText}</p>
+              <p className={styles.hint}>{s.dropHint}</p>
               <input
                 id="avatar-file-input"
                 type="file"
@@ -122,7 +126,7 @@ export default function AvatarEditorOverlay({ open, onClose, personaId, target =
               />
             </div>
 
-            <div className={styles.divider}>oder aus der Galerie wählen</div>
+            <div className={styles.divider}>{s.galleryDivider}</div>
 
             {loading ? (
               <Spinner />
@@ -154,7 +158,7 @@ export default function AvatarEditorOverlay({ open, onClose, personaId, target =
       </OverlayBody>
       {view === 'gallery' && (
         <OverlayFooter>
-          <Button variant="secondary" onClick={onClose}>Abbrechen</Button>
+          <Button variant="secondary" onClick={onClose}>{sc.cancel}</Button>
         </OverlayFooter>
       )}
     </Overlay>

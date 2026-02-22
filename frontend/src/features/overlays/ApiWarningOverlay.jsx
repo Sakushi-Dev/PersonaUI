@@ -7,26 +7,31 @@ import { WarningIcon } from '../../components/Icons/Icons';
 import OverlayBody from '../../components/Overlay/OverlayBody';
 import OverlayFooter from '../../components/Overlay/OverlayFooter';
 import Button from '../../components/Button/Button';
+import { useLanguage } from '../../hooks/useLanguage';
 import styles from './Overlays.module.css';
 
 export default function ApiWarningOverlay({ open, onClose, onOpenApiKey }) {
+  const { t } = useLanguage();
+  const s = t('apiWarning');
+  const sc = t('common');
+
   return (
     <Overlay open={open} onClose={onClose} width="420px">
-      <OverlayHeader title="Kein API-Key konfiguriert" icon={<WarningIcon size={20} />} onClose={onClose} />
+      <OverlayHeader title={s.title} icon={<WarningIcon size={20} />} onClose={onClose} />
       <OverlayBody>
         <div className={styles.infoContent}>
-          <p>Um PersonaUI nutzen zu können, benötigst du einen Anthropic API-Key.</p>
+          <p>{s.text}</p>
           <ol className={styles.stepList}>
-            <li>Erstelle ein Konto auf <strong>console.anthropic.com</strong></li>
-            <li>Generiere einen API-Key</li>
-            <li>Füge ihn in den API-Key Einstellungen ein</li>
+            <li dangerouslySetInnerHTML={{ __html: s.step1 }} />
+            <li>{s.step2}</li>
+            <li>{s.step3}</li>
           </ol>
         </div>
       </OverlayBody>
       <OverlayFooter>
-        <Button variant="secondary" onClick={onClose}>Schließen</Button>
+        <Button variant="secondary" onClick={onClose}>{sc.close}</Button>
         <Button variant="primary" onClick={() => { onClose(); onOpenApiKey?.(); }}>
-          API-Key einrichten
+          {s.setupBtn}
         </Button>
       </OverlayFooter>
     </Overlay>

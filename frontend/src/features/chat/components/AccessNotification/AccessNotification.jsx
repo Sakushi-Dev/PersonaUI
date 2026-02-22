@@ -5,9 +5,14 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getServerSettings } from '../../../../services/serverApi';
 import { getPendingRequests, approveRequest, denyRequest } from '../../../../services/accessApi';
+import { useLanguage } from '../../../../hooks/useLanguage';
 import styles from './AccessNotification.module.css';
 
 export default function AccessNotification({ polling = false }) {
+  const { t } = useLanguage();
+  const s = t('accessNotification');
+  const sc = t('accessControl');
+
   const [notificationIp, setNotificationIp] = useState(null);
   const [visible, setVisible] = useState(false);
   const knownRef = useRef(new Set());
@@ -116,11 +121,11 @@ export default function AccessNotification({ polling = false }) {
       <div className={styles.content}>
         <span className={styles.icon}>🔔</span>
         <span className={styles.text}>
-          <strong>{notificationIp}</strong> fragt Zugang an
+          <strong>{notificationIp}</strong> {s.requestsAccess}
         </span>
         <div className={styles.actions}>
-          <button className={styles.approveBtn} onClick={handleApprove} title="Genehmigen">✓</button>
-          <button className={styles.denyBtn} onClick={handleDeny} title="Ablehnen">✕</button>
+          <button className={styles.approveBtn} onClick={handleApprove} title={sc.approve}>✓</button>
+          <button className={styles.denyBtn} onClick={handleDeny} title={sc.deny}>✕</button>
         </div>
       </div>
     </div>

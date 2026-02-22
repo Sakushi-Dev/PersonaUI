@@ -4,6 +4,7 @@
 
 import StaticBackground from '../StaticBackground/StaticBackground';
 import { resolveFontFamily } from '../../utils/constants';
+import { useLanguage } from '../../hooks/useLanguage';
 import styles from './InterfacePreview.module.css';
 
 /**
@@ -31,6 +32,8 @@ export default function InterfacePreview({
   const bg = bgColor ?? (isDark ? '#1a2332' : '#a3baff');
   const g1 = gradient1 ?? (isDark ? '#2a3f5f' : '#66cfff');
   const g2 = gradient2 ?? (isDark ? '#3d4f66' : '#fd91ee');
+  const { t } = useLanguage();
+  const s = t('interfacePreview');
 
   const bubbleStyle = {};
   if (fontSize) bubbleStyle.fontSize = `${fontSize}px`;
@@ -59,11 +62,11 @@ export default function InterfacePreview({
         className={`${styles.previewBubble} ${isDark ? styles.bubbleDark : ''}`}
         style={bubbleStyle}
       >
-        Das ist eine Vorschau.{' '}
+        {s.previewText}{' '}
         <span className={styles.nonverbal} style={{ color: nonverbalColor }}>
-          *lächelt sanft*
+          {s.nonverbal}
         </span>{' '}
-        So sieht dein Chat aus.
+        {s.previewEnd}
       </div>
     </div>
   );

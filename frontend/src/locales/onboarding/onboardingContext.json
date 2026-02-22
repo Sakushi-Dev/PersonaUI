@@ -1,0 +1,40 @@
+{
+  "en": {
+    "title": "Context",
+    "desc": "How much should your persona remember?",
+    "introP1": "The <strong>context limit</strong> determines how many past messages the AI considers for each response. The higher the value, the more conversation history flows into the response – but each message costs more.",
+    "introP2": "Think of it as short-term memory: A low value means the persona focuses on the here and now. A high value lets it dive deeper into your conversation.",
+    "feature1Title": "Conversation Depth",
+    "feature1Desc": "More context = the persona remembers messages further back",
+    "feature2Title": "API Costs",
+    "feature2Desc": "Each message sends the entire context to the API – more context costs more",
+    "feature3Title": "Cortex Trigger",
+    "feature3Desc": "The Cortex frequency is based on your context limit – both are linked",
+    "sliderLabel": "Context Limit:",
+    "sliderUnit": "messages",
+    "sliderRec": "Recommended: 200",
+    "rangeLow": "A low context limit keeps costs down. The persona forgets older messages faster but focuses only on what matters.",
+    "rangeMedium": "A medium limit is a good compromise – the persona retains enough conversation history to stay on track without significantly increasing costs.",
+    "rangeHigh": "A high context limit gives the persona extensive access to the conversation so far. Ideal for deep conversations – but API costs increase noticeably.",
+    "adjustAnytime": "You can adjust this value anytime in the settings."
+  },
+  "de": {
+    "title": "Kontext",
+    "desc": "Wie viel soll sich deine Persona merken?",
+    "introP1": "Das <strong>Kontextlimit</strong> bestimmt, wie viele vergangene Nachrichten die KI bei jeder Antwort berücksichtigt. Je höher der Wert, desto mehr Gesprächsverlauf fließt ein – aber jede Nachricht kostet mehr.",
+    "introP2": "Stell es dir wie ein Kurzzeitgedächtnis vor: Ein niedriger Wert bedeutet, die Persona konzentriert sich auf das Hier und Jetzt. Ein hoher Wert lässt sie tiefer in euer Gespräch eintauchen.",
+    "feature1Title": "Gesprächstiefe",
+    "feature1Desc": "Mehr Kontext = die Persona erinnert sich an weiter zurückliegende Nachrichten",
+    "feature2Title": "API-Kosten",
+    "feature2Desc": "Jede Nachricht sendet den gesamten Kontext an die API – mehr Kontext kostet mehr",
+    "feature3Title": "Cortex-Auslöser",
+    "feature3Desc": "Die Cortex-Frequenz basiert auf deinem Kontextlimit – beides ist miteinander verknüpft",
+    "sliderLabel": "Kontextlimit:",
+    "sliderUnit": "Nachrichten",
+    "sliderRec": "Empfohlen: 200",
+    "rangeLow": "Ein niedriges Kontextlimit hält die Kosten niedrig. Die Persona vergisst ältere Nachrichten schneller, konzentriert sich aber auf das Wesentliche.",
+    "rangeMedium": "Ein mittleres Limit ist ein guter Kompromiss – die Persona behält genug Gesprächsverlauf, um am Ball zu bleiben, ohne die Kosten deutlich zu erhöhen.",
+    "rangeHigh": "Ein hohes Kontextlimit gibt der Persona umfangreichen Zugriff auf den bisherigen Gesprächsverlauf. Ideal für tiefgehende Gespräche – aber die API-Kosten steigen spürbar.",
+    "adjustAnytime": "Du kannst diesen Wert jederzeit in den Einstellungen anpassen."
+  }
+}

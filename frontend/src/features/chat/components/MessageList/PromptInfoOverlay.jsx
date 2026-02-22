@@ -3,12 +3,15 @@
 
 import { useMemo, useRef } from 'react';
 import { useSettings } from '../../../../hooks/useSettings';
+import { useLanguage } from '../../../../hooks/useLanguage';
 import styles from './PromptInfoOverlay.module.css';
 
 export default function PromptInfoOverlay({ open, onClose, stats }) {
-  if (!open || !stats) return null;
-
   const { get, defaults } = useSettings();
+  const { t } = useLanguage();
+  const s = t('promptInfo');
+
+  if (!open || !stats) return null;
 
   // ── Real API values ──
   const apiInput = stats.api_input_tokens || 0;
@@ -35,7 +38,7 @@ export default function PromptInfoOverlay({ open, onClose, stats }) {
 
   const inputPrice = modelMeta?.inputPrice ?? 0;
   const outputPrice = modelMeta?.outputPrice ?? 0;
-  const modelDisplayName = modelMeta?.pricingName || modelMeta?.label || currentModel || 'Unbekannt';
+  const modelDisplayName = modelMeta?.pricingName || modelMeta?.label || currentModel || s.unknown;
 
   const inputCost = (apiInput / 1_000_000) * inputPrice;
   const outputCost = (outputTokens / 1_000_000) * outputPrice;
@@ -68,7 +71,7 @@ export default function PromptInfoOverlay({ open, onClose, stats }) {
         <div className={styles.header}>
           <div className={styles.titleGroup}>
             <div className={styles.icon}>📊</div>
-            <h3>Prompt Informationen</h3>
+            <h3>{s.title}</h3>
           </div>
           <button className={styles.closeBtn} onClick={onClose}>&times;</button>
         </div>
@@ -83,14 +86,17 @@ export default function PromptInfoOverlay({ open, onClose, stats }) {
           </div>
           <div className={styles.progressLabels}>
             <span className={styles.progressLabelSide}>1k</span>
-            <span className={styles.progressLabelCenter}>{grandTotal.toLocaleString()} Tokens</span>
+            <span className={styles.progressLabelCenter}>{grandTotal.toLocaleString()} {s.tokens}</span>
             <span className={styles.progressLabelSide}>50k</span>
           </div>
           <div className={styles.costInfo}>
             ~ ${totalCost.toFixed(6)} (Input: ${inputCost.toFixed(6)} | Output: ${outputCost.toFixed(6)})
           </div>
           <div className={styles.costDisclaimer}>
-            ⚠️ Ungefähre Berechnung – Die API gibt keine Kosteninformationen zurück. Preise basieren auf {modelDisplayName} (${inputPrice}/M Input, ${outputPrice}/M Output). Bitte mit Anbieter-Rechnung abgleichen.
+            {s.costDisclaimer
+              .replace('{model}', modelDisplayName)
+              .replace('{inputPrice}', String(inputPrice))
+              .replace('{outputPrice}', String(outputPrice))}
           </div>
         </div>
 
@@ -98,49 +104,49 @@ export default function PromptInfoOverlay({ open, onClose, stats }) {
         <div className={styles.stats}>
           {/* System Prompt */}
           <div className={`${styles.section} ${styles.systemPrompt}`}>
-            <div className={styles.sectionLabel}><span className={styles.dot} />System Prompt</div>
+            <div className={styles.sectionLabel}><span className={styles.dot} />{s.systemPrompt}</div>
             <div className={styles.breakdown}>
               <div className={styles.statItem}>
-                <span className={styles.statName}>Prompt + Persona</span>
-                <span className={styles.statValue}>{systemScaled.toLocaleString()} Token</span>
+                <span className={styles.statName}>{s.promptPersona}</span>
+                <span className={styles.statValue}>{systemScaled.toLocaleString()} {s.token}</span>
               </div>
             </div>
           </div>
 
           {/* Messages */}
           <div className={`${styles.section} ${styles.history}`}>
-            <div className={styles.sectionLabel}><span className={styles.dot} />Messages</div>
+            <div className={styles.sectionLabel}><span className={styles.dot} />{s.messages}</div>
             <div className={styles.breakdown}>
               <div className={styles.statItem}>
-                <span className={styles.statName}>Chat History</span>
-                <span className={styles.statValue}>{historyScaled.toLocaleString()} Token</span>
+                <span className={styles.statName}>{s.chatHistory}</span>
+                <span className={styles.statValue}>{historyScaled.toLocaleString()} {s.token}</span>
               </div>
               <div className={styles.statItem}>
-                <span className={styles.statName}>User Nachricht</span>
-                <span className={styles.statValue}>{userMsgScaled.toLocaleString()} Token</span>
+                <span className={styles.statName}>{s.userMessage}</span>
+                <span className={styles.statValue}>{userMsgScaled.toLocaleString()} {s.token}</span>
               </div>
               <div className={styles.statItem}>
-                <span className={styles.statName}>Prefill</span>
-                <span className={styles.statValue}>{prefillScaled.toLocaleString()} Token</span>
+                <span className={styles.statName}>{s.prefill}</span>
+                <span className={styles.statValue}>{prefillScaled.toLocaleString()} {s.token}</span>
               </div>
             </div>
           </div>
 
           {/* Total */}
           <div className={`${styles.section} ${styles.total}`}>
-            <div className={styles.sectionLabel}><span className={styles.dot} />Gesamt (Anthropic API)</div>
+            <div className={styles.sectionLabel}><span className={styles.dot} />{s.totalApi}</div>
             <div className={styles.breakdown}>
               <div className={styles.statItem}>
-                <span className={styles.statName}>Input</span>
-                <span className={styles.statValue}>{apiInput.toLocaleString()} Token</span>
+                <span className={styles.statName}>{s.input}</span>
+                <span className={styles.statValue}>{apiInput.toLocaleString()} {s.token}</span>
               </div>
               <div className={styles.statItem}>
-                <span className={styles.statName}>Output</span>
-                <span className={styles.statValue}>{outputTokens.toLocaleString()} Token</span>
+                <span className={styles.statName}>{s.output}</span>
+                <span className={styles.statValue}>{outputTokens.toLocaleString()} {s.token}</span>
               </div>
               <div className={`${styles.statItem} ${styles.statSum}`}>
-                <span className={styles.statName}>Total</span>
-                <span className={styles.statValue}>{grandTotal.toLocaleString()} Token</span>
+                <span className={styles.statName}>{s.total}</span>
+                <span className={styles.statValue}>{grandTotal.toLocaleString()} {s.token}</span>
               </div>
             </div>
           </div>

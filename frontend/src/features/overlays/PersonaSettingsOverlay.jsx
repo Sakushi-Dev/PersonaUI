@@ -20,10 +20,14 @@ import {
   getAvailableOptions,
   backgroundAutofill,
 } from '../../services/personaApi';
+import { useLanguage } from '../../hooks/useLanguage';
 import styles from './Overlays.module.css';
 
 export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEditor, onOpenCustomSpecs, avatarCallbackRef }) {
   const { loadPersonas: refreshSidebarPersonas } = useSession();
+  const { t } = useLanguage();
+  const s = t('personaSettings');
+  const sc = t('common');
 
   const [view, setView] = useState('list'); // 'list' | 'editor'
   const [personas, setPersonas] = useState([]);
@@ -167,7 +171,7 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Möchtest du diese Persona wirklich löschen?')) return;
+    if (!window.confirm(s.deleteConfirm)) return;
     try {
       await deletePersona(id);
       await refresh();
@@ -248,7 +252,7 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
   if (view === 'list') {
     return (
       <Overlay open={open} onClose={onClose} width="1200px">
-        <OverlayHeader title="Persona Einstellungen" icon={<PersonaIcon size={20} />} onClose={onClose} />
+        <OverlayHeader title={s.title} icon={<PersonaIcon size={20} />} onClose={onClose} />
         <OverlayBody>
           {loading ? (
             <Spinner />
@@ -256,9 +260,9 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
             <>
               {/* List Header */}
               <div className={styles.personaListHeader}>
-                <h3 className={styles.personaListTitle}>Meine Personas</h3>
+                <h3 className={styles.personaListTitle}>{s.myPersonas}</h3>
                 <button className={styles.specsBtn} onClick={() => onOpenCustomSpecs?.()}>
-                  Custom Specs
+                  {s.customSpecs}
                 </button>
               </div>
 
@@ -271,17 +275,17 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
                   >
                     <Avatar src={p.avatar} type={p.avatar_type} name={p.name} size={46} />
                     <div className={styles.personaContactInfo}>
-                      <span className={styles.personaContactName}>{p.name || 'Unbenannt'}</span>
+                      <span className={styles.personaContactName}>{p.name || s.unnamed}</span>
                       <span className={styles.personaContactType}>{p.persona || 'KI'}</span>
                     </div>
 
                     {/* Badges */}
                     <div className={styles.personaContactBadges}>
                       {p.is_active && (
-                        <span className={`${styles.personaBadge} ${styles.activeBadge}`}>Aktiv</span>
+                        <span className={`${styles.personaBadge} ${styles.activeBadge}`}>{s.active}</span>
                       )}
                       {p.is_default && (
-                        <span className={`${styles.personaBadge} ${styles.defaultBadge}`}>Standard</span>
+                        <span className={`${styles.personaBadge} ${styles.defaultBadge}`}>{s.default}</span>
                       )}
                     </div>
 
@@ -291,7 +295,7 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
                         <button
                           className={styles.personaEditBtn}
                           onClick={(e) => { e.stopPropagation(); openEditor(p); }}
-                          title="Bearbeiten"
+                          title={s.editTitle}
                         >
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -301,7 +305,7 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
                         <button
                           className={styles.personaDeleteBtn}
                           onClick={(e) => { e.stopPropagation(); handleDelete(p.id); }}
-                          title="Löschen"
+                          title={s.deleteTitle}
                         >
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <polyline points="3 6 5 6 21 6" />
@@ -318,10 +322,10 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
               <div
                 className={styles.personaAddRow}
                 onClick={() => openEditor()}
-                title="Neue Persona erstellen"
+                title={s.newPersona}
               >
                 <div className={styles.personaAddCircle}>+</div>
-                <span className={styles.personaAddLabel}>Neue Persona erstellen</span>
+                <span className={styles.personaAddLabel}>{s.newPersona}</span>
               </div>
             </>
           )}
@@ -334,7 +338,7 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
   return (
     <Overlay open={open} onClose={onClose} width="1200px">
       <OverlayHeader
-        title={editingId ? `${name || 'Persona'} bearbeiten` : 'Persona Creator'}
+        title={editingId ? s.editingTitle.replace('{name}', name || 'Persona') : s.creatorTitle}
         icon={<PersonaIcon size={20} />}
         onClose={onClose}
       />
@@ -342,10 +346,10 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
         {/* Creator Header */}
         <div className={styles.personaCreatorHeader}>
           <button className={styles.btnBack} onClick={() => setView('list')}>
-            ← Zurück
+            ← {sc.back}
           </button>
           <h3 className={styles.personaCreatorTitle}>
-            {editingId ? `${name || 'Persona'} bearbeiten` : 'Persona Creator'}
+            {editingId ? s.editingTitle.replace('{name}', name || 'Persona') : s.creatorTitle}
           </h3>
         </div>
 
@@ -354,8 +358,8 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
 
           {/* ── Avatar Section ── */}
           <div className={styles.configSection}>
-            <h3 className={styles.configSectionTitle}>Avatar</h3>
-            <div className={styles.configDescription}>Wähle ein Bild für deine Persona:</div>
+            <h3 className={styles.configSectionTitle}>{s.avatar}</h3>
+            <div className={styles.configDescription}>{s.avatarDesc}</div>
             <div className={styles.creatorAvatarArea}>
               <div
                 className={styles.creatorAvatarPreview}
@@ -364,28 +368,28 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
                 {avatar ? (
                   <Avatar src={avatar} type={avatarType} name={name || '?'} size={76} />
                 ) : (
-                  <span className={styles.avatarPlaceholderText}>Kein Avatar</span>
+                  <span className={styles.avatarPlaceholderText}>{s.noAvatar}</span>
                 )}
               </div>
               <Button variant="secondary" onClick={() => onOpenAvatarEditor?.('persona')}>
-                Avatar auswählen
+                {s.selectAvatar}
               </Button>
             </div>
           </div>
 
           {/* ── Persona Info Section ── */}
           <div className={styles.configSection}>
-            <h3 className={styles.configSectionTitle}>Persona Info</h3>
+            <h3 className={styles.configSectionTitle}>{s.personaInfo}</h3>
             <div className={styles.personaInfoGrid}>
               {/* Name */}
               <div className={styles.personaInfoField}>
-                <label className={styles.configDescription} style={{ marginBottom: 0 }}>Name:</label>
+                <label className={styles.configDescription} style={{ marginBottom: 0 }}>{s.nameLabel}</label>
                 <input
                   className={styles.textInput}
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="z.B. Ayame"
+                  placeholder={s.namePlaceholder}
                   disabled={!!editingId}
                   style={editingId ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
                 />
@@ -394,7 +398,7 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
               {/* Age */}
               <div className={styles.personaInfoField}>
                 <label className={styles.configDescription} style={{ marginBottom: 0 }}>
-                  Alter: <span>{age}</span>
+                  {s.ageLabel} <span>{age}</span>
                 </label>
                 <input
                   type="range"
@@ -408,17 +412,17 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
 
               {/* Gender - Full Width */}
               <div className={`${styles.personaInfoField} ${styles.personaInfoFieldFull}`}>
-                <label className={styles.configDescription} style={{ marginBottom: 0 }}>Geschlecht:</label>
+                <label className={styles.configDescription} style={{ marginBottom: 0 }}>{s.genderLabel}</label>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  {['männlich', 'weiblich', 'divers'].map((g) => (
+                  {[{ value: 'männlich', label: s.genderMale }, { value: 'weiblich', label: s.genderFemale }, { value: 'divers', label: s.genderDiverse }].map((g) => (
                     <button
-                      key={g}
+                      key={g.value}
                       type="button"
-                      className={styles.tagButton + (gender === g ? ` ${styles.tagButtonActive}` : '')}
+                      className={styles.tagButton + (gender === g.value ? ` ${styles.tagButtonActive}` : '')}
                       style={{ flex: 1, textAlign: 'center' }}
-                      onClick={() => setGender(g)}
+                      onClick={() => setGender(g.value)}
                     >
-                      {g.charAt(0).toUpperCase() + g.slice(1)}
+                      {g.label}
                     </button>
                   ))}
                 </div>
@@ -429,8 +433,8 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
           {/* ── Persona Type Section ── */}
           {typeOptions.length > 0 && (
             <div className={styles.configSection}>
-              <h3 className={styles.configSectionTitle}>Persona</h3>
-              <div className={styles.configDescription}>Art der Persona:</div>
+              <h3 className={styles.configSectionTitle}>{s.personaTypeSection}</h3>
+              <div className={styles.configDescription}>{s.personaTypeDesc}</div>
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                 {typeOptions.map((t) => (
                   <button
@@ -452,8 +456,8 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
 
           {/* ── Scenario Section (slide in/out) ── */}
           <div className={`${styles.configSection} ${styles.scenarioSlide} ${showScenario ? styles.scenarioVisible : ''}`}>
-            <h3 className={styles.configSectionTitle}>Szenario</h3>
-            <div className={styles.configDescription}>Wähle ein oder mehrere Settings (kombinierbar):</div>
+            <h3 className={styles.configSectionTitle}>{s.scenarioSection}</h3>
+            <div className={styles.configDescription}>{s.scenarioDesc}</div>
             <div className={styles.tagsAvailable}>
               {scenarioOptions.map((opt) => (
                 <button
@@ -466,7 +470,7 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
               ))}
             </div>
             <div className={styles.tagsActiveContainer}>
-              <h4 className={styles.tagsActiveTitle}>Aktiv ({scenarios.length}):</h4>
+              <h4 className={styles.tagsActiveTitle}>{s.activeCount.replace('{count}', scenarios.length)}</h4>
               <div className={styles.tagsActive}>
                 {scenarios.map((key) => (
                   <button
@@ -484,8 +488,8 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
           {/* ── Core Traits Section ── */}
           {traitOptions.length > 0 && (
             <div className={styles.configSection}>
-              <h3 className={styles.configSectionTitle}>Core Traits</h3>
-              <div className={styles.configDescription}>Wähle Persönlichkeitsmerkmale:</div>
+              <h3 className={styles.configSectionTitle}>{s.coreTraits}</h3>
+              <div className={styles.configDescription}>{s.coreTraitsDesc}</div>
               <div className={styles.tagsAvailable}>
                 {traitOptions.map((opt) => (
                   <button
@@ -498,7 +502,7 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
                 ))}
               </div>
               <div className={styles.tagsActiveContainer}>
-                <h4 className={styles.tagsActiveTitle}>Aktiv ({coreTraits.length}):</h4>
+                <h4 className={styles.tagsActiveTitle}>{s.activeCount.replace('{count}', coreTraits.length)}</h4>
                 <div className={styles.tagsActive}>
                   {coreTraits.map((key) => (
                     <button
@@ -517,8 +521,8 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
           {/* ── Knowledge Section ── */}
           {knowledgeOptions.length > 0 && (
             <div className={styles.configSection}>
-              <h3 className={styles.configSectionTitle}>Knowledge</h3>
-              <div className={styles.configDescription}>Wähle Wissensgebiete:</div>
+              <h3 className={styles.configSectionTitle}>{s.knowledgeSection}</h3>
+              <div className={styles.configDescription}>{s.knowledgeDesc}</div>
               <div className={styles.tagsAvailable}>
                 {knowledgeOptions.map((opt) => (
                   <button
@@ -531,7 +535,7 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
                 ))}
               </div>
               <div className={styles.tagsActiveContainer}>
-                <h4 className={styles.tagsActiveTitle}>Aktiv ({knowledge.length}):</h4>
+                <h4 className={styles.tagsActiveTitle}>{s.activeCount.replace('{count}', knowledge.length)}</h4>
                 <div className={styles.tagsActive}>
                   {knowledge.map((key) => (
                     <button
@@ -550,8 +554,8 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
           {/* ── Expression Section ── */}
           {expressionOptions.length > 0 && (
             <div className={styles.configSection}>
-              <h3 className={styles.configSectionTitle}>Expression</h3>
-              <div className={styles.configDescription}>Wähle einen Schreibstil:</div>
+              <h3 className={styles.configSectionTitle}>{s.expressionSection}</h3>
+              <div className={styles.configDescription}>{s.expressionDesc}</div>
               <div className={styles.tagsAvailable}>
                 {expressionOptions.map((opt) => (
                   <button
@@ -564,7 +568,7 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
                 ))}
               </div>
               <div className={styles.tagsActiveContainer}>
-                <h4 className={styles.tagsActiveTitle}>Aktiv:</h4>
+                <h4 className={styles.tagsActiveTitle}>{s.activeLabel}</h4>
                 <div className={styles.tagsActive}>
                   {expression && (
                     <button
@@ -581,15 +585,15 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
 
           {/* ── Background Section ── */}
           <div className={styles.configSection}>
-            <h3 className={styles.configSectionTitle}>Background</h3>
-            <div className={styles.configDescription}>Hintergrundgeschichte der Persona (optional):</div>
+            <h3 className={styles.configSectionTitle}>{s.backgroundSection}</h3>
+            <div className={styles.configDescription}>{s.backgroundDesc}</div>
             <div className={styles.backgroundInputArea}>
               <div className={styles.backgroundTextareaWrapper}>
                 <textarea
                   className={styles.textarea}
                   value={background}
                   onChange={(e) => setBackground(e.target.value)}
-                  placeholder="Beschreibe die Hintergrundgeschichte deiner Persona oder nutze Auto-Fill..."
+                  placeholder={s.backgroundPlaceholder}
                   maxLength={1500}
                   rows={4}
                   disabled={filling}
@@ -597,7 +601,7 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
                 {filling && (
                   <div className={styles.autofillOverlay}>
                     <Spinner />
-                    <span className={styles.autofillOverlayText}>Generiere Hintergrundgeschichte...</span>
+                    <span className={styles.autofillOverlayText}>{s.generatingBg}</span>
                   </div>
                 )}
               </div>
@@ -612,7 +616,7 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
                   disabled={filling || !name}
                   title="KI generiert eine Hintergrundgeschichte basierend auf den Persona-Einstellungen"
                 >
-                  {filling ? 'Generiert...' : 'Auto-Fill'}
+                  {filling ? sc.saving : 'Auto-Fill'}
                 </Button>
               </div>
             </div>
@@ -620,16 +624,16 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
 
           {/* ── Auto First Message Section ── */}
           <div className={styles.configSection}>
-            <h3 className={styles.configSectionTitle}>Auto First Message</h3>
+            <h3 className={styles.configSectionTitle}>{s.autoFirstMsg}</h3>
             <div className={styles.firstMessageToggle}>
               <Toggle
-                label="Auto First Message aktivieren"
+                label={s.autoFirstMsgLabel}
                 checked={startMsgEnabled}
                 onChange={setStartMsgEnabled}
                 id="start-msg-toggle"
               />
               <p className={styles.configHint}>
-                Wenn aktiviert, generiert die Persona automatisch eine Eröffnungsnachricht per KI wenn ein neuer Chat gestartet wird. Die Nachricht wird passend zum Charakter und Szenario generiert.
+                {s.autoFirstMsgHint}
               </p>
             </div>
           </div>
@@ -637,9 +641,9 @@ export default function PersonaSettingsOverlay({ open, onClose, onOpenAvatarEdit
 
         {/* Creator Footer */}
         <div className={styles.personaCreatorFooter}>
-          <Button variant="secondary" onClick={resetEditor}>Reset</Button>
+          <Button variant="secondary" onClick={resetEditor}>{sc.reset}</Button>
           <Button variant="primary" onClick={handleSave} disabled={saving || filling || !name.trim()}>
-            {saving ? 'Speichert...' : 'Persona speichern'}
+            {saving ? sc.saving : s.savePersona}
           </Button>
         </div>
       </OverlayBody>

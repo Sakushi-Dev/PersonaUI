@@ -1,0 +1,22 @@
+{
+  "en": {
+    "title": "Interface",
+    "desc": "Customize the look to your taste.",
+    "designMode": "Design Mode",
+    "light": "Light",
+    "dark": "Dark",
+    "nonverbalColor": "Nonverbal Text Color",
+    "nonverbalHint": "Color for text between asterisks (*nonverbal*) – e.g. actions, emotions",
+    "infoText": "More interface settings like colors, font, and size can be found later under <strong>Settings</strong>."
+  },
+  "de": {
+    "title": "Oberfläche",
+    "desc": "Passe das Aussehen nach deinem Geschmack an.",
+    "designMode": "Design-Modus",
+    "light": "Hell",
+    "dark": "Dunkel",
+    "nonverbalColor": "Nonverbale Textfarbe",
+    "nonverbalHint": "Farbe für Text zwischen Sternchen (*nonverbal*) – z.\u00A0B. Aktionen, Emotionen",
+    "infoText": "Weitere Oberflächeneinstellungen wie Farben, Schrift und Größe findest du später unter <strong>Einstellungen</strong>."
+  }
+}

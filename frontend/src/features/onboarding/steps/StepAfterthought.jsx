@@ -1,11 +1,12 @@
 // ── Step: Afterthought (5/6) ──
 
-import { t } from '../useTranslation';
+import { useLanguage } from '../../../hooks/useLanguage';
 import styles from './Steps.module.css';
 
-export default function StepAfterthought({ data, onChange, onNext, onBack, language }) {
-  const s = t(language, 'afterthought');
-  const c = t(language, 'common');
+export default function StepAfterthought({ data, onChange, onNext, onBack }) {
+  const { t } = useLanguage();
+  const s = t('onboardingAfterthought');
+  const c = t('onboardingCommon');
 
   const MODES = [
     { value: 'off',    label: s.modeOff },

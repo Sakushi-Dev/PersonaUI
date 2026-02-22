@@ -2,6 +2,7 @@
 // Import this file once at app startup to register all default commands.
 
 import { register } from './slashCommandRegistry';
+import { t as translate } from '../../../utils/i18n';
 
 // /reload – Reloads the browser page
 register({
@@ -16,7 +17,8 @@ register({
 register({
   name: 'rebuild',
   description: 'React-Frontend neu kompilieren (eigenes Fenster)',
-  async execute() {
+  async execute({ language } = {}) {
+    const s = translate(language || 'en', 'slashCommands');
     console.log('[SlashCommand] /rebuild – starte Build-Script …');
 
     try {
@@ -24,9 +26,9 @@ register({
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok || !data.success) {
-        const msg = data.error || 'Unbekannter Fehler';
+        const msg = data.error || s.unknownError;
         console.error('[SlashCommand] /rebuild fehlgeschlagen:', msg);
-        alert(`Build konnte nicht gestartet werden:\n${msg}`);
+        alert(`${s.buildFailed}\n${msg}`);
         return;
       }
 
@@ -53,7 +55,8 @@ register({
 register({
   name: 'onboarding',
   description: 'Start-Sequenz (Onboarding) erneut aktivieren',
-  async execute() {
+  async execute({ language } = {}) {
+    const s = translate(language || 'en', 'slashCommands');
     console.log('[SlashCommand] /onboarding – setze Onboarding zurück …');
 
     try {
@@ -61,9 +64,9 @@ register({
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok || !data.success) {
-        const msg = data.error || 'Unbekannter Fehler';
+        const msg = data.error || s.unknownError;
         console.error('[SlashCommand] /onboarding fehlgeschlagen:', msg);
-        alert(`Onboarding konnte nicht zurückgesetzt werden:\n${msg}`);
+        alert(`${s.onboardingFailed}\n${msg}`);
         return;
       }
 
@@ -79,7 +82,8 @@ register({
 register({
   name: 'cortex',
   description: 'Cortex-Update sofort auslösen (Zähler wird zurückgesetzt)',
-  async execute({ sessionId } = {}) {
+  async execute({ sessionId, language } = {}) {
+    const s = translate(language || 'en', 'slashCommands');
     console.log('[SlashCommand] /cortex – starte manuellen Cortex-Update …', { sessionId });
 
     try {
@@ -92,7 +96,7 @@ register({
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok || !data.success) {
-        const msg = data.error || 'Unbekannter Fehler';
+        const msg = data.error || s.unknownError;
         console.error('[SlashCommand] /cortex fehlgeschlagen:', msg);
         window.dispatchEvent(
           new CustomEvent('cortex-command-error', {

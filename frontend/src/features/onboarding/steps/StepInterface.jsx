@@ -2,12 +2,13 @@
 
 import InterfacePreview from '../../../components/InterfacePreview/InterfacePreview';
 import { NONVERBAL_PRESETS } from '../../../utils/constants';
-import { t } from '../useTranslation';
+import { useLanguage } from '../../../hooks/useLanguage';
 import styles from './Steps.module.css';
 
-export default function StepInterface({ data, onChange, onDarkModeChange, onNext, onBack, language }) {
-  const s = t(language, 'interface');
-  const c = t(language, 'common');
+export default function StepInterface({ data, onChange, onDarkModeChange, onNext, onBack }) {
+  const { t } = useLanguage();
+  const s = t('onboardingInterface');
+  const c = t('onboardingCommon');
 
   const update = (field, value) => {
     onChange((prev) => ({ ...prev, [field]: value }));

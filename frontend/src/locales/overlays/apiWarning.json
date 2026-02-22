@@ -1,0 +1,18 @@
+{
+  "en": {
+    "title": "No API Key Configured",
+    "text": "To use PersonaUI, you need an Anthropic API key.",
+    "step1": "Create an account at <strong>console.anthropic.com</strong>",
+    "step2": "Generate an API key",
+    "step3": "Enter it in the API key settings",
+    "setupBtn": "Set Up API Key"
+  },
+  "de": {
+    "title": "Kein API-Key konfiguriert",
+    "text": "Um PersonaUI nutzen zu können, benötigst du einen Anthropic API-Key.",
+    "step1": "Erstelle ein Konto auf <strong>console.anthropic.com</strong>",
+    "step2": "Generiere einen API-Key",
+    "step3": "Füge ihn in den API-Key Einstellungen ein",
+    "setupBtn": "API-Key einrichten"
+  }
+}

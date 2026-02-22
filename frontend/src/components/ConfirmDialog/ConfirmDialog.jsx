@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useLanguage } from '../../hooks/useLanguage';
 import styles from './ConfirmDialog.module.css';
 
 /**
@@ -19,9 +20,11 @@ export default function ConfirmDialog({
   message,
   onConfirm,
   onCancel,
-  confirmLabel = 'Ja',
-  cancelLabel = 'Nein',
+  confirmLabel,
+  cancelLabel,
 }) {
+  const { t } = useLanguage();
+  const s = t('confirmDialog');
   const confirmRef = useRef(null);
 
   // Focus the confirm button when opened & handle Escape
@@ -49,10 +52,10 @@ export default function ConfirmDialog({
             className={styles.confirmBtn}
             onClick={onConfirm}
           >
-            {confirmLabel}
+            {confirmLabel || s.yes}
           </button>
           <button className={styles.cancelBtn} onClick={onCancel}>
-            {cancelLabel}
+            {cancelLabel || s.no}
           </button>
         </div>
       </div>

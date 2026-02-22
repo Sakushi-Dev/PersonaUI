@@ -1,0 +1,34 @@
+{
+  "en": {
+    "pendingTitle": "Access Requested",
+    "pendingText": "Your request has been sent. Waiting for approval...",
+    "approvedTitle": "Access Granted!",
+    "approvedText": "You will be redirected...",
+    "deniedTitle": "Access Denied",
+    "deniedText": "Your request was denied.",
+    "expiredTitle": "Request Expired",
+    "expiredText": "Your request has expired. Please try again.",
+    "rateLimitedTitle": "Too Many Requests",
+    "rateLimitedText": "Please wait a few minutes and try again.",
+    "errorTitle": "Error",
+    "errorText": "An error occurred. Please try again.",
+    "connecting": "Establishing connection...",
+    "retryBtn": "Try Again"
+  },
+  "de": {
+    "pendingTitle": "Zugang angefragt",
+    "pendingText": "Deine Anfrage wurde gesendet. Warte auf Freigabe...",
+    "approvedTitle": "Zugang gewährt!",
+    "approvedText": "Du wirst weitergeleitet...",
+    "deniedTitle": "Zugang verweigert",
+    "deniedText": "Deine Anfrage wurde abgelehnt.",
+    "expiredTitle": "Anfrage abgelaufen",
+    "expiredText": "Deine Anfrage ist abgelaufen. Bitte versuche es erneut.",
+    "rateLimitedTitle": "Zu viele Anfragen",
+    "rateLimitedText": "Bitte warte einige Minuten und versuche es dann erneut.",
+    "errorTitle": "Fehler",
+    "errorText": "Es ist ein Fehler aufgetreten. Bitte versuche es erneut.",
+    "connecting": "Verbindung wird hergestellt...",
+    "retryBtn": "Erneut versuchen"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "en": {
+    "title": "Welcome to PersonaUI",
+    "subtitle": "Create AI characters with their own personality, memories, and quirks – local, private, and entirely on your machine.",
+    "feature1Title": "Living Personas",
+    "feature1Desc": "Each persona has unique character traits, knowledge areas, and an individual expression style. You decide who you talk to.",
+    "feature2Title": "Cortex – Real Memory",
+    "feature2Desc": "Your personas remember your conversations, evolve over time, and build a genuine relationship with you.",
+    "feature3Title": "Afterthought",
+    "feature3Desc": "Sometimes your persona reaches out on its own when something comes to mind – just like a real conversation partner.",
+    "feature4Title": "100% Local & Private",
+    "feature4Desc": "No cloud, no tracking. All data stays on your machine – only the API communication goes out.",
+    "hint": "6 quick steps to set everything up – takes just a few minutes.",
+    "startBtn": "Start Setup"
+  },
+  "de": {
+    "title": "Willkommen bei PersonaUI",
+    "subtitle": "Erstelle KI-Charaktere mit eigener Persönlichkeit, Erinnerungen und Eigenheiten – lokal, privat und komplett auf deinem Rechner.",
+    "feature1Title": "Lebendige Personas",
+    "feature1Desc": "Jede Persona hat einzigartige Charakterzüge, Wissensbereiche und einen individuellen Ausdrucksstil. Du entscheidest, mit wem du sprichst.",
+    "feature2Title": "Cortex – Echtes Gedächtnis",
+    "feature2Desc": "Deine Personas erinnern sich an eure Gespräche, entwickeln sich weiter und bauen eine echte Beziehung zu dir auf.",
+    "feature3Title": "Nachgedanke",
+    "feature3Desc": "Manchmal meldet sich deine Persona von selbst, wenn ihr etwas einfällt – genau wie ein echter Gesprächspartner.",
+    "feature4Title": "100% Lokal & Privat",
+    "feature4Desc": "Keine Cloud, kein Tracking. Alle Daten bleiben auf deinem Rechner – nur die API-Kommunikation geht nach außen.",
+    "hint": "6 kurze Schritte zur Einrichtung – dauert nur wenige Minuten.",
+    "startBtn": "Setup starten"
+  }
+}

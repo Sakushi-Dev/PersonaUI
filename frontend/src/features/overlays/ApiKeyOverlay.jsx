@@ -12,6 +12,7 @@ import FormGroup from '../../components/FormGroup/FormGroup';
 import Button from '../../components/Button/Button';
 import { testApiKey, saveApiKey, checkApiStatus } from '../../services/serverApi';
 import { useSettings } from '../../hooks/useSettings';
+import { useLanguage } from '../../hooks/useLanguage';
 import styles from './Overlays.module.css';
 
 export default function ApiKeyOverlay({ open, onClose }) {
@@ -23,39 +24,42 @@ export default function ApiKeyOverlay({ open, onClose }) {
   const [testValid, setTestValid] = useState(false);
   const inputRef = useRef(null);
   const { get } = useSettings();
+  const { t } = useLanguage();
+  const s = t('apiKey');
+  const sc = t('common');
 
   // ── Client-side validation (matches legacy SettingsManager.testApiKey) ──
   const handleTest = useCallback(async () => {
     const key = apiKey.trim();
 
     if (!key) {
-      setStatus({ type: 'error', message: 'Bitte geben Sie einen API-Key ein' });
+      setStatus({ type: 'error', message: s.emptyError });
       setTestValid(false);
       return;
     }
 
     if (!key.startsWith('sk-ant-api')) {
-      setStatus({ type: 'error', message: 'Ungültiges API-Key Format. Key sollte mit "sk-ant-api" beginnen' });
+      setStatus({ type: 'error', message: s.formatError });
       setTestValid(false);
       return;
     }
 
     setTesting(true);
-    setStatus({ type: 'loading', message: 'Teste API-Key...' });
+    setStatus({ type: 'loading', message: s.testing });
 
     try {
       const apiModel = get('apiModel');
       const result = await testApiKey(key, apiModel);
 
       if (result.success) {
-        setStatus({ type: 'success', message: '✓ API-Key ist gültig! Sie können ihn jetzt speichern.' });
+        setStatus({ type: 'success', message: s.valid });
         setTestValid(true);
       } else {
         setStatus({ type: 'error', message: `✗ ${result.error || 'API-Key ist ungültig'}` });
         setTestValid(false);
       }
     } catch (err) {
-      setStatus({ type: 'error', message: '✗ Verbindungsfehler beim Testen' });
+      setStatus({ type: 'error', message: s.connError });
       setTestValid(false);
     } finally {
       setTesting(false);
@@ -68,13 +72,13 @@ export default function ApiKeyOverlay({ open, onClose }) {
     if (!key) return;
 
     setSaving(true);
-    setStatus({ type: 'loading', message: 'Speichere API-Key...' });
+    setStatus({ type: 'loading', message: s.savingKey });
 
     try {
       const result = await saveApiKey(key);
 
       if (result.success) {
-        setStatus({ type: 'success', message: '✓ API-Key erfolgreich gespeichert!' });
+        setStatus({ type: 'success', message: s.saved });
         // Legacy: wait 1s, then checkApiStatus, close, reload
         setTimeout(async () => {
           try { await checkApiStatus(); } catch { /* ignore */ }
@@ -82,11 +86,11 @@ export default function ApiKeyOverlay({ open, onClose }) {
           window.location.reload();
         }, 1000);
       } else {
-        setStatus({ type: 'error', message: `✗ ${result.error || 'Fehler beim Speichern'}` });
+        setStatus({ type: 'error', message: `✗ ${result.error || s.saveError}` });
         setSaving(false);
       }
     } catch (err) {
-      setStatus({ type: 'error', message: '✗ Verbindungsfehler beim Speichern' });
+      setStatus({ type: 'error', message: s.connError });
       setSaving(false);
     }
   }, [apiKey, onClose]);
@@ -122,8 +126,8 @@ export default function ApiKeyOverlay({ open, onClose }) {
     }
     // Fallback: focus input and show hint
     inputRef.current?.focus();
-    setStatus({ type: 'error', message: 'Bitte mit Ctrl+V einfügen' });
-    setTimeout(() => setStatus((s) => s?.message === 'Bitte mit Ctrl+V einfügen' ? null : s), 3000);
+    setStatus({ type: 'error', message: s.pasteHint });
+    setTimeout(() => setStatus((st) => st?.message === s.pasteHint ? null : st), 3000);
   }, [applyPaste]);
 
   // ── Reset state when closing ──
@@ -151,9 +155,9 @@ export default function ApiKeyOverlay({ open, onClose }) {
 
   return (
     <Overlay open={open} onClose={handleClose} width="480px">
-      <OverlayHeader title="Anthropic API-Key Verwaltung" icon={<KeyIcon size={20} />} onClose={handleClose} />
+      <OverlayHeader title={s.title} icon={<KeyIcon size={20} />} onClose={handleClose} />
       <OverlayBody>
-        <FormGroup label="API-Key:" hint="Geben Sie Ihren Anthropic API-Key ein">
+        <FormGroup label={s.label} hint={s.hint}>
           <div className={styles.passwordWrapper}>
             <input
               ref={inputRef}
@@ -162,13 +166,13 @@ export default function ApiKeyOverlay({ open, onClose }) {
               value={apiKey}
               onChange={handleKeyChange}
               onPaste={handleNativePaste}
-              placeholder="sk-ant-api03-..."
+              placeholder={s.placeholder}
               style={{ paddingRight: '72px' }}
             />
             <button
               className={styles.inlineBtn}
               onClick={() => setShowPassword((v) => !v)}
-              title="Key anzeigen/verbergen"
+              title={s.showHide}
               type="button"
             >
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
@@ -189,7 +193,7 @@ export default function ApiKeyOverlay({ open, onClose }) {
             <button
               className={`${styles.inlineBtn} ${styles.inlineBtnPaste}`}
               onClick={handlePasteClick}
-              title="Einfügen (Ctrl+V)"
+              title={s.paste}
               type="button"
             >
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -209,11 +213,11 @@ export default function ApiKeyOverlay({ open, onClose }) {
       </OverlayBody>
       <OverlayFooter>
         <Button variant="secondary" onClick={handleTest} disabled={!apiKey.trim() || testing || saving}>
-          Testen
+          {sc.test}
         </Button>
         {testValid && (
           <Button variant="primary" onClick={handleSave} disabled={saving}>
-            Speichern
+            {sc.save}
           </Button>
         )}
       </OverlayFooter>

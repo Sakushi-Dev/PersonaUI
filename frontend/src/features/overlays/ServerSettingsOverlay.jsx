@@ -12,9 +12,14 @@ import Toggle from '../../components/Toggle/Toggle';
 import Button from '../../components/Button/Button';
 import { getServerSettings, saveAndRestartServer, checkApiStatus } from '../../services/serverApi';
 import { getAccessLists, toggleAccessControl } from '../../services/accessApi';
+import { useLanguage } from '../../hooks/useLanguage';
 import styles from './Overlays.module.css';
 
 export default function ServerSettingsOverlay({ open, onClose }) {
+  const { t } = useLanguage();
+  const s = t('serverSettings');
+  const sc = t('common');
+
   const [serverMode, setServerMode] = useState('local');
   const [accessControlEnabled, setAccessControlEnabled] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -59,7 +64,7 @@ export default function ServerSettingsOverlay({ open, onClose }) {
           if (attempts < maxAttempts) {
             restartTimerRef.current = setTimeout(check, 1000);
           } else {
-            setRestartMessage('Server-Neustart dauert länger als erwartet.');
+            setRestartMessage(s.restartSlow);
             setRestarting(false);
           }
         });
@@ -74,7 +79,7 @@ export default function ServerSettingsOverlay({ open, onClose }) {
     try {
       await saveAndRestartServer(serverMode);
       setRestarting(true);
-      setRestartMessage('Server wird neu gestartet...');
+      setRestartMessage(s.restarting);
       waitForServerAndReload();
     } catch (err) {
       console.error('Server restart failed:', err);
@@ -89,10 +94,10 @@ export default function ServerSettingsOverlay({ open, onClose }) {
         <div className={styles.restartOverlay}>
           <div className={styles.restartIcon}>🔄</div>
           <div className={styles.restartText}>{restartMessage}</div>
-          <p className={styles.hint}>Die Seite wird automatisch neu geladen</p>
-          {restartMessage.includes('länger') && (
+          <p className={styles.hint}>{s.autoReload}</p>
+          {restartMessage === s.restartSlow && (
             <Button variant="primary" onClick={() => { window.location.href = '/'; }} style={{ marginTop: 16 }}>
-              Seite neu laden
+              {s.reloadPage}
             </Button>
           )}
         </div>
@@ -102,33 +107,30 @@ export default function ServerSettingsOverlay({ open, onClose }) {
 
   return (
     <Overlay open={open} onClose={onClose} width="460px">
-      <OverlayHeader title="Server-Einstellungen" icon={<ServerIcon size={20} />} onClose={onClose} />
+      <OverlayHeader title={s.title} icon={<ServerIcon size={20} />} onClose={onClose} />
       <OverlayBody>
-        <FormGroup label="Server-Modus">
+        <FormGroup label={s.serverMode}>
           <select
             className={styles.select}
             value={serverMode}
             onChange={(e) => setServerMode(e.target.value)}
           >
-            <option value="local">Lokal (127.0.0.1)</option>
-            <option value="listen">Öffentlich (0.0.0.0 - Listen)</option>
+            <option value="local">{s.local}</option>
+            <option value="listen">{s.public}</option>
           </select>
-          <p className={styles.hint} style={{ marginTop: 6 }}>
-            <strong>Lokal:</strong> Nur auf diesem Computer erreichbar<br />
-            <strong>Öffentlich:</strong> Alle Geräte im selben Netzwerk (z.B. Handy, Tablet) können auf den Chat zugreifen
-          </p>
+          <p className={styles.hint} style={{ marginTop: 6 }} dangerouslySetInnerHTML={{ __html: `${s.localHint}<br />${s.publicHint}` }} />
         </FormGroup>
 
         {/* Access Control */}
         <div className={styles.settingRow}>
           <div className={styles.settingInfo}>
-            <p className={styles.settingLabel}>🛡️ IP-Zugangskontrolle</p>
+            <p className={styles.settingLabel}>🛡️ {s.accessControl}</p>
             <p className={styles.hint}>
-              Unbekannte Geräte müssen vom Host genehmigt werden, bevor sie Zugang erhalten. Nur im öffentlichen Modus aktiv.
+              {s.accessControlHint}
             </p>
           </div>
           <Toggle
-            label={accessControlEnabled ? 'Aktiv' : 'Inaktiv'}
+            label={accessControlEnabled ? s.accessActive : s.accessInactive}
             checked={accessControlEnabled}
             onChange={handleAccessToggle}
             id="access-control"
@@ -137,20 +139,20 @@ export default function ServerSettingsOverlay({ open, onClose }) {
 
         <div className={styles.tipBox}>
           <p className={styles.hint}>
-            ℹ️ <strong>Tipp:</strong> Verwalte genehmigte und blockierte IPs über <em>Einstellungen → Zugangskontrolle</em>.
+            ℹ️ <strong>Tipp:</strong> <span dangerouslySetInnerHTML={{ __html: s.tipAccess }} />
           </p>
         </div>
 
         <div className={styles.tipBox}>
           <p className={styles.hint}>
-            ℹ️ <strong>Tipp:</strong> Server-Modus Änderungen erfordern einen Neustart.
+            ℹ️ <strong>Tipp:</strong> {s.tipRestart}
           </p>
         </div>
       </OverlayBody>
       <OverlayFooter>
-        <Button variant="secondary" onClick={onClose}>Abbrechen</Button>
+        <Button variant="secondary" onClick={onClose}>{sc.cancel}</Button>
         <Button variant="primary" onClick={handleSave} disabled={saving}>
-          {saving ? 'Startet neu...' : 'Speichern & Neustarten'}
+          {saving ? sc.saving : s.saveRestart}
         </Button>
       </OverlayFooter>
     </Overlay>

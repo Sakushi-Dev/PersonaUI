@@ -7,6 +7,7 @@ import { useSettings } from '../../../../hooks/useSettings';
 import Avatar from '../../../../components/Avatar/Avatar';
 import { checkApiStatus } from '../../../../services/serverApi';
 import { playNotificationSound } from '../../../../utils/audioUtils';
+import { useLanguage } from '../../../../hooks/useLanguage';
 import styles from './Header.module.css';
 
 // ── SVG Icons ──
@@ -32,6 +33,8 @@ export default function Header({
 }) {
   const { character, sessionId } = useSession();
   const { get, set } = useSettings();
+  const { t } = useLanguage();
+  const h = t('header');
 
   const charName = character?.char_name || 'PersonaUI';
   const charAvatar = character?.avatar;
@@ -246,7 +249,7 @@ export default function Header({
             <button
               className={`${styles.soundToggle} ${!soundEnabled ? styles.soundMuted : ''}`}
               onClick={toggleSound}
-              title="Benachrichtigungston an/aus"
+              title={h.soundToggle}
             >
               {soundEnabled ? <SoundOnIcon /> : <SoundOffIcon />}
             </button>
@@ -273,7 +276,7 @@ export default function Header({
                     onChange={handleVolumeChange}
                     onMouseUp={handleVolumeSliderMouseUp}
                     className={styles.volumeSlider}
-                    title={`Lautstärke: ${Math.round(notificationVolume * 100)}%`}
+                    title={`${h.volume} ${Math.round(notificationVolume * 100)}%`}
                   />
                   <span className={styles.volumeLabel}>{Math.round(notificationVolume * 100)}%</span>
                 </div>
@@ -285,7 +288,7 @@ export default function Header({
           <button
             className={styles.qrCodeBtn}
             onClick={onOpenQRCode}
-            title="QR-Code & Netzwerk-Adressen"
+            title={h.qrTitle}
           >
             <QRCodeIcon />
           </button>
@@ -293,7 +296,7 @@ export default function Header({
           {/* API Status Indicator */}
           <div
             className={`${styles.apiStatus} ${apiConnected === true ? styles.apiConnected : apiConnected === false ? styles.apiDisconnected : ''}`}
-            title={apiConnected === true ? 'Bestätigter API Zugang' : apiConnected === false ? 'API Zugang benötigt' : 'Lädt...'}
+            title={apiConnected === true ? h.apiConnected : apiConnected === false ? h.apiDisconnected : h.apiLoading}
           >
             <span className={styles.statusDot} />
           </div>
@@ -302,7 +305,7 @@ export default function Header({
           <button
             className={`${styles.dropdownToggle} ${toolbarVisible ? styles.dropdownToggleActive : ''}`}
             onClick={toggleToolbar}
-            title="Menü"
+            title={h.menu}
           >
             ☰
           </button>
@@ -315,10 +318,10 @@ export default function Header({
           <button
             className={styles.toolbarBtn}
             onClick={onOpenUserProfile}
-            title="Mein Profil"
+            title={h.profileBtn}
           >
             <UserIcon />
-            <span className={styles.toolbarLabel}>Profil</span>
+            <span className={styles.toolbarLabel}>{h.profileBtn}</span>
           </button>
 
           <button
@@ -327,7 +330,7 @@ export default function Header({
             title="Set API-Key"
           >
             <KeyIcon />
-            <span className={styles.toolbarLabel}>API-Key</span>
+            <span className={styles.toolbarLabel}>{h.apiKeyBtn}</span>
           </button>
 
           <button
@@ -336,7 +339,7 @@ export default function Header({
             title="Cortex"
           >
             <CortexIcon />
-            <span className={styles.toolbarLabel}>Cortex</span>
+            <span className={styles.toolbarLabel}>{h.cortexBtn}</span>
           </button>
 
           <button
@@ -345,7 +348,7 @@ export default function Header({
             title="Persona"
           >
             <PersonaIcon />
-            <span className={styles.toolbarLabel}>Persona</span>
+            <span className={styles.toolbarLabel}>{h.personaBtn}</span>
           </button>
 
           {/* Settings with hover submenu */}
@@ -357,10 +360,10 @@ export default function Header({
           >
             <button
               className={styles.toolbarBtn}
-              title="Einstellungen"
+              title="Settings"
             >
               <GearIcon />
-              <span className={styles.toolbarLabel}>Settings</span>
+              <span className={styles.toolbarLabel}>{h.settingsBtn}</span>
             </button>
           </div>
 
@@ -376,7 +379,7 @@ export default function Header({
               title="Community & Support"
             >
               <GitHubIcon />
-              <span className={styles.toolbarLabel}>Community</span>
+              <span className={styles.toolbarLabel}>{h.communityBtn}</span>
             </button>
           </div>
         </div>
@@ -403,19 +406,19 @@ export default function Header({
             <div className={styles.submenuContent}>
               <button className={styles.submenuBtn} onClick={() => { setSettingsOpen(false); onOpenInterfaceSettings?.(); }}>
                 <MonitorIcon />
-                <span>Interface</span>
+                <span>{h.interfaceSubmenu}</span>
               </button>
               <button className={styles.submenuBtn} onClick={() => { setSettingsOpen(false); onOpenApiSettings?.(); }}>
                 <ChatIcon />
-                <span>API / Chat</span>
+                <span>{h.apiChatSubmenu}</span>
               </button>
               <button className={styles.submenuBtn} onClick={() => { setSettingsOpen(false); onOpenServerSettings?.(); }}>
                 <ServerIcon />
-                <span>Server</span>
+                <span>{h.serverSubmenu}</span>
               </button>
               <button className={styles.submenuBtn} onClick={() => { setSettingsOpen(false); onOpenAccessControl?.(); }}>
                 <ShieldIcon />
-                <span>Zugang</span>
+                <span>{h.accessSubmenu}</span>
               </button>
             </div>
           </div>
@@ -444,15 +447,15 @@ export default function Header({
             <div className={styles.submenuContent}>
               <button className={styles.submenuBtn} onClick={() => { setCommunityOpen(false); window.open('https://github.com/Sakushi-Dev/PersonaUI', '_blank'); }}>
                 <ExternalLinkIcon />
-                <span>GitHub</span>
+                <span>{h.githubSubmenu}</span>
               </button>
               <button className={styles.submenuBtn} onClick={() => { setCommunityOpen(false); window.open('https://github.com/Sakushi-Dev/PersonaUI/issues', '_blank'); }}>
                 <BugIcon />
-                <span>Issues</span>
+                <span>{h.issuesSubmenu}</span>
               </button>
               <button className={styles.submenuBtn} onClick={() => { setCommunityOpen(false); onOpenSupport?.(); }}>
                 <HeartIcon />
-                <span>Support</span>
+                <span>{h.supportSubmenu}</span>
               </button>
             </div>
           </div>

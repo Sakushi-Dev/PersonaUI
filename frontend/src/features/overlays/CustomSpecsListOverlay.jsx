@@ -2,7 +2,7 @@
 // Browse, view, edit and delete existing custom persona specs
 // Pattern: ifaceSection / ifaceCard (like InterfaceSettingsOverlay)
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import Overlay from '../../components/Overlay/Overlay';
 import OverlayHeader from '../../components/Overlay/OverlayHeader';
 import { GearIcon } from '../../components/Icons/Icons';
@@ -10,22 +10,23 @@ import OverlayBody from '../../components/Overlay/OverlayBody';
 import Button from '../../components/Button/Button';
 import Spinner from '../../components/Spinner/Spinner';
 import { getCustomSpecs, deleteCustomSpec, createCustomSpec } from '../../services/customSpecsApi';
+import { useLanguage } from '../../hooks/useLanguage';
 import styles from './Overlays.module.css';
 
 // ── Categories with mapping to backend keys ──
-const CATEGORIES = [
-  { key: 'persona-type', label: 'Persona Typ', specKey: 'persona_type' },
-  { key: 'core-trait', label: 'Core Trait', specKey: 'core_traits_details' },
-  { key: 'knowledge', label: 'Wissen', specKey: 'knowledge_areas' },
-  { key: 'scenario', label: 'Szenario', specKey: 'scenarios' },
-  { key: 'expression-style', label: 'Schreibstil', specKey: 'expression_styles' },
+const CATEGORY_KEYS = [
+  { key: 'persona-type', labelKey: 'personaType', specKey: 'persona_type' },
+  { key: 'core-trait', labelKey: 'coreTrait', specKey: 'core_traits_details' },
+  { key: 'knowledge', labelKey: 'knowledge', specKey: 'knowledge_areas' },
+  { key: 'scenario', labelKey: 'scenario', specKey: 'scenarios' },
+  { key: 'expression-style', labelKey: 'expressionStyle', specKey: 'expression_styles' },
 ];
 
 // Which categories have expandable item arrays
-const ITEMS_FIELD = {
-  'core-trait': { field: 'behaviors', label: 'Verhaltensweisen' },
-  scenario: { field: 'setting', label: 'Settings' },
-  'expression-style': { field: 'characteristics', label: 'Merkmale' },
+const ITEMS_FIELD_KEYS = {
+  'core-trait': { field: 'behaviors', labelKey: 'behaviorPlural' },
+  scenario: { field: 'setting', labelKey: 'settingPlural' },
+  'expression-style': { field: 'characteristics', labelKey: 'characteristicPlural' },
 };
 
 const ITEMS_MAX = 6;
@@ -53,6 +54,12 @@ function parseEntries(specData) {
 }
 
 export default function CustomSpecsListOverlay({ open, onClose, onOpenCreate }) {
+  const { t } = useLanguage();
+  const s = t('customSpecsList');
+
+  const categories = useMemo(() =>
+    CATEGORY_KEYS.map((c) => ({ ...c, label: s[c.labelKey] })), [s]);
+
   const [activeTab, setActiveTab] = useState('persona-type');
   const [specs, setSpecs] = useState({});
   const [loading, setLoading] = useState(true);
@@ -85,9 +92,11 @@ export default function CustomSpecsListOverlay({ open, onClose, onOpenCreate }) 
   }, [open, refresh]);
 
   // ── Derived ──
-  const cat = CATEGORIES.find((c) => c.key === activeTab);
-  const entries = cat ? parseEntries(specs[cat.specKey]) : [];
-  const itemsInfo = ITEMS_FIELD[activeTab];
+  const cat = categories.find((c) => c.key === activeTab);
+  const catKey = CATEGORY_KEYS.find((c) => c.key === activeTab);
+  const entries = catKey ? parseEntries(specs[catKey.specKey]) : [];
+  const itemsFieldKey = ITEMS_FIELD_KEYS[activeTab];
+  const itemsInfo = itemsFieldKey ? { field: itemsFieldKey.field, label: s[itemsFieldKey.labelKey] } : null;
 
   // ── Tab Change ──
   const handleTabChange = (key) => {
@@ -215,22 +224,22 @@ export default function CustomSpecsListOverlay({ open, onClose, onOpenCreate }) 
   // ═══════════════════════════════════════════
   return (
     <Overlay open={open} onClose={onClose} width="600px">
-      <OverlayHeader title="Custom Specs Bibliothek" icon={<GearIcon size={20} />} onClose={onClose} />
+      <OverlayHeader title={s.title} icon={<GearIcon size={20} />} onClose={onClose} />
       <OverlayBody>
 
         {/* ═══ Back ═══ */}
         {onOpenCreate && (
           <button type="button" className={styles.cslBackBtn} onClick={onOpenCreate}>
-            Zurück
+            {s.back}
           </button>
         )}
 
         {/* ═══ Section: Kategorie ═══ */}
         <div className={styles.ifaceSection}>
-          <h3 className={styles.ifaceSectionTitle}>Kategorie</h3>
+          <h3 className={styles.ifaceSectionTitle}>{s.category}</h3>
           <div className={styles.ifaceCard}>
             <div className={styles.cortexTabBar}>
-              {CATEGORIES.map((c) => {
+              {categories.map((c) => {
                 const count = Object.keys(specs[c.specKey] || {}).length;
                 return (
                   <button
@@ -251,7 +260,7 @@ export default function CustomSpecsListOverlay({ open, onClose, onOpenCreate }) 
         {/* ═══ Section: Eintraege ═══ */}
         <div className={styles.ifaceSection}>
           <h3 className={styles.ifaceSectionTitle}>
-            Eintraege
+            {s.entries}
             <span className={styles.accessBadgeCount}>{entries.length}</span>
           </h3>
           <div className={styles.ifaceCard}>
@@ -259,10 +268,10 @@ export default function CustomSpecsListOverlay({ open, onClose, onOpenCreate }) 
               <div className={styles.centeredContent}><Spinner /></div>
             ) : entries.length === 0 ? (
               <div className={styles.accessEmptyState}>
-                <span className={styles.ifaceToggleHint}>Keine Eintraege vorhanden</span>
+                <span className={styles.ifaceToggleHint}>{s.noEntries}</span>
                 {onOpenCreate && (
                   <Button variant="secondary" size="sm" onClick={onOpenCreate} style={{ marginTop: 8 }}>
-                    Neuen Spec erstellen
+                    {s.createNew}
                   </Button>
                 )}
               </div>
@@ -300,14 +309,14 @@ export default function CustomSpecsListOverlay({ open, onClose, onOpenCreate }) 
                                 className={styles.cslBtnEdit}
                                 onClick={(e) => { e.stopPropagation(); startEdit(entry); }}
                               >
-                                Bearbeiten
+                                {s.editEntry}
                               </button>
                               <button
                                 type="button"
                                 className={styles.cslBtnDelete}
                                 onClick={(e) => { e.stopPropagation(); handleDelete(entry.key); }}
                               >
-                                Loeschen
+                                {s.deleteEntry}
                               </button>
                             </>
                           )}
@@ -323,7 +332,7 @@ export default function CustomSpecsListOverlay({ open, onClose, onOpenCreate }) 
                               {/* Name (scenario, expression-style) */}
                               {(activeTab === 'scenario' || activeTab === 'expression-style') && (
                                 <div className={styles.ifaceFieldGroup}>
-                                  <span className={styles.ifaceFieldLabel}>Name</span>
+                                  <span className={styles.ifaceFieldLabel}>{s.name}</span>
                                   <input
                                     className={styles.textInput}
                                     value={editForm.name || ''}
@@ -335,7 +344,7 @@ export default function CustomSpecsListOverlay({ open, onClose, onOpenCreate }) 
 
                               {/* Description */}
                               <div className={styles.ifaceFieldGroup}>
-                                <span className={styles.ifaceFieldLabel}>Beschreibung</span>
+                                <span className={styles.ifaceFieldLabel}>{s.description}</span>
                                 <textarea
                                   className={styles.textarea}
                                   value={editForm.description || ''}
@@ -347,7 +356,7 @@ export default function CustomSpecsListOverlay({ open, onClose, onOpenCreate }) 
                               {/* Example (expression-style) */}
                               {activeTab === 'expression-style' && (
                                 <div className={styles.ifaceFieldGroup}>
-                                  <span className={styles.ifaceFieldLabel}>Beispiel</span>
+                                  <span className={styles.ifaceFieldLabel}>{s.example}</span>
                                   <textarea
                                     className={styles.textarea}
                                     value={editForm.example || ''}
@@ -380,7 +389,7 @@ export default function CustomSpecsListOverlay({ open, onClose, onOpenCreate }) 
                                             type="button"
                                             className={styles.csRemoveItemBtn}
                                             onClick={() => removeEditItem(idx)}
-                                            title="Entfernen"
+                                            title={s.remove}
                                           >
                                             &minus;
                                           </button>
@@ -394,7 +403,7 @@ export default function CustomSpecsListOverlay({ open, onClose, onOpenCreate }) 
                                       className={styles.csAddItemBtn}
                                       onClick={addEditItem}
                                     >
-                                      + Hinzufuegen
+                                      {s.addItem}
                                     </button>
                                   )}
                                 </div>
@@ -403,10 +412,10 @@ export default function CustomSpecsListOverlay({ open, onClose, onOpenCreate }) 
                               {/* Edit Actions */}
                               <div className={styles.cslEditActions}>
                                 <Button variant="ghost" size="sm" onClick={cancelEdit}>
-                                  Abbrechen
+                                  {s.cancelEdit}
                                 </Button>
                                 <Button variant="primary" size="sm" onClick={saveEdit}>
-                                  Speichern
+                                  {s.saveEdit}
                                 </Button>
                               </div>
                             </>
@@ -415,7 +424,7 @@ export default function CustomSpecsListOverlay({ open, onClose, onOpenCreate }) 
                             <>
                               {/* Key */}
                               <div className={styles.cslDetailField}>
-                                <span className={styles.cslDetailLabel}>Key</span>
+                                <span className={styles.cslDetailLabel}>{s.key}</span>
                                 <span className={`${styles.cslDetailValue} ${styles.cslDetailMono}`}>
                                   {entry.key}
                                 </span>
@@ -424,7 +433,7 @@ export default function CustomSpecsListOverlay({ open, onClose, onOpenCreate }) 
                               {/* Name (if different from key) */}
                               {entry.name && entry.name !== entry.key && (
                                 <div className={styles.cslDetailField}>
-                                  <span className={styles.cslDetailLabel}>Name</span>
+                                  <span className={styles.cslDetailLabel}>{s.name}</span>
                                   <span className={styles.cslDetailValue}>{entry.name}</span>
                                 </div>
                               )}
@@ -432,7 +441,7 @@ export default function CustomSpecsListOverlay({ open, onClose, onOpenCreate }) 
                               {/* Description */}
                               {entry.description && (
                                 <div className={styles.cslDetailField}>
-                                  <span className={styles.cslDetailLabel}>Beschreibung</span>
+                                  <span className={styles.cslDetailLabel}>{s.description}</span>
                                   <span className={styles.cslDetailValue}>{toStr(entry.description)}</span>
                                 </div>
                               )}
@@ -440,7 +449,7 @@ export default function CustomSpecsListOverlay({ open, onClose, onOpenCreate }) 
                               {/* Example */}
                               {entry.example && (
                                 <div className={styles.cslDetailField}>
-                                  <span className={styles.cslDetailLabel}>Beispiel</span>
+                                  <span className={styles.cslDetailLabel}>{s.example}</span>
                                   <span className={styles.cslDetailValue}>{entry.example}</span>
                                 </div>
                               )}
@@ -474,7 +483,7 @@ export default function CustomSpecsListOverlay({ open, onClose, onOpenCreate }) 
         {onOpenCreate && entries.length > 0 && (
           <div className={styles.cslLinkRow}>
             <button type="button" className={styles.cslLinkBtn} onClick={onOpenCreate}>
-              + Neuen Spec erstellen
+              {s.createNewPlus}
             </button>
           </div>
         )}

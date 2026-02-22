@@ -1,9 +1,10 @@
 // ── EmojiPicker ──
 // Categorized emoji popup for the chat input
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import styles from './EmojiPicker.module.css';
 import { getEmojiUsage, incrementEmojiUsage } from '../../../../services/emojiApi';
+import { useLanguage } from '../../../../hooks/useLanguage';
 
 // ── Emoji keyword map for search (EN only) ──
 const EMOJI_KEYWORDS = {
@@ -171,7 +172,8 @@ const EMOJI_SEARCH_INDEX = new Map();
 
 const EMOJI_CATEGORIES = [
   {
-    name: 'Smileys',
+    name: 'smileys',
+    labelKey: 'catSmileys',
     icon: '😀',
     emojis: [
       '😀','😃','😄','😁','😆','😅','🤣','😂','🙂','🙃',
@@ -188,7 +190,8 @@ const EMOJI_CATEGORIES = [
     ],
   },
   {
-    name: 'Gesten',
+    name: 'gestures',
+    labelKey: 'catGestures',
     icon: '👋',
     emojis: [
       '👋','🤚','🖐️','✋','🖖','🫱','🫲','🫳','🫴','👌',
@@ -200,7 +203,8 @@ const EMOJI_CATEGORIES = [
     ],
   },
   {
-    name: 'Herzen',
+    name: 'hearts',
+    labelKey: 'catHearts',
     icon: '❤️',
     emojis: [
       '❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔',
@@ -209,7 +213,8 @@ const EMOJI_CATEGORIES = [
     ],
   },
   {
-    name: 'Tiere',
+    name: 'animals',
+    labelKey: 'catAnimals',
     icon: '🐱',
     emojis: [
       '🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐻‍❄️','🐨',
@@ -222,7 +227,8 @@ const EMOJI_CATEGORIES = [
     ],
   },
   {
-    name: 'Essen',
+    name: 'food',
+    labelKey: 'catFood',
     icon: '🍕',
     emojis: [
       '🍏','🍎','🍐','🍊','🍋','🍌','🍉','🍇','🍓','🫐',
@@ -239,7 +245,8 @@ const EMOJI_CATEGORIES = [
     ],
   },
   {
-    name: 'Objekte',
+    name: 'objects',
+    labelKey: 'catObjects',
     icon: '💡',
     emojis: [
       '⌚','📱','💻','⌨️','🖥️','🖨️','🖱️','🖲️','💾','💿',
@@ -253,7 +260,8 @@ const EMOJI_CATEGORIES = [
     ],
   },
   {
-    name: 'Symbole',
+    name: 'symbols',
+    labelKey: 'catSymbols',
     icon: '⭐',
     emojis: [
       '⭐','🌟','✨','⚡','🔥','💫','🎉','🎊','🎈','🎁',
@@ -289,6 +297,9 @@ function deriveFavorites(usage) {
 
 
 export default function EmojiPicker({ onSelect, visible, onClose }) {
+  const { t } = useLanguage();
+  const s = t('emojiPicker');
+
   const [activeCategory, setActiveCategory] = useState('favo');
   const [favoriteEmojis, setFavoriteEmojis] = useState([]);
   const [search, setSearch] = useState('');
@@ -351,6 +362,12 @@ export default function EmojiPicker({ onSelect, visible, onClose }) {
     }
   }, [activeCategory]);
 
+  // Translated category labels
+  const translatedCats = useMemo(
+    () => EMOJI_CATEGORIES.map(cat => ({ ...cat, label: s[cat.labelKey] || cat.name })),
+    [s]
+  );
+
   if (!visible) return null;
 
 
@@ -364,13 +381,13 @@ export default function EmojiPicker({ onSelect, visible, onClose }) {
       const kw = EMOJI_SEARCH_INDEX.get(e) || '';
       return kw.includes(q);
     });
-    displayTitle = 'Suchergebnisse';
+    displayTitle = s.searchResults;
   } else if (activeCategory === 'favo') {
     displayEmojis = favoriteEmojis;
-    displayTitle = 'Favoriten';
+    displayTitle = s.favorites;
   } else {
     displayEmojis = EMOJI_CATEGORIES[activeCategory].emojis;
-    displayTitle = EMOJI_CATEGORIES[activeCategory].name;
+    displayTitle = translatedCats[activeCategory].label;
   }
 
   return (
@@ -380,7 +397,7 @@ export default function EmojiPicker({ onSelect, visible, onClose }) {
         <input
           className={styles.searchInput}
           type="text"
-          placeholder="Emoji suchen..."
+          placeholder={s.searchPlaceholder}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           autoFocus
@@ -392,17 +409,17 @@ export default function EmojiPicker({ onSelect, visible, onClose }) {
         <button
           className={`${styles.catBtn} ${styles.favoTab} ${activeCategory === 'favo' && !search ? styles.catActive : ''}`}
           onClick={() => { setActiveCategory('favo'); setSearch(''); }}
-          title="Favoriten"
+          title={s.favorites}
           type="button"
         >
           ★
         </button>
-        {EMOJI_CATEGORIES.map((cat, i) => (
+        {translatedCats.map((cat, i) => (
           <button
             key={cat.name}
             className={`${styles.catBtn} ${activeCategory === i && !search ? styles.catActive : ''}`}
             onClick={() => { setActiveCategory(i); setSearch(''); }}
-            title={cat.name}
+            title={cat.label}
             type="button"
           >
             {cat.icon}
@@ -417,7 +434,7 @@ export default function EmojiPicker({ onSelect, visible, onClose }) {
       <div className={styles.grid} ref={gridRef}>
         {displayEmojis.length === 0 ? (
           <div className={styles.empty}>
-            {activeCategory === -1 ? 'Noch keine Emojis verwendet' : 'Keine Emojis gefunden'}
+            {activeCategory === -1 ? s.noEmojisUsed : s.noEmojisFound}
           </div>
         ) : (
           displayEmojis.map((emoji, i) => (

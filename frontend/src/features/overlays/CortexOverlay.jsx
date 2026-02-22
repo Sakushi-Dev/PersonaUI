@@ -1,9 +1,10 @@
 // ── CortexOverlay ──
 // Cortex settings + file management in a tabbed overlay
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSession } from '../../hooks/useSession';
 import { useSettings } from '../../hooks/useSettings';
+import { useLanguage } from '../../hooks/useLanguage';
 import Overlay from '../../components/Overlay/Overlay';
 import OverlayHeader from '../../components/Overlay/OverlayHeader';
 import { CortexIcon } from '../../components/Icons/Icons';
@@ -15,24 +16,37 @@ import Spinner from '../../components/Spinner/Spinner';
 import { getCortexFiles, saveCortexFile, resetCortexFile, resetAllCortexFiles } from '../../services/cortexApi';
 import styles from './Overlays.module.css';
 
-// ── Tab-Konfiguration ──
-const TABS = [
-  { key: 'memory',       label: 'Memory',     fileType: 'memory' },
-  { key: 'soul',         label: 'Seele',       fileType: 'soul' },
-  { key: 'relationship', label: 'Beziehung',   fileType: 'relationship' },
+// ── Tab keys (labels resolved via i18n) ──
+const TAB_KEYS = [
+  { key: 'memory',       labelKey: 'tabMemory',       fileType: 'memory' },
+  { key: 'soul',         labelKey: 'tabSoul',         fileType: 'soul' },
+  { key: 'relationship', labelKey: 'tabRelationship', fileType: 'relationship' },
 ];
 
-// ── Frequenz-Optionen ──
-const FREQUENCY_OPTIONS = [
-  { value: 'frequent', label: 'Häufig',  percent: 50, hint: 'Update alle 50% des Kontexts' },
-  { value: 'medium',   label: 'Mittel',  percent: 75, hint: 'Update alle 75% des Kontexts' },
-  { value: 'rare',     label: 'Selten',  percent: 95, hint: 'Update alle 95% des Kontexts' },
+// ── Frequency option keys (labels resolved via i18n) ──
+const FREQ_KEYS = [
+  { value: 'frequent', labelKey: 'frequent',  percent: 50, hintKey: 'freqHintFrequent' },
+  { value: 'medium',   labelKey: 'medium',    percent: 75, hintKey: 'freqHintMedium' },
+  { value: 'rare',     labelKey: 'rare',      percent: 95, hintKey: 'freqHintRare' },
 ];
 const DEFAULT_FREQUENCY = 'medium';
 
 export default function CortexOverlay({ open, onClose }) {
   const { personaId, character } = useSession();
   const { get, setMany } = useSettings();
+  const { t } = useLanguage();
+  const s = t('cortex');
+  const sc = t('common');
+
+  // Resolve i18n for tabs + frequency options
+  const TABS = useMemo(() =>
+    TAB_KEYS.map(tab => ({ ...tab, label: s[tab.labelKey] || tab.key })),
+    [s]
+  );
+  const FREQUENCY_OPTIONS = useMemo(() =>
+    FREQ_KEYS.map(opt => ({ ...opt, label: s[opt.labelKey] || opt.value, hint: s[opt.hintKey] || '' })),
+    [s]
+  );
 
   // ── Settings State ──
   const [cortexEnabled, setCortexEnabled] = useState(true);
@@ -75,7 +89,7 @@ export default function CortexOverlay({ open, onClose }) {
         })
         .catch((err) => {
           console.error('Failed to load cortex files:', err);
-          setError('Cortex-Dateien konnten nicht geladen werden.');
+          setError(s.loadError);
         })
         .finally(() => setLoading(false));
     } else {
@@ -108,7 +122,7 @@ export default function CortexOverlay({ open, onClose }) {
       setEditing(false);
     } catch (err) {
       console.error('Failed to save cortex file:', err);
-      setError('Datei konnte nicht gespeichert werden.');
+      setError(s.saveError);
     } finally {
       setSaving(false);
     }
@@ -116,7 +130,7 @@ export default function CortexOverlay({ open, onClose }) {
 
   const handleResetFile = useCallback(async () => {
     const tabLabel = TABS.find((t) => t.fileType === currentFileType)?.label || currentFileType;
-    if (!window.confirm(`„${tabLabel}" auf das Template zurücksetzen?\nAlle manuellen Änderungen gehen verloren.`)) return;
+    if (!window.confirm(s.resetConfirm.replace('{label}', tabLabel))) return;
     setSaving(true);
     setError(null);
     try {
@@ -125,14 +139,14 @@ export default function CortexOverlay({ open, onClose }) {
       setEditing(false);
     } catch (err) {
       console.error('Failed to reset cortex file:', err);
-      setError('Datei konnte nicht zurückgesetzt werden.');
+      setError(s.resetError);
     } finally {
       setSaving(false);
     }
   }, [personaId, currentFileType]);
 
   const handleResetAll = useCallback(async () => {
-    if (!window.confirm('Alle 3 Cortex-Dateien (Memory, Seele, Beziehung) auf die Templates zurücksetzen?\nAlle manuellen Änderungen gehen verloren.')) return;
+    if (!window.confirm(s.resetAllConfirm)) return;
     setSaving(true);
     setError(null);
     try {
@@ -141,7 +155,7 @@ export default function CortexOverlay({ open, onClose }) {
       setEditing(false);
     } catch (err) {
       console.error('Failed to reset all cortex files:', err);
-      setError('Cortex-Dateien konnten nicht zurückgesetzt werden.');
+      setError(s.resetAllError);
     } finally {
       setSaving(false);
     }
@@ -181,20 +195,20 @@ export default function CortexOverlay({ open, onClose }) {
   // ══════════════════════════════════════════
   return (
     <Overlay open={open} onClose={onClose} width="580px">
-      <OverlayHeader title="Cortex" icon={<CortexIcon size={20} />} onClose={onClose} />
+      <OverlayHeader title={s.title} icon={<CortexIcon size={20} />} onClose={onClose} />
       <OverlayBody>
 
         {/* ═══ Section: Cortex Aktivierung ═══ */}
         <div className={styles.ifaceSection}>
-          <h3 className={styles.ifaceSectionTitle}>Status</h3>
+          <h3 className={styles.ifaceSectionTitle}>{s.status}</h3>
           <div className={styles.ifaceCard}>
             <div className={styles.ifaceToggleRow}>
               <div className={styles.ifaceToggleInfo}>
-                <span className={styles.ifaceToggleLabel}>Cortex-System</span>
+                <span className={styles.ifaceToggleLabel}>{s.cortexSystem}</span>
                 <span className={styles.ifaceToggleHint}>
                   {cortexEnabled
-                    ? 'Cortex ist aktiv – Dateien werden in den Prompt eingebunden.'
-                    : 'Cortex ist deaktiviert – keine Cortex-Daten im Prompt.'}
+                    ? s.enabledHint
+                    : s.disabledHint}
                 </span>
               </div>
               <Toggle
@@ -208,13 +222,12 @@ export default function CortexOverlay({ open, onClose }) {
 
         {/* ═══ Section: Update-Frequenz ═══ */}
         <div className={styles.ifaceSection}>
-          <h3 className={styles.ifaceSectionTitle}>Update-Frequenz</h3>
+          <h3 className={styles.ifaceSectionTitle}>{s.updateFrequency}</h3>
           <div className={styles.ifaceCard}>
             <div className={styles.ifaceFieldGroup}>
-              <span className={styles.ifaceFieldLabel}>Aktualisierungsintervall</span>
+              <span className={styles.ifaceFieldLabel}>{s.updateInterval}</span>
               <span className={styles.ifaceFieldHint}>
-                Wie oft soll Cortex seine Dateien aktualisieren?
-                Der Prozentsatz bezieht sich auf dein Kontext-Limit.
+                {s.updateIntervalHint}
               </span>
 
               {/* Segmented Control / Radio Group */}
@@ -248,7 +261,7 @@ export default function CortexOverlay({ open, onClose }) {
         {/* ═══ Section: Cortex-Dateien ═══ */}
         <div className={styles.ifaceSection}>
           <h3 className={styles.ifaceSectionTitle}>
-            Cortex-Dateien
+            {s.files}
             {personaName && (
               <span className={styles.cortexPersonaBadge}>
                 {personaName}
@@ -280,17 +293,16 @@ export default function CortexOverlay({ open, onClose }) {
               </div>
             ) : !personaId ? (
               <p className={styles.emptyText}>
-                Keine Persona ausgewählt. Bitte erstelle zuerst eine Persona.
+                {s.noPersona}
               </p>
             ) : currentContent === '' && !editing ? (
               /* Empty State */
               <div className={styles.cortexEmptyState}>
                 <p className={styles.emptyText}>
-                  Diese Datei ist noch leer. Cortex wird sie automatisch befüllen,
-                  oder du kannst sie manuell bearbeiten.
+                  {s.emptyFile}
                 </p>
                 <Button variant="secondary" size="sm" onClick={handleStartEdit}>
-                  Manuell bearbeiten
+                  {s.manualEdit}
                 </Button>
               </div>
             ) : editing ? (
@@ -301,18 +313,18 @@ export default function CortexOverlay({ open, onClose }) {
                   value={editContent}
                   onChange={(e) => setEditContent(e.target.value)}
                   rows={12}
-                  placeholder="Markdown-Inhalt eingeben..."
+                  placeholder={s.editPlaceholder}
                   disabled={saving}
                 />
                 <div className={styles.cortexEditActions}>
                   <Button variant="secondary" size="sm" onClick={handleCancelEdit} disabled={saving}>
-                    Abbrechen
+                    {sc.cancel}
                   </Button>
                   <Button variant="ghost" size="sm" onClick={handleResetFile} disabled={saving}>
-                    Zurücksetzen
+                    {s.resetFile}
                   </Button>
                   <Button variant="primary" size="sm" onClick={handleSaveFile} disabled={saving}>
-                    {saving ? 'Speichert...' : 'Datei speichern'}
+                    {saving ? sc.saving : s.saveFile}
                   </Button>
                 </div>
               </div>
@@ -324,10 +336,10 @@ export default function CortexOverlay({ open, onClose }) {
                 </pre>
                 <div className={styles.cortexFileActions}>
                   <Button variant="secondary" size="sm" onClick={handleStartEdit}>
-                    Bearbeiten
+                    {sc.edit}
                   </Button>
                   <Button variant="ghost" size="sm" onClick={handleResetFile} disabled={saving}>
-                    Zurücksetzen
+                    {s.resetFile}
                   </Button>
                 </div>
               </div>
@@ -344,7 +356,7 @@ export default function CortexOverlay({ open, onClose }) {
             {personaId && !loading && (
               <div className={styles.cortexResetAllRow}>
                 <Button variant="ghost" size="sm" onClick={handleResetAll} disabled={saving}>
-                  Alle Cortex-Dateien zurücksetzen
+                  {s.resetAll}
                 </Button>
               </div>
             )}
@@ -353,8 +365,8 @@ export default function CortexOverlay({ open, onClose }) {
 
       </OverlayBody>
       <OverlayFooter>
-        <Button variant="secondary" onClick={handleResetSettings}>Zurücksetzen</Button>
-        <Button variant="primary" onClick={handleSaveSettings}>Speichern</Button>
+        <Button variant="secondary" onClick={handleResetSettings}>{sc.reset}</Button>
+        <Button variant="primary" onClick={handleSaveSettings}>{sc.save}</Button>
       </OverlayFooter>
     </Overlay>
   );

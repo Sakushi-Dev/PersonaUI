@@ -18,9 +18,13 @@ import {
   removeFromWhitelist,
   removeFromBlacklist,
 } from '../../services/accessApi';
+import { useLanguage } from '../../hooks/useLanguage';
 import styles from './Overlays.module.css';
 
 export default function AccessControlOverlay({ open, onClose }) {
+  const { t } = useLanguage();
+  const s = t('accessControl');
+
   const [pending, setPending] = useState([]);
   const [whitelist, setWhitelist] = useState([]);
   const [blacklist, setBlacklist] = useState([]);
@@ -77,7 +81,7 @@ export default function AccessControlOverlay({ open, onClose }) {
 
   return (
     <Overlay open={open} onClose={onClose} width="500px">
-      <OverlayHeader title="Zugangskontrolle" icon={<ShieldIcon size={20} />} onClose={onClose} />
+      <OverlayHeader title={s.title} icon={<ShieldIcon size={20} />} onClose={onClose} />
       <OverlayBody>
         {loading ? (
           <div className={styles.centeredContent}>
@@ -88,7 +92,7 @@ export default function AccessControlOverlay({ open, onClose }) {
             {/* ═══ Section: Ausstehende Anfragen ═══ */}
             <div className={styles.ifaceSection}>
               <h3 className={styles.ifaceSectionTitle}>
-                Ausstehende Anfragen
+                {s.pendingRequests}
                 {pending.length > 0 && (
                   <span className={styles.accessBadgePending}>{pending.length}</span>
                 )}
@@ -96,7 +100,7 @@ export default function AccessControlOverlay({ open, onClose }) {
               <div className={styles.ifaceCard}>
                 {pending.length === 0 ? (
                   <div className={styles.accessEmptyState}>
-                    <span className={styles.ifaceToggleHint}>Keine ausstehenden Anfragen</span>
+                    <span className={styles.ifaceToggleHint}>{s.noPending}</span>
                   </div>
                 ) : (
                   <ul className={styles.accessList}>
@@ -108,18 +112,18 @@ export default function AccessControlOverlay({ open, onClose }) {
                             <button
                               className={styles.accessBtnApprove}
                               onClick={() => handleApprove(ip)}
-                              title="Genehmigen"
+                              title={s.approve}
                               type="button"
                             >
-                              Genehmigen
+                              {s.approve}
                             </button>
                             <button
                               className={styles.accessBtnDeny}
                               onClick={() => handleDeny(ip)}
-                              title="Ablehnen"
+                              title={s.deny}
                               type="button"
                             >
-                              Ablehnen
+                              {s.deny}
                             </button>
                           </div>
                         </div>
@@ -134,13 +138,13 @@ export default function AccessControlOverlay({ open, onClose }) {
             {/* ═══ Section: Whitelist ═══ */}
             <div className={styles.ifaceSection}>
               <h3 className={styles.ifaceSectionTitle}>
-                Whitelist
+                {s.whitelist}
                 <span className={styles.accessBadgeCount}>{whitelist.length}</span>
               </h3>
               <div className={styles.ifaceCard}>
                 {whitelist.length === 0 ? (
                   <div className={styles.accessEmptyState}>
-                    <span className={styles.ifaceToggleHint}>Keine Eintraege</span>
+                    <span className={styles.ifaceToggleHint}>{s.noEntries}</span>
                   </div>
                 ) : (
                   <ul className={styles.accessList}>
@@ -151,10 +155,10 @@ export default function AccessControlOverlay({ open, onClose }) {
                           <button
                             className={styles.accessBtnRemove}
                             onClick={() => handleRemoveWhitelist(ip)}
-                            title="Entfernen"
+                            title={s.remove}
                             type="button"
                           >
-                            Entfernen
+                            {s.remove}
                           </button>
                         </div>
                         {idx < whitelist.length - 1 && <div className={styles.ifaceDivider} />}
@@ -168,13 +172,13 @@ export default function AccessControlOverlay({ open, onClose }) {
             {/* ═══ Section: Blacklist ═══ */}
             <div className={styles.ifaceSection}>
               <h3 className={styles.ifaceSectionTitle}>
-                Blacklist
+                {s.blacklist}
                 <span className={styles.accessBadgeCount}>{blacklist.length}</span>
               </h3>
               <div className={styles.ifaceCard}>
                 {blacklist.length === 0 ? (
                   <div className={styles.accessEmptyState}>
-                    <span className={styles.ifaceToggleHint}>Keine Eintraege</span>
+                    <span className={styles.ifaceToggleHint}>{s.noEntries}</span>
                   </div>
                 ) : (
                   <ul className={styles.accessList}>
@@ -185,10 +189,10 @@ export default function AccessControlOverlay({ open, onClose }) {
                           <button
                             className={styles.accessBtnRemove}
                             onClick={() => handleRemoveBlacklist(ip)}
-                            title="Entfernen"
+                            title={s.remove}
                             type="button"
                           >
-                            Entfernen
+                            {s.remove}
                           </button>
                         </div>
                         {idx < blacklist.length - 1 && <div className={styles.ifaceDivider} />}
@@ -202,7 +206,7 @@ export default function AccessControlOverlay({ open, onClose }) {
         )}
       </OverlayBody>
       <OverlayFooter>
-        <Button variant="secondary" onClick={onClose}>Schliessen</Button>
+        <Button variant="secondary" onClick={onClose}>{s.close}</Button>
       </OverlayFooter>
     </Overlay>
   );

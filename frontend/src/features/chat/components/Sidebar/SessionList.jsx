@@ -4,11 +4,14 @@
 import { useState, useEffect } from 'react';
 import { getSessions } from '../../../../services/sessionApi';
 import { useSession } from '../../../../hooks/useSession';
+import { useLanguage } from '../../../../hooks/useLanguage';
 import SessionItem from './SessionItem';
 import styles from './Sidebar.module.css';
 
 export default function SessionList({ personaId, onNewChat, onClose }) {
   const { sessionId: activeSessionId, switchSession, deleteSession, switchPersona } = useSession();
+  const { t } = useLanguage();
+  const s = t('sidebar');
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -40,7 +43,7 @@ export default function SessionList({ personaId, onNewChat, onClose }) {
   };
 
   if (loading) {
-    return <div className={styles.empty}>Laden...</div>;
+    return <div className={styles.empty}>{s.noChats}</div>;
   }
 
   return (
@@ -48,12 +51,12 @@ export default function SessionList({ personaId, onNewChat, onClose }) {
       {/* New Chat button at top of sessions view (legacy position) */}
       <button className={styles.newChatBtn} onClick={onNewChat}>
         <span className={styles.newChatIcon}>+</span>
-        <span>Neuer Chat</span>
+        <span>{s.newChat}</span>
       </button>
 
       {sessions.length === 0 ? (
         <div className={styles.empty}>
-          Noch keine Chats.<br />Starte einen neuen Chat!
+          {s.noChats}<br />{s.startChat}
         </div>
       ) : (
         <div className={styles.sessionsList}>

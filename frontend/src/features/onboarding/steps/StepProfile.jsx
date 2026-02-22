@@ -4,12 +4,13 @@ import { useState, useCallback, useRef } from 'react';
 import AvatarCropper from '../../../components/AvatarCropper/AvatarCropper';
 import { getAvailableAvatars, uploadAvatar } from '../../../services/avatarApi';
 import { API_BASE_URL } from '../../../utils/constants';
-import { t } from '../useTranslation';
+import { useLanguage } from '../../../hooks/useLanguage';
 import styles from './Steps.module.css';
 
-export default function StepProfile({ data, onChange, onNext, onBack, language }) {
-  const s = t(language, 'profile');
-  const c = t(language, 'common');
+export default function StepProfile({ data, onChange, onNext, onBack }) {
+  const { t } = useLanguage();
+  const s = t('onboardingProfile');
+  const c = t('onboardingCommon');
 
 
   // Avatar gallery state

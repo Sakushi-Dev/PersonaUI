@@ -10,9 +10,13 @@ import OverlayFooter from '../../components/Overlay/OverlayFooter';
 import Button from '../../components/Button/Button';
 import Spinner from '../../components/Spinner/Spinner';
 import { getServerSettings, getLocalIps, generateQRCode } from '../../services/serverApi';
+import { useLanguage } from '../../hooks/useLanguage';
 import styles from './Overlays.module.css';
 
 export default function QRCodeOverlay({ open, onClose, onOpenServerSettings }) {
+  const { t } = useLanguage();
+  const s = t('qrCode');
+
   const [serverMode, setServerMode] = useState(null);
   const [qrImage, setQrImage] = useState(null);
   const [ipEntries, setIpEntries] = useState([]);  // { ip, port, url, type }
@@ -59,7 +63,7 @@ export default function QRCodeOverlay({ open, onClose, onOpenServerSettings }) {
 
   return (
     <Overlay open={open} onClose={onClose} width="420px">
-      <OverlayHeader title="Netzwerk-Zugriff" icon={<SmartphoneIcon size={20} />} onClose={onClose} />
+      <OverlayHeader title={s.title} icon={<SmartphoneIcon size={20} />} onClose={onClose} />
       <OverlayBody>
         {loading ? (
           <Spinner />
@@ -71,7 +75,7 @@ export default function QRCodeOverlay({ open, onClose, onOpenServerSettings }) {
               </div>
             )}
             <div className={styles.ipList}>
-              <p className={styles.settingLabel}>📡 Netzwerk-Adressen:</p>
+              <p className={styles.settingLabel}>📡 {s.addresses}</p>
               {ipEntries.map((entry, i) => (
                 <div key={i} className={styles.ipEntry}>
                   <span className={styles.ipType}>{entry.type}:</span>
@@ -88,32 +92,29 @@ export default function QRCodeOverlay({ open, onClose, onOpenServerSettings }) {
             </div>
             <div className={styles.tipBox}>
               <p className={styles.hint}>
-                💡 <strong>Hinweis:</strong> Dein Handy muss mit dem selben WLAN-Netzwerk verbunden sein.
+                💡 <strong>{s.wifiHint}</strong>
               </p>
             </div>
             <div className={styles.scanningIndicator}>
               <span className={styles.scanningDot} />
-              <span className={styles.scanningText}>Warte auf Gerät…</span>
+              <span className={styles.scanningText}>{s.waitingDevice}</span>
             </div>
           </div>
         ) : (
           <div className={styles.centeredContent}>
             <span className={styles.bigIcon}>🔒</span>
-            <h3>Kein öffentlicher Zugang</h3>
-            <p className={styles.hint}>
-              Der Server läuft aktuell im <strong>lokalen Modus</strong>.
-              Um von anderen Geräten im Netzwerk darauf zuzugreifen, aktiviere den öffentlichen Modus in den Server-Einstellungen.
-            </p>
+            <h3>{s.noPublicAccess}</h3>
+            <p className={styles.hint} dangerouslySetInnerHTML={{ __html: s.localMode }} />
           </div>
         )}
       </OverlayBody>
       <OverlayFooter>
         {!isListen && !loading && (
           <Button variant="primary" onClick={() => { onClose(); onOpenServerSettings?.(); }}>
-            ⚙️ Server-Einstellungen öffnen
+            ⚙️ {s.openSettings}
           </Button>
         )}
-        <Button variant="secondary" onClick={onClose}>Schließen</Button>
+        <Button variant="secondary" onClick={onClose}>{s.close}</Button>
       </OverlayFooter>
     </Overlay>
   );

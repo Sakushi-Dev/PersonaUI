@@ -24,6 +24,7 @@ import Spinner from '../../components/Spinner/Spinner';
 import ErrorBoundary from '../../components/ErrorBoundary/ErrorBoundary';
 import AccessNotification from './components/AccessNotification/AccessNotification';
 import { resolveFontFamily } from '../../utils/constants';
+import { useLanguage } from '../../hooks/useLanguage';
 
 import {
   PersonaSettingsOverlay,
@@ -50,6 +51,8 @@ import styles from './ChatPage.module.css';
 export default function ChatPage() {
   const { loading } = useSession();
   const { loaded: settingsLoaded } = useSettings();
+  const { t } = useLanguage();
+  const s = t('chat');
 
   console.log('[ChatPage] loading:', loading, 'settingsLoaded:', settingsLoaded);
 
@@ -59,7 +62,7 @@ export default function ChatPage() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
           <Spinner />
           <p style={{ color: '#333', marginTop: '16px', position: 'absolute', top: '55%' }}>
-            Lade...
+            {s.loadingText}
           </p>
         </div>
       </div>
@@ -296,7 +299,6 @@ function ChatPageContent() {
         isStreaming={isStreaming}
         onCancel={cancelStream}
         sessionId={sessionId}
-        placeholder={!sessionId ? 'Bitte erstelle zuerst einen neuen Chat...' : 'Deine Nachricht...'}
       />
 
       {/* ── Overlays ── */}

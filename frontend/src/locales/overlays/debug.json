@@ -1,0 +1,26 @@
+{
+  "en": {
+    "title": "Debug Panel",
+    "toastSection": "Toast Notifications",
+    "infoToast": "Info message",
+    "successToast": "Success!",
+    "warningToast": "Warning!",
+    "errorToast": "Error occurred!",
+    "pageTools": "Page Tools",
+    "sessionInfo": "Session Info",
+    "refresh": "Refresh",
+    "close": "Close"
+  },
+  "de": {
+    "title": "Debug Panel",
+    "toastSection": "Toast Notifications",
+    "infoToast": "Info-Nachricht",
+    "successToast": "Erfolg!",
+    "warningToast": "Warnung!",
+    "errorToast": "Fehler aufgetreten!",
+    "pageTools": "Page Tools",
+    "sessionInfo": "Session Info",
+    "refresh": "Aktualisieren",
+    "close": "Schließen"
+  }
+}

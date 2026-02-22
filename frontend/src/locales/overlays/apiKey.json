@@ -1,0 +1,36 @@
+{
+  "en": {
+    "title": "Anthropic API Key Management",
+    "label": "API Key:",
+    "hint": "Enter your Anthropic API key",
+    "placeholder": "sk-ant-api03-...",
+    "showHide": "Show/hide key",
+    "paste": "Paste (Ctrl+V)",
+    "pasteHint": "Please paste with Ctrl+V",
+    "emptyError": "Please enter an API key",
+    "formatError": "Invalid API key format. Key should start with \"sk-ant-api\"",
+    "testing": "Testing API key...",
+    "valid": "✓ API key is valid! You can save it now.",
+    "connError": "✗ Connection error while testing",
+    "savingKey": "Saving API key...",
+    "saved": "✓ API key saved successfully!",
+    "saveError": "✗ Error while saving"
+  },
+  "de": {
+    "title": "Anthropic API-Key Verwaltung",
+    "label": "API-Key:",
+    "hint": "Geben Sie Ihren Anthropic API-Key ein",
+    "placeholder": "sk-ant-api03-...",
+    "showHide": "Key anzeigen/verbergen",
+    "paste": "Einfügen (Strg+V)",
+    "pasteHint": "Bitte mit Ctrl+V einfügen",
+    "emptyError": "Bitte geben Sie einen API-Key ein",
+    "formatError": "Ungültiges API-Key Format. Key sollte mit \"sk-ant-api\" beginnen",
+    "testing": "Teste API-Key...",
+    "valid": "✓ API-Key ist gültig! Sie können ihn jetzt speichern.",
+    "connError": "✗ Verbindungsfehler beim Testen",
+    "savingKey": "Speichere API-Key...",
+    "saved": "✓ API-Key erfolgreich gespeichert!",
+    "saveError": "✗ Fehler beim Speichern"
+  }
+}

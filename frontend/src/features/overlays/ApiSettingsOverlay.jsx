@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useSettings } from '../../hooks/useSettings';
+import { useLanguage } from '../../hooks/useLanguage';
 import Overlay from '../../components/Overlay/Overlay';
 import OverlayHeader from '../../components/Overlay/OverlayHeader';
 import { ChatIcon } from '../../components/Icons/Icons';
@@ -16,6 +17,9 @@ import styles from './Overlays.module.css';
 
 export default function ApiSettingsOverlay({ open, onClose }) {
   const { get, setMany, reset, defaults, loaded } = useSettings();
+  const { t } = useLanguage();
+  const s = t('apiSettings');
+  const sc = t('common');
   const modelOptions = defaults.apiModelOptions ?? [];
 
   const [model, setModel] = useState('');
@@ -57,16 +61,16 @@ export default function ApiSettingsOverlay({ open, onClose }) {
 
   return (
     <Overlay open={open} onClose={onClose} width="540px">
-      <OverlayHeader title="API / Chat Einstellungen" icon={<ChatIcon size={20} />} onClose={onClose} />
+      <OverlayHeader title={s.title} icon={<ChatIcon size={20} />} onClose={onClose} />
       <OverlayBody>
 
-        {/* ═══ Section: Modell ═══ */}
+        {/* ═══ Section: Model ═══ */}
         <div className={styles.ifaceSection}>
-          <h3 className={styles.ifaceSectionTitle}>Modell</h3>
+          <h3 className={styles.ifaceSectionTitle}>{s.model}</h3>
           <div className={styles.ifaceCard}>
             <div className={styles.ifaceFieldGroup}>
-              <span className={styles.ifaceFieldLabel}>Claude Modell</span>
-              <span className={styles.ifaceFieldHint}>Wähle das KI-Modell für deine Unterhaltungen</span>
+              <span className={styles.ifaceFieldLabel}>{s.claudeModel}</span>
+              <span className={styles.ifaceFieldHint}>{s.claudeModelHint}</span>
               <select
                 className={styles.select}
                 value={model}
@@ -74,7 +78,7 @@ export default function ApiSettingsOverlay({ open, onClose }) {
                 disabled={!loaded || modelOptions.length === 0}
               >
                 {modelOptions.length === 0
-                  ? <option value="">Wird geladen…</option>
+                  ? <option value="">{s.loadingModel}</option>
                   : modelOptions.map((opt) => (
                       <option key={opt.value} value={opt.value}>{opt.label}</option>
                     ))
@@ -84,12 +88,12 @@ export default function ApiSettingsOverlay({ open, onClose }) {
           </div>
         </div>
 
-        {/* ═══ Section: Antwortverhalten ═══ */}
+        {/* ═══ Section: Response Behavior ═══ */}
         <div className={styles.ifaceSection}>
-          <h3 className={styles.ifaceSectionTitle}>Antwortverhalten</h3>
+          <h3 className={styles.ifaceSectionTitle}>{s.responseBehavior}</h3>
           <div className={styles.ifaceCard}>
             <div className={styles.ifaceFieldGroup}>
-              <span className={styles.ifaceFieldHint}>Steuert die Kreativität der Antworten</span>
+              <span className={styles.ifaceFieldHint}>{s.temperatureHint}</span>
               <Slider
                 label="Temperature"
                 value={temperature}
@@ -100,39 +104,39 @@ export default function ApiSettingsOverlay({ open, onClose }) {
                 displayValue={temperature.toFixed(1)}
               />
               <div className={styles.sliderLabels}>
-                <span>Sachlich</span>
-                <span>Kreativ</span>
+                <span>{s.factual}</span>
+                <span>{s.creative}</span>
               </div>
             </div>
 
             <div className={styles.ifaceDivider} />
 
             <div className={styles.ifaceFieldGroup}>
-              <span className={styles.ifaceFieldHint}>Höherer Kontext = mehr Kosten pro Nachricht</span>
+              <span className={styles.ifaceFieldHint}>{s.contextHint}</span>
               <Slider
-                label="Kontext-Limit"
+                label={s.contextLimit}
                 value={contextLimit}
                 onChange={(v) => setContextLimit(Math.round(v))}
                 min={50}
                 max={400}
                 step={5}
-                displayValue={`${contextLimit} Nachrichten`}
+                displayValue={`${contextLimit} ${s.messages}`}
               />
             </div>
           </div>
         </div>
 
-        {/* ═══ Section: Erweitert ═══ */}
+        {/* ═══ Section: Advanced ═══ */}
         <div className={styles.ifaceSection}>
-          <h3 className={styles.ifaceSectionTitle}>Erweitert</h3>
+          <h3 className={styles.ifaceSectionTitle}>{s.advanced}</h3>
           <div className={styles.ifaceCard}>
             <div className={styles.ifaceToggleRow}>
               <div className={styles.ifaceToggleInfo}>
-                <span className={styles.ifaceToggleLabel}>Prompt-Modus</span>
+                <span className={styles.ifaceToggleLabel}>{s.promptMode}</span>
                 <span className={styles.ifaceToggleHint}>
                   {experimentalMode
-                    ? 'Experimenteller Modus mit erweiterten Prompt-Techniken.'
-                    : 'Standard-Modus mit bewährtem Prompt-Aufbau.'}
+                    ? s.experimentalOn
+                    : s.experimentalOff}
                 </span>
               </div>
               <Toggle
@@ -144,13 +148,13 @@ export default function ApiSettingsOverlay({ open, onClose }) {
 
             <div className={styles.ifaceDivider} />
 
-            <FormGroup label="Nachgedanke" hint="Innerer Dialog-System — die KI kann von sich aus Nachrichten senden. Höhere Frequenz = mehr API-Kosten im Hintergrund.">
+            <FormGroup label={s.afterthought} hint={s.afterthoughtHint}>
               <div className={styles.typePills}>
                 {[
-                  { value: 'off',     label: 'Aus' },
-                  { value: 'selten',  label: 'Selten' },
-                  { value: 'mittel',  label: 'Mittel' },
-                  { value: 'hoch',    label: 'Hoch' },
+                  { value: 'off',     label: s.afterthoughtOff },
+                  { value: 'selten',  label: s.afterthoughtRare },
+                  { value: 'mittel',  label: s.afterthoughtMedium },
+                  { value: 'hoch',    label: s.afterthoughtHigh },
                 ].map((opt) => (
                   <button
                     key={opt.value}
@@ -165,9 +169,9 @@ export default function ApiSettingsOverlay({ open, onClose }) {
               {nachgedankeMode !== 'off' && (
                 <div className={styles.typeDescBox}>
                   <span className={styles.typeDescText}>
-                    {nachgedankeMode === 'selten' && 'Jede 3. Nachricht löst einen inneren Dialog aus.'}
-                    {nachgedankeMode === 'mittel' && 'Jede 2. Nachricht löst einen inneren Dialog aus.'}
-                    {nachgedankeMode === 'hoch' && 'Jede Nachricht löst einen inneren Dialog aus.'}
+                    {nachgedankeMode === 'selten' && s.afterthoughtDescRare}
+                    {nachgedankeMode === 'mittel' && s.afterthoughtDescMedium}
+                    {nachgedankeMode === 'hoch' && s.afterthoughtDescHigh}
                   </span>
                 </div>
               )}
@@ -176,14 +180,14 @@ export default function ApiSettingsOverlay({ open, onClose }) {
 
           {/* Token Info */}
           <div className={styles.ifaceInfoNote}>
-            Klicke auf das (i) Symbol bei KI-Nachrichten, um Token-Verbrauch und Kosten einzusehen.
+            {s.tokenInfo}
           </div>
         </div>
 
       </OverlayBody>
       <OverlayFooter>
-        <Button variant="secondary" onClick={handleReset}>Zurücksetzen</Button>
-        <Button variant="primary" onClick={handleSave}>Speichern</Button>
+        <Button variant="secondary" onClick={handleReset}>{sc.reset}</Button>
+        <Button variant="primary" onClick={handleSave}>{sc.save}</Button>
       </OverlayFooter>
     </Overlay>
   );

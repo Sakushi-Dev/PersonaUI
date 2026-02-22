@@ -3,14 +3,18 @@
 
 import Avatar from '../../../../components/Avatar/Avatar';
 import { formatDateTime } from '../../../../utils/formatTime';
+import { useLanguage } from '../../../../hooks/useLanguage';
 import styles from './Sidebar.module.css';
 
 export default function PersonaCard({ persona, isActive, onClick }) {
+  const { language, t } = useLanguage();
+  const s = t('sidebar');
+
   const sessionCount = persona.session_count || 0;
   const subtitle = sessionCount > 0
     ? `${sessionCount} ${sessionCount === 1 ? 'Chat' : 'Chats'}`
-    : 'Kein Chat vorhanden';
-  const lastActivity = formatDateTime(persona.last_updated);
+    : s.noChatAvailable;
+  const lastActivity = formatDateTime(persona.last_updated, language);
 
   return (
     <div
@@ -30,7 +34,7 @@ export default function PersonaCard({ persona, isActive, onClick }) {
       </div>
       <div className={styles.cardInfo}>
         <div className={styles.cardNameRow}>
-          <span className={styles.cardName}>{persona.name || 'Unbenannt'}</span>
+          <span className={styles.cardName}>{persona.name || s.unnamed}</span>
           {lastActivity && <span className={styles.cardTime}>{lastActivity}</span>}
         </div>
         <div className={styles.cardSub}>{subtitle}</div>

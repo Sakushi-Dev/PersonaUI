@@ -1,0 +1,26 @@
+{
+  "en": {
+    "title": "Access Control",
+    "pendingRequests": "Pending Requests",
+    "noPending": "No pending requests",
+    "whitelist": "Whitelist",
+    "blacklist": "Blacklist",
+    "approve": "Approve",
+    "deny": "Deny",
+    "remove": "Remove",
+    "noEntries": "No entries",
+    "close": "Close"
+  },
+  "de": {
+    "title": "Zugangskontrolle",
+    "pendingRequests": "Ausstehende Anfragen",
+    "noPending": "Keine ausstehenden Anfragen",
+    "whitelist": "Whitelist",
+    "blacklist": "Blacklist",
+    "approve": "Genehmigen",
+    "deny": "Ablehnen",
+    "remove": "Entfernen",
+    "noEntries": "Keine Einträge",
+    "close": "Schließen"
+  }
+}

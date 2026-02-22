@@ -1,0 +1,24 @@
+{
+  "en": {
+    "loadingText": "Loading...",
+    "noSessionPlaceholder": "Please create a new chat first...",
+    "messagePlaceholder": "Your message...",
+    "streamingPlaceholder": "Generating response...",
+    "sendTitle": "Send message",
+    "cancelTitle": "Cancel",
+    "emojisTitle": "Emojis",
+    "cortexUpdating": "Cortex is updating…",
+    "loadMore": "Load older messages"
+  },
+  "de": {
+    "loadingText": "Lade...",
+    "noSessionPlaceholder": "Bitte erstelle zuerst einen neuen Chat...",
+    "messagePlaceholder": "Deine Nachricht...",
+    "streamingPlaceholder": "Antwort wird generiert...",
+    "sendTitle": "Nachricht senden",
+    "cancelTitle": "Abbrechen",
+    "emojisTitle": "Emojis",
+    "cortexUpdating": "Cortex aktualisiert sich…",
+    "loadMore": "Ältere Nachrichten laden"
+  }
+}

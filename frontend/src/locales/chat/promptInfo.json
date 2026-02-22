@@ -1,0 +1,36 @@
+{
+  "en": {
+    "title": "Prompt Information",
+    "systemPrompt": "System Prompt",
+    "promptPersona": "Prompt + Persona",
+    "messages": "Messages",
+    "chatHistory": "Chat History",
+    "userMessage": "User Message",
+    "prefill": "Prefill",
+    "totalApi": "Total (Anthropic API)",
+    "input": "Input",
+    "output": "Output",
+    "total": "Total",
+    "token": "Token",
+    "tokens": "Tokens",
+    "costDisclaimer": "⚠️ Approximate calculation – The API does not return cost information. Prices based on {model} (${inputPrice}/M Input, ${outputPrice}/M Output). Please compare with provider invoice.",
+    "unknown": "Unknown"
+  },
+  "de": {
+    "title": "Prompt Informationen",
+    "systemPrompt": "System Prompt",
+    "promptPersona": "Prompt + Persona",
+    "messages": "Messages",
+    "chatHistory": "Chat History",
+    "userMessage": "User Nachricht",
+    "prefill": "Prefill",
+    "totalApi": "Gesamt (Anthropic API)",
+    "input": "Input",
+    "output": "Output",
+    "total": "Total",
+    "token": "Token",
+    "tokens": "Tokens",
+    "costDisclaimer": "⚠️ Ungefähre Berechnung – Die API gibt keine Kosteninformationen zurück. Preise basieren auf {model} (${inputPrice}/M Input, ${outputPrice}/M Output). Bitte mit Anbieter-Rechnung abgleichen.",
+    "unknown": "Unbekannt"
+  }
+}

@@ -12,11 +12,14 @@ import OverlayFooter from '../../components/Overlay/OverlayFooter';
 import Button from '../../components/Button/Button';
 import Spinner from '../../components/Spinner/Spinner';
 import { getCortexFiles } from '../../services/cortexApi';
+import { useLanguage } from '../../hooks/useLanguage';
 import styles from './Overlays.module.css';
 
 export default function DebugOverlay({ open, onClose }) {
   const { sessionId, personaId, chatHistory, totalMessageCount } = useSession();
   const toast = useToast();
+  const { t } = useLanguage();
+  const s = t('debug');
 
   const [sessionInfo, setSessionInfo] = useState(null);
   const [loadingInfo, setLoadingInfo] = useState(false);
@@ -36,22 +39,22 @@ export default function DebugOverlay({ open, onClose }) {
 
   return (
     <Overlay open={open} onClose={onClose} width="520px">
-      <OverlayHeader title="Debug Panel" icon={<WrenchIcon size={20} />} onClose={onClose} />
+      <OverlayHeader title={s.title} icon={<WrenchIcon size={20} />} onClose={onClose} />
       <OverlayBody>
         {/* Toast Notifications */}
         <section className={styles.section}>
-          <h4 className={styles.sectionTitle}>Toast Notifications</h4>
+          <h4 className={styles.sectionTitle}>{s.toastSection}</h4>
           <div className={styles.buttonGrid}>
-            <Button size="sm" variant="secondary" onClick={() => toast.info('Info-Nachricht')}>
+            <Button size="sm" variant="secondary" onClick={() => toast.info(s.infoToast)}>
               Info
             </Button>
-            <Button size="sm" variant="secondary" onClick={() => toast.success('Erfolg!')}>
+            <Button size="sm" variant="secondary" onClick={() => toast.success(s.successToast)}>
               Success
             </Button>
-            <Button size="sm" variant="secondary" onClick={() => toast.warning('Warnung!')}>
+            <Button size="sm" variant="secondary" onClick={() => toast.warning(s.warningToast)}>
               Warning
             </Button>
-            <Button size="sm" variant="secondary" onClick={() => toast.error('Fehler aufgetreten!')}>
+            <Button size="sm" variant="secondary" onClick={() => toast.error(s.errorToast)}>
               Error
             </Button>
             <Button size="sm" variant="secondary" onClick={() => toast.info('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.')}>
@@ -62,7 +65,7 @@ export default function DebugOverlay({ open, onClose }) {
 
         {/* Page Tools */}
         <section className={styles.section}>
-          <h4 className={styles.sectionTitle}>Page Tools</h4>
+          <h4 className={styles.sectionTitle}>{s.pageTools}</h4>
           <div className={styles.buttonGrid}>
             <Button size="sm" variant="secondary" onClick={() => window.location.reload()}>
               🔄 Page Reload
@@ -73,8 +76,8 @@ export default function DebugOverlay({ open, onClose }) {
         {/* Session Info */}
         <section className={styles.section}>
           <h4 className={styles.sectionTitle}>
-            Session Info
-            <button className={styles.iconBtn} onClick={refreshInfo} title="Aktualisieren">🔄</button>
+            {s.sessionInfo}
+            <button className={styles.iconBtn} onClick={refreshInfo} title={s.refresh}>🔄</button>
           </h4>
 
           {loadingInfo ? (
@@ -124,7 +127,7 @@ export default function DebugOverlay({ open, onClose }) {
         </section>
       </OverlayBody>
       <OverlayFooter>
-        <Button variant="secondary" onClick={onClose}>Schließen</Button>
+        <Button variant="secondary" onClick={onClose}>{s.close}</Button>
       </OverlayFooter>
     </Overlay>
   );

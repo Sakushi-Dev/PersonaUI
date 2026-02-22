@@ -2,6 +2,7 @@
 // Floating popup above the chat input showing matching slash commands.
 
 import { useEffect, useRef } from 'react';
+import { useLanguage } from '../../../../hooks/useLanguage';
 import styles from './SlashCommandMenu.module.css';
 
 export default function SlashCommandMenu({
@@ -12,6 +13,8 @@ export default function SlashCommandMenu({
   visible,        // boolean
 }) {
   const listRef = useRef(null);
+  const { t } = useLanguage();
+  const sc = t('slashCommands');
 
   // Keep selected item scrolled into view
   useEffect(() => {
@@ -38,7 +41,7 @@ export default function SlashCommandMenu({
             onMouseEnter={() => onHover?.(i)}
           >
             <span className={styles.commandName}>/{cmd.name}</span>
-            <span className={styles.commandDesc}>{cmd.description}</span>
+            <span className={styles.commandDesc}>{sc[cmd.name] || cmd.description}</span>
           </li>
         ))}
       </ul>

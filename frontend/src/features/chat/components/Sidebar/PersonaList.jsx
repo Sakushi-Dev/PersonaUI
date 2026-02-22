@@ -4,9 +4,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { getPersonaSummary } from '../../../../services/sessionApi';
 import PersonaCard from './PersonaCard';
+import { useLanguage } from '../../../../hooks/useLanguage';
 import styles from './Sidebar.module.css';
 
 export default function PersonaList({ personas, activePersonaId, onSelectPersona }) {
+  const { t } = useLanguage();
+  const s = t('sidebar');
   const [summary, setSummary] = useState({});
 
   // Load persona summary (session counts + last_updated)
@@ -47,7 +50,7 @@ export default function PersonaList({ personas, activePersonaId, onSelectPersona
   }, [personas, summary, activePersonaId]);
 
   if (!enrichedPersonas.length) {
-    return <div className={styles.empty}>Keine Personas vorhanden</div>;
+    return <div className={styles.empty}>{s.noPersonas}</div>;
   }
 
   return (

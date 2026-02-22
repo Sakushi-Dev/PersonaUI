@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { useSession } from '../../../../hooks/useSession';
 import PersonaList from './PersonaList';
 import SessionList from './SessionList';
+import { useLanguage } from '../../../../hooks/useLanguage';
 import styles from './Sidebar.module.css';
 
 export default function Sidebar({
@@ -17,6 +18,8 @@ export default function Sidebar({
   onNewChat,
 }) {
   const { personas, personaId: activePersonaId } = useSession();
+  const { t } = useLanguage();
+  const s = t('sidebar');
 
   const selectedPersona = personas.find((p) => p.id === selectedPersonaId);
 
@@ -27,14 +30,14 @@ export default function Sidebar({
         {/* Header: back btn (sessions only) + title + close btn */}
         <div className={styles.header}>
           {view === 'sessions' && (
-            <button className={styles.backBtn} onClick={onShowPersonas} title="Zurück zur Persona-Übersicht">
+            <button className={styles.backBtn} onClick={onShowPersonas} title={s.backToPersonas}>
               <span>◀</span>
             </button>
           )}
           <span className={styles.title}>
-            {view === 'sessions' ? (selectedPersona?.name || 'Sessions') : 'Chats'}
+            {view === 'sessions' ? (selectedPersona?.name || s.sessions) : s.chats}
           </span>
-          <button className={styles.closeBtn} onClick={onClose} title="Sidebar ausblenden">
+          <button className={styles.closeBtn} onClick={onClose} title={s.hideSidebar}>
             <span>◀</span>
           </button>
         </div>

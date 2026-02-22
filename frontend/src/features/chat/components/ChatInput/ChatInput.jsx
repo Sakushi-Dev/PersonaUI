@@ -6,8 +6,12 @@ import styles from './ChatInput.module.css';
 import SlashCommandMenu from './SlashCommandMenu';
 import EmojiPicker from './EmojiPicker';
 import { getCommands, findCommand } from '../../slashCommands';
+import { useLanguage } from '../../../../hooks/useLanguage';
 
 export default function ChatInput({ onSend, disabled, isStreaming, onCancel, placeholder, sessionId }) {
+  const { language, t } = useLanguage();
+  const s = t('chat');
+
   const [text, setText] = useState('');
   const textareaRef = useRef(null);
 
@@ -71,7 +75,7 @@ export default function ChatInput({ onSend, disabled, isStreaming, onCancel, pla
     // args = everything after "/commandName "
     const argsStr = text.slice(1 + cmd.name.length).trim();
     console.log(`[ChatInput] executing /${cmd.name}`, argsStr ? `args: ${argsStr}` : '(no args)');
-    cmd.execute({ args: argsStr, sessionId });
+    cmd.execute({ args: argsStr, sessionId, language });
     setText('');
     setCmdMenuOpen(false);
     if (textareaRef.current) textareaRef.current.style.height = '42px';
@@ -199,7 +203,7 @@ export default function ChatInput({ onSend, disabled, isStreaming, onCancel, pla
           <button
             className={`${styles.emojiBtn} ${emojiPickerOpen ? styles.emojiBtnActive : ''}`}
             onClick={toggleEmojiPicker}
-            title="Emojis"
+            title={s.emojisTitle}
             type="button"
             data-emoji-toggle
             tabIndex={-1}
@@ -217,7 +221,7 @@ export default function ChatInput({ onSend, disabled, isStreaming, onCancel, pla
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={isStreaming ? 'Antwort wird generiert...' : (placeholder || 'Deine Nachricht...')}
+            placeholder={isStreaming ? s.streamingPlaceholder : disabled ? s.noSessionPlaceholder : (placeholder || s.messagePlaceholder)}
             rows={1}
             disabled={disabled}
           />
@@ -231,7 +235,7 @@ export default function ChatInput({ onSend, disabled, isStreaming, onCancel, pla
           className={`${styles.sendBtn} ${isStreaming ? styles.cancel : ''}`}
           onClick={handleClick}
           disabled={disabled}
-          title={isStreaming ? 'Abbrechen' : 'Nachricht senden'}
+          title={isStreaming ? s.cancelTitle : s.sendTitle}
           type="button"
         >
           {isStreaming ? (

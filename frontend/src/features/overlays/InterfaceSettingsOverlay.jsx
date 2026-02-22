@@ -1,9 +1,10 @@
 // ── InterfaceSettingsOverlay ──
-// Structured into: Preview → Darstellung → Farben → Schrift
+// Structured into: Preview → Appearance → Colors → Font
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSettings } from '../../hooks/useSettings';
 import { useTheme } from '../../hooks/useTheme';
+import { useLanguage } from '../../hooks/useLanguage';
 import { resolveFontFamily, adjustedFontSize, hueToColors, DEFAULT_HUE, NONVERBAL_PRESETS } from '../../utils/constants';
 import Overlay from '../../components/Overlay/Overlay';
 import OverlayHeader from '../../components/Overlay/OverlayHeader';
@@ -16,18 +17,21 @@ import Button from '../../components/Button/Button';
 import InterfacePreview from '../../components/InterfacePreview/InterfacePreview';
 import styles from './Overlays.module.css';
 
-// Font options with icons for visual clarity
-const FONT_OPTIONS = [
-  { value: 'ubuntu',  label: 'Ubuntu',          desc: 'Standard', icon: 'Aa' },
-  { value: 'comic',   label: 'Comic Sans',      desc: 'Verspielt', icon: 'Aa' },
-  { value: 'times',   label: 'Times New Roman',  desc: 'Klassisch', icon: 'Aa' },
-  { value: 'courier', label: 'Courier New',      desc: 'Monospace', icon: 'Aa' },
-  { value: 'pixel',   label: 'Pixel',            desc: 'Retro', icon: 'Px' },
-  { value: 'console', label: 'Console',          desc: 'Terminal', icon: '>' },
+// Font option keys – desc is resolved via i18n
+const FONT_OPTION_KEYS = [
+  { value: 'ubuntu',  label: 'Ubuntu',          descKey: 'fontDefault',   icon: 'Aa' },
+  { value: 'comic',   label: 'Comic Sans',      descKey: 'fontPlayful',   icon: 'Aa' },
+  { value: 'times',   label: 'Times New Roman',  descKey: 'fontClassic',   icon: 'Aa' },
+  { value: 'courier', label: 'Courier New',      descKey: 'fontMonospace', icon: 'Aa' },
+  { value: 'pixel',   label: 'Pixel',            descKey: 'fontRetro',     icon: 'Px' },
+  { value: 'console', label: 'Console',          descKey: 'fontTerminal',  icon: '>' },
 ];
 
 export default function InterfaceSettingsOverlay({ open, onClose }) {
   const { get, setMany } = useSettings();
+  const { t } = useLanguage();
+  const s = t('interfaceSettings');
+  const sc = t('common');
   const {
     setIsDark,
     updateColors,
@@ -45,6 +49,12 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
   const [nonverbalColor, setNonverbalColor] = useState('#e4ba00');
   const [fontSize, setFontSize] = useState(18);
   const [fontFamily, setFontFamily] = useState('ubuntu');
+
+  // Resolve font option descriptions via i18n
+  const fontOptions = useMemo(() =>
+    FONT_OPTION_KEYS.map(f => ({ ...f, desc: s[f.descKey] || f.descKey })),
+    [s]
+  );
 
   // Derive colors from hue
   const derivedColors = hueToColors(colorHue, darkMode);
@@ -115,7 +125,7 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
 
   // ── Reset ──
   const handleReset = useCallback(() => {
-    if (!window.confirm('Möchtest du die Interface-Einstellungen auf die Standardwerte zurücksetzen?')) {
+    if (!window.confirm(s.confirmReset)) {
       return;
     }
 
@@ -166,7 +176,7 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
 
   return (
     <Overlay open={open} onClose={handleClose} width="540px">
-      <OverlayHeader title="Interface-Einstellungen" icon={<MonitorIcon size={20} />} onClose={handleClose} />
+      <OverlayHeader title={s.title} icon={<MonitorIcon size={20} />} onClose={handleClose} />
       <OverlayBody>
 
         {/* ═══ Sticky Live Preview ═══ */}
@@ -183,17 +193,17 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
           />
         </div>
 
-        {/* ═══ Section: Darstellung ═══ */}
+        {/* ═══ Section: Appearance ═══ */}
         <div className={styles.ifaceSection}>
           <h3 className={styles.ifaceSectionTitle}>
-            Darstellung
+            {s.appearance}
           </h3>
           <div className={styles.ifaceCard}>
 
             {/* Language Selector */}
             <div className={styles.ifaceToggleRow}>
               <div className={styles.ifaceToggleInfo}>
-                <span className={styles.ifaceToggleLabel}>Sprache / Language</span>
+                <span className={styles.ifaceToggleLabel}>{s.language}</span>
                 <span className={styles.ifaceToggleHint}>
                   {language === 'de' ? 'Deutsch' : 'English'}
                 </span>
@@ -220,9 +230,9 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
 
             <div className={styles.ifaceToggleRow}>
               <div className={styles.ifaceToggleInfo}>
-                <span className={styles.ifaceToggleLabel}>Design-Modus</span>
+                <span className={styles.ifaceToggleLabel}>{s.designMode}</span>
                 <span className={styles.ifaceToggleHint}>
-                  {darkMode ? 'Dunkles Farbschema' : 'Helles Farbschema'}
+                  {darkMode ? s.darkScheme : s.lightScheme}
                 </span>
               </div>
               <Toggle
@@ -236,8 +246,8 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
 
             <div className={styles.ifaceToggleRow}>
               <div className={styles.ifaceToggleInfo}>
-                <span className={styles.ifaceToggleLabel}>Dynamischer Hintergrund</span>
-                <span className={styles.ifaceToggleHint}>Animierte Farbverläufe im Chat</span>
+                <span className={styles.ifaceToggleLabel}>{s.dynamicBg}</span>
+                <span className={styles.ifaceToggleHint}>{s.dynamicBgHint}</span>
               </div>
               <Toggle
                 checked={dynamicBg}
@@ -250,8 +260,8 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
 
             <div className={styles.ifaceToggleRow}>
               <div className={styles.ifaceToggleInfo}>
-                <span className={styles.ifaceToggleLabel}>Benachrichtigungston</span>
-                <span className={styles.ifaceToggleHint}>Sound bei neuen Nachrichten</span>
+                <span className={styles.ifaceToggleLabel}>{s.notificationSound}</span>
+                <span className={styles.ifaceToggleHint}>{s.notificationSoundHint}</span>
               </div>
               <Toggle
                 checked={notificationSound}
@@ -262,16 +272,16 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
           </div>
         </div>
 
-        {/* ═══ Section: Farben ═══ */}
+        {/* ═══ Section: Colors ═══ */}
         <div className={styles.ifaceSection}>
           <h3 className={styles.ifaceSectionTitle}>
-            Farben
+            {s.colors}
           </h3>
           <div className={styles.ifaceCard}>
             {/* Hue Slider */}
             <div className={styles.ifaceFieldGroup}>
               <div className={styles.hueLabelRow}>
-                <span className={styles.ifaceFieldLabel}>Farbschema</span>
+                <span className={styles.ifaceFieldLabel}>{s.colorScheme}</span>
                 <span className={styles.hueValue}>{colorHue}°</span>
               </div>
               <input
@@ -286,15 +296,15 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
               <div className={styles.huePreview}>
                 <div className={styles.hueSwatchLabeled}>
                   <span className={styles.hueSwatch} style={{ background: derivedColors.bg }} />
-                  <span className={styles.hueSwatchLabel}>Basis</span>
+                  <span className={styles.hueSwatchLabel}>{s.base}</span>
                 </div>
                 <div className={styles.hueSwatchLabeled}>
                   <span className={styles.hueSwatch} style={{ background: derivedColors.g1 }} />
-                  <span className={styles.hueSwatchLabel}>Verlauf 1</span>
+                  <span className={styles.hueSwatchLabel}>{s.gradient1}</span>
                 </div>
                 <div className={styles.hueSwatchLabeled}>
                   <span className={styles.hueSwatch} style={{ background: derivedColors.c2 }} />
-                  <span className={styles.hueSwatchLabel}>Verlauf 2</span>
+                  <span className={styles.hueSwatchLabel}>{s.gradient2}</span>
                 </div>
               </div>
             </div>
@@ -303,8 +313,8 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
 
             {/* Nonverbal Color Presets */}
             <div className={styles.ifaceFieldGroup}>
-              <span className={styles.ifaceFieldLabel}>Nonverbale Text-Farbe</span>
-              <span className={styles.ifaceFieldHint}>Für Text zwischen *Sternchen* – z.B. Aktionen, Emotionen</span>
+              <span className={styles.ifaceFieldLabel}>{s.nonverbalColor}</span>
+              <span className={styles.ifaceFieldHint}>{s.nonverbalHint}</span>
               <div className={styles.colorPresets}>
                 {NONVERBAL_PRESETS.map((preset) => (
                   <button
@@ -323,15 +333,15 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
           </div>
         </div>
 
-        {/* ═══ Section: Schrift ═══ */}
+        {/* ═══ Section: Font ═══ */}
         <div className={styles.ifaceSection}>
           <h3 className={styles.ifaceSectionTitle}>
-            Schrift
+            {s.font}
           </h3>
           <div className={styles.ifaceCard}>
             {/* Font Size */}
             <Slider
-              label="Schriftgröße"
+              label={s.fontSize}
               value={fontSize}
               onChange={(v) => setFontSize(Math.round(v))}
               min={14}
@@ -344,9 +354,9 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
 
             {/* Font Family Cards */}
             <div className={styles.ifaceFieldGroup}>
-              <span className={styles.ifaceFieldLabel}>Schriftart</span>
+              <span className={styles.ifaceFieldLabel}>{s.fontFamily}</span>
               <div className={styles.fontCardGrid}>
-                {FONT_OPTIONS.map((f) => (
+                {fontOptions.map((f) => (
                   <button
                     key={f.value}
                     type="button"
@@ -370,8 +380,8 @@ export default function InterfaceSettingsOverlay({ open, onClose }) {
 
       </OverlayBody>
       <OverlayFooter>
-        <Button variant="secondary" onClick={handleReset}>Zurücksetzen</Button>
-        <Button variant="primary" onClick={handleSave}>Speichern</Button>
+        <Button variant="secondary" onClick={handleReset}>{sc.reset}</Button>
+        <Button variant="primary" onClick={handleSave}>{sc.save}</Button>
       </OverlayFooter>
     </Overlay>
   );

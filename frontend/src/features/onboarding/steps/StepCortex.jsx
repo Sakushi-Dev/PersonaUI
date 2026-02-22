@@ -1,11 +1,12 @@
 // ── Step: Cortex (4/6) ──
 
-import { t } from '../useTranslation';
+import { useLanguage } from '../../../hooks/useLanguage';
 import styles from './Steps.module.css';
 
-export default function StepCortex({ data, onChange, onNext, onBack, language }) {
-  const s = t(language, 'cortex');
-  const c = t(language, 'common');
+export default function StepCortex({ data, onChange, onNext, onBack }) {
+  const { t } = useLanguage();
+  const s = t('onboardingCortex');
+  const c = t('onboardingCommon');
 
   const FREQUENCY_OPTIONS = [
     { value: 'frequent', label: s.freqFrequent,  percent: 50 },

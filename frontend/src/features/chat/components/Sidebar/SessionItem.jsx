@@ -2,11 +2,14 @@
 // Matches legacy session-item: full datetime, optional created date, × delete
 
 import { formatFullDateTime } from '../../../../utils/formatTime';
+import { useLanguage } from '../../../../hooks/useLanguage';
 import styles from './Sidebar.module.css';
 
 export default function SessionItem({ session, isActive, onSelect, onDelete }) {
-  const dateStr = formatFullDateTime(session.updated_at || session.created_at);
-  const createdStr = formatFullDateTime(session.created_at);
+  const { language, t } = useLanguage();
+  const s = t('sidebar');
+  const dateStr = formatFullDateTime(session.updated_at || session.created_at, language);
+  const createdStr = formatFullDateTime(session.created_at, language);
   const showCreated = createdStr && createdStr !== dateStr;
 
   return (
@@ -19,7 +22,7 @@ export default function SessionItem({ session, isActive, onSelect, onDelete }) {
       <div className={styles.sessionInfo}>
         <div className={styles.sessionDatePrimary}>{dateStr}</div>
         {showCreated && (
-          <div className={styles.sessionDateCreated}>Erstellt: {createdStr}</div>
+          <div className={styles.sessionDateCreated}>{s.created} {createdStr}</div>
         )}
       </div>
       <button
@@ -28,7 +31,7 @@ export default function SessionItem({ session, isActive, onSelect, onDelete }) {
           e.stopPropagation();
           onDelete();
         }}
-        title="Chat löschen"
+        title={s.deleteChat}
       >
         ×
       </button>

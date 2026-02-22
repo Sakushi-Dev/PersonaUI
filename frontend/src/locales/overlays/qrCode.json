@@ -1,0 +1,22 @@
+{
+  "en": {
+    "title": "Network Access",
+    "addresses": "Network Addresses:",
+    "wifiHint": "Your phone must be connected to the same WiFi network.",
+    "waitingDevice": "Waiting for device…",
+    "noPublicAccess": "No Public Access",
+    "localMode": "The server is currently running in <strong>local mode</strong>. To access it from other devices on the network, enable public mode in the server settings.",
+    "openSettings": "Open Server Settings",
+    "close": "Close"
+  },
+  "de": {
+    "title": "Netzwerk-Zugriff",
+    "addresses": "Netzwerk-Adressen:",
+    "wifiHint": "Dein Handy muss mit dem selben WLAN-Netzwerk verbunden sein.",
+    "waitingDevice": "Warte auf Gerät…",
+    "noPublicAccess": "Kein öffentlicher Zugang",
+    "localMode": "Der Server läuft aktuell im <strong>lokalen Modus</strong>. Um von anderen Geräten im Netzwerk darauf zuzugreifen, aktiviere den öffentlichen Modus in den Server-Einstellungen.",
+    "openSettings": "Server-Einstellungen öffnen",
+    "close": "Schließen"
+  }
+}

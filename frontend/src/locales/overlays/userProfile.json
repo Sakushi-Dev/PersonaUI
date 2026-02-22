@@ -1,0 +1,42 @@
+{
+  "en": {
+    "title": "My Profile",
+    "profile": "Profile",
+    "displayNameHint": "Your display name in chat",
+    "namePlaceholder": "Your Name",
+    "removeAvatar": "Remove Avatar",
+    "personal": "Personal",
+    "gender": "Gender",
+    "male": "Male",
+    "female": "Female",
+    "diverse": "Diverse",
+    "interestedIn": "Interested In",
+    "multiSelect": "Multiple selection possible",
+    "aboutMe": "About Me",
+    "aboutDesc": "Description",
+    "aboutHint": "Interests, quirks, context for the AI",
+    "aboutPlaceholder": "Write something about yourself...",
+    "personaLanguage": "Persona Language",
+    "personaLanguageHint": "In which language should your personas respond?"
+  },
+  "de": {
+    "title": "Mein Profil",
+    "profile": "Profil",
+    "displayNameHint": "Dein Anzeigename im Chat",
+    "namePlaceholder": "Dein Name",
+    "removeAvatar": "Avatar entfernen",
+    "personal": "Persönliches",
+    "gender": "Geschlecht",
+    "male": "Männlich",
+    "female": "Weiblich",
+    "diverse": "Divers",
+    "interestedIn": "Interessiert an",
+    "multiSelect": "Mehrfachauswahl möglich",
+    "aboutMe": "Über mich",
+    "aboutDesc": "Beschreibung",
+    "aboutHint": "Interessen, Besonderheiten, Kontext für die KI",
+    "aboutPlaceholder": "Schreibe etwas über dich...",
+    "personaLanguage": "Persona-Sprache",
+    "personaLanguageHint": "In welcher Sprache sollen deine Personas antworten?"
+  }
+}

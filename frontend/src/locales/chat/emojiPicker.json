@@ -1,0 +1,30 @@
+{
+  "en": {
+    "searchPlaceholder": "Search emoji...",
+    "favorites": "Favorites",
+    "searchResults": "Search Results",
+    "noEmojisUsed": "No emojis used yet",
+    "noEmojisFound": "No emojis found",
+    "catSmileys": "Smileys",
+    "catGestures": "Gestures",
+    "catHearts": "Hearts",
+    "catAnimals": "Animals",
+    "catFood": "Food",
+    "catObjects": "Objects",
+    "catSymbols": "Symbols"
+  },
+  "de": {
+    "searchPlaceholder": "Emoji suchen...",
+    "favorites": "Favoriten",
+    "searchResults": "Suchergebnisse",
+    "noEmojisUsed": "Noch keine Emojis verwendet",
+    "noEmojisFound": "Keine Emojis gefunden",
+    "catSmileys": "Smileys",
+    "catGestures": "Gesten",
+    "catHearts": "Herzen",
+    "catAnimals": "Tiere",
+    "catFood": "Essen",
+    "catObjects": "Objekte",
+    "catSymbols": "Symbole"
+  }
+}
