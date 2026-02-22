@@ -15,7 +15,7 @@ import {
   SoundOnIcon, SoundOffIcon, QRCodeIcon,
   UserIcon, KeyIcon, CortexIcon, PersonaIcon, GearIcon,
   MonitorIcon, ChatIcon, ServerIcon, ShieldIcon,
-  GitHubIcon, ExternalLinkIcon, HeartIcon, BugIcon,
+  GitHubIcon, ExternalLinkIcon, HeartIcon, BugIcon, PatchNotesIcon,
 } from '../../../../components/Icons/Icons';
 
 export default function Header({
@@ -30,6 +30,7 @@ export default function Header({
   onOpenQRCode,
   onOpenAccessControl,
   onOpenSupport,
+  onOpenPatchNotes,
 }) {
   const { character, sessionId } = useSession();
   const { get, set } = useSettings();
@@ -456,6 +457,10 @@ export default function Header({
               <button className={styles.submenuBtn} onClick={() => { setCommunityOpen(false); onOpenSupport?.(); }}>
                 <HeartIcon />
                 <span>{h.supportSubmenu}</span>
+              </button>
+              <button className={styles.submenuBtn} onClick={() => { setCommunityOpen(false); onOpenPatchNotes?.(); }}>
+                <PatchNotesIcon />
+                <span>{h.patchNotesSubmenu}</span>
               </button>
             </div>
           </div>

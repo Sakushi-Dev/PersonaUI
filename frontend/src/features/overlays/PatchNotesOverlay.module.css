@@ -1,0 +1,201 @@
+/* ── PatchNotesOverlay Styles ── */
+
+.patchNotesContent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Version Selector Row ── */
+.versionRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.versionSelectWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.versionLabel {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--overlay-text-secondary, #666);
+  white-space: nowrap;
+}
+
+.selectContainer {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.versionSelect {
+  appearance: none;
+  -webkit-appearance: none;
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 5px 32px 5px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--nonverbal-color, #e4ba00);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.versionSelect:hover {
+  border-color: var(--nonverbal-color, #e4ba00);
+}
+
+.versionSelect:focus {
+  border-color: var(--nonverbal-color, #e4ba00);
+  box-shadow: 0 0 0 2px rgba(228, 186, 0, 0.15);
+}
+
+:global(body.dark-mode) .versionSelect {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--nonverbal-color, #e4ba00);
+}
+
+:global(body.dark-mode) .versionSelect:hover,
+:global(body.dark-mode) .versionSelect:focus {
+  border-color: var(--nonverbal-color, #e4ba00);
+}
+
+.selectChevron {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--overlay-text-secondary, #888);
+  display: flex;
+  align-items: center;
+}
+
+.versionDate {
+  font-size: 12px;
+  color: var(--overlay-text-secondary, #888);
+  white-space: nowrap;
+}
+
+.latestBadge {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(46, 160, 67, 0.12);
+  color: #2ea043;
+  white-space: nowrap;
+}
+
+:global(body.dark-mode) .latestBadge {
+  background: rgba(46, 160, 67, 0.18);
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--overlay-text-secondary, #666);
+  margin: 0 0 4px;
+  line-height: 1.55;
+}
+
+/* ── Category Section ── */
+.categorySection {
+  margin-bottom: 6px;
+}
+
+.categoryHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+:global(body.dark-mode) .categoryHeader {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.categoryIcon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.categoryTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--overlay-heading, #222);
+  margin: 0;
+}
+
+/* ── Notes List ── */
+.notesList {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.noteItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+}
+
+.noteItem:hover {
+  background: rgba(0, 0, 0, 0.025);
+}
+
+:global(body.dark-mode) .noteItem:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.noteBullet {
+  color: var(--nonverbal-color, #e4ba00);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.55;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.noteText {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--overlay-text, #444);
+  word-break: break-word;
+}
+
+/* ── Info Box ── */
+.infoBox {
+  margin-top: 4px;
+  padding: 10px 14px;
+  background: rgba(88, 166, 255, 0.06);
+  border: 1px solid rgba(88, 166, 255, 0.15);
+  border-radius: var(--border-radius-md, 10px);
+}
+
+:global(body.dark-mode) .infoBox {
+  background: rgba(88, 166, 255, 0.08);
+  border-color: rgba(88, 166, 255, 0.2);
+}
+
+.infoText {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--overlay-text-secondary, #666);
+  margin: 0;
+}

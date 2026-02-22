@@ -1,0 +1,14 @@
+{
+  "en": {
+    "title": "Patch Notes",
+    "close": "Close",
+    "versionLabel": "Version",
+    "latestBadge": "Latest"
+  },
+  "de": {
+    "title": "Patch Notes",
+    "close": "Schließen",
+    "versionLabel": "Version",
+    "latestBadge": "Aktuell"
+  }
+}

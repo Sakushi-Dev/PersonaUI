@@ -19,7 +19,8 @@
     "accessSubmenu": "Access",
     "githubSubmenu": "GitHub",
     "issuesSubmenu": "Issues",
-    "supportSubmenu": "Support"
+    "supportSubmenu": "Support",
+    "patchNotesSubmenu": "Patch Notes"
   },
   "de": {
     "soundToggle": "Benachrichtigungston an/aus",
@@ -41,6 +42,7 @@
     "accessSubmenu": "Zugang",
     "githubSubmenu": "GitHub",
     "issuesSubmenu": "Issues",
-    "supportSubmenu": "Support"
+    "supportSubmenu": "Support",
+    "patchNotesSubmenu": "Patch Notes"
   }
 }

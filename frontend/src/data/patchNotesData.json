@@ -1,0 +1,131 @@
+{
+  "versions": [
+    {
+      "id": "0.2.0_alpha",
+      "label": "v0.2.0 Alpha",
+      "date": "2026-02-22",
+      "en": {
+        "subtitle": "Here's what's new in this version. We've been working hard to bring you a better experience!",
+        "infoNote": "This is an Alpha release — some features may still change. If you find issues, let us know via GitHub Issues!",
+        "categories": {
+          "newFeatures": {
+            "title": "New Features",
+            "items": [
+              "Complete React Frontend — The entire UI has been rebuilt from scratch with React + Vite for a faster, smoother experience.",
+              "Cortex System — A new intelligent system that evolves your persona over time by analyzing conversations and storing insights automatically.",
+              "Slash Commands — Type '/' in the chat to access quick commands like /cortex, /reset, and more.",
+              "Emoji Picker — Express yourself with an integrated emoji picker, now with smart usage tracking.",
+              "Custom Persona Specs — Create and manage custom specification templates for your personas with per-field autofill.",
+              "Auto First Message — Personas can now automatically send a greeting when starting a new chat session.",
+              "Afterthought Mode — The AI can now reflect between messages and bring up relevant thoughts on its own.",
+              "Multi-Language Support — Full English and German localization across the entire app.",
+              "QR Code Sharing — Share your session via QR code for easy access on other devices.",
+              "Access Control — Manage who can access your PersonaUI instance with approval-based access requests."
+            ]
+          },
+          "improvements": {
+            "title": "Improvements",
+            "items": [
+              "Redesigned Onboarding — A fresh, step-by-step onboarding experience with persona language selection.",
+              "Better Theme Customization — Color presets, hue slider, dynamic font sizing, and improved dark/light mode support.",
+              "Context Bar — See at a glance how many messages are in your current context window.",
+              "Sound Notifications — Toggle notification sounds with adjustable volume control in the header.",
+              "Message Management — Edit, delete, regenerate, or resend your messages directly in the chat.",
+              "Improved Overlays — All overlay windows now have icons, better backdrop handling, and smoother interactions.",
+              "Smarter Prompt Engine — Enhanced prompt building with better formatting and critical memory handling."
+            ]
+          },
+          "bugFixes": {
+            "title": "Bug Fixes",
+            "items": [
+              "Fixed message ordering to be consistent across sessions.",
+              "Fixed theme settings not applying correctly on first load.",
+              "Fixed font family resolution issues in chat bubbles.",
+              "Improved text formatting to handle consecutive line breaks properly."
+            ]
+          },
+          "ui": {
+            "title": "UI & Design",
+            "items": [
+              "New static and dynamic background options for the chat page.",
+              "Refined chat bubbles with improved styling and better readability.",
+              "Updated profile and persona settings overlays with cleaner layout.",
+              "Consistent icon usage throughout all menus and overlays."
+            ]
+          },
+          "technical": {
+            "title": "Under the Hood",
+            "items": [
+              "Migrated from legacy Jinja templates to React Single Page Application.",
+              "Automated Node.js installation and frontend build process.",
+              "CORS support for flexible API communication.",
+              "Improved database module structure and query handling.",
+              "Comprehensive test suite for Cortex services and prompt engine."
+            ]
+          }
+        }
+      },
+      "de": {
+        "subtitle": "Das ist neu in dieser Version. Wir haben hart daran gearbeitet, euch ein besseres Erlebnis zu bieten!",
+        "infoNote": "Dies ist ein Alpha-Release — einige Features können sich noch ändern. Wenn ihr Fehler findet, meldet sie uns über GitHub Issues!",
+        "categories": {
+          "newFeatures": {
+            "title": "Neue Features",
+            "items": [
+              "Komplett neues React Frontend — Die gesamte Oberfläche wurde mit React + Vite von Grund auf neu aufgebaut, für eine schnellere und flüssigere Nutzung.",
+              "Cortex System — Ein neues intelligentes System, das eure Persona über die Zeit weiterentwickelt, indem es Gespräche analysiert und Erkenntnisse automatisch speichert.",
+              "Slash Commands — Tippt '/' im Chat, um schnelle Befehle wie /cortex, /reset und mehr zu nutzen.",
+              "Emoji Picker — Drückt euch mit einem integrierten Emoji-Picker aus, jetzt mit intelligenter Nutzungsverfolgung.",
+              "Eigene Persona Specs — Erstellt und verwaltet eigene Spezifikations-Vorlagen für eure Personas mit automatischer Feld-Ausfüllung.",
+              "Auto-Erste-Nachricht — Personas können jetzt automatisch eine Begrüßung senden, wenn eine neue Chat-Sitzung gestartet wird.",
+              "Nachgedanke-Modus — Die KI kann jetzt zwischen Nachrichten reflektieren und von selbst relevante Gedanken einbringen.",
+              "Mehrsprachigkeit — Vollständige Englische und Deutsche Lokalisierung in der gesamten App.",
+              "QR-Code Teilen — Teilt eure Sitzung per QR-Code für einfachen Zugriff auf anderen Geräten.",
+              "Zugriffskontrolle — Verwaltet, wer auf eure PersonaUI-Instanz zugreifen kann, mit genehmigungsbasierten Zugriffsanfragen."
+            ]
+          },
+          "improvements": {
+            "title": "Verbesserungen",
+            "items": [
+              "Überarbeitetes Onboarding — Ein frisches, schrittweises Onboarding-Erlebnis mit Persona-Sprachauswahl.",
+              "Bessere Theme-Anpassung — Farbvorlagen, Farbton-Regler, dynamische Schriftgrößen und verbesserter Dark/Light-Mode.",
+              "Kontext-Leiste — Seht auf einen Blick, wie viele Nachrichten in eurem aktuellen Kontextfenster sind.",
+              "Sound-Benachrichtigungen — Schaltet Benachrichtigungstöne mit einstellbarer Lautstärke im Header ein/aus.",
+              "Nachrichten-Verwaltung — Bearbeitet, löscht, regeneriert oder sendet eure Nachrichten direkt im Chat erneut.",
+              "Verbesserte Overlays — Alle Overlay-Fenster haben jetzt Icons, bessere Backdrop-Handhabung und flüssigere Interaktionen.",
+              "Intelligentere Prompt Engine — Verbesserter Prompt-Aufbau mit besserem Formatting und kritischer Erinnerungshandhabung."
+            ]
+          },
+          "bugFixes": {
+            "title": "Fehlerbehebungen",
+            "items": [
+              "Nachrichtenreihenfolge ist jetzt über alle Sitzungen hinweg konsistent.",
+              "Theme-Einstellungen werden beim ersten Laden korrekt angewendet.",
+              "Schriftart-Auflösung in Chat-Blasen korrigiert.",
+              "Textformatierung bei aufeinanderfolgenden Zeilenumbrüchen verbessert."
+            ]
+          },
+          "ui": {
+            "title": "UI & Design",
+            "items": [
+              "Neue statische und dynamische Hintergrund-Optionen für die Chat-Seite.",
+              "Verfeinerte Chat-Blasen mit verbessertem Styling und besserer Lesbarkeit.",
+              "Aktualisierte Profil- und Persona-Einstellungen mit aufgeräumterem Layout.",
+              "Einheitliche Icon-Verwendung in allen Menüs und Overlays."
+            ]
+          },
+          "technical": {
+            "title": "Unter der Haube",
+            "items": [
+              "Migration von Legacy-Jinja-Templates zu React Single Page Application.",
+              "Automatisierte Node.js-Installation und Frontend-Build-Prozess.",
+              "CORS-Unterstützung für flexible API-Kommunikation.",
+              "Verbesserte Datenbankmodul-Struktur und Query-Handling.",
+              "Umfassende Test-Suite für Cortex-Services und Prompt Engine."
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

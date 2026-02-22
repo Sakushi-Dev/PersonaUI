@@ -43,6 +43,7 @@ import {
   CreditExhaustedOverlay,
   ApiWarningOverlay,
   SupportOverlay,
+  PatchNotesOverlay,
 } from '../overlays';
 
 import styles from './ChatPage.module.css';
@@ -165,6 +166,7 @@ function ChatPageContent() {
   const creditExhausted = useOverlay();
   const apiWarning = useOverlay();
   const support = useOverlay();
+  const patchNotes = useOverlay();
 
   // ── Cortex update indicator ──
   const [cortexUpdating, setCortexUpdating] = useState(false);
@@ -265,6 +267,7 @@ function ChatPageContent() {
         onOpenQRCode={qrCode.open}
         onOpenAccessControl={accessControl.open}
         onOpenSupport={support.open}
+        onOpenPatchNotes={patchNotes.open}
       />
 
       <div style={{ position: 'relative', height: 0, zIndex: 50 }}>
@@ -379,6 +382,10 @@ function ChatPageContent() {
       <SupportOverlay
         open={support.isOpen}
         onClose={support.close}
+      />
+      <PatchNotesOverlay
+        open={patchNotes.isOpen}
+        onClose={patchNotes.close}
       />
     </div>
   );
