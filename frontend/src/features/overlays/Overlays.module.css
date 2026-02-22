@@ -2052,6 +2052,67 @@
   padding: 14px 0 8px;
 }
 
+/* Per-field autofill: header row with label + ✨ button */
+.csFieldHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.csFieldHeader .ifaceFieldLabel {
+  margin: 0;
+}
+
+.csFieldAutofillBtn {
+  flex-shrink: 0;
+  width: 32px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--overlay-border-color, rgba(0, 0, 0, 0.1));
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+.csFieldAutofillBtn:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 0.08);
+  border-color: rgba(99, 102, 241, 0.3);
+  transform: scale(1.05);
+}
+
+.csFieldAutofillBtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.csItemsGenerating {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  font-size: 12px;
+  color: #667eea;
+  font-weight: 500;
+}
+
+:root[data-theme="dark"] .csFieldAutofillBtn {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme="dark"] .csFieldAutofillBtn:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+:root[data-theme="dark"] .csItemsGenerating {
+  color: #8b9cf7;
+}
+
 .csSpecRow {
   display: flex;
   align-items: center;

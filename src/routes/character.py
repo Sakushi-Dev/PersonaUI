@@ -196,6 +196,11 @@ def background_autofill():
     if not data or not data.get('name'):
         return error_response('Persona-Name ist erforderlich')
     
+    # Sprache aus User-Profil
+    from routes.user_profile import get_user_profile_data
+    profile = get_user_profile_data()
+    language = profile.get('persona_language', 'english') or 'english'
+    
     # Persona-Daten für Referenz zusammenbauen
     char_name = data.get('name', 'Assistant')
     char_age = data.get('age', 18)
@@ -229,20 +234,21 @@ def background_autofill():
         if engine:
             prompt = engine.resolve_prompt(
                 'background_autofill', variant='default',
-                runtime_vars={'reference_text': reference_text, 'user_hint_section': user_hint_section}
+                runtime_vars={'reference_text': reference_text, 'user_hint_section': user_hint_section, 'language': language}
             )
     except Exception:
         pass
 
     if not prompt:
-        prompt = f"""Erstelle eine kurze, stimmige Hintergrundgeschichte für folgende Persona:
+        prompt = f"""Create a short, coherent background story for the following persona:
 
 {reference_text}
 
 {user_hint_section}
 
-Schreibe eine kompakte Hintergrundgeschichte (max 800 Zeichen) in der dritten Person die zur Persona passt. 
-Nur den Hintergrund-Text zurückgeben, keine Erklärungen oder Formatierung."""
+Write a compact background story (max 800 characters) in third person that fits the persona.
+Respond in {language}.
+Return only the background text, no explanations or formatting."""
     
     try:
         config = RequestConfig(
