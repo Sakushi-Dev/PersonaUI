@@ -12,7 +12,7 @@ export default defineConfig({
       '/chat': 'http://localhost:5000',
       '/chat_stream': 'http://localhost:5000',
       '/afterthought': 'http://localhost:5000',
-      '/static/images': 'http://localhost:5000',
+
       '/get_char_config': 'http://localhost:5000',
       '/get_available_options': 'http://localhost:5000',
       '/save_char_config': 'http://localhost:5000',

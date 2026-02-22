@@ -1,7 +1,6 @@
 // ── Avatar Component ──
 
 import styles from './Avatar.module.css';
-import { API_BASE_URL } from '../../utils/constants';
 
 export default function Avatar({ src, type, name, size = 40, onClick, className = '' }) {
   const letter = name ? name.charAt(0).toUpperCase() : '?';
@@ -12,10 +11,10 @@ export default function Avatar({ src, type, name, size = 40, onClick, className 
     if (src.startsWith('http') || src.startsWith('/') || src.startsWith('blob:')) {
       avatarSrc = src;
     } else if (type === 'custom') {
-      avatarSrc = `${API_BASE_URL}/static/images/custom/${src}`;
+      avatarSrc = `/avatar/costum/${src}`;
     } else {
       // 'gallery', 'default', undefined — all use avatars/ directory
-      avatarSrc = `${API_BASE_URL}/static/images/avatars/${src}`;
+      avatarSrc = `/avatar/${src}`;
     }
   }
 

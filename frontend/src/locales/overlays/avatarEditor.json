@@ -5,6 +5,7 @@
     "dropText": "Drag image here or click to upload",
     "dropHint": ".png, .jpg, .webp",
     "galleryDivider": "or choose from gallery",
+    "confirmSelect": "Select",
     "saveCrop": "Save Crop",
     "cancelCrop": "Cancel"
   },
@@ -14,6 +15,7 @@
     "dropText": "Bild hierher ziehen oder klicken zum Hochladen",
     "dropHint": ".png, .jpg, .webp",
     "galleryDivider": "oder aus der Galerie wählen",
+    "confirmSelect": "Auswählen",
     "saveCrop": "Zuschnitt speichern",
     "cancelCrop": "Abbrechen"
   }

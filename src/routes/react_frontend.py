@@ -12,6 +12,11 @@ DIST_DIR = os.path.normpath(
     os.path.join(os.path.dirname(__file__), '..', '..', 'frontend', 'dist')
 )
 
+# Pfad zum öffentlichen Avatar-Ordner (für dynamisch hinzugefügte Custom-Avatare)
+PUBLIC_AVATAR_DIR = os.path.normpath(
+    os.path.join(os.path.dirname(__file__), '..', '..', 'frontend', 'public', 'avatar')
+)
+
 
 def has_react_build():
     """Prüft ob ein React-Build vorhanden ist."""
@@ -36,3 +41,19 @@ def serve_react_app():
 def vite_svg():
     """Vite-Favicon."""
     return send_from_directory(DIST_DIR, 'vite.svg')
+
+
+@react_bp.route('/avatar/costum/<path:filename>')
+def serve_custom_avatar(filename):
+    """Liefert dynamisch hochgeladene Custom-Avatare aus frontend/public/avatar/costum/."""
+    costum_dir = os.path.join(PUBLIC_AVATAR_DIR, 'costum')
+    return send_from_directory(costum_dir, filename)
+
+
+@react_bp.route('/avatar/<path:filename>')
+def serve_avatar(filename):
+    """Liefert Standard-Avatare – bevorzugt aus dem Build, Fallback aus public/."""
+    dist_avatar_dir = os.path.join(DIST_DIR, 'avatar')
+    if os.path.isfile(os.path.join(dist_avatar_dir, filename)):
+        return send_from_directory(dist_avatar_dir, filename)
+    return send_from_directory(PUBLIC_AVATAR_DIR, filename)

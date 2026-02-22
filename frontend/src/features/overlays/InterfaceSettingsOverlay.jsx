@@ -23,7 +23,7 @@ const FONT_OPTION_KEYS = [
   { value: 'comic',   label: 'Comic Sans',      descKey: 'fontPlayful',   icon: 'Aa' },
   { value: 'times',   label: 'Times New Roman',  descKey: 'fontClassic',   icon: 'Aa' },
   { value: 'courier', label: 'Courier New',      descKey: 'fontMonospace', icon: 'Aa' },
-  { value: 'pixel',   label: 'Pixel',            descKey: 'fontRetro',     icon: 'Px' },
+  { value: 'pixel',   label: 'VT323',            descKey: 'fontRetro',     icon: 'Px' },
   { value: 'console', label: 'Console',          descKey: 'fontTerminal',  icon: '>' },
 ];
 

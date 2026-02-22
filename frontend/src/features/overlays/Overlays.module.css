@@ -1017,6 +1017,10 @@
   padding: 4px;
 }
 
+.avatarThumbWrap {
+  position: relative;
+}
+
 .avatarThumb {
   width: 100%;
   aspect-ratio: 1;
@@ -1032,6 +1036,41 @@
 .avatarThumb:hover {
   border-color: var(--color-primary, #6366f1);
   transform: scale(1.08);
+}
+
+.avatarThumbSelected {
+  border-color: var(--color-primary, #6366f1);
+  box-shadow: 0 0 0 2px var(--color-primary, #6366f1);
+  transform: scale(1.08);
+}
+
+.avatarDeleteBtn {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(220, 38, 38, 0.85);
+  color: #fff;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 2;
+}
+
+.avatarThumbWrap:hover .avatarDeleteBtn {
+  opacity: 1;
+}
+
+.avatarDeleteBtn:hover {
+  background: rgba(220, 38, 38, 1);
 }
 
 .avatarThumb img {

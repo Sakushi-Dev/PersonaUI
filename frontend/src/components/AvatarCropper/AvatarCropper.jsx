@@ -1,6 +1,6 @@
 // ── AvatarCropper Component ──
 
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import Button from '../Button/Button';
 import styles from './AvatarCropper.module.css';
 
@@ -14,6 +14,25 @@ export default function AvatarCropper({ file, onSave, onCancel }) {
   const [dragStart, setDragStart] = useState(null);
 
   const CANVAS_SIZE = 256;
+
+  // Minimum scale: image must always cover the full canvas
+  const minScale = useMemo(
+    () => (image ? Math.max(CANVAS_SIZE / image.width, CANVAS_SIZE / image.height) : 0.1),
+    [image]
+  );
+
+  // Clamp offset so the image edge never goes past the canvas boundary
+  const clampOffset = useCallback((ox, oy, img, sc) => {
+    if (!img) return { x: ox, y: oy };
+    const imgW = img.width * sc;
+    const imgH = img.height * sc;
+    const maxX = Math.max(0, (imgW - CANVAS_SIZE) / 2);
+    const maxY = Math.max(0, (imgH - CANVAS_SIZE) / 2);
+    return {
+      x: Math.max(-maxX, Math.min(maxX, ox)),
+      y: Math.max(-maxY, Math.min(maxY, oy)),
+    };
+  }, []);
 
   // Load image from file prop if provided
   useEffect(() => {
@@ -84,7 +103,8 @@ export default function AvatarCropper({ file, onSave, onCancel }) {
 
   const handleMouseMove = (e) => {
     if (!dragging || !dragStart) return;
-    setOffset({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
+    const raw = { x: e.clientX - dragStart.x, y: e.clientY - dragStart.y };
+    setOffset(clampOffset(raw.x, raw.y, image, scale));
   };
 
   const handleMouseUp = () => {
@@ -92,11 +112,15 @@ export default function AvatarCropper({ file, onSave, onCancel }) {
     setDragStart(null);
   };
 
-  const handleWheel = (e) => {
+  const handleWheel = useCallback((e) => {
     e.preventDefault();
     const delta = e.deltaY > 0 ? -0.05 : 0.05;
-    setScale((prev) => Math.max(0.1, Math.min(5, prev + delta)));
-  };
+    setScale((prev) => {
+      const next = Math.max(minScale, Math.min(5, prev + delta));
+      setOffset((off) => clampOffset(off.x, off.y, image, next));
+      return next;
+    });
+  }, [image, minScale, clampOffset]);
 
   // ── Touch support (drag + pinch-to-zoom) ──
   const lastTouchRef = useRef(null);
@@ -114,26 +138,43 @@ export default function AvatarCropper({ file, onSave, onCancel }) {
     }
   };
 
-  const handleTouchMove = (e) => {
+  const handleTouchMove = useCallback((e) => {
     e.preventDefault();
     if (e.touches.length === 1 && dragging && dragStart) {
       const t = e.touches[0];
-      setOffset({ x: t.clientX - dragStart.x, y: t.clientY - dragStart.y });
+      const raw = { x: t.clientX - dragStart.x, y: t.clientY - dragStart.y };
+      setOffset(clampOffset(raw.x, raw.y, image, scale));
     } else if (e.touches.length === 2 && lastPinchDistRef.current) {
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
       const dist = Math.hypot(dx, dy);
       const delta = (dist - lastPinchDistRef.current) * 0.005;
-      setScale((prev) => Math.max(0.1, Math.min(5, prev + delta)));
+      setScale((prev) => {
+        const next = Math.max(minScale, Math.min(5, prev + delta));
+        setOffset((off) => clampOffset(off.x, off.y, image, next));
+        return next;
+      });
       lastPinchDistRef.current = dist;
     }
-  };
+  }, [dragging, dragStart, image, scale, minScale, clampOffset]);
 
   const handleTouchEnd = () => {
     setDragging(false);
     setDragStart(null);
     lastPinchDistRef.current = null;
   };
+
+  // Register touchmove + wheel as non-passive so preventDefault() works
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+    canvas.addEventListener('wheel', handleWheel, { passive: false });
+    return () => {
+      canvas.removeEventListener('touchmove', handleTouchMove);
+      canvas.removeEventListener('wheel', handleWheel);
+    };
+  }, [handleTouchMove, handleWheel]);
 
   const handleSave = () => {
     const canvas = canvasRef.current;
@@ -155,9 +196,7 @@ export default function AvatarCropper({ file, onSave, onCancel }) {
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
-          onWheel={handleWheel}
           onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         />
         {!image && (
@@ -180,11 +219,15 @@ export default function AvatarCropper({ file, onSave, onCancel }) {
         <div className={styles.controls}>
           <input
             type="range"
-            min="0.1"
+            min={minScale}
             max="5"
             step="0.05"
             value={scale}
-            onChange={(e) => setScale(parseFloat(e.target.value))}
+            onChange={(e) => {
+            const next = Math.max(minScale, parseFloat(e.target.value));
+            setScale(next);
+            setOffset((off) => clampOffset(off.x, off.y, image, next));
+          }}
             className={styles.zoomSlider}
           />
           <span className={styles.zoomLabel}>Zoom</span>

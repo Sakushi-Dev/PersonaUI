@@ -199,7 +199,7 @@
 
   .input {
     font-size: 16px;
-    padding-left: 40px;
+    padding-left: 14px;
   }
 
   .sendBtn {
@@ -208,9 +208,6 @@
   }
 
   .emojiBtn {
-    width: 30px;
-    height: 30px;
-    left: 4px;
-    bottom: 6px;
+    display: none;
   }
 }

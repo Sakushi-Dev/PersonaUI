@@ -127,7 +127,7 @@
   width: 100%;
   padding-bottom: 38px;
   font-family: var(--bubble-font-family, 'Ubuntu', 'Roboto', 'Segoe UI', system-ui, -apple-system, sans-serif);
-  font-weight: 600;
+  font-weight: 400;
   font-size: var(--bubble-font-size, 18px);
   line-height: 1.6;
   word-wrap: break-word;

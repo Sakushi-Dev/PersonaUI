@@ -3,7 +3,6 @@
 import { useState, useCallback, useRef } from 'react';
 import AvatarCropper from '../../../components/AvatarCropper/AvatarCropper';
 import { getAvailableAvatars, uploadAvatar } from '../../../services/avatarApi';
-import { API_BASE_URL } from '../../../utils/constants';
 import { useLanguage } from '../../../hooks/useLanguage';
 import styles from './Steps.module.css';
 
@@ -29,8 +28,8 @@ export default function StepProfile({ data, onChange, onNext, onBack }) {
   // Avatar preview helper
   const avatarSrc = data.user_avatar
     ? data.user_avatar_type === 'custom'
-      ? `${API_BASE_URL}/static/images/custom/${data.user_avatar}`
-      : `${API_BASE_URL}/static/images/avatars/${data.user_avatar}`
+      ? `/avatar/costum/${data.user_avatar}`
+      : `/avatar/${data.user_avatar}`
     : null;
 
   const placeholderLetter = (data.user_name || 'U').charAt(0).toUpperCase();
@@ -74,7 +73,7 @@ export default function StepProfile({ data, onChange, onNext, onBack }) {
     try {
       const formData = new FormData();
       formData.append('file', croppedBlob, 'avatar.jpg');
-      formData.append('crop_data', JSON.stringify({ x: 0, y: 0, size: 1024 }));
+      // No crop_data — blob is already cropped to a square by AvatarCropper
       const result = await uploadAvatar(formData);
       const filename = result.filename || result.avatar;
       update('user_avatar', filename);
@@ -194,8 +193,8 @@ export default function StepProfile({ data, onChange, onNext, onBack }) {
                       >
                         <img
                           src={av.type === 'custom'
-                            ? `${API_BASE_URL}/static/images/custom/${av.filename}`
-                            : `${API_BASE_URL}/static/images/avatars/${av.filename}`}
+                            ? `/avatar/costum/${av.filename}`
+                            : `/avatar/${av.filename}`}
                           alt={av.filename}
                           loading="lazy"
                         />

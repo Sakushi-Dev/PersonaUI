@@ -9,7 +9,7 @@ export const FONT_FAMILY_MAP = {
   comic: "'Comic Sans MS', 'Comic Sans', cursive",
   times: "'Times New Roman', Times, serif",
   courier: "'Courier New', Courier, monospace",
-  pixel: "'Press Start 2P', 'VT323', monospace",
+  pixel: "'VT323', monospace",
   console: "'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace",
 };
 
@@ -19,9 +19,7 @@ export function resolveFontFamily(key) {
 }
 
 // Per-font size offset in px (some fonts render much larger/smaller)
-export const FONT_SIZE_OFFSET = {
-  pixel: -7,
-};
+export const FONT_SIZE_OFFSET = {};
 
 /** Get the effective font size adjusted for the given font key. */
 export function adjustedFontSize(basePx, fontKey) {

@@ -10,7 +10,7 @@ import OverlayFooter from '../../components/Overlay/OverlayFooter';
 import Button from '../../components/Button/Button';
 import AvatarCropper from '../../components/AvatarCropper/AvatarCropper';
 import Spinner from '../../components/Spinner/Spinner';
-import { getAvailableAvatars, uploadAvatar, saveAvatar, saveUserAvatar } from '../../services/avatarApi';
+import { getAvailableAvatars, uploadAvatar, saveAvatar, saveUserAvatar, deleteAvatar } from '../../services/avatarApi';
 import { useLanguage } from '../../hooks/useLanguage';
 import styles from './Overlays.module.css';
 
@@ -19,41 +19,59 @@ export default function AvatarEditorOverlay({ open, onClose, personaId, target =
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('gallery'); // 'gallery' | 'crop'
   const [selectedFile, setSelectedFile] = useState(null);
+  const [selected, setSelected] = useState(null); // highlighted gallery avatar
   const [saving, setSaving] = useState(false);
   const { t } = useLanguage();
   const s = t('avatarEditor');
   const sc = t('common');
 
+  const refreshGallery = useCallback(() => {
+    setLoading(true);
+    getAvailableAvatars()
+      .then((data) => setAvatars(data.avatars || data || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
   useEffect(() => {
     if (open) {
       setView('gallery');
       setSelectedFile(null);
-      setLoading(true);
-      getAvailableAvatars()
-        .then((data) => setAvatars(data.avatars || data || []))
-        .catch(() => {})
-        .finally(() => setLoading(false));
+      setSelected(null);
+      refreshGallery();
     }
-  }, [open]);
+  }, [open, refreshGallery]);
 
-  const handleSelectGallery = useCallback(async (avatar) => {
+  // ── Confirm selected gallery avatar ──
+  const handleConfirmSelection = useCallback(async () => {
+    if (!selected) return;
     setSaving(true);
     try {
       if (target === 'user') {
-        await saveUserAvatar(avatar.filename, avatar.type);
+        await saveUserAvatar(selected.filename, selected.type);
       } else if (target !== 'persona') {
-        // For persona creator/editor, skip server save — avatar is stored locally
-        // and included in the persona save payload
-        await saveAvatar(personaId, avatar.filename, avatar.type);
+        await saveAvatar(personaId, selected.filename, selected.type);
       }
-      onSaved?.(avatar.filename, avatar.type);
+      onSaved?.(selected.filename, selected.type);
       onClose();
     } catch (err) {
       console.error('Avatar save failed:', err);
     } finally {
       setSaving(false);
     }
-  }, [personaId, target, onSaved, onClose]);
+  }, [selected, personaId, target, onSaved, onClose]);
+
+  // ── Delete custom avatar ──
+  const handleDelete = useCallback(async (avatar, e) => {
+    e.stopPropagation();
+    try {
+      await deleteAvatar(avatar.filename);
+      if (selected?.filename === avatar.filename) setSelected(null);
+      refreshGallery();
+    } catch (err) {
+      console.error('Avatar delete failed:', err);
+    }
+  }, [selected, refreshGallery]);
 
   const handleFileSelect = useCallback((e) => {
     const file = e.target.files?.[0];
@@ -77,7 +95,6 @@ export default function AvatarEditorOverlay({ open, onClose, personaId, target =
     try {
       const formData = new FormData();
       formData.append('file', croppedBlob, 'avatar.jpg');
-      formData.append('crop_data', JSON.stringify({ x: 0, y: 0, size: 1024 }));
 
       const result = await uploadAvatar(formData);
       const filename = result.filename || result.avatar;
@@ -85,17 +102,22 @@ export default function AvatarEditorOverlay({ open, onClose, personaId, target =
       if (target === 'user') {
         await saveUserAvatar(filename, 'custom');
       } else if (target !== 'persona') {
-        // For persona creator/editor, skip server save
         await saveAvatar(personaId, filename, 'custom');
       }
       onSaved?.(filename, 'custom');
-      onClose();
+
+      // Go back to gallery and refresh the avatar list
+      setSelectedFile(null);
+      setSelected(null);
+      setLoading(true);
+      setView('gallery');
+      refreshGallery();
     } catch (err) {
       console.error('Avatar upload failed:', err);
     } finally {
       setSaving(false);
     }
-  }, [personaId, target, onSaved, onClose]);
+  }, [personaId, target, onSaved, refreshGallery]);
 
   return (
     <Overlay open={open} onClose={onClose} width="560px" stacked={stacked}>
@@ -133,17 +155,27 @@ export default function AvatarEditorOverlay({ open, onClose, personaId, target =
             ) : (
               <div className={styles.avatarGallery}>
                 {avatars.map((av, i) => (
-                  <button
-                    key={i}
-                    className={styles.avatarThumb}
-                    onClick={() => handleSelectGallery(av)}
-                    disabled={saving}
-                  >
-                    <img
-                      src={`/static/images/avatars/${av.filename}`}
-                      alt={av.filename}
-                    />
-                  </button>
+                  <div key={i} className={styles.avatarThumbWrap}>
+                    <button
+                      className={`${styles.avatarThumb} ${selected?.filename === av.filename ? styles.avatarThumbSelected : ''}`}
+                      onClick={() => setSelected(av)}
+                      disabled={saving}
+                    >
+                      <img
+                        src={av.type === 'custom' ? `/avatar/costum/${av.filename}` : `/avatar/${av.filename}`}
+                        alt={av.filename}
+                      />
+                    </button>
+                    {av.type === 'custom' && (
+                      <button
+                        className={styles.avatarDeleteBtn}
+                        onClick={(e) => handleDelete(av, e)}
+                        title={sc.delete}
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
                 ))}
               </div>
             )}
@@ -158,6 +190,9 @@ export default function AvatarEditorOverlay({ open, onClose, personaId, target =
       </OverlayBody>
       {view === 'gallery' && (
         <OverlayFooter>
+          <Button variant="primary" onClick={handleConfirmSelection} disabled={!selected || saving}>
+            {s.confirmSelect}
+          </Button>
           <Button variant="secondary" onClick={onClose}>{sc.cancel}</Button>
         </OverlayFooter>
       )}
