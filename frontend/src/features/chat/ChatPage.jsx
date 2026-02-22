@@ -292,6 +292,7 @@ function ChatPageContent() {
         disabled={!sessionId}
         isStreaming={isStreaming}
         onCancel={cancelStream}
+        sessionId={sessionId}
         placeholder={!sessionId ? 'Bitte erstelle zuerst einen neuen Chat...' : 'Deine Nachricht...'}
       />
 

@@ -6,7 +6,7 @@ import styles from './ChatInput.module.css';
 import SlashCommandMenu from './SlashCommandMenu';
 import { getCommands, findCommand } from '../../slashCommands';
 
-export default function ChatInput({ onSend, disabled, isStreaming, onCancel, placeholder }) {
+export default function ChatInput({ onSend, disabled, isStreaming, onCancel, placeholder, sessionId }) {
   const [text, setText] = useState('');
   const textareaRef = useRef(null);
 
@@ -67,11 +67,11 @@ export default function ChatInput({ onSend, disabled, isStreaming, onCancel, pla
     // args = everything after "/commandName "
     const argsStr = text.slice(1 + cmd.name.length).trim();
     console.log(`[ChatInput] executing /${cmd.name}`, argsStr ? `args: ${argsStr}` : '(no args)');
-    cmd.execute({ args: argsStr });
+    cmd.execute({ args: argsStr, sessionId });
     setText('');
     setCmdMenuOpen(false);
     if (textareaRef.current) textareaRef.current.style.height = '42px';
-  }, [text]);
+  }, [text, sessionId]);
 
   // ── Select a command from the menu (click or Enter) ──
   const selectCommand = useCallback((cmd) => {

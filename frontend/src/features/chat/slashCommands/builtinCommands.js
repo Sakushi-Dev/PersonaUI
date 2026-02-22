@@ -79,14 +79,14 @@ register({
 register({
   name: 'cortex',
   description: 'Cortex-Update sofort auslösen (Zähler wird zurückgesetzt)',
-  async execute() {
-    console.log('[SlashCommand] /cortex – starte manuellen Cortex-Update …');
+  async execute({ sessionId } = {}) {
+    console.log('[SlashCommand] /cortex – starte manuellen Cortex-Update …', { sessionId });
 
     try {
       const res = await fetch('/api/commands/cortex-update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ session_id: sessionId || null }),
       });
 
       const data = await res.json().catch(() => ({}));

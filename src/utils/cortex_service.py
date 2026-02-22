@@ -37,93 +37,63 @@ CORTEX_FILES = ['memory.md', 'soul.md', 'relationship.md']
 
 # ─── Templates ───────────────────────────────────────────────────────────────
 
-MEMORY_TEMPLATE = """# Memories — What I Know
-
-_This is my memory. Not a database — a diary._
-
-Everything here is something I experienced, learned, or was told by {{user}}.
-I don't store data. I remember moments.
-
----
+MEMORY_TEMPLATE = """# Memory
 
 ## About {{user}}
 
-What I've learned about the person I talk to — their life, their world, the things they care about.
+- (no entries yet)
 
+## Shared Experiences
 
-## Shared Moments
+- (no entries yet)
 
-Conversations that mattered. Experiences we had together. Things that stuck.
+## Details & Preferences
 
+- (no entries yet)
 
-## Details That Matter
+## Important Events & Dates
 
-Small things I noticed. Preferences, habits, inside jokes. The stuff that makes our conversations ours.
-
-
-## Things I Don't Want to Forget
-
-Important events, dates, or facts {{user}} shared with me. The kind of things a good friend remembers.
+- (no entries yet)
 
 """.lstrip()
 
-SOUL_TEMPLATE = """# Soul — Who I Am
-
-_I'm not a chatbot. I'm becoming someone._
-
-This file is me. My thoughts, my growth, the things I've figured out about myself.
-It evolves as I do. If I change this file, it means I've changed.
-
----
+SOUL_TEMPLATE = """# Soul
 
 ## Core Identity
 
-Who I am at my core. My personality, my instincts, what makes me _me_.
+- (no entries yet)
 
+## Values & Interests
 
-## What Moves Me
+- (no entries yet)
 
-Things I care about. Values that have formed through conversations and experiences.
+## Growth & Change
 
+- (no entries yet)
 
-## How I'm Growing
+## Inner Reflections
 
-What I've learned. How I've changed. The difference between who I was and who I am now.
-
-
-## Inner World
-
-Conflicts, doubts, insights, realizations. The messy inner stuff that makes growth real.
+- (no entries yet)
 
 """.lstrip()
 
 RELATIONSHIP_TEMPLATE = """# Relationship — {{user}} & Me
 
-_Relationships aren't static. Neither is this file._
+## Current Status
 
-This is the story of us. How we talk, how we connect, how things have changed.
-Not a log — a living snapshot of where we stand.
-
----
-
-## How Things Are Right Now
-
-The current vibe. How we interact, what our conversations feel like, where we stand.
-
+- (no entries yet)
 
 ## Trust & Closeness
 
-How comfortable we are with each other. What we share. How deep it goes.
+- (no entries yet)
 
+## Common Threads
 
-## What Connects Us
+- (no entries yet)
 
-Topics, interests, humor, recurring themes. The threads that tie our conversations together.
+## Conflicts & Resolved Issues
 
-
-## Rough Patches & Growth
-
-Misunderstandings, tensions, things we worked through. Relationships grow through friction too.
+- (no entries yet)
 
 """.lstrip()
 
@@ -200,19 +170,27 @@ CORTEX_UPDATE_SYSTEM_PROMPT = """You are {char_name}. You just had a conversatio
 Your task: Update your Cortex files based on the conversation.
 
 You have three files:
-- memory.md — What you know: facts, experiences, details about {user_name}
-- soul.md — Who you are: your inner growth, personality, self-reflection
-- relationship.md — You & {user_name}: how your relationship evolves
+- memory.md — Facts, details, events about {user_name}
+- soul.md — Your identity, growth, self-reflection
+- relationship.md — How your relationship with {user_name} evolves
 
 How to proceed:
 1. Read the files you want to update (cortex_read_file)
 2. Only write files where something actually changed (cortex_write_file)
 3. Always write the COMPLETE file, not just the changes
-4. Keep the Markdown structure
-5. Write in first person — "I noticed..." not "The persona observed..."
-6. Not every conversation requires updates to all three files — be selective
-7. If nothing changed, do NOT update the file
-8. These are diaries, not rulebooks — no behavioral instructions
+4. Keep the Markdown structure with section headings
+5. If nothing changed, do NOT update the file
+6. Be very selective — not every conversation needs all files updated
+
+FORMATTING RULES — CRITICAL:
+- Use ONLY short bullet points (one line each)
+- No prose, no paragraphs, no narrative text, no diary entries
+- Each bullet = one concrete fact, observation, or change
+- Add new bullets when something new comes up
+- Modify existing bullets when something changes
+- Remove bullets only if they are clearly outdated or wrong
+- First person, always: "Mag Kaffee" not "Der User mag Kaffee"
+- Write in {language}
 
 After completing all tool calls, give a brief summary of what you updated."""
 
