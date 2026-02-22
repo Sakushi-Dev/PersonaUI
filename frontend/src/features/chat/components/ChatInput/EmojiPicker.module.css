@@ -237,8 +237,45 @@
     width: calc(100vw - 24px);
     left: 50%;
     transform: translateX(-50%);
-    height: 360px;
-    max-height: 360px;
+    height: 240px;
+    max-height: 240px;
+    border-radius: 12px;
+  }
+
+  .searchRow {
+    padding: 6px 8px 4px;
+  }
+
+  .searchInput {
+    padding: 5px 8px;
+    font-size: 12px;
+  }
+
+  .categories {
+    padding: 2px 6px;
+    gap: 1px;
+  }
+
+  .catBtn {
+    width: 28px;
+    height: 28px;
+    font-size: 15px;
+  }
+
+  .catTitle {
+    padding: 4px 8px 1px;
+    font-size: 10px;
+  }
+
+  .grid {
+    padding: 2px 6px 6px;
+    gap: 1px;
+  }
+
+  .emojiBtn {
+    width: 30px;
+    height: 30px;
+    font-size: 18px;
   }
 
   @keyframes emojiSlideUp {

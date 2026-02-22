@@ -379,11 +379,15 @@
 
 @media (max-width: 768px) {
   .messageContent {
-    max-width: 90%;
+    max-width: 95%;
   }
 
   .message {
     margin-bottom: 30px;
+  }
+
+  .messageAvatar {
+    display: none;
   }
 
   .messageBubble {

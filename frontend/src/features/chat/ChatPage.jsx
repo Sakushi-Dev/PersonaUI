@@ -60,7 +60,7 @@ export default function ChatPage() {
   if (loading || !settingsLoaded) {
     return (
       <div className={styles.page}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
           <Spinner />
           <p style={{ color: '#333', marginTop: '16px', position: 'absolute', top: '55%' }}>
             {s.loadingText}
