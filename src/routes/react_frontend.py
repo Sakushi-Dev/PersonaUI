@@ -43,6 +43,18 @@ def vite_svg():
     return send_from_directory(DIST_DIR, 'vite.svg')
 
 
+@react_bp.route('/favicon.ico')
+def favicon_ico():
+    """Favicon."""
+    return send_from_directory(DIST_DIR, 'favicon.ico')
+
+
+@react_bp.route('/persona_ui.ico')
+def persona_ui_ico():
+    """PersonaUI Logo/Icon."""
+    return send_from_directory(DIST_DIR, 'persona_ui.ico')
+
+
 @react_bp.route('/avatar/costum/<path:filename>')
 def serve_custom_avatar(filename):
     """Liefert dynamisch hochgeladene Custom-Avatare aus frontend/public/avatar/costum/."""
