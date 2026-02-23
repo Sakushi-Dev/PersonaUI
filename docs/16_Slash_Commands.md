@@ -1,396 +1,215 @@
-# 16 — Slash Command System
+# 16 — Slash Commands
+
+> Discord-style `/command` system with a React command menu and backend handlers.
+
+---
 
 ## Overview
 
-PersonaUI includes a **slash command system** that enables users to execute special commands by typing `/command` in the chat input. Commands can perform frontend actions (like `/reload`) or trigger server-side operations (like `/rebuild`).
-
-The system provides an intuitive auto-complete interface with keyboard and mouse navigation, similar to Discord or Slack.
+PersonaUI supports **slash commands** in the chat input — typing `/` opens a command menu similar to Discord or Slack. Commands trigger special actions like rebuilding the frontend, resetting onboarding, or forcing a Cortex update.
 
 ---
 
 ## Architecture
 
 ```
-Frontend Components:
-  ChatInput.jsx              ← Main input with slash command detection
-    ├── SlashCommandMenu.jsx ← Floating autocomplete popup
-    └── slashCommands/
-          ├── index.js        ← Main exports
-          ├── slashCommandRegistry.js ← Command registry & filtering
-          └── builtinCommands.js      ← Default commands (/reload, /rebuild)
-
-Backend Support:
-  routes/commands.py          ← API endpoints for server-side commands
-    └── /api/commands/*       ← Individual command handlers
-```
-
-**Command Flow:**
-```
-User types "/" → Chat input detects → Shows command menu → User selects → Command executes
-                    ↓
-Frontend command = Direct execution
-Server command = API call to /api/commands/*
+Frontend                              Backend
+┌──────────────────────┐              ┌────────────────────────┐
+│ ChatInput.jsx        │              │ commands.py            │
+│   └─ onInput('/')    │              │   POST /api/commands/  │
+│      └─ SlashCommand │   HTTP POST  │     ├── rebuild-frontend│
+│         Menu.jsx     │ ────────────→│     ├── reset-onboarding│
+│         └─ command   │              │     └── cortex-update   │
+│            Registry  │              └────────────────────────┘
+└──────────────────────┘
 ```
 
 ---
 
-## Frontend Implementation
+## Frontend — Command Registry
 
-### 1. Command Registry (`slashCommandRegistry.js`)
+**File:** `frontend/src/features/chat/slashCommands/commandRegistry.js`
 
-Central registry for all slash commands:
-
-```javascript
-// Register a new command
-register({
-  name: 'reload',
-  description: 'Reload the page',
-  execute({ args }) {
-    window.location.reload();
-  }
-});
-
-// Query available commands
-const commands = getCommands('rel'); // Returns commands matching "rel"
-const cmd = findCommand('reload');   // Find exact command
-```
-
-#### Registry API
-
-| Function | Description |
-|----------|-------------|
-| `register(cmd)` | Add new command to registry |
-| `getCommands(query?)` | Get all commands, optionally filtered |
-| `findCommand(name)` | Find command by exact name |
-
-#### Command Object Structure
+Defines all available commands:
 
 ```javascript
-{
-  name: string,        // Command keyword (without "/")
-  description: string, // Short description for UI
-  execute: function    // Handler function: ({ args: string }) => void
-}
+export const commands = [
+    {
+        name: 'reload',
+        description: 'Reload the application',
+        icon: '🔄',
+        action: () => window.location.reload(),
+    },
+    {
+        name: 'rebuild',
+        description: 'Rebuild the frontend',
+        icon: '🏗️',
+        action: async () => {
+            await fetch('/api/commands/rebuild-frontend', { method: 'POST' });
+        },
+    },
+    {
+        name: 'onboarding',
+        description: 'Reset and show onboarding wizard',
+        icon: '🎓',
+        action: async () => {
+            await fetch('/api/commands/reset-onboarding', { method: 'POST' });
+            window.location.href = '/onboarding';
+        },
+    },
+    {
+        name: 'cortex',
+        description: 'Trigger a manual Cortex memory update',
+        icon: '🧠',
+        action: async () => {
+            await fetch('/api/commands/cortex-update', { method: 'POST' });
+        },
+    },
+];
 ```
 
-### 2. Built-in Commands (`builtinCommands.js`)
+### Built-In Commands
 
-Default commands shipped with PersonaUI:
-
-| Command | Description | Type |
-|---------|-------------|------|
-| `/reload` | Reload the browser page | Frontend |
-| `/rebuild` | Trigger frontend build script | Backend API |
-
-**Adding New Built-in Commands:**
-```javascript
-register({
-  name: 'clear',
-  description: 'Clear chat history',
-  execute({ args }) {
-    // Implementation here
-  },
-});
-```
-
-### 3. Chat Input Integration (`ChatInput.jsx`)
-
-The main chat input component handles slash command detection and execution:
-
-#### Key Features
-
-- **Auto-detection**: Monitors input for leading `/` character
-- **Live filtering**: Shows matching commands as user types
-- **Keyboard navigation**: Arrow keys + Enter for selection
-- **Mouse support**: Click to select commands
-- **Seamless fallback**: Normal message sending if no command matches
-
-#### State Management
-
-```javascript
-const [cmdMenuOpen, setCmdMenuOpen] = useState(false);
-const [cmdSelectedIdx, setCmdSelectedIdx] = useState(0);
-
-// Query extraction: "/reload server" → query = "reload"
-const cmdQuery = useMemo(() => {
-  if (!text.startsWith('/')) return null;
-  return text.slice(1).split(' ')[0];
-}, [text]);
-
-// Filtered command list
-const filteredCmds = useMemo(() => {
-  if (cmdQuery === null) return [];
-  return getCommands(cmdQuery);
-}, [cmdQuery]);
-```
-
-#### Keyboard Controls
-
-| Key | Action |
-|-----|--------|
-| `/` | Start command mode |
-| `ArrowUp` / `ArrowDown` | Navigate command list |
-| `Enter` | Execute selected command |
-| `Escape` | Cancel command mode |
-| `Tab` | Auto-complete command name |
-
-### 4. Command Menu UI (`SlashCommandMenu.jsx`)
-
-Floating popup that appears above the chat input:
-
-#### Features
-
-- **Auto-positioning**: Appears above input when commands are available
-- **Visual feedback**: Highlighted selection with hover states
-- **Scroll handling**: Selected item always visible
-- **Mouse interaction**: Click to execute, hover to highlight
-
-#### Props Interface
-
-```javascript
-<SlashCommandMenu
-  commands={filteredCmds}     // Array of command objects
-  selectedIndex={cmdSelectedIdx} // Currently highlighted index
-  onSelect={selectCommand}    // (cmd) => void
-  onHover={setCmdSelectedIdx} // (index) => void
-  visible={cmdMenuOpen}       // Boolean
-/>
-```
+| Command | Icon | Action |
+|---------|------|--------|
+| `/reload` | 🔄 | Reloads the browser page |
+| `/rebuild` | 🏗️ | Runs `build_frontend.bat` to rebuild React app |
+| `/onboarding` | 🎓 | Resets onboarding and redirects to wizard |
+| `/cortex` | 🧠 | Triggers immediate Cortex memory update |
 
 ---
 
-## Backend Support (`routes/commands.py`)
+## Frontend — Slash Command Menu
 
-Server-side commands that require backend processing get their own API endpoints.
+**File:** `frontend/src/features/chat/slashCommands/SlashCommandMenu.jsx`
 
-### Current Endpoints
+### How It Works
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/commands/rebuild-frontend` | Trigger frontend build script |
+1. User types `/` in the chat input
+2. `ChatInput.jsx` detects the `/` prefix and renders `SlashCommandMenu`
+3. The menu shows all matching commands (filtered by typed text)
+4. User clicks a command or presses Enter
+5. The command's `action()` function is executed
+6. The input is cleared (command text is not sent as a chat message)
 
-### Example: Rebuild Frontend Command
+### UI
+
+The menu appears as a floating dropdown above the chat input:
+
+```
+┌──────────────────────────┐
+│ 🔄 /reload               │
+│    Reload the application │
+├──────────────────────────┤
+│ 🏗️ /rebuild              │
+│    Rebuild the frontend   │
+├──────────────────────────┤
+│ 🎓 /onboarding           │
+│    Reset onboarding       │
+├──────────────────────────┤
+│ 🧠 /cortex               │
+│    Manual Cortex update   │
+└──────────────────────────┘
+```
+
+Features:
+- **Fuzzy filtering** — Typing `/reb` matches `/rebuild`
+- **Keyboard navigation** — Arrow keys + Enter
+- **Auto-dismiss** — Menu closes when input loses focus or clears
+
+---
+
+## Backend — Command Handlers
+
+**File:** `src/routes/commands.py` (~153 lines)
+
+### `POST /api/commands/rebuild-frontend`
 
 ```python
 @commands_bp.route('/api/commands/rebuild-frontend', methods=['POST'])
-@handle_route_error('rebuild_frontend')
 def rebuild_frontend():
-    """Start build_frontend.bat in separate console window."""
-    
-    if not os.path.isfile(_BUILD_SCRIPT):
-        return error_response('Build script not found', 404)
-    
-    # Start as detached process with own console window
-    subprocess.Popen([
-        'cmd', '/c', 'start', 
-        'PersonaUI - Frontend Build', 
-        'cmd', '/c', _BUILD_SCRIPT
-    ], cwd=_PROJECT_ROOT)
-    
-    return success_response(message='Build script started')
+    """Runs build_frontend.bat in a new console window."""
+    bat_path = os.path.join(BASE_DIR, '..', 'bin', 'build_frontend.bat')
+    subprocess.Popen(['cmd', '/c', 'start', bat_path], shell=True)
+    return success_response(message='Frontend rebuild started')
 ```
 
-### Adding New Backend Commands
+Opens a new terminal window that runs the build script. The HTTP response returns immediately (non-blocking).
 
-1. **Add route handler** in `commands.py`
-2. **Register frontend command** that calls the API
-3. **Handle errors** appropriately
+### `POST /api/commands/reset-onboarding`
+
+```python
+@commands_bp.route('/api/commands/reset-onboarding', methods=['POST'])
+def reset_onboarding():
+    """Resets onboarding.json so onboarding shows again."""
+    onboarding_path = os.path.join(BASE_DIR, 'settings', 'onboarding.json')
+    with open(onboarding_path, 'w') as f:
+        json.dump({'completed': False}, f)
+    return success_response(message='Onboarding reset')
+```
+
+### `POST /api/commands/cortex-update`
+
+```python
+@commands_bp.route('/api/commands/cortex-update', methods=['POST'])
+def cortex_update():
+    """Triggers an immediate Cortex update + resets the cycle counter."""
+    persona_id = resolve_persona_id(session_id=request.json.get('session_id'))
+    cortex_service = get_cortex_service()
+    cortex_service.run_cortex_update(persona_id, session_id)
+    # Reset cycle counter so next auto-update is fresh
+    return success_response(message='Cortex update triggered')
+```
+
+---
+
+## Adding New Commands
+
+### 1. Register in Frontend
+
+Add entry to `commandRegistry.js`:
+
+```javascript
+{
+    name: 'mycommand',
+    description: 'What it does',
+    icon: '⚡',
+    action: async () => {
+        await fetch('/api/commands/my-command', { method: 'POST' });
+    },
+}
+```
+
+### 2. Add Backend Handler (if needed)
+
+Add route to `src/routes/commands.py`:
 
 ```python
 @commands_bp.route('/api/commands/my-command', methods=['POST'])
+@handle_route_error('my-command')
 def my_command():
-    # Server-side logic here
-    return success_response(data={'result': 'success'})
+    # Do something
+    return success_response(message='Done')
 ```
+
+### 3. Client-Only Commands
+
+Commands that don't need backend interaction can be entirely client-side:
 
 ```javascript
-register({
-  name: 'mycommand',
-  description: 'Do something on server',
-  async execute({ args }) {
-    const response = await fetch('/api/commands/my-command', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ args })
-    });
-    const result = await response.json();
-    console.log('Command result:', result);
-  }
-});
+{
+    name: 'clear',
+    description: 'Clear the input',
+    icon: '🗑️',
+    action: () => { /* client-side only */ },
+}
 ```
 
 ---
 
-## Usage Examples
+## Related Documentation
 
-### Simple Frontend Command
-
-```javascript
-// Clear chat history
-register({
-  name: 'clear',
-  description: 'Clear the current chat',
-  execute() {
-    // Clear messages from UI state
-    messageManager.clearMessages();
-    console.log('[SlashCommand] Chat cleared');
-  }
-});
-```
-
-### Command with Arguments
-
-```javascript
-// Set persona
-register({
-  name: 'persona',
-  description: 'Switch to a different persona',
-  execute({ args }) {
-    const personaName = args.trim();
-    if (!personaName) {
-      alert('Usage: /persona <name>');
-      return;
-    }
-    
-    // Switch persona logic
-    personaManager.switchTo(personaName);
-  }
-});
-```
-
-### Async Server Command
-
-```javascript
-// Deploy application
-register({
-  name: 'deploy',
-  description: 'Deploy the application',
-  async execute() {
-    try {
-      const response = await fetch('/api/commands/deploy', { 
-        method: 'POST' 
-      });
-      const result = await response.json();
-      
-      if (result.success) {
-        alert('Deployment started successfully');
-      } else {
-        alert(`Deployment failed: ${result.error}`);
-      }
-    } catch (error) {
-      alert(`Network error: ${error.message}`);
-    }
-  }
-});
-```
-
----
-
-## User Interface
-
-### Command Discovery
-
-- Type `/` in chat input to enter command mode
-- Commands appear in floating menu above input
-- Menu shows command name and description
-- Live filtering as you type more characters
-
-### Command Execution
-
-- **Keyboard**: Navigate with arrows, press Enter to execute
-- **Mouse**: Click on any command to execute
-- **Auto-complete**: Tab key fills in command name
-- **Arguments**: Continue typing after command name for arguments
-
-### Visual States
-
-- **Menu open**: Floating popup with command list
-- **Command selected**: Highlighted background on selected item
-- **No matches**: Menu disappears when no commands match
-- **Executing**: Normal loading states for async commands
-
----
-
-## File Structure
-
-```
-frontend/src/features/chat/
-├── components/ChatInput/
-│   ├── ChatInput.jsx           ← Main input with command support
-│   ├── SlashCommandMenu.jsx    ← Command popup menu
-│   └── *.module.css           ← Styling
-└── slashCommands/
-    ├── index.js               ← Main exports
-    ├── slashCommandRegistry.js ← Registry system
-    └── builtinCommands.js     ← Default commands
-
-src/routes/
-└── commands.py                ← Backend command handlers
-```
-
----
-
-## Extension Points
-
-### Adding New Commands
-
-1. **Frontend-only commands**: Add to `builtinCommands.js`
-2. **Server commands**: Add route to `commands.py` + frontend caller
-3. **Plugin system**: Import command modules in application startup
-
-### Command Categories
-
-Commands can be logically grouped:
-
-```javascript
-// Utility commands
-register({ name: 'reload', category: 'utility', ... });
-register({ name: 'clear', category: 'utility', ... });
-
-// Developer commands  
-register({ name: 'rebuild', category: 'dev', ... });
-register({ name: 'deploy', category: 'dev', ... });
-
-// Chat commands
-register({ name: 'persona', category: 'chat', ... });
-register({ name: 'mood', category: 'chat', ... });
-```
-
-### Advanced Features
-
-- **Command aliases**: Multiple names for same command
-- **Permission checks**: Restrict commands based on user role
-- **Help system**: Auto-generated help from command metadata
-- **Command history**: Track and suggest previously used commands
-
----
-
-## Best Practices
-
-### Command Design
-
-- **Keep names short**: Easy to type and remember
-- **Clear descriptions**: Help users discover functionality
-- **Handle errors gracefully**: Show user-friendly error messages
-- **Validate arguments**: Check required parameters before execution
-
-### Implementation Guidelines
-
-- **Async commands**: Use proper loading states and error handling
-- **Resource cleanup**: Cancel ongoing operations when appropriate
-- **User feedback**: Always indicate command execution status
-- **Consistent naming**: Follow established conventions
-
-### Performance Considerations
-
-- **Lazy loading**: Only load commands when needed
-- **Debounced filtering**: Avoid excessive filtering on rapid typing
-- **Memory management**: Clean up command references appropriately
-
----
-
-**📝 Document Version:** 1.0  
-**Created:** 2026-02-20  
-**Purpose:** Complete guide to PersonaUI's slash command system
-
-> The slash command system makes PersonaUI more powerful and developer-friendly by providing quick access to application functions through an intuitive chat interface.
+- [04 — Routes & API](04_Routes_and_API.md) — Command endpoints
+- [10 — Cortex Memory System](10_Cortex_Memory_System.md) — Cortex update triggered by `/cortex`
+- [12 — Frontend React SPA](12_Frontend_React_SPA.md) — Chat page components
+- [14 — Onboarding, Splash & Reset](14_Onboarding_Splash_and_Reset.md) — Onboarding triggered by `/onboarding`

@@ -1,220 +1,254 @@
 # 05 — Chat System
 
+> SSE streaming, message assembly, afterthought system, and the complete chat request lifecycle.
+
+---
+
 ## Overview
 
-The chat system is the **core feature** of PersonaUI. It enables real-time communication with AI personas via Server-Sent Events (SSE), including a unique "Afterthought" system for autonomous persona messages.
-
----
-
-## Architecture
+The chat system is the core feature of PersonaUI. A user message flows through several layers before reaching the Anthropic API and streaming back:
 
 ```
-Frontend (MessageManager.js)
-  │
-  ├── POST /chat_stream ──→ chat.py ──→ ChatService.chat_stream()
-  │                                         │
-  │                                    PromptEngine.build_system_prompt()
-  │                                    PromptEngine.build_prefill()
-  │                                    PromptEngine.get_chat_message_sequence()
-  │                                         │
-  │                                    ApiClient.stream(RequestConfig)
-  │                                         │
-  │                                    Anthropic Claude API
-  │
-  ├── POST /afterthought ──→ chat.py ──→ ChatService.afterthought_decision()
-  │   (decision phase)                     ChatService.afterthought_followup()
-  │
-  └── SSE Events ← chunk | done | error
+User types message (React)
+    │
+    ├── POST /chat_stream (Flask)
+    │     ├── Load persona config
+    │     ├── Load conversation history (SQLite)
+    │     ├── Load Cortex memory (if enabled)
+    │     ├── ChatService.stream_chat()
+    │     │     ├── PromptEngine → system prompt
+    │     │     ├── Build message sequence
+    │     │     └── ApiClient.stream() → Anthropic API
+    │     ├── SSE stream → React frontend
+    │     ├── Save messages to DB
+    │     └── Check Cortex update trigger
+    │
+    └── (optional) POST /afterthought
+          ├── Phase 1: Decision (should persona follow up?)
+          └── Phase 2: Followup (SSE streamed response)
 ```
 
 ---
 
-## Chat Flow (Main Message)
+## SSE Streaming — `/chat_stream`
 
-### 1. Frontend Sends Message
+### Request
 
-```javascript
-// MessageManager.js → sendMessage()
-POST /chat_stream {
-  message: "Hallo!",
-  session_id: 1,
-  api_model: "claude-sonnet-4-5-20250929",
-  api_temperature: 0.7,
-  experimental_mode: false,
-  context_limit: 25
-}
-```
-
-### 2. Backend Processing
-
-1. **Validation**: Message not empty, API key present
-2. **Context limit**: Clamped to [10, 100]
-3. **Character data** loaded (active persona)
-4. **Conversation context** fetched from persona-specific DB
-5. **SSE stream** started
-
-### 3. ChatService Message Assembly
-
-`_build_chat_messages()` follows the PromptEngine sequence:
-
-| Position | Content | Role |
-|----------|---------|------|
-| `first_assistant` | Memory context (memories) | `assistant` |
-| `history` | Conversation history | alternating `user`/`assistant` |
-| `prefill` | Control prefix for the response | `assistant` |
-
-**Edge Case Handling:**
-- Consecutive identical roles are separated by "bridge messages" (Claude API requires alternating roles)
-- Dialog injections are inserted as separate messages
-
-### 4. SSE Stream Processing
-
-```
-Server → SSE Events:
-  data: {"type":"chunk", "text":"Hallo"}
-  data: {"type":"chunk", "text":" zurück!"}
-  data: {"type":"done", "response":"Hallo zurück!", "stats":{...}, "character_name":"Mia"}
-```
-
-The frontend uses the `ReadableStream` API to process SSE events:
-- **`chunk`**: Text is continuously inserted into the chat bubble (with cursor animation)
-- **`done`**: Final response + statistics, user and bot messages are saved to the DB
-- **`error`**: Special handling for `credit_balance_exhausted`
-
-### 5. Save Message to DB
-
-After the complete stream:
-- User message saved on the **first chunk**
-- Bot response saved on the **done** event
-- Both stored in the persona-specific SQLite DB
-
----
-
-## Afterthought System
-
-A unique feature: The persona can **unsolicited** send a follow-up message.
-
-### Timer Escalation (Frontend)
-
-```
-10 seconds → 1 minute → 5 minutes → 15 minutes → 1 hour
-```
-
-After each timer expires, the decision phase is triggered.
-
-### Phase 1: Decision (Inner Dialogue)
-
-```
-POST /afterthought {
-  phase: "decision",
-  session_id: 1,
-  elapsed_time: "10 Sekunden"
-}
-```
-
-1. PromptEngine resolves `afterthought_inner_dialogue` prompt
-2. Persona system prompt includes `afterthought_system_note` (position: `system_prompt_append`)
-3. Persona performs an inner monologue and ends with **"Ja"** (Yes) or **"Nein"** (No)
-4. Response is parsed (last word)
-
-**Response:**
 ```json
+POST /chat_stream
 {
-  "decision": true,
-  "inner_dialogue": "Hmm, ich möchte noch etwas hinzufügen... Ja"
+    "message": "Hello!",
+    "session_id": 1,
+    "api_model": "claude-sonnet-4-20250514",
+    "api_temperature": 0.7,
+    "context_limit": 25,
+    "experimental_mode": false,
+    "pending_afterthought": null
 }
 ```
 
-### Phase 2: Followup (Streamed)
-
-Only if `decision = true`:
+### Response (Server-Sent Events)
 
 ```
-POST /afterthought {
-  phase: "followup",
-  session_id: 1,
-  inner_dialogue: "...",
-  elapsed_time: "10 Sekunden"
-}
+data: {"type": "chunk", "content": "Hello"}
+data: {"type": "chunk", "content": " there!"}
+data: {"type": "chunk", "content": " How are"}
+data: {"type": "chunk", "content": " you?"}
+data: {"type": "done", "content": "Hello there! How are you?", "usage": {"input_tokens": 1200, "output_tokens": 15}, "afterthought": true}
 ```
 
-- Returned as SSE stream (like `/chat_stream`)
-- Follow-up message is saved to the DB
-- Afterthought timers are reset
+Event types:
+- **`chunk`** — Partial token from the streaming response
+- **`done`** — Stream complete. Includes full text, token usage, and afterthought flag
+- **`error`** — An error occurred. Includes error message and optional `error_type`
 
----
+### Processing Flow
 
-## Variant System
-
-| Variant | Description |
-|---------|-------------|
-| `default` | Standard mode, SFW content |
-| `experimental` | Extended features, fewer restrictions |
-
-The variant affects:
-- Which prompts are loaded (`variant_condition`)
-- Prompt content (each domain file can have different variants)
-- System prompt assembly
+1. **Validate input** — Check for empty message, API key readiness
+2. **Load context** — Persona config, user profile, conversation history
+3. **Build messages** via `ChatService._build_chat_messages()`:
+   - Get message sequence from PromptEngine
+   - Insert conversation history at correct position
+   - Apply dialog injections (experimental mode)
+   - Add prefill if configured
+4. **Build system prompt** via PromptEngine — resolves all placeholders
+5. **Stream to API** via `ApiClient.stream()` — yields `StreamEvent` objects
+6. **Save to DB** — User message saved on first chunk, bot message on done
+7. **Cortex check** — `check_and_trigger_cortex_update()` if enabled
 
 ---
 
 ## System Prompt Assembly
 
-The system prompt is composed of **15+ individual prompt building blocks** (sorted by `order`):
-
-| Order | Prompt | Description |
-|-------|--------|-------------|
-| 100 | `impersonation` | Core identity instruction |
-| 200 | `persona_integrity_shield` | Persona integrity protection |
-| 300 | `system_rule` | General system rules |
-| 400 | `conversation_dynamics` | Conversation dynamics |
-| 500 | `topic_transition_guard` | Topic transition guard |
-| 600 | `persona_description` | Persona description |
-| 600 | `world_consistency` | World consistency |
-| 700 | `expression_style_detail` | Expression style details |
-| 900 | `emotional_state` | Emotional state |
-| 1000 | `user_info` | User information |
-| 1100 | `relationship_tracking` | Relationship tracking |
-| 1200 | `time_sense` | Time awareness |
-| 1300 | `response_style_control` | Response style control |
-| 1400 | `output_format` | Output format |
-| 1500 | `topic_boundaries` | Topic boundaries |
-| 1600 | `continuity_guard` | Continuity guard |
-
----
-
-## Notification Sound
-
-Generated via Web Audio API (no audio file import):
-- **Two-tone signal**: D5 (587 Hz) + G5 (784 Hz)
-- Duration: 80ms per tone
-- Gain envelope for a soft sound
-
----
-
-## Dependencies
+The system prompt is built from multiple prompt templates, each resolved via the PromptEngine:
 
 ```
-MessageManager.js (Frontend)
-  ├── /chat_stream (SSE) → chat.py
-  │     ├── ChatService.chat_stream()
-  │     │     ├── PromptEngine (system prompt, prefill, sequence)
-  │     │     ├── ApiClient.stream() → Anthropic API
-  │     │     └── database (conversation context)
-  │     └── database (save messages)
-  │
-  └── /afterthought (SSE/JSON) → chat.py
-        ├── ChatService.afterthought_decision()
-        └── ChatService.afterthought_followup()
+┌─────────────────────────────────────┐
+│          System Prompt              │
+├─────────────────────────────────────┤
+│ 1. system_rule                      │  ← Core behavior rules
+│ 2. persona_description              │  ← Character description
+│ 3. output_format                    │  ← Response formatting rules
+│ 4. response_style_control           │  ← Style enforcement
+│ 5. expression_style_detail          │  ← Writing style details
+│ 6. emotional_state                  │  ← Current emotional context
+│ 7. conversation_dynamics            │  ← Conversation flow rules
+│ 8. topic_boundaries                 │  ← Topic restrictions
+│ 9. topic_transition_guard           │  ← Smooth topic changes
+│ 10. relationship_tracking           │  ← User relationship context
+│ 11. continuity_guard                │  ← Memory continuity
+│ 12. persona_integrity_shield        │  ← Stay in character
+│ 13. world_consistency               │  ← Fictional world rules
+│ 14. time_sense                      │  ← Current date/time
+│ 15. user_info                       │  ← User name/preferences
+│ 16. cortex_context                  │  ← Long-term memory (if enabled)
+│ 17. conversation_history_context    │  ← Recent history summary
+│ 18. remember                        │  ← Key facts to remember
+└─────────────────────────────────────┘
 ```
+
+Each block is a JSON prompt template with `{{placeholder}}` variables resolved by the engine. The sequence and inclusion of blocks depends on the active variant (`default` or `experimental`).
 
 ---
 
-## Design Decisions
+## Message Sequence
 
-1. **SSE instead of WebSockets**: Server-Sent Events for simplicity and HTTP compatibility
-2. **Per-chunk streaming**: Response is streamed character by character for a natural typing feel
-3. **Afterthought timer escalation**: Escalating intervals prevent too-frequent API calls
-4. **Bridge messages**: Automatic insertion when consecutive identical roles occur
-5. **User message saved only on first chunk**: Prevents saving on API errors
-6. **Credit balance detection**: Special error handling for exhausted API credits
+The `ChatService._build_chat_messages()` method constructs the messages array sent to the Anthropic API. The sequence is defined by the PromptEngine and typically follows this order:
+
+```
+Messages Array:
+  1. [assistant] First assistant message (impersonation prefill)
+  2. [user/assistant...] Conversation history
+  3. [user/assistant...] Dialog injections (experimental mode)
+  4. [user] Current user message
+  5. [assistant] Response prefill (primes the response style)
+```
+
+The `conversation_history` is loaded from SQLite with a configurable `context_limit` (default: 25 messages, range: 10–100).
+
+---
+
+## Afterthought System
+
+The afterthought system allows the persona to autonomously send follow-up messages after a period of silence. It works in two phases:
+
+### Phase 1: Decision
+
+The frontend calls `POST /afterthought` with `phase: "decision"` after a configurable delay:
+
+```json
+POST /afterthought
+{
+    "session_id": 1,
+    "phase": "decision",
+    "elapsed_time": "15 seconds"
+}
+```
+
+The backend asks the AI: *"Should you say something more?"* — returns a yes/no decision with an inner dialogue explaining the reasoning.
+
+```json
+{
+    "success": true,
+    "data": {
+        "decision": true,
+        "inner_dialogue": "I want to ask about their day..."
+    }
+}
+```
+
+### Phase 2: Followup
+
+If the decision was "yes", the frontend calls `POST /afterthought` with `phase: "followup"`:
+
+```json
+POST /afterthought
+{
+    "session_id": 1,
+    "phase": "followup",
+    "inner_dialogue": "I want to ask about their day..."
+}
+```
+
+This returns an SSE stream just like `/chat_stream` with the persona's follow-up message.
+
+### Timer Escalation
+
+The afterthought delay escalates with consecutive follow-ups to prevent spam:
+
+```
+1st afterthought:  base delay (e.g., 15s)
+2nd afterthought:  2× base delay
+3rd afterthought:  increasing delay
+...until user sends a message (resets the counter)
+```
+
+### Afterthought Prompts
+
+Three dedicated prompt templates drive the system:
+- `afterthought_system_note` — Injected into the system prompt during afterthought
+- `afterthought_inner_dialogue` — The decision-phase prompt
+- `afterthought_followup` — The followup-phase system context
+
+---
+
+## Variant System
+
+The chat system supports two variants:
+
+| Variant | Activated By | Effect |
+|---------|-------------|--------|
+| `default` | Normal mode | Standard prompts and behavior |
+| `experimental` | `experimentalMode: true` | Extended prompts, dialog injections, prefill impersonation |
+
+Variants are configured in the PromptEngine manifest. Each prompt can have different text for each variant.
+
+---
+
+## Message Persistence
+
+Messages are saved to the per-persona SQLite database:
+
+```
+User sends "Hello"
+    → save_message(session_id, "Hello", is_user=True, char_name="User")
+
+AI responds "Hi there!"
+    → save_message(session_id, "Hi there!", is_user=False, char_name="Luna")
+```
+
+Session timestamps are updated after each message.
+
+---
+
+## Additional Chat Endpoints
+
+### Auto First Message — `POST /chat/auto_first_message`
+
+When `start_msg_enabled` is true in settings, the persona automatically sends a greeting when entering an empty chat. Uses the SSE streaming format.
+
+### Regenerate — `POST /chat/regenerate`
+
+Deletes the last bot message and re-generates it. The user message remains, and a new response is streamed.
+
+### Edit Last Message — `PUT /chat/last_message`
+
+Updates the text of the last message in the database. Used for inline editing.
+
+### Delete Last Message — `DELETE /chat/last_message`
+
+Removes the last message from the session.
+
+### Clear Chat — `POST /clear_chat`
+
+Deletes all messages in a session.
+
+---
+
+## Related Documentation
+
+- [04 — Routes & API](04_Routes_and_API.md) — Endpoint reference
+- [06 — Prompt Engine](06_Prompt_Engine.md) — Template resolution
+- [08 — Database Layer](08_Database_Layer.md) — Message persistence
+- [10 — Cortex Memory System](10_Cortex_Memory_System.md) — Cortex update triggers
+- [11 — Services Layer](11_Services_Layer.md) — ChatService and ApiClient

@@ -1,355 +1,273 @@
 # 06 — Prompt Engine
 
+> JSON-based prompt template system with dual manifests, placeholder resolution, and domain organization.
+
+---
+
 ## Overview
 
-The **PromptEngine** is the central prompt management system of PersonaUI. It is a pure Python library (no Flask/PyWebView dependencies) with **~1163 lines** in the core module. It manages JSON-based prompt templates with a three-phase placeholder resolution system.
+The PromptEngine is the central system for managing all AI prompt text. Instead of hardcoding prompt strings in Python code, all prompts are stored as **JSON template files** with `{{placeholder}}` variables that are resolved at runtime.
+
+**File:** `src/utils/prompt_engine/engine.py` (~1482 lines)
+
+```
+src/utils/prompt_engine/
+├── engine.py              Main PromptEngine class
+├── loader.py              JSON file loading
+├── placeholder_resolver.py Three-phase placeholder resolution
+├── validator.py           Prompt validation
+├── manifest_migrator.py   Manifest migration between versions
+└── __init__.py            Package exports
+```
 
 ---
 
 ## Architecture
 
 ```
-src/utils/prompt_engine/
-  ├── __init__.py              ← Re-exports PromptEngine
-  ├── engine.py (~1163 lines)  ← Core orchestrator
-  ├── loader.py (~191 lines)   ← JSON I/O layer
-  ├── placeholder_resolver.py  ← {{var}} resolution
-  ├── validator.py (232 lines) ← Schema validation
-  ├── memory_context.py        ← Memory formatting
-  ├── migrator.py              ← Legacy .txt → JSON migration
-  └── manifest_migrator.py     ← Single → Dual manifest migration
+┌─────────────────────────────────────────────────────────┐
+│                     PromptEngine                        │
+│                                                         │
+│  ┌─────────────┐   ┌───────────────┐   ┌─────────────┐  │
+│  │   Loader    │   │   Resolver    │   │  Validator  │  │
+│  │  (JSON I/O) │   │ (Placeholders)│   │  (Schema)   │  │
+│  └──────┬──────┘   └──────┬────────┘   └──────┬──────┘  │
+│         │                 │                    │        │
+│  ┌──────▼─────────────────▼────────────────────▼─────┐  │
+│  │              Internal Data Stores                 │  │
+│  │  _system_manifest  _user_manifest  _domains       │  │
+│  │  _system_registry  _user_registry  _resolver      │  │
+│  └───────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## File Structures
+## Dual Manifest System
 
-### Domain Files (`instructions/prompts/*.json`)
+The engine uses **two manifests** to separate system defaults from user customizations:
 
-Each JSON file contains a prompt entry:
+### System Manifest — `_meta/prompt_manifest.json`
+
+Defines all available prompts, their metadata, and default text:
 
 ```json
 {
-  "impersonation": {
+    "version": "2.0",
+    "prompts": {
+        "system_rule": {
+            "domain": "system_rule",
+            "label": "System Rules",
+            "description": "Core behavior rules for the persona",
+            "category": "core",
+            "order": 100,
+            "variants": {
+                "default": { "enabled": true },
+                "experimental": { "enabled": true }
+            }
+        },
+        "persona_description": { ... },
+        "output_format": { ... }
+    }
+}
+```
+
+### User Manifest — `_meta/user_manifest.json`
+
+Contains only user overrides. Missing entries fall back to the system manifest:
+
+```json
+{
+    "version": "2.0",
+    "prompts": {
+        "system_rule": {
+            "variants": {
+                "default": { "enabled": false }
+            }
+        }
+    }
+}
+```
+
+This dual system means users can customize prompts without affecting the original defaults. Factory reset simply deletes the user manifest.
+
+---
+
+## Domain Files — Prompt Templates
+
+Each prompt is stored in a **domain JSON file** in `src/instructions/prompts/`:
+
+```json
+// src/instructions/prompts/system_rule.json
+{
+    "id": "system_rule",
+    "label": "System Rules",
+    "description": "Core behavior rules",
     "variants": {
-      "default": {
-        "content": "Du bist {{char_name}}, {{char_description}}..."
-      },
-      "experimental": {
-        "content": "Alternative Version..."
-      }
-    },
-    "placeholders_used": ["char_name", "char_description"]
-  }
-}
-```
-
-**36 domain files** available, including:
-- Chat: `impersonation`, `system_rule`, `persona_description`, `output_format`, ...
-- Afterthought: `afterthought_inner_dialogue`, `afterthought_followup`, `afterthought_system_note`
-- Summary: `summary_impersonation`, `summary_system_rule`, `summary_user_prompt`, ...
-- Spec-Autofill: `spec_autofill_persona_type`, `_core_trait`, `_knowledge`, `_scenario`, `_expression_style`
-- Utility: `title_generation`, `background_autofill`
-
-### Manifest (`_meta/prompt_manifest.json`)
-
-```json
-{
-  "version": "2.0",
-  "prompts": {
-    "impersonation": {
-      "name": "Impersonation",
-      "description": "Core identity instruction",
-      "category": "system",
-      "type": "text",
-      "target": "system_prompt",
-      "position": "system_prompt",
-      "order": 100,
-      "enabled": true,
-      "domain_file": "impersonation.json",
-      "tags": ["core"],
-      "variant_condition": null
+        "default": {
+            "text": "You are {{char_name}}, a {{persona_type}}. You must always stay in character...",
+            "enabled": true
+        },
+        "experimental": {
+            "text": "You are {{char_name}}, a {{persona_type}}. Extended rules for experimental mode...",
+            "enabled": true
+        }
     }
-  }
 }
 ```
 
-### Dual Manifest System
+### Domain File Catalog (32 files)
 
-| Manifest | Description |
-|----------|-------------|
-| `prompt_manifest.json` | System manifest (Git-versioned) |
-| `user_manifest.json` | User manifest (gitignored) |
+| Category | Domains |
+|----------|---------|
+| **Core** | `system_rule`, `persona_description`, `output_format`, `impersonation` |
+| **Memory** | `conversation_history`, `cortex_context`, `remember` |
+| **Behavior** | `emotional_state`, `conversation_dynamics`, `topic_boundaries`, `topic_transition_guard` |
+| **Style** | `response_style_control`, `expression_style_detail` |
+| **Continuity** | `relationship_tracking`, `continuity_guard`, `persona_integrity_shield`, `world_consistency` |
+| **Afterthought** | `afterthought_followup`, `afterthought_inner_dialogue`, `afterthought_system_note` |
+| **Cortex** | `cortex_update_system`, `cortex_update_tools`, `cortex_update_user_message` |
+| **Autofill** | `background_autofill`, `spec_autofill_traits`, `spec_autofill_knowledge`, `spec_autofill_expression`, `spec_autofill_scenarios`, `spec_autofill_type` |
+| **Utility** | `time_sense`, `title_generation`, `user_info` |
 
-On ID collision, the user manifest wins. Each entry receives an `_origin` field (`system`/`user`).
-
-### Dual Registry System
-
-| Registry | File | Description |
-|----------|------|-------------|
-| `placeholder_registry.json` | System registry (Git-tracked) | Contains all system placeholders |
-| `user_placeholder_registry.json` | User registry (gitignored) | User-defined placeholders, absent on first start |
-
-On key collision, the **user registry** wins (user customization takes priority). Each entry in the merged view receives an `_origin` field for provenance tracking.
-
-#### Example: System Registry (`_meta/placeholder_registry.json`)
-
-```json
-{
-  "version": "2.0",
-  "placeholders": {
-    "char_name": {
-      "name": "Character Name",
-      "source": "persona_config",
-      "source_path": "persona_settings.name",
-      "type": "string",
-      "resolve_phase": "static",
-      "category": "persona"
-    },
-    "char_description": {
-      "name": "Character Description",
-      "source": "computed",
-      "compute_function": "build_character_description",
-      "resolve_phase": "computed",
-      "category": "persona"
-    }
-  }
-}
-```
-
-#### User Registry (`_meta/user_placeholder_registry.json`)
-
-```json
-{
-  "version": "2.0",
-  "placeholders": {
-    "custom_greeting": {
-      "name": "Custom Greeting",
-      "source": "static",
-      "type": "string",
-      "resolve_phase": "static",
-      "category": "custom",
-      "default": "Hallo!"
-    }
-  }
-}
-```
+Each domain file also has a copy in `_defaults/` for factory reset recovery.
 
 ---
 
-## Three-Phase Placeholder Resolution
+## Placeholder Resolution
+
+**File:** `src/utils/prompt_engine/placeholder_resolver.py` (~404 lines)
+
+Placeholders use the `{{key}}` syntax and are resolved in **three phases**:
 
 ### Phase 1: Static (Cached)
 
-Reads from `persona_config.json` and `user_profile.json` via dot-path navigation:
-- `persona_settings.name` → `"Mia"`
-- `user_name` → `"Saiks"`
+Loaded once from persona config and user profile:
 
-Lists are joined with `join_separator`. **Cache is invalidated on persona switch.**
+| Placeholder | Source | Example |
+|-------------|--------|---------|
+| `{{char_name}}` | persona config | "Luna" |
+| `{{persona_type}}` | persona config | "Companion" |
+| `{{char_age}}` | persona config | "25" |
+| `{{char_gender}}` | persona config | "female" |
+| `{{char_background}}` | persona config | "A curious AI..." |
+| `{{user_name}}` | user profile | "Alex" |
+| `{{language}}` | user profile | "english" |
 
-### Phase 2: Computed (Fresh on Every Call)
+### Phase 2: Computed (Dynamic)
 
-Calls registered Python functions:
+Calculated at resolve time via registered functions:
 
-| Compute Function | Result |
-|------------------|--------|
-| `build_character_description` | Complete persona description |
-| `build_persona_type_description` | Persona type label |
-| `build_char_core_traits` | Core traits with descriptions + behaviors |
-| `build_char_knowledge` | Knowledge areas with descriptions |
-| `build_char_expression` | Communication style details |
-| `build_char_scenarios` | Scenario settings |
-| `get_time_context.current_date` | Date (DD.MM.YYYY) |
-| `get_time_context.current_time` | Time (HH:MM) |
-| `get_time_context.current_weekday` | Weekday (German) |
+| Placeholder | Compute Function | Description |
+|-------------|-----------------|-------------|
+| `{{char_description}}` | `build_character_description()` | Full character description |
+| `{{persona_type_description}}` | `build_persona_type_description()` | Persona type explanation |
+| `{{char_core_traits}}` | `build_char_core_traits()` | Formatted trait list |
+| `{{char_knowledge}}` | `build_char_knowledge()` | Knowledge areas |
+| `{{char_expression}}` | `build_char_expression()` | Expression styles |
+| `{{char_scenarios}}` | `build_char_scenarios()` | Scenario descriptions |
+| `{{current_date}}` | `get_time_context()` | "23. Februar 2026" |
+| `{{current_time}}` | `get_time_context()` | "14:30" |
+| `{{current_weekday}}` | `get_time_context()` | "Montag" |
+| `{{cortex_persona_context}}` | `build_cortex_persona_context()` | Cortex memory summary |
 
-### Phase 3: Runtime (Passed by Caller)
+### Phase 3: Runtime (Caller-Provided)
 
-Injected by the calling code:
-- `elapsed_time` — Elapsed time (afterthought)
-- `inner_dialogue` — Inner dialogue (afterthought follow-up)
-- `memory_entries` — Memory entries
-- `input` — User input (spec-autofill)
-- `chat_text` — Chat text (summary)
-- `language` — Language
-- `history` — Conversation history
+Passed directly by the calling code:
 
-**Unknown placeholders** remain as `{{key}}` — no crash, no removal.
+| Placeholder | Provider | Used In |
+|-------------|----------|---------|
+| `{{elapsed_time}}` | `afterthought()` route | Afterthought prompts |
+| `{{inner_dialogue}}` | `afterthought()` route | Followup prompts |
+| `{{conversation_context}}` | `chat_stream()` route | History summary |
 
----
-
-## PromptEngine Class — Method Overview
-
-### Loading and Cache Management
-
-| Method | Description |
-|--------|-------------|
-| `_load_all()` | Master loading sequence: migration → manifests → system registry → user registry → merge → domains → resolver → validation |
-| `reload()` | Invalidate cache + re-run `_load_all()` |
-| `invalidate_cache()` | Clear only the PlaceholderResolver cache |
-
-### Prompt Access
-
-| Method | Description |
-|--------|-------------|
-| `get_all_prompts()` | All manifest entries (for editor sidebar) |
-| `get_prompt(id)` | Single prompt: `{id, meta, content}` |
-| `get_prompts_by_target(target)` | Enabled prompts for a target, sorted by `order` |
-| `get_prompts_by_category(category)` | All prompts of a category |
-
-### Prompt Building
-
-| Method | Return | Description |
-|--------|--------|-------------|
-| `build_system_prompt(variant)` | `str` | All `target=system_prompt` prompts, excluding `system_prompt_append`, excluding summary/spec_autofill |
-| `get_system_prompt_append(variant)` | `str` | Only `position=system_prompt_append` prompts |
-| `build_prefill(variant, category_filter)` | `str` | All `target=prefill` prompts; excludes `summary`/`spec_autofill` categories by default; `category_filter` allows targeted access |
-| `get_first_assistant_content(variant)` | `str` | All `position=first_assistant` prompts |
-| `get_chat_message_sequence(variant)` | `List[Dict]` | Ordered sequence: `first_assistant` → `history` → `prefill` |
-| `get_dialog_injections(variant)` | `List[Dict]` | Multi-turn dialog injections |
-| `resolve_prompt(id, variant)` | `str` | Resolve a single prompt |
-
-### Specialized Builders
-
-| Method | Description |
-|--------|-------------|
-| `build_summary_prompt(variant)` | `{system_prompt, prefill}` for memory summaries |
-| `build_afterthought_inner_dialogue(variant)` | Inner dialogue prompt |
-| `build_afterthought_followup(variant)` | Follow-up prompt |
-| `build_spec_autofill_prompt(type, input)` | Spec autofill with `{{input}}` |
-
-### Mutation (for Editor)
-
-| Method | Description |
-|--------|-------------|
-| `save_prompt(id, data)` | Content to domain file, metadata to the correct manifest |
-| `create_prompt(data)` | Always created in the user manifest |
-| `delete_prompt(id)` | Only user prompts can be deleted; system prompts can only be disabled |
-| `reorder_prompts(order)` | Update order values |
-| `toggle_prompt(id, enabled)` | Enable/disable a prompt |
-| `create_placeholder(key, data)` | Create a new static placeholder in the **user registry** |
-| `delete_placeholder(key)` | Delete a placeholder (only static/custom/user); automatically routes to the correct registry |
-
-### Export/Import/Reset
-
-| Method | Description |
-|--------|-------------|
-| `export_prompt_set(path)` | ZIP with manifests + registries + domain files + metadata |
-| `import_prompt_set(zip, mode)` | Import modes: `replace`, `merge`, `overwrite` |
-| `factory_reset(scope)` | Restore from `_defaults/`: `system` (keeps user prompts) or `full` |
-| `reset_prompt_to_default(id)` | Per-prompt factory reset |
-| `validate_integrity()` | Startup check: validates JSON, recovers from `_defaults/` |
+Unknown placeholders remain as `{{key}}` (no error raised).
 
 ---
 
-## Validation
+## Dual Placeholder Registry
 
-The `PromptValidator` checks:
+Similar to manifests, placeholders have system and user registries:
 
-| Check | Level | Description |
-|-------|-------|-------------|
-| Manifest fields | Error | Required fields: name, type, target, position, order, enabled, domain_file |
-| Enum values | Error | category, type, target, position from allowed sets |
-| Order type | Error | Must be numeric |
-| Cross-references | Error | Each `domain_file` in the manifest must exist as a loaded domain |
-| Domain content | Error | Text prompts need `content`, multi-turn needs `messages` |
-| Placeholder declaration | Warning | `{{key}}` in content should be listed in `placeholders_used` |
-| Placeholder registry | Warning | `{{key}}` in content should exist in the registry |
+- **`_meta/placeholder_registry.json`** — System-defined placeholders with types, sources, descriptions
+- **`_meta/user_placeholder_registry.json`** — User-added placeholders
 
-### Valid Enum Values
-
-| Field | Values |
-|-------|--------|
-| `category` | system, persona, context, prefill, dialog_injection, afterthought, summary, spec_autofill, utility, custom |
-| `type` | text, multi_turn |
-| `target` | system_prompt, message, prefill |
-| `position` | system_prompt, first_assistant, consent_dialog, user_message, prefill, system_prompt_append, history |
-
----
-
-## Memory Context Formatting
-
-`format_memories_for_prompt(memories, max_memories=30, engine=None)`:
-
-1. Truncate to `max_memories`
-2. Clean content
-3. If engine is available: `engine.resolve_prompt('memory_context', ...)` with `{{memory_entries}}`
-4. Fallback: Hardcoded `**MEMORY CONTEXT** ... **END OF MEMORY CONTEXT**` format
+```json
+{
+    "placeholders": {
+        "char_name": {
+            "type": "static",
+            "source": "persona_config",
+            "key": "char_name",
+            "description": "Character name"
+        },
+        "current_date": {
+            "type": "computed",
+            "function": "get_time_context.current_date",
+            "description": "Current date"
+        }
+    }
+}
+```
 
 ---
 
-## Migration System
+## Key Engine Methods
 
-### `PromptMigrator` — Legacy .txt → JSON
+```python
+engine = get_prompt_engine()
 
-Converts old `.txt`-based prompts to JSON domain files:
-- `{key}` → `{{key}}` for known placeholders
-- Backup creation
-- Parity check (whitespace-normalized comparison)
+# Resolve a single prompt
+text = engine.resolve_prompt('system_rule', variant='default')
 
-### `ManifestMigrator` — Single → Dual Manifest
+# Build the complete system prompt (all enabled prompts in order)
+system_prompt = engine.build_system_prompt(variant='default', runtime_vars={...})
 
-One-time migration: Compares active manifest with factory default. IDs not found in the default are classified as user prompts and moved to `user_manifest.json`.
+# Get the chat message sequence
+sequence = engine.get_chat_message_sequence(variant='default')
 
----
+# Get dialog injections (experimental mode)
+injections = engine.get_dialog_injections(variant='experimental')
 
-## Internal Registry Management
+# CRUD operations
+engine.update_prompt('system_rule', variant='default', text='new text...')
+engine.reset_prompt_to_default('system_rule')
 
-### Merge Strategy (`_merge_registries()`)
+# Export/Import
+engine.export_prompts('/path/to/export.zip')
+engine.import_prompts('/path/to/export.zip')
 
-1. Load system placeholders as base
-2. Overlay user placeholders on top
-3. On key collision: **user wins** (with log warning)
-4. `_user_placeholder_keys` set is rebuilt (for write routing)
-
-### Write Routing
-
-| Operation | Target |
-|-----------|--------|
-| `create_placeholder()` | Always → user registry |
-| `delete_placeholder()` | Checks via `_is_user_placeholder(key)` → user or system registry |
-| Reload after mutation | Merged view is recalculated |
-
-### Internal State Attributes
-
-| Attribute | Description |
-|-----------|-------------|
-| `_system_registry` | System registry (Git-tracked) |
-| `_user_registry` | User registry (gitignored) |
-| `_registry` | Merged view (system + user) |
-| `_user_placeholder_keys` | Set of keys belonging to the user registry |
-
-### PlaceholderResolver Integration
-
-The `PlaceholderResolver` receives the **merged registry dict** directly upon creation (instead of a file path as before). The internal `_load_registry()` method in the resolver is marked as **DEPRECATED** (legacy support).
+# Factory reset
+engine.factory_reset()  # Restores all prompts from _defaults/
+```
 
 ---
 
 ## Thread Safety
 
-The entire `PromptEngine` is **thread-safe** via `threading.RLock`:
-- All read and write operations are locked
-- RLock allows re-entrance (important for nested calls)
-- Atomic JSON write operations via temp file + `os.replace()`
+The PromptEngine uses a `threading.RLock` for all read/write operations. This is critical because:
+- Multiple chat requests can resolve prompts simultaneously
+- The Prompt Editor can modify prompts while chats are active
+- Cortex updates may trigger prompt changes
 
 ---
 
-## Dependencies
+## Manifest Migration
 
-```
-PromptEngine
-  ├── PromptLoader         ← JSON I/O (atomic writes, system + user registry)
-  ├── PlaceholderResolver  ← {{var}} resolution (receives merged registry dict)
-  │     ├── config.build_character_description
-  │     ├── config.load_char_config / load_char_profile
-  │     └── time_context.get_time_context
-  ├── PromptValidator      ← Schema validation
-  ├── ManifestMigrator     ← One-time migration
-  └── logger.log
+**File:** `src/utils/prompt_engine/manifest_migrator.py`
 
-Consumers:
-  ├── ChatService          ← System prompt, prefill, sequence
-  ├── MemoryService        ← Summary prompt
-  ├── ChatPromptBuilder    ← Legacy bridge
-  └── EditorApi            ← Prompt editor UI
-```
+When the prompt system is updated (new prompts, schema changes), the migrator handles the transition:
+
+1. Checks if `user_manifest.json` exists
+2. If the system manifest version is newer, merges new prompts into the user manifest
+3. Preserves all user customizations
+4. Creates backup before migration
+
+---
+
+## Related Documentation
+
+- [05 — Chat System](05_Chat_System.md) — How prompts are used in chat
+- [07 — Prompt Builder](07_Prompt_Builder.md) — Legacy builder with engine delegation
+- [09 — Persona & Instructions](09_Persona_and_Instructions.md) — Persona data that fills placeholders
+- [13 — Prompt Editor](13_Prompt_Editor.md) — UI for editing prompts

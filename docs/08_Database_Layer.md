@@ -1,226 +1,258 @@
 # 08 — Database Layer
 
-## Overview
-
-PersonaUI uses **per-persona SQLite databases** for chat messages, sessions, and memories. Each persona gets its own database file, enabling clean isolation and easy deletion.
+> Per-persona SQLite databases, named SQL queries, schema management, and migrations.
 
 ---
 
-## Architecture
+## Overview
+
+PersonaUI uses SQLite with a **per-persona database** architecture. Each persona has its own database file, keeping chat histories and sessions fully isolated.
 
 ```
 src/utils/database/
-  ├── __init__.py        ← Re-exports 27 functions
-  ├── connection.py      ← DB path and connection
-  ├── schema.py          ← Schema init and persona DB management
-  ├── migration.py       ← Registry-based migration framework
-  ├── chat.py (333 L.)   ← Chat messages CRUD
-  ├── sessions.py        ← Sessions CRUD
-  └── memories.py        ← Memories CRUD
-
-src/sql/
-  ├── schema.sql         ← Full DB schema
-  ├── chat.sql           ← 15 named chat queries
-  ├── sessions.sql       ← 9 named session queries
-  ├── memories.sql       ← 11 named memory queries
-  └── migrations.sql     ← 5 migration queries
+├── __init__.py      Public API (re-exports)
+├── connection.py    Connection management, schema init
+├── chat.py          Chat message CRUD (~325 lines)
+├── sessions.py      Session management (~244 lines)
+├── persona.py       Persona DB lifecycle (~222 lines)
+├── migration.py     Schema migrations (~133 lines)
+└── schema.py        Schema utilities
 ```
 
 ---
 
-## Per-Persona Database Isolation
+## Per-Persona Databases
 
-| Persona | Database File |
-|---------|--------------|
-| Default | `src/data/main.db` |
-| Custom (UUID) | `src/data/persona_{uuid}.db` |
+```
+src/data/
+├── main.db              Default persona database
+├── persona_abc123.db    Custom persona "abc123"
+├── persona_def456.db    Custom persona "def456"
+└── ...
+```
+
+### Database Routing
 
 ```python
-def get_db_path(persona_id='default'):
-    if persona_id == 'default':
+def get_db_path(persona_id='default') -> str:
+    if persona_id == 'default' or not persona_id:
         return os.path.join(DATA_DIR, 'main.db')
     return os.path.join(DATA_DIR, f'persona_{persona_id}.db')
 ```
 
-Connections are created with `PRAGMA foreign_keys = ON`.
+All database functions accept an optional `persona_id` parameter to target the correct database.
 
 ---
 
-## Schema (`src/sql/schema.sql`)
+## Schema
+
+**File:** `src/sql/schema.sql`
+
+```sql
+CREATE TABLE IF NOT EXISTS db_info (
+    key TEXT PRIMARY KEY,
+    value TEXT
+);
+
+CREATE TABLE IF NOT EXISTS chat_sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT DEFAULT 'Neue Konversation',
+    persona_id TEXT DEFAULT 'default',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS chat_messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id INTEGER NOT NULL,
+    message TEXT NOT NULL,
+    is_user BOOLEAN NOT NULL,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    character_name TEXT DEFAULT 'Assistant',
+    FOREIGN KEY (session_id) REFERENCES chat_sessions (id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_session_id ON chat_messages(session_id);
+```
 
 ### Tables
 
-| Table | Purpose | Key Columns |
-|-------|---------|-------------|
-| `db_info` | Key-value store for persona ID and migrations | `key TEXT PK`, `value TEXT` |
-| `chat_sessions` | Session management | `id`, `title`, `persona_id`, `created_at`, `updated_at`, `last_memory_message_id` |
-| `chat_messages` | Individual messages | `id`, `session_id FK`, `message`, `is_user BOOL`, `timestamp`, `character_name` |
-| `memories` | Memory storage with message range | `id`, `session_id`, `persona_id`, `content`, `is_active BOOL`, `start_message_id`, `end_message_id` |
+| Table | Purpose |
+|-------|---------|
+| `db_info` | Key-value store for DB metadata (e.g., `persona_id`) |
+| `chat_sessions` | Chat sessions with titles and timestamps |
+| `chat_messages` | Individual messages linked to sessions |
 
-### Indexes
-
-- `idx_session_id` on `chat_messages(session_id)`
-- `idx_memory_session`, `idx_memory_active`, `idx_memory_persona` on `memories`
-
-### Relationships
-
-- `chat_messages.session_id` → `chat_sessions.id` (CASCADE DELETE)
-- `last_memory_message_id` on sessions as a "marker" for incremental memory creation
+Cascading deletes: deleting a session automatically removes all its messages.
 
 ---
 
 ## Named SQL Queries
 
-### Chat Queries (`src/sql/chat.sql` — 15 Queries)
+All SQL lives in `.sql` files under `src/sql/`, loaded via the SQL Loader (see [03 — Utils & Helpers](03_Utils_and_Helpers.md)).
 
-| Query | Description |
-|-------|-------------|
-| `get_latest_session_id` | Most recent session by `updated_at` |
-| `get_memory_ranges` | Active memory ranges (non-null start/end) |
-| `get_chat_history` | Paginated messages (DESC with LIMIT/OFFSET) |
-| `get_conversation_context` | Last N messages for API context |
-| `insert_message` | Save message |
-| `get_messages_since_marker` | Messages after the last memory marker |
-| `count_user_messages_since_marker` | User messages since last memory |
-| `get_total_count` | Total message count |
+### `chat.sql` — Message Queries
+
+| Query Name | Purpose |
+|------------|---------|
+| `get_latest_session_id` | Get the most recent session ID |
+| `get_chat_history` | Get messages for a session (paginated) |
+| `get_message_count` | Count messages in a session |
+| `get_conversation_context` | Get recent messages for API context |
+| `insert_message` | Save a new message |
+| `update_session_timestamp` | Update session's `updated_at` |
+| `delete_all_messages` | Clear all messages in a session |
+| `delete_all_sessions` | Delete all sessions |
+| `get_total_message_count` | Total messages across all sessions |
 | `get_max_message_id` | Highest message ID |
+| `count_all_user_messages` | Count user messages only |
+| `get_all_messages_count` | Total messages for all sessions |
+| `get_all_messages_limited` | Limited message listing |
+| `get_last_message` | Get the last message in a session |
+| `delete_last_message` | Delete the last message |
+| `update_last_message_text` | Edit last message text |
+| `upsert_db_info` | Insert or update DB metadata |
 
-### Session Queries (`src/sql/sessions.sql` — 9 Queries)
+### `sessions.sql` — Session Queries
 
-| Query | Description |
-|-------|-------------|
-| `create_session` | Create new session |
-| `get_all_sessions` | All sessions (sorted by `updated_at DESC`) |
-| `get_session_by_id` | Single session |
-| `update_session_title` | Update title |
-| `delete_session` | Delete session (CASCADE) |
-| `get_session_count_summary` | Summary per persona |
+| Query Name | Purpose |
+|------------|---------|
+| `create_session` | Create a new chat session |
+| `get_all_sessions` | List all sessions |
+| `get_session_by_id` | Get a specific session |
+| `get_session_persona_id` | Get persona ID for a session |
+| `update_session_title` | Rename a session |
+| `delete_session` | Delete a session |
+| `get_current_session_id` | Get the active session |
+| `check_session_exists` | Check if session exists |
+| `get_session_count_summary` | Session count per persona |
 
-### Memory Queries (`src/sql/memories.sql` — 11 Queries)
+### `migrations.sql` — Migration Queries
 
-| Query | Description |
-|-------|-------------|
-| `insert_memory` | Save memory with message range |
-| `get_active_memories` / `get_all_memories` | Filtered by `is_active` |
-| `toggle_memory_status` | `SET is_active = NOT is_active` |
-| `get_max_end_message_id` | Marker recalculation |
-| `update_session_memory_marker` | Update session-level marker |
-| `upsert_db_info` | `INSERT OR REPLACE` for key-value metadata |
-
----
-
-## Database Functions
-
-### Connection & Schema (`connection.py`, `schema.py`)
-
-| Function | Description |
-|----------|-------------|
-| `get_db_path(persona_id)` | Resolve database path |
-| `get_db_connection(persona_id)` | Connection with foreign keys |
-| `init_persona_db(persona_id)` | Create/open DB file + initialize schema |
-| `create_persona_db(persona_id)` | New persona DB + migrations |
-| `delete_persona_db(persona_id)` | Delete DB file (protects `'default'`) |
-| `get_all_persona_ids()` | Scans `data/` for DBs |
-| `init_all_dbs()` | Server start: initialize all DBs + migrations |
-| `find_session_persona(session_id)` | Searches all persona DBs for a session ID |
-
-### Chat (`chat.py` — 333 Lines)
-
-| Function | Description |
-|----------|-------------|
-| `get_chat_history(limit, session_id, offset, persona_id)` | History with `memorized` flag |
-| `get_conversation_context(limit, session_id, persona_id)` | Claude API format, merges consecutive same-role messages |
-| `save_message(message, is_user, character_name, session_id, persona_id)` | Insert message, auto-create session |
-| `clear_chat_history(persona_id)` | Delete all messages and sessions |
-| `get_messages_since_marker(session_id, persona_id, limit)` | Messages after memory marker |
-
-**Important:** `get_conversation_context` merges consecutive same-role messages (e.g. from afterthought), because the Claude API requires alternating user/assistant roles.
-
-### Sessions (`sessions.py`)
-
-| Function | Description |
-|----------|-------------|
-| `create_session(title, persona_id)` | New chat session |
-| `get_all_sessions(persona_id)` | If `None`: aggregates across **all** persona DBs |
-| `get_persona_session_summary()` | Aggregates `{persona_id, session_count, last_updated}` |
-| `update_session_title(session_id, title, persona_id)` | Update title |
-| `delete_session(session_id, persona_id)` | Delete session (CASCADE deletes messages) |
-
-### Memories (`memories.py`)
-
-| Function | Description |
-|----------|-------------|
-| `save_memory(session_id, content, persona_id, start_message_id, end_message_id)` | With message range |
-| `get_all_memories(active_only, persona_id)` | All or only active |
-| `toggle_memory_status(memory_id, persona_id)` | Toggle active/inactive |
-| `delete_memory(memory_id, persona_id)` | Delete + recalculate marker |
-| `set_last_memory_message_id(session_id, message_id, persona_id)` | Set marker |
-
-**Important:** `delete_memory` recalculates the session memory marker by finding the highest `end_message_id` among remaining memories.
+| Query Name | Purpose |
+|------------|---------|
+| `check_last_memory_message_id` | Check if memory marker column exists |
+| `add_last_memory_message_id` | Add memory marker column |
+| `check_memory_message_ranges` | Check for range columns |
+| `add_start_message_id` | Add range start column |
+| `add_end_message_id` | Add range end column |
 
 ---
 
-## Migration Framework
+## Database Public API
 
-Registry-based migration system in `migration.py`:
+**File:** `src/utils/database/__init__.py`
 
-| Migration ID | Description |
-|--------------|-------------|
-| `add_last_memory_message_id` | Adds memory marker column to sessions |
-| `add_memory_message_ranges` | Adds start/end message IDs to memories |
+Re-exports all functions for clean imports:
 
-### Process
+```python
+from utils.database import (
+    # Connection
+    get_db_connection, init_persona_db, get_all_persona_ids,
+    
+    # Chat
+    get_chat_history, get_conversation_context, save_message,
+    clear_chat_history, get_last_message, delete_last_message,
+    update_last_message_text, get_message_count,
+    
+    # Sessions
+    create_session, get_all_sessions, get_session,
+    update_session_title, delete_session,
+    
+    # Persona
+    create_persona_db, delete_persona_db, init_all_dbs,
+)
+```
+
+---
+
+## Connection Management
+
+**File:** `src/utils/database/connection.py`
+
+```python
+def get_db_connection(persona_id='default') -> sqlite3.Connection:
+    db_path = get_db_path(persona_id)
+    conn = sqlite3.connect(db_path)
+    conn.execute('PRAGMA foreign_keys = ON')  # Enable FK constraints
+    return conn
+```
+
+Connections are **not pooled** — each function opens and closes its own connection. This is safe for SQLite's use case (single desktop user, low concurrency).
+
+---
+
+## Persona Database Lifecycle
+
+**File:** `src/utils/database/persona.py`
+
+```python
+# Create a new persona database
+create_persona_db('my_persona')  # Creates src/data/persona_my_persona.db
+
+# Delete a persona database
+delete_persona_db('my_persona')  # Removes the .db file
+
+# Initialize all databases on startup
+init_all_dbs()  # Creates main.db + migrates legacy chat.db if found
+```
+
+### Legacy Migration
+
+If an old `chat.db` file exists (from before per-persona databases), `migrate_from_legacy_db()` moves its data into `main.db`.
+
+---
+
+## Schema Migrations
+
+**File:** `src/utils/database/migration.py`
+
+Migrations are defined as a list of operations that run on every persona database:
 
 ```python
 MIGRATIONS = [
     {
         'id': 'add_last_memory_message_id',
-        'check': 'SELECT last_memory_message_id FROM chat_sessions LIMIT 1',
-        'apply': ['ALTER TABLE chat_sessions ADD COLUMN last_memory_message_id INTEGER']
-    }
+        'description': 'Memory marker column for sessions',
+        'check': 'migrations.check_last_memory_message_id',  # SQL query to check
+        'apply': ['migrations.add_last_memory_message_id'],   # SQL queries to apply
+    },
+    {
+        'id': 'add_memory_message_ranges',
+        'description': 'Start/End Message-ID for memory ranges',
+        'check': 'migrations.check_memory_message_ranges',
+        'apply': ['migrations.add_start_message_id', 'migrations.add_end_message_id'],
+    },
 ]
 ```
 
-1. Checks `db_info` table whether migration has already been applied
-2. Runs check SQL (catches error = column missing)
-3. Applies apply SQL
-4. Marks as applied in `db_info`
-5. Runs across **all** persona DBs on server start
+### How Migrations Work
+
+1. On startup, `run_pending_migrations()` is called from `app.py`
+2. For each persona database, iterates through `MIGRATIONS`
+3. Runs the `check` query — if it indicates the migration is needed:
+   - Executes all `apply` queries
+   - Records the migration ID in `db_info` to prevent re-running
+4. All checks use named SQL queries from `migrations.sql`
 
 ---
 
-## SQL Loader Convention
+## Data Flow Example
 
-SQL files use `-- name: query_name` comments as delimiters:
-
-```sql
--- name: get_chat_history
--- Description: Loads paginated chat messages
-SELECT * FROM chat_messages WHERE session_id = ? ORDER BY id DESC LIMIT ? OFFSET ?;
-
--- name: insert_message
--- Description: Inserts a new message
-INSERT INTO chat_messages (session_id, message, is_user, character_name) VALUES (?, ?, ?, ?);
 ```
-
-Access via `sql('chat.get_chat_history')` — module.query_name.
+User sends message:
+    chat.py → save_message(session_id=1, "Hello", is_user=True, persona_id="default")
+              → get_db_connection("default")  → opens main.db
+              → cursor.execute(sql('chat.insert_message'), ...)
+              → cursor.execute(sql('chat.update_session_timestamp'), ...)
+              → conn.commit() → conn.close()
+```
 
 ---
 
-## Dependencies
+## Related Documentation
 
-```
-database/
-  ├── connection.py (foundation — all others import from here)
-  ├── schema.py     ← sql_loader, logger
-  ├── migration.py  ← sql_loader, schema.get_all_persona_ids
-  ├── chat.py       ← sql_loader, connection
-  ├── sessions.py   ← sql_loader, connection, schema
-  └── memories.py   ← sql_loader, connection, chat.get_message_count
-
-Consumers:
-  ├── Routes (chat, sessions, memory, main, character)
-  ├── ChatService
-  ├── MemoryService
-  └── app.py (init_all_dbs on startup)
-```
+- [03 — Utils & Helpers](03_Utils_and_Helpers.md) — SQL Loader
+- [05 — Chat System](05_Chat_System.md) — Message persistence
+- [07 — Routes & API](04_Routes_and_API.md) — Session and chat endpoints
+- [09 — Persona & Instructions](09_Persona_and_Instructions.md) — Persona lifecycle

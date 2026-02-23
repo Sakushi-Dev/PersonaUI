@@ -1,145 +1,203 @@
 # 01 — App Core & Startup
 
-## Overview
-
-PersonaUI is a **desktop chat application** based on Flask + PyWebView that uses Anthropic's Claude API as the AI backend. The application enables creating and interacting with configurable AI personas through a native desktop interface.
+> How PersonaUI bootstraps, configures Flask, and launches the desktop window.
 
 ---
 
-## Startup Process (Bootstrap)
+## Startup Chain
 
-### Three-Stage Startup
+PersonaUI uses a **two-stage startup** with an optional process replacement:
 
 ```
-PersonaUI.exe → bin\start.bat → src/init.py
-  ├── Stage 1: Already in venv
-  │     ├── Quick dependency check
-  │     └── exec(app.py)  ← replaces the process (no subprocess overhead)
-  ├── Stage 2: Not in venv
-  │     ├── Check Python version (≥ 3.10)
-  │     ├── Create .venv if needed
-  │     └── Start app.py via subprocess in venv
-  └── Stage 3: First installation
-        ├── pip upgrade
-        ├── Install requirements.txt
-        └── Start app.py in venv
+bin/start.bat
+    └── python src/init.py
+            ├── Stage 1: Environment Bootstrap (init.py)
+            │     ├── Ensure Python venv exists
+            │     ├── Install/update pip dependencies
+            │     ├── Download Node.js 22 if missing
+            │     ├── Run npm install in frontend/
+            │     └── exec() → app.py (replaces process)
+            │
+            └── Stage 2: Flask Application (app.py)
+                  ├── Create Flask app + CORS
+                  ├── Init database schemas
+                  ├── Init singleton services (Provider)
+                  ├── Register 15 route blueprints
+                  ├── Apply IP access control
+                  ├── (--dev) Start Vite dev server
+                  └── Launch PyWebView window (or --no-gui)
 ```
-
-### `src/init.py` — Bootstrap Module
-
-| Function | Description |
-|----------|-------------|
-| `main()` | Three-stage bootstrap process |
-| `_load_launch_options()` | Reads `launch_options.txt` from project root |
-| `_merge_launch_options()` | Inserts non-comment lines into `sys.argv` |
-
-**Notable:** The `exec()` technique in Stage 1 completely replaces the `init.py` process with `app.py` — no double process overhead in the normal case.
-
-**Dynamically loaded functions** from `splash_screen/utils/install.py` (via `importlib.util` to avoid import chains):
-- `check_python_version()` — Validates Python 3.10+
-- `check_venv()` / `check_dependencies()` / `install_dependencies()`
-- `_get_venv_python()` / `_running_in_venv()` / `_get_requirements_path()`
 
 ---
 
-## `src/app.py` — Main Application
+## Stage 1: `init.py` — Environment Bootstrap
 
-### Module-Level Initialization (before `__main__`)
+**File:** `src/init.py` (~570 lines)
 
-1. **`os.chdir(script_dir)`** — Set working directory to `src/`
-2. **`ensure_env_file()`** — Create `.env` if not present
-3. **`load_dotenv()`** — Load environment variables
-4. **Flask app creation** — `SECRET_KEY` from `.env`, `json.sort_keys = False`
-5. **Session configuration**: 7-day lifetime, HttpOnly, SameSite=Lax
-6. **`init_services()`** — Initialize ApiClient, ChatService, MemoryService
-7. **Jinja filter** `format_message` registered
-8. **`register_routes(app)`** — Attach all Flask blueprints
+This is the **entry point** for all startup methods (`start.bat`, manual `python src/init.py`). Its job is to guarantee the runtime environment is ready before launching the actual app.
 
-### IP Access Control (`@app.before_request`)
+### What It Does
 
-`check_ip_access()` runs before **every** request. Exempt endpoints:
-- Static files, `access.*` routes, `onboarding.*` routes, `/api/access/*`
+1. **Virtual Environment** — Creates `.venv/` if it doesn't exist using `python -m venv`
+2. **Pip Dependencies** — Installs/upgrades packages from `requirements.txt` using the venv's pip
+3. **Node.js** — If `node` is not found on PATH, downloads Node.js v22.14.0 to `bin/node/` and adds it to PATH
+4. **npm Install** — Runs `npm install` in `frontend/` to ensure JS dependencies are present
+5. **Process Replacement** — Uses `os.execv()` to replace itself with `app.py`, passing through any CLI arguments
 
-Non-authorized IPs are redirected to `access.waiting_screen`.
+### Launch Options
 
-### Startup Modes
+Read from `launch_options.txt` in the project root:
 
-| Mode | Description |
-|------|-------------|
-| **PyWebView** (default) | Native desktop window with splash screen → chat UI |
-| **No-GUI** (`--no-gui`) | Pure Flask server in browser |
-| **Fallback** | If `pywebview` not installed → browser mode |
+```
+# PersonaUI – Launch Options
+# Available: --no-gui, --dev
+--no-gui
+--dev
+```
 
-### PyWebView Mode in Detail
+| Flag | Effect |
+|------|--------|
+| `--no-gui` | Skip PyWebView, open in browser only |
+| `--dev` | Start Vite dev server for hot-reload development |
+
+Options can also be passed as CLI arguments: `python src/init.py --dev --no-gui`
+
+### Key Implementation Details
+
+- Uses `subprocess` to run pip/npm commands, capturing output for logging
+- Node.js download is platform-aware (Windows zip, Linux/macOS tar.gz)
+- The `exec()` call replaces the current process entirely — `init.py` never returns after launching `app.py`
+- If `init.py` fails at any stage, it prints a clear error and exits
+
+---
+
+## Stage 2: `app.py` — Flask Application
+
+**File:** `src/app.py` (~374 lines)
+
+### App Factory: `create_app()`
 
 ```python
-# Hide console window
-hide_console_window()
-
-# Load window settings (position, size)
-load_window_settings()
-
-# Splash screen as initial page
-webview.Window(splash_html, ...)
-
-# Startup sequence in background thread
-startup_sequence → DB init → start Flask → navigate to chat
-
-# On close: save window position/size
-_on_closing → save_window_settings()
+def create_app():
+    app = Flask(__name__)
+    
+    # CORS — allow React dev server
+    CORS(app, resources={r"/*": {"origins": ["http://localhost:5173", "http://127.0.0.1:5173"]}})
+    
+    # Session config
+    app.secret_key = os.urandom(24)
+    
+    # Initialize databases
+    init_all_dbs()        # Per-persona SQLite schemas
+    run_pending_migrations()  # Schema migrations
+    
+    # Initialize services (singleton via Provider)
+    init_services()       # ApiClient, ChatService, CortexService, PromptEngine
+    
+    # Register all 15 route blueprints
+    register_routes(app)
+    
+    # IP access control middleware
+    apply_access_control(app)
+    
+    return app
 ```
 
-### Server Configuration
+### Service Initialization: `init_services()`
 
-Read from `settings/server_settings.json`:
-- **Port**: Default 5000
-- **Mode**: `local` (127.0.0.1) or `listen` (0.0.0.0)
+Creates singleton service instances and registers them with the Provider:
+
+```python
+def init_services():
+    api_key = os.environ.get('ANTHROPIC_API_KEY', '')
+    api_client = ApiClient(api_key)
+    chat_service = ChatService(api_client)
+    cortex_service = CortexService(api_client)
+    
+    Provider.set_api_client(api_client)
+    Provider.set_chat_service(chat_service)
+    Provider.set_cortex_service(cortex_service)
+    # PromptEngine is lazily initialized on first access
+```
+
+### Vite Dev Server Management
+
+When `--dev` is passed:
+
+```python
+def start_vite_dev_server():
+    """Starts Vite in a new console window for hot-reload development."""
+    frontend_dir = os.path.join(BASE_DIR, '..', 'frontend')
+    subprocess.Popen(
+        ['cmd', '/c', 'start', 'npm', 'run', 'dev'],
+        cwd=frontend_dir, shell=True
+    )
+```
+
+In dev mode, the React app is served by Vite on `:5173` which proxies API calls to Flask on `:5000`. In production, Flask serves `frontend/dist/` directly.
+
+### PyWebView Desktop Window
+
+```python
+def launch_window(app):
+    """Opens the PyWebView native window pointing to Flask."""
+    url = f"http://127.0.0.1:{PORT}"
+    
+    if '--no-gui' in sys.argv:
+        # Browser-only mode
+        webbrowser.open(url)
+        app.run(host='127.0.0.1', port=PORT)
+    else:
+        # Desktop window
+        window = webview.create_window(
+            'PersonaUI', url,
+            width=width, height=height,
+            x=x, y=y
+        )
+        webview.start()
+```
+
+Window position and size are persisted in `src/settings/window_settings.json` and restored on next launch.
+
+### Startup Sequence (Complete)
+
+```
+1. create_app()
+   ├── Flask() + CORS
+   ├── init_all_dbs()          → SQLite schemas
+   ├── run_pending_migrations() → DB migrations
+   ├── init_services()          → ApiClient, ChatService, CortexService
+   └── register_routes()        → 15 blueprints
+   
+2. Start Flask server (threaded, port 5000)
+
+3. (if --dev) start_vite_dev_server()
+
+4. (if --no-gui) open browser
+   (else) open PyWebView window
+   
+5. On window close → save window position → exit
+```
 
 ---
 
-## Dependencies
+## File Reference
 
-### External Packages (`requirements.txt`)
-
-| Package | Version | Purpose |
-|---------|---------|---------|
-| `flask` | ≥3.0.0 | Web framework |
-| `anthropic` | ≥0.34.0 | Claude API SDK |
-| `python-dotenv` | ≥1.0.0 | Load `.env` file |
-| `pyyaml` | ≥6.0.1 | YAML parsing |
-| `qrcode` | ≥7.4.2 | QR code generation for network access |
-| `pillow` | ≥10.0.0 | Image processing (avatars, QR) |
-| `pywebview` | ≥5.0.0 | Native desktop window |
-| `pytest` | ≥8.0.0 | Testing |
-| `pytest-mock` | ≥3.12.0 | Test mocking |
-
-**Note:** No database driver needed — uses Python's built-in `sqlite3`. No frontend build system — vanilla JS.
-
-### Internal Dependencies of `app.py`
-
-```
-app.py
-  ├── utils/logger         → Logging
-  ├── utils/database        → DB initialization
-  ├── utils/provider        → Service initialization
-  ├── utils/helpers         → format_message, ensure_env_file
-  ├── utils/access_control  → IP access control
-  ├── utils/window_settings → Window persistence
-  ├── routes/               → All Flask blueprints
-  └── splash_screen/        → Boot UI
-```
-
-### `launch_options.txt`
-
-Enables persistent CLI flag configuration without editing batch files:
-- `--no-gui` — Start without PyWebView window (currently the only documented option)
+| File | Lines | Purpose |
+|------|-------|---------|
+| `src/init.py` | ~570 | Environment bootstrap (venv, pip, node, npm) |
+| `src/app.py` | ~374 | Flask app creation, service init, window launch |
+| `launch_options.txt` | 4 | CLI flags (`--no-gui`, `--dev`) |
+| `bin/start.bat` | — | Windows launcher (calls `init.py`) |
+| `bin/install_py12.bat` | — | Python 3.12 installer helper |
+| `bin/reset.bat` | — | Factory reset launcher |
+| `bin/update.bat` | — | Git pull + dependency update |
 
 ---
 
-## Design Decisions
+## Related Documentation
 
-1. **Self-Bootstrapping**: `init.py` handles its own venv creation and dependency installation using only stdlib
-2. **Process replacement**: `exec()` instead of subprocess for zero-overhead startup
-3. **Graceful degradation**: PyWebView → browser fallback if not installed
-4. **Windows-native integration**: `ctypes` Win32 API for console hiding and multi-monitor detection
-5. **German codebase**: All comments, log messages, UI strings in German
+- [02 — Configuration & Settings](02_Configuration_and_Settings.md) — JSON settings loaded during startup
+- [03 — Utils & Helpers](03_Utils_and_Helpers.md) — Provider pattern, logger
+- [11 — Services Layer](11_Services_Layer.md) — Services initialized during startup
+- [12 — Frontend React SPA](12_Frontend_React_SPA.md) — React app served by Flask

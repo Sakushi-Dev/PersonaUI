@@ -1,263 +1,324 @@
 # 11 — Services Layer
 
+> ApiClient, ChatService, CortexService, and the Provider singleton pattern.
+
+---
+
 ## Overview
 
-The services layer encapsulates the core business logic of PersonaUI in **three central services**: `ApiClient`, `ChatService`, and `MemoryService`. These services manage API communication, chat orchestration, and the memory system.
+PersonaUI's service layer consists of three main services managed by the Provider:
+
+```
+Provider (singleton locator)
+├── ApiClient      Anthropic SDK wrapper (sync + streaming)
+├── ChatService    Chat orchestration (message assembly → API → response)
+└── CortexService  Long-term memory orchestration (tool_use)
+```
+
+All services are initialized once during startup and accessed via `provider.py`.
 
 ---
 
-## Architecture
+## Provider — Service Locator
 
-```
-Services Layer:
-  src/utils/services/
-    ├── __init__.py
-    ├── api_client.py      ← API communication with Anthropic
-    ├── chat_service.py    ← Chat orchestration & SSE streaming
-    └── memory_service.py  ← Memory management & extraction
-```
-
-All services are **lazily initialized** via the Provider pattern (see doc 03).
-
----
-
-## ApiClient (`api_client.py`)
-
-### Responsibility
-
-Direct interface to the Anthropic Claude API. Handles authentication, request building, streaming, and error handling.
-
-### Key Methods
-
-| Method | Description |
-|--------|-------------|
-| `send_message(messages, system, model, max_tokens, stream)` | Send message to Claude API |
-| `send_message_streaming(messages, system, model, max_tokens)` | SSE streaming response |
-| `count_tokens(messages, system)` | Token counting via API |
-| `get_available_models()` | List available models |
-
-### Streaming Implementation
+**File:** `src/utils/provider.py`
 
 ```python
-def send_message_streaming(self, messages, system, model, max_tokens):
-    with self.client.messages.stream(
-        model=model,
-        max_tokens=max_tokens,
-        system=system,
-        messages=messages
-    ) as stream:
-        for text in stream.text_stream:
-            yield text
+from utils.provider import (
+    get_api_client,       # → ApiClient
+    get_chat_service,     # → ChatService
+    get_cortex_service,   # → CortexService
+    get_prompt_engine,    # → PromptEngine (lazy init)
+)
 ```
 
-### Configuration
+### How It Works
 
-- **API Key**: Read from `user_settings.json` → `apiKey`
-- **Models**: Configurable per function (chat, afterthought, autofill)
-- **Max tokens**: Per-request configurable
-- **Timeout**: Default 120 seconds
-- **Retry logic**: Automatic retry on transient errors (429, 500, 529)
+```python
+class Provider:
+    _api_client = None
+    _chat_service = None
+    _cortex_service = None
+    _prompt_engine = None
+
+    @classmethod
+    def set_api_client(cls, client): cls._api_client = client
+    
+    @classmethod
+    def get_api_client(cls): return cls._api_client
+
+    @classmethod
+    def get_prompt_engine(cls):
+        if cls._prompt_engine is None:
+            cls._prompt_engine = PromptEngine()  # Lazy init
+        return cls._prompt_engine
+```
+
+Services are set during `app.py:init_services()`. The `PromptEngine` is lazily initialized on first call to `get_prompt_engine()`.
+
+---
+
+## ApiClient — Anthropic SDK Wrapper
+
+**File:** `src/utils/api_request/client.py` (~418 lines)
+
+```
+src/utils/api_request/
+├── client.py           ApiClient class
+├── response_cleaner.py Response post-processing
+├── types.py            RequestConfig, ApiResponse, StreamEvent
+└── __init__.py         Package exports
+```
+
+### Initialization
+
+```python
+client = ApiClient(api_key='sk-ant-...')
+# or
+client = ApiClient()  # Reads from ANTHROPIC_API_KEY env var
+```
+
+Creates an `anthropic.Anthropic` SDK instance. The `is_ready` property checks if the client was initialized successfully.
+
+### Request Types
+
+| Type | Purpose |
+|------|---------|
+| `RequestConfig` | Input: system prompt, messages, model, temperature, max_tokens, prefill |
+| `ApiResponse` | Output: success, content, usage, raw_response, stop_reason |
+| `StreamEvent` | Streaming output: type (`chunk`/`done`/`error`) + content |
+
+### Synchronous Requests
+
+```python
+response = client.request(RequestConfig(
+    system_prompt="You are a helpful assistant.",
+    messages=[{"role": "user", "content": "Hello"}],
+    model="claude-sonnet-4-20250514",
+    temperature=0.7,
+    max_tokens=4096,
+))
+# response.success, response.content, response.usage
+```
+
+Used for: afterthought decisions, cortex updates, spec autofill, session title generation, tests.
+
+### Streaming Requests
+
+```python
+for event in client.stream(config):
+    if event.type == 'chunk':
+        print(event.content, end='')  # Token fragment
+    elif event.type == 'done':
+        print(f'\n[Done: {event.usage}]')
+    elif event.type == 'error':
+        print(f'Error: {event.content}')
+```
+
+Used for: chat responses, afterthought followups.
+
+### API Key Update
+
+```python
+client.update_api_key('sk-ant-new-key')  # Hot-swap without restart
+```
+
+### Model Resolution
+
+```python
+client._resolve_model(model=None)
+# Returns configured default from settings if model is None
+```
+
+### Response Cleaning
+
+**File:** `src/utils/api_request/response_cleaner.py`
+
+Post-processes API responses:
+- Strips prefill text from the beginning of responses
+- Cleans up formatting artifacts
+- Handles edge cases in Claude's output
 
 ### Error Handling
 
-| Error | Handling |
-|-------|----------|
-| `AuthenticationError` | Clear message to check API key |
-| `RateLimitError` | Retry with exponential backoff |
-| `APIConnectionError` | Retry, then clear error message |
-| `APIStatusError` (overloaded) | Retry with backoff |
-| General exceptions | Logged, wrapped in `ServiceError` |
+The client catches `anthropic.APIError` and returns structured errors:
+- **Credit balance exhausted** → `error: "credit_balance_exhausted"` (special handling in UI)
+- **Other API errors** → Error string passed through
+- **Connection errors** → Generic error message
 
 ---
 
-## ChatService (`chat_service.py`)
+## ChatService — Chat Orchestration
 
-### Responsibility
+**File:** `src/utils/services/chat_service.py` (~559 lines)
 
-Orchestrates the complete chat flow: message preparation, prompt building, API call, response processing, persistence, and afterthought triggering.
+The ChatService is the central orchestator. It connects the PromptEngine, conversation history, Cortex memory, and the ApiClient.
 
-### Chat Flow (Sequence)
-
-```
-User sends message
-  → ChatService.process_message()
-    1. Load conversation history from DB
-    2. Build system prompt (via PromptEngine)
-    3. Append user message to history
-    4. Trim history if token limit exceeded
-    5. API call (streaming via ApiClient)
-    6. Collect & save AI response
-    7. Trigger afterthought (async)
-    8. Return full response
-```
-
-### Key Methods
-
-| Method | Description |
-|--------|-------------|
-| `process_message(user_message, session_id)` | Main entry: process a chat message |
-| `stream_response(user_message, session_id)` | SSE streaming chat response |
-| `get_conversation_history(session_id)` | Load message history |
-| `save_message(session_id, role, content)` | Persist a message |
-| `trim_history(messages, max_tokens)` | Shorten history to fit token limit |
-| `trigger_afterthought(session_id, user_msg, ai_msg)` | Start afterthought analysis |
-| `regenerate_response(session_id)` | Regenerate last AI response |
-| `edit_and_regenerate(session_id, message_id, new_content)` | Edit user message & regenerate |
-
-### SSE Streaming
+### Initialization
 
 ```python
-def stream_response(self, user_message, session_id):
-    # 1. Prepare (history, prompt, etc.)
-    # 2. Start streaming
-    for chunk in self.api_client.send_message_streaming(...):
-        yield f"data: {json.dumps({'text': chunk})}\n\n"
-    # 3. After complete: save, afterthought
-    yield f"data: {json.dumps({'done': True, 'message_id': msg_id})}\n\n"
+chat_service = ChatService(api_client)
+# Tries to load PromptEngine via Provider
+# Falls back gracefully if engine unavailable
 ```
 
-### History Management
-
-- **Token limit**: Configurable via `contextLength` setting
-- **Trimming strategy**: Oldest messages removed first, system prompt never trimmed
-- **Persistence**: All messages stored in persona-specific SQLite DB
-- **Context window**: Sliding window over conversation history
-
-### Afterthought System
-
-After each AI response, an **asynchronous afterthought analysis** is triggered:
-
-1. Build afterthought prompt (separate from chat prompt)
-2. Send last exchange (user + AI) for analysis
-3. Parse JSON response for:
-   - `inner_thoughts`: AI's internal monologue
-   - `mood_summary`: Current mood
-   - `memory_markers`: Memorable items (→ MemoryService)
-4. Save afterthought result to DB
-5. Send SSE event with afterthought data
-
-Uses the cost-efficient `apiAfterModel` to keep costs low.
-
-### Variant System
-
-Supports **response variants** (regeneration):
-
-```
-Original response → Variant 1 → Variant 2 → ...
-  ↑ User can navigate between variants
-```
-
-| Feature | Description |
-|---------|-------------|
-| Regenerate | Generate new response for same input |
-| Edit & regenerate | Edit user message, then regenerate |
-| Variant navigation | Switch between response variants |
-| Variant deletion | Remove unwanted variants |
-
-Variants are stored as separate messages with a `variant_group` field linking them.
-
----
-
-## MemoryService (`memory_service.py`)
-
-See dedicated [10_Memory_System.md](10_Memory_System.md) for full documentation.
-
-### Summary of Integration
-
-```
-ChatService → afterthought → memory_markers
-  → MemoryService.process_memory_markers()
-    → Validate & deduplicate
-    → Persist to DB
-    → Available via {{memories}} placeholder in next prompt
-```
-
----
-
-## Service Initialization
-
-### Provider Pattern
-
-Services are initialized lazily via the Provider module:
+### Main Method: `stream_chat()`
 
 ```python
-# src/utils/provider.py
-
-_api_client = None
-_chat_service = None
-_memory_service = None
-
-def get_api_client():
-    global _api_client
-    if _api_client is None:
-        _api_client = ApiClient(api_key=get_api_key())
-    return _api_client
-
-def get_chat_service():
-    global _chat_service
-    if _chat_service is None:
-        _chat_service = ChatService(
-            api_client=get_api_client(),
-            prompt_engine=get_prompt_engine()
-        )
-    return _chat_service
+for event in chat_service.stream_chat(
+    user_message="How are you?",
+    conversation_history=[...],
+    char_name="Luna",
+    user_name="Alex",
+    persona_language="english",
+    session_id=1,
+    persona_id="default",
+    api_model=None,
+    api_temperature=None,
+    experimental_mode=False,
+    pending_afterthought=None,
+):
+    handle_event(event)
 ```
 
-### Advantages
+### Internal Flow
 
-1. **No circular imports**: Services are created on-demand
-2. **Testable**: Easy to inject mocks
-3. **Memory efficient**: Only instantiated when needed
-4. **Configurable**: API key changes trigger re-initialization
+```
+stream_chat()
+    │
+    ├── 1. Build system prompt
+    │     └── PromptEngine.build_system_prompt(variant, runtime_vars)
+    │         ├── Resolve all enabled prompt templates
+    │         ├── Fill {{placeholders}} (3-phase resolution)
+    │         └── Concatenate into single system prompt string
+    │
+    ├── 2. Load Cortex context (if enabled)
+    │     └── CortexService.get_cortex_for_prompt(persona_id)
+    │
+    ├── 3. Build message sequence
+    │     └── _build_chat_messages()
+    │         ├── Get sequence from PromptEngine
+    │         ├── Insert conversation history
+    │         ├── Add dialog injections (experimental)
+    │         └── Add prefill (if configured)
+    │
+    ├── 4. Create RequestConfig
+    │     └── system_prompt + messages + model + temperature
+    │
+    └── 5. Stream request
+          └── ApiClient.stream(config) → yield StreamEvents
+```
 
-### Re-initialization
+### Settings Reading
 
-When settings change (e.g., API key), services are re-created:
+The ChatService reads settings directly from JSON files (not via the Provider) to stay decoupled:
 
 ```python
-def reset_services():
-    global _api_client, _chat_service, _memory_service
-    _api_client = None
-    _chat_service = None
-    _memory_service = None
+def _read_setting(key, default=None):
+    """Reads from user_settings.json, fallback to defaults.json."""
+```
+
+### Afterthought Support
+
+The ChatService also handles afterthought decisions:
+
+```python
+result = chat_service.evaluate_afterthought(
+    conversation_history, char_name, elapsed_time, persona_language
+)
+# {'decision': True, 'inner_dialogue': 'I should ask about...'}
 ```
 
 ---
 
-## Dependencies
+## CortexService — Long-Term Memory
 
-```
-ApiClient
-  ├── anthropic SDK
-  ├── user_settings.json (API key, models)
-  └── logger
+**File:** `src/utils/cortex_service.py` (~719 lines)
 
-ChatService
-  ├── ApiClient (API calls)
-  ├── PromptEngine (prompt building)
-  ├── Database (message persistence)
-  ├── MemoryService (afterthought → memories)
-  └── logger
+See [10 — Cortex Memory System](10_Cortex_Memory_System.md) for comprehensive documentation.
 
-MemoryService
-  ├── Database (memory persistence)
-  ├── ApiClient (for extraction, if needed)
-  └── logger
+Key methods:
 
-Provider
-  ├── ApiClient, ChatService, MemoryService
-  ├── PromptEngine
-  └── Settings (API key, model config)
+```python
+cortex = get_cortex_service()
+
+# Get formatted cortex content for system prompt
+context = cortex.get_cortex_for_prompt(persona_id)
+
+# File operations
+content = cortex.read_cortex_file(persona_id, 'memory.md')
+cortex.write_cortex_file(persona_id, 'memory.md', new_content)
+cortex.reset_cortex_file(persona_id, 'memory.md')
+
+# Update trigger
+cortex.run_cortex_update(persona_id, session_id)
 ```
 
 ---
 
-## Design Decisions
+## Service Lifecycle
 
-1. **Service separation**: Each service has a clear, single responsibility
-2. **Lazy initialization**: Services are only created when first accessed
-3. **Provider pattern**: Centralized service creation avoids circular dependencies
-4. **Streaming-first**: Chat uses SSE streaming for real-time response display
-5. **Afterthought as side-effect**: Post-processing runs after response delivery, doesn't block the user
-6. **Cost-aware model selection**: Different models for chat (powerful) vs. afterthought/autofill (cost-efficient)
-7. **Variant system**: Users can regenerate and compare responses without losing history
+```
+Startup (app.py)
+│
+├── ApiClient(api_key)          ← Created from .env
+├── ChatService(api_client)     ← Receives ApiClient
+├── CortexService(api_client)   ← Receives ApiClient
+│
+├── Provider.set_api_client()
+├── Provider.set_chat_service()
+├── Provider.set_cortex_service()
+│
+└── PromptEngine                ← Lazy-initialized on first use
+```
+
+### Hot-Swap API Key
+
+When the user changes their API key through the UI:
+
+```python
+client = get_api_client()
+client.update_api_key(new_key)
+# All services that reference this client automatically use the new key
+```
+
+---
+
+## Type Definitions
+
+**File:** `src/utils/api_request/types.py`
+
+```python
+@dataclass
+class RequestConfig:
+    system_prompt: str
+    messages: list
+    model: str = None
+    temperature: float = 0.7
+    max_tokens: int = 4096
+    prefill: str = None
+
+@dataclass
+class ApiResponse:
+    success: bool
+    content: str = ''
+    error: str = None
+    usage: dict = None
+    raw_response: Any = None
+    stop_reason: str = None
+
+@dataclass
+class StreamEvent:
+    type: str        # 'chunk', 'done', 'error'
+    content: str = ''
+    usage: dict = None
+```
+
+---
+
+## Related Documentation
+
+- [01 — App Core & Startup](01_App_Core_and_Startup.md) — Service initialization
+- [05 — Chat System](05_Chat_System.md) — How ChatService is used
+- [06 — Prompt Engine](06_Prompt_Engine.md) — Prompt resolution
+- [10 — Cortex Memory System](10_Cortex_Memory_System.md) — CortexService details

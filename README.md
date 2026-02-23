@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/python-3.10+-blue?style=flat-square&logo=python&logoColor=white" alt="Python 3.10+">
+  <img src="https://img.shields.io/badge/python-3.12+-blue?style=flat-square&logo=python&logoColor=white" alt="Python 3.12+">
   <img src="https://img.shields.io/badge/anthropic-Claude_API-blueviolet?style=flat-square" alt="Claude API">
   <img src="https://img.shields.io/badge/desktop-PyWebView-green?style=flat-square" alt="PyWebView">
   <img src="https://img.shields.io/badge/frontend-React_19_%2B_Vite-61DAFB?style=flat-square&logo=react&logoColor=white" alt="React 19 + Vite">
@@ -175,7 +175,7 @@ Every persona operates in its own isolated environment with dedicated Cortex fil
 | Layer | Technology | Purpose |
 |-------|------------|---------|
 | **AI Engine** | Anthropic Claude (SDK 0.34+) | Response generation with tool-use support |
-| **Backend** | Python 3.10+ with Flask 3.0+ | Application server and API |
+| **Backend** | Python 3.12+ with Flask 3.0+ | Application server and API |
 | **Desktop** | PyWebView 5.x | Native desktop window without Electron overhead |
 | **Frontend** | React 19, Vite 7, React Router 7 | Single-page application with hot module replacement |
 | **Storage** | SQLite (one database per persona) | Local-only storage, easy to back up or delete |
@@ -211,9 +211,9 @@ Every persona operates in its own isolated environment with dedicated Cortex fil
 +-------------------------------------------------------+
 ```
 
-**Backend** — 16 Flask blueprints: access, api, avatar, character, chat, commands, cortex, custom_specs, emoji, helpers, main, onboarding, react_frontend, sessions, settings, user_profile.
+**Backend** — 15 Flask blueprints: access, api, avatar, character, chat, commands, cortex, custom_specs, emoji, main, onboarding, react_frontend, sessions, settings, user_profile (~84 REST endpoints).
 
-**Frontend** — A React 19 single-page application with three pages (Chat, Onboarding, Waiting), 20 reusable UI components, 19 overlay dialogs, 5 context providers, and 13 API service modules. Includes a slash command system with autocomplete and keyboard navigation.
+**Frontend** — A React 19 single-page application with three pages (Chat, Onboarding, Waiting), 20 reusable UI components, 21 overlay dialogs, 5 context providers, 8 custom hooks, and 13 API service modules. Includes a slash command system with autocomplete and keyboard navigation.
 
 ---
 
@@ -226,22 +226,23 @@ The [`docs/`](docs/) directory contains detailed guides for every part of the sy
 
 | # | Document | Focus Area |
 |---|----------|------------|
-| 00 | [Project Summary](docs/00_Project_Summary.md) | Architecture, philosophy, design decisions |
-| 01 | [App Core & Startup](docs/01_App_Core_and_Startup.md) | Bootstrap process, PyWebView, init sequence |
-| 02 | [Configuration & Settings](docs/02_Configuration_and_Settings.md) | Settings hierarchy, JSON files, defaults |
-| 03 | [Utils & Helpers](docs/03_Utils_and_Helpers.md) | Logger, provider, access control, SQL loader |
-| 04 | [Routes & API](docs/04_Routes_and_API.md) | 16 blueprints, REST endpoints |
-| 05 | [Chat System](docs/05_Chat_System.md) | SSE streaming, afterthought system |
-| 06 | [Prompt Engine](docs/06_Prompt_Engine.md) | Placeholder resolution, validation |
-| 07 | [Prompt Builder](docs/07_Prompt_Builder.md) | Facade pattern, variants |
-| 08 | [Database Layer](docs/08_Database_Layer.md) | Per-persona SQLite, schema, migrations |
-| 09 | [Persona & Instructions](docs/09_Persona_and_Instructions.md) | Specifications, custom specs, lifecycle |
-| 11 | [Services Layer](docs/11_Services_Layer.md) | ChatService, CortexService, ApiClient |
-| 12 | [Frontend & Templates](docs/12_Frontend_and_Templates.md) | React SPA, components, Jinja2 templates |
-| 13 | [Prompt Editor](docs/13_Prompt_Editor.md) | Standalone editor, EditorApi |
-| 14 | [Onboarding, Splash & Reset](docs/14_Onboarding_Splash_and_Reset.md) | Lifecycle screens |
-| 15 | [Tests & Quality](docs/15_Tests_and_Quality.md) | Test strategy, reliability |
-| 16 | [Slash Commands](docs/16_Slash_Commands.md) | Command system with autocomplete |
+| 00 | [Project Summary](docs/00_Project_Summary.md) | Architecture, tech stack, design decisions |
+| 01 | [App Core & Startup](docs/01_App_Core_and_Startup.md) | Bootstrap chain, `init.py`, `app.py`, PyWebView |
+| 02 | [Configuration & Settings](docs/02_Configuration_and_Settings.md) | JSON settings, defaults, `.env`, config loading |
+| 03 | [Utils & Helpers](docs/03_Utils_and_Helpers.md) | Logger, provider, access control, SQL loader, helpers |
+| 04 | [Routes & API](docs/04_Routes_and_API.md) | 15 blueprints, ~84 REST endpoints |
+| 05 | [Chat System](docs/05_Chat_System.md) | SSE streaming, afterthought, message assembly |
+| 06 | [Prompt Engine](docs/06_Prompt_Engine.md) | JSON templates, manifests, placeholder resolution |
+| 07 | [Prompt Builder](docs/07_Prompt_Builder.md) | Legacy builder, engine delegation |
+| 08 | [Database Layer](docs/08_Database_Layer.md) | Per-persona SQLite, schema, migrations, SQL loader |
+| 09 | [Persona & Instructions](docs/09_Persona_and_Instructions.md) | Persona spec, config, CRUD, AI autofill |
+| 10 | [Cortex Memory System](docs/10_Cortex_Memory_System.md) | Long-term memory, tool_use, tier system |
+| 11 | [Services Layer](docs/11_Services_Layer.md) | ApiClient, ChatService, CortexService, Provider |
+| 12 | [Frontend — React SPA](docs/12_Frontend_React_SPA.md) | React architecture, components, services, hooks |
+| 13 | [Prompt Editor](docs/13_Prompt_Editor.md) | Standalone editor app, CRUD, preview |
+| 14 | [Onboarding, Splash & Reset](docs/14_Onboarding_Splash_and_Reset.md) | First-run wizard, splash screen, factory reset |
+| 15 | [Tests & Quality](docs/15_Tests_and_Quality.md) | Test architecture, fixtures, coverage |
+| 16 | [Slash Commands](docs/16_Slash_Commands.md) | Command system, registry, built-in commands |
 
 </details>
 
