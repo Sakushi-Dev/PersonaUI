@@ -35,21 +35,15 @@ export default function SupportOverlay({ open, onClose, panelOnly }) {
             <p className={styles.noteText} dangerouslySetInnerHTML={{ __html: s.noteTitle }} />
           </div>
 
-          {/* Ko-fi Section */}
+          {/* Ko-fi Widget */}
           <div className={styles.kofiSection}>
-            <div className={styles.kofiIcon}>☕</div>
-            <p className={styles.kofiText}>
-              {s.kofiText}
-            </p>
-            <a
-              href="https://ko-fi.com/sakushipersona"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.kofiButton}
-            >
-              <span className={styles.kofiEmoji}>☕</span>
-              {s.kofiBtn}
-            </a>
+            <iframe
+              id="kofiframe"
+              src="https://ko-fi.com/sakushipersonaui/?hidefeed=true&widget=true&embed=true&preview=true"
+              className={styles.kofiIframe}
+              height="712"
+              title="sakushipersonaui"
+            />
           </div>
 
           {/* GitHub Star */}

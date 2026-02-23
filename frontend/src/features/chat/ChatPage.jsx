@@ -197,11 +197,9 @@ function ChatPageContent() {
     { id: 'personaSettings',    hook: personaSettings },
     { id: 'interfaceSettings',  hook: interfaceSettings },
     { id: 'apiSettings',        hook: apiSettings },
-    { id: 'serverSettings',     hook: serverSettings },
-    { id: 'accessControl',      hook: accessControl },
     { id: 'support',            hook: support },
     { id: 'patchNotes',         hook: patchNotes },
-  ], [userProfile, apiKey, cortex, personaSettings, interfaceSettings, apiSettings, serverSettings, accessControl, support, patchNotes]);
+  ], [userProfile, apiKey, cortex, personaSettings, interfaceSettings, apiSettings, support, patchNotes]);
 
   const activeOverlayId = useMemo(() => {
     for (const item of overlaySequence) {
@@ -411,10 +409,6 @@ function ChatPageContent() {
         return <InterfaceSettingsOverlay panelOnly open={isOpen} onClose={closeAllOverlays} />;
       case 'apiSettings':
         return <ApiSettingsOverlay panelOnly open={isOpen} onClose={closeAllOverlays} />;
-      case 'serverSettings':
-        return <ServerSettingsOverlay panelOnly open={isOpen} onClose={closeAllOverlays} />;
-      case 'accessControl':
-        return <AccessControlOverlay panelOnly open={isOpen} onClose={closeAllOverlays} />;
       case 'support':
         return <SupportOverlay panelOnly open={isOpen} onClose={closeAllOverlays} />;
       case 'patchNotes':

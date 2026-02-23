@@ -162,6 +162,17 @@ export default function Header({
     typeof window !== 'undefined' && window.matchMedia('(hover: hover)').matches
   );
 
+  // ── Mobile detection ──
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches
+  );
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const handler = (e) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
   // ── Settings submenu state (with hover delay) ──
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef(null);
@@ -440,14 +451,18 @@ export default function Header({
                 <ChatIcon />
                 <span>{h.apiChatSubmenu}</span>
               </button>
-              <button className={styles.submenuBtn} onClick={() => { setSettingsOpen(false); onOpenServerSettings?.(); }}>
-                <ServerIcon />
-                <span>{h.serverSubmenu}</span>
-              </button>
-              <button className={styles.submenuBtn} onClick={() => { setSettingsOpen(false); onOpenAccessControl?.(); }}>
-                <ShieldIcon />
-                <span>{h.accessSubmenu}</span>
-              </button>
+              {!isMobile && (
+                <button className={styles.submenuBtn} onClick={() => { setSettingsOpen(false); onOpenServerSettings?.(); }}>
+                  <ServerIcon />
+                  <span>{h.serverSubmenu}</span>
+                </button>
+              )}
+              {!isMobile && (
+                <button className={styles.submenuBtn} onClick={() => { setSettingsOpen(false); onOpenAccessControl?.(); }}>
+                  <ShieldIcon />
+                  <span>{h.accessSubmenu}</span>
+                </button>
+              )}
             </div>
           </div>
         </div>,
