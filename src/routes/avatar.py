@@ -96,7 +96,7 @@ def upload_avatar():
     """
     Lädt ein Custom-Avatar-Bild hoch.
     Erwartet: file + crop_data (JSON) mit x, y, size für den Zuschnitt.
-    Speichert als 1024x1024 JPEG in static/images/custom/
+    Speichert als 1024x1024 JPEG in frontend/public/avatar/costum/
     """
     if 'file' not in request.files:
         return error_response('Keine Datei hochgeladen')

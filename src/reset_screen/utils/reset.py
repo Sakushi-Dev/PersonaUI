@@ -143,9 +143,9 @@ def reset_sequence(window):
     _type(window, '', 'default')
 
     # ========================================
-    # [1/9] Datenbanken
+    # [1/11] Datenbanken
     # ========================================
-    _type_bar(window, '  [1/9] Delete databases ', 'warn', 600)
+    _type_bar(window, '  [1/11] Delete databases ', 'warn', 600)
     data_dir = os.path.join(src, 'data')
     db_count = _delete_files(os.path.join(data_dir, '*.db'))
     _delete_files(os.path.join(data_dir, '*.db.backup'))
@@ -161,9 +161,9 @@ def reset_sequence(window):
         errors.append('Datenbanken konnten nicht gelöscht werden (App noch offen?)')
 
     # ========================================
-    # [2/9] .env
+    # [2/11] .env
     # ========================================
-    _type_bar(window, '  [2/9] Delete .env ', 'warn', 400)
+    _type_bar(window, '  [2/11] Delete .env ', 'warn', 400)
     env_path = os.path.join(src, '.env')
     if os.path.exists(env_path):
         try:
@@ -176,11 +176,11 @@ def reset_sequence(window):
         _type(window, '        Keine .env gefunden', 'default')
 
     # ========================================
-    # [3/9] Settings
+    # [3/11] Settings
     # ========================================
-    _type_bar(window, '  [3/9] Delete settings ', 'warn', 600)
+    _type_bar(window, '  [3/11] Delete settings ', 'warn', 600)
     settings_dir = os.path.join(src, 'settings')
-    for name in ['server_settings.json', 'user_settings.json', 'user_profile.json', 'window_settings.json', 'onboarding.json']:
+    for name in ['server_settings.json', 'user_settings.json', 'user_profile.json', 'window_settings.json', 'onboarding.json', 'cycle_state.json', 'emoji_usage.json', 'cortex_settings.json']:
         fp = os.path.join(settings_dir, name)
         if os.path.exists(fp):
             try:
@@ -193,9 +193,9 @@ def reset_sequence(window):
             _type(window, f'        {name} nicht vorhanden', 'default')
 
     # ========================================
-    # [4/9] Erstellte Personas + Custom Specs
+    # [4/11] Erstellte Personas + Custom Specs
     # ========================================
-    _type_bar(window, '  [4/9] Delete personas & custom specs ', 'warn', 700)
+    _type_bar(window, '  [4/11] Delete personas & custom specs ', 'warn', 700)
     personas_dir = os.path.join(src, 'instructions', 'created_personas')
 
     # Collect persona names before they are deleted
@@ -222,9 +222,9 @@ def reset_sequence(window):
         _type(window, '        Keine Custom Specs vorhanden', 'default')
 
     # ========================================
-    # [5/9] Aktive Persona entfernen (wird beim Start auto-erstellt)
+    # [5/11] Aktive Persona entfernen (wird beim Start auto-erstellt)
     # ========================================
-    _type_bar(window, '  [5/9] Entferne aktive Persona-Config ', 'warn', 400)
+    _type_bar(window, '  [5/11] Delete active persona config ', 'warn', 400)
     active_config = os.path.join(src, 'instructions', 'personas', 'active', 'persona_config.json')
     if os.path.exists(active_config):
         try:
@@ -236,9 +236,65 @@ def reset_sequence(window):
         _type(window, '        persona_config.json nicht vorhanden', 'default')
 
     # ========================================
-    # [6/9] Logs
+    # [6/11] Cortex custom memory files
     # ========================================
-    _type_bar(window, '  [6/9] Delete logs ', 'warn', 400)
+    _type_bar(window, '  [6/11] Delete cortex memory ', 'warn', 500)
+    cortex_custom = os.path.join(src, 'instructions', 'personas', 'cortex', 'custom')
+    cortex_count = 0
+    if os.path.isdir(cortex_custom):
+        for entry in os.listdir(cortex_custom):
+            entry_path = os.path.join(cortex_custom, entry)
+            if entry == '.gitkeep':
+                continue
+            if os.path.isdir(entry_path):
+                try:
+                    shutil.rmtree(entry_path)
+                    cortex_count += 1
+                except Exception:
+                    pass
+            elif os.path.isfile(entry_path):
+                try:
+                    os.remove(entry_path)
+                    cortex_count += 1
+                except Exception:
+                    pass
+    if cortex_count > 0:
+        _type(window, f'        {cortex_count} Cortex-Speicher gelöscht', 'info')
+    else:
+        _type(window, '        Keine Cortex-Daten gefunden', 'default')
+
+    # ========================================
+    # [7/11] Persona notes
+    # ========================================
+    _type_bar(window, '  [7/11] Delete persona notes ', 'warn', 400)
+    persona_notes_dir = os.path.join(src, 'data', 'persona_notes')
+    notes_count = 0
+    if os.path.isdir(persona_notes_dir):
+        for entry in os.listdir(persona_notes_dir):
+            entry_path = os.path.join(persona_notes_dir, entry)
+            if entry in ('.gitkeep', 'default'):
+                continue
+            if os.path.isdir(entry_path):
+                try:
+                    shutil.rmtree(entry_path)
+                    notes_count += 1
+                except Exception:
+                    pass
+            elif os.path.isfile(entry_path):
+                try:
+                    os.remove(entry_path)
+                    notes_count += 1
+                except Exception:
+                    pass
+    if notes_count > 0:
+        _type(window, f'        {notes_count} Persona-Notizen gelöscht', 'info')
+    else:
+        _type(window, '        Keine Persona-Notizen gefunden', 'default')
+
+    # ========================================
+    # [8/11] Logs
+    # ========================================
+    _type_bar(window, '  [8/11] Delete logs ', 'warn', 400)
     logs_dir = os.path.join(src, 'logs')
     log_count = _delete_files(os.path.join(logs_dir, '*.log*'))
     if log_count > 0:
@@ -247,10 +303,12 @@ def reset_sequence(window):
         _type(window, '        Keine Logs gefunden', 'default')
 
     # ========================================
-    # [7/9] Hochgeladene Avatare
+    # [9/11] Hochgeladene Avatare
     # ========================================
-    _type_bar(window, '  [7/9] Delete uploaded avatars ', 'warn', 500)
-    custom_dir = os.path.join(src, 'static', 'images', 'custom')
+    _type_bar(window, '  [9/11] Delete uploaded avatars ', 'warn', 500)
+    # Avatars are now stored in frontend/public/avatar/costum/
+    project_root = os.path.dirname(src)
+    custom_dir = os.path.join(project_root, 'frontend', 'public', 'avatar', 'costum')
     avatar_count = 0
     if os.path.isdir(custom_dir):
         for f in os.listdir(custom_dir):
@@ -265,10 +323,19 @@ def reset_sequence(window):
     else:
         _type(window, '        Keine Custom Avatare gefunden', 'default')
 
+    # Remove avatar index.json (rebuilt automatically on next start)
+    avatar_index = os.path.join(project_root, 'frontend', 'public', 'avatar', 'index.json')
+    if os.path.exists(avatar_index):
+        try:
+            os.remove(avatar_index)
+            _type(window, '        index.json entfernt (wird beim Start neu erstellt)', 'info')
+        except Exception:
+            pass
+
     # ========================================
-    # [8/8] __pycache__ + temporary files
+    # [10/11] __pycache__ + temporary files
     # ========================================
-    _type_bar(window, '  [8/9] Delete cache & temporary files ', 'warn', 600)
+    _type_bar(window, '  [10/11] Delete cache & temporary files ', 'warn', 600)
     cache_count = _delete_dirs_recursive(src, '__pycache__')
     _type(window, f'        {cache_count} __pycache__ Ordner gelöscht', 'info')
 
@@ -281,9 +348,9 @@ def reset_sequence(window):
             pass
 
     # ========================================
-    # [9/9] Reset prompts to factory defaults
+    # [11/11] Reset prompts to factory defaults
     # ========================================
-    _type_bar(window, '  [9/9] Reset prompts to factory defaults ', 'warn', 500)
+    _type_bar(window, '  [11/11] Reset prompts to factory defaults ', 'warn', 500)
     try:
         instructions_dir = os.path.join(src, 'instructions')
         from utils.prompt_engine import PromptEngine

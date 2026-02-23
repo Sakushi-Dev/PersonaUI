@@ -75,7 +75,6 @@ src/restart_server.bat
 
 # Lokale Status-Dateien (pro Installation)
 src/settings/onboarding.json
-src/settings/update_state.json
 
 # pytest_cache
 .pytest_cache/

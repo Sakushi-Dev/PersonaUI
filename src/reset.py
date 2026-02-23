@@ -142,20 +142,20 @@ if __name__ == '__main__':
         for f in glob.glob(os.path.join(data_dir, '*.db.backup')):
             try: os.remove(f)
             except: pass
-        print("[1/8] Datenbanken geloescht")
+        print("[1/11] Datenbanken geloescht")
 
         # .env
         env_path = os.path.join(src, '.env')
         if os.path.exists(env_path):
             os.remove(env_path)
-        print("[2/8] .env geloescht")
+        print("[2/11] .env geloescht")
 
         # Settings
-        for name in ['server_settings.json', 'user_settings.json', 'user_profile.json', 'window_settings.json', 'onboarding.json']:
+        for name in ['server_settings.json', 'user_settings.json', 'user_profile.json', 'window_settings.json', 'onboarding.json', 'cycle_state.json', 'emoji_usage.json', 'cortex_settings.json']:
             fp = os.path.join(src, 'settings', name)
             if os.path.exists(fp):
                 os.remove(fp)
-        print("[3/8] Einstellungen geloescht")
+        print("[3/11] Einstellungen geloescht")
 
         # Personas + Custom Specs
         for f in glob.glob(os.path.join(src, 'instructions', 'created_personas', '*.json')):
@@ -164,28 +164,64 @@ if __name__ == '__main__':
         cs = os.path.join(src, 'instructions', 'personas', 'spec', 'custom_spec', 'custom_spec.json')
         if os.path.exists(cs):
             os.remove(cs)
-        print("[4/8] Personas & Custom Specs geloescht")
+        print("[4/11] Personas & Custom Specs geloescht")
 
         # Active persona
         ac = os.path.join(src, 'instructions', 'personas', 'active', 'persona_config.json')
         if os.path.exists(ac):
             os.remove(ac)
-        print("[5/8] Aktive Persona entfernt")
+        print("[5/11] Aktive Persona entfernt")
+
+        # Cortex custom memory files
+        cortex_custom = os.path.join(src, 'instructions', 'personas', 'cortex', 'custom')
+        if os.path.isdir(cortex_custom):
+            for entry in os.listdir(cortex_custom):
+                entry_path = os.path.join(cortex_custom, entry)
+                if entry == '.gitkeep':
+                    continue
+                if os.path.isdir(entry_path):
+                    try: shutil.rmtree(entry_path)
+                    except: pass
+                elif os.path.isfile(entry_path):
+                    try: os.remove(entry_path)
+                    except: pass
+        print("[6/11] Cortex-Speicher geloescht")
+
+        # Persona notes
+        persona_notes_dir = os.path.join(src, 'data', 'persona_notes')
+        if os.path.isdir(persona_notes_dir):
+            for entry in os.listdir(persona_notes_dir):
+                entry_path = os.path.join(persona_notes_dir, entry)
+                if entry in ('.gitkeep', 'default'):
+                    continue
+                if os.path.isdir(entry_path):
+                    try: shutil.rmtree(entry_path)
+                    except: pass
+                elif os.path.isfile(entry_path):
+                    try: os.remove(entry_path)
+                    except: pass
+        print("[7/11] Persona-Notizen geloescht")
 
         # Logs
         for f in glob.glob(os.path.join(src, 'logs', '*.log*')):
             try: os.remove(f)
             except: pass
-        print("[6/8] Logs geloescht")
+        print("[8/11] Logs geloescht")
 
-        # Custom Avatare
-        custom_dir = os.path.join(src, 'static', 'images', 'custom')
+        # Custom Avatare (now in frontend/public/avatar/costum/)
+        root_dir = os.path.dirname(src)
+        custom_dir = os.path.join(root_dir, 'frontend', 'public', 'avatar', 'costum')
         if os.path.isdir(custom_dir):
             for f in os.listdir(custom_dir):
                 if f != '.gitkeep':
                     try: os.remove(os.path.join(custom_dir, f))
                     except: pass
-        print("[7/8] Custom Avatare geloescht")
+        # Remove avatar index.json (rebuilt automatically on next start)
+        avatar_index = os.path.join(root_dir, 'frontend', 'public', 'avatar', 'index.json')
+        if os.path.exists(avatar_index):
+            try: os.remove(avatar_index)
+            except: pass
+        print("[9/11] Custom Avatare geloescht")
 
         # __pycache__
         for root, dirs, _ in os.walk(src, topdown=False):
@@ -193,7 +229,7 @@ if __name__ == '__main__':
                 if d == '__pycache__':
                     try: shutil.rmtree(os.path.join(root, d))
                     except: pass
-        print("[8/9] Cache geloescht")
+        print("[10/11] Cache geloescht")
 
         # Prompts auf Factory-Defaults
         instructions_dir = os.path.join(src, 'instructions')
@@ -224,9 +260,9 @@ if __name__ == '__main__':
                         shutil.copy2(s, d)
                         restored += 1
                     except: pass
-            print(f"[9/9] {restored} Prompt-Dateien wiederhergestellt")
+            print(f"[11/11] {restored} Prompt-Dateien wiederhergestellt")
         else:
-            print("[9/9] WARNUNG: _defaults/ nicht gefunden, Prompt-Reset uebersprungen")
+            print("[11/11] WARNUNG: _defaults/ nicht gefunden, Prompt-Reset uebersprungen")
 
         print()
         print("Reset abgeschlossen!")

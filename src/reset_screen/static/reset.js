@@ -93,7 +93,7 @@ function _processQueue() {
     line.appendChild(textSpan);
     wrapper.appendChild(line);
     var i = 0;
-    var speed = 14;
+    var speed = 18;
     function tick() {
         if (i < item.text.length) {
             textSpan.textContent += item.text.charAt(i);
