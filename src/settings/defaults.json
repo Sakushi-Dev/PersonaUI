@@ -3,7 +3,7 @@
     "apiModel": "claude-sonnet-4-5-20250929",
     "apiAutofillModel": "claude-sonnet-4-5-20250929",
     "apiTemperature": "0.7",
-    "contextLimit": "65",
+    "contextLimit": "100",
     "backgroundColor_dark": "#1a2332",
     "backgroundColor_light": "#a3baff",
     "bubbleFontFamily": "ubuntu",

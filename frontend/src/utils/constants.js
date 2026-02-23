@@ -87,7 +87,7 @@ export const DEFAULTS = {
   color2_dark: '#3d4f66',
   apiModel: '',
   apiTemperature: 0.7,
-  contextLimit: 30,
+  contextLimit: 100,
   experimentalMode: false,
   nachgedankeMode: 'off',
   notificationSound: true,

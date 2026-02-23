@@ -79,14 +79,14 @@ def _get_context_limit() -> int:
             if os.path.exists(defaults_path):
                 with open(defaults_path, 'r', encoding='utf-8') as f:
                     data = json.load(f)
-                raw = data.get('contextLimit', '65')
+                raw = data.get('contextLimit', '100')
         except Exception:
-            raw = '65'
+            raw = '100'
 
     try:
         return max(10, int(raw))
     except (TypeError, ValueError):
-        return 65
+        return 100
 
 
 def _calculate_threshold(context_limit: int, frequency: str) -> int:

@@ -24,7 +24,7 @@ export default function ApiSettingsOverlay({ open, onClose, panelOnly }) {
 
   const [model, setModel] = useState('');
   const [temperature, setTemperature] = useState(0.7);
-  const [contextLimit, setContextLimit] = useState(65);
+  const [contextLimit, setContextLimit] = useState(100);
   const [experimentalMode, setExperimentalMode] = useState(false);
   const [nachgedankeMode, setNachgedankeMode] = useState('off');
 
@@ -33,7 +33,7 @@ export default function ApiSettingsOverlay({ open, onClose, panelOnly }) {
     if (!open) return;
     setModel(get('apiModel', 'claude-sonnet-4-5-20250929'));
     setTemperature(parseFloat(get('apiTemperature', '0.7')));
-    setContextLimit(parseInt(get('contextLimit', '65'), 10));
+    setContextLimit(parseInt(get('contextLimit', '100'), 10));
     setExperimentalMode(get('experimentalMode', false));
     setNachgedankeMode(get('nachgedankeMode', 'off'));
   }, [open, get]);
@@ -54,7 +54,7 @@ export default function ApiSettingsOverlay({ open, onClose, panelOnly }) {
   const handleReset = useCallback(() => {
     setModel('claude-sonnet-4-5-20250929');
     setTemperature(0.7);
-    setContextLimit(65);
+    setContextLimit(100);
     setExperimentalMode(false);
     setNachgedankeMode('off');
   }, []);

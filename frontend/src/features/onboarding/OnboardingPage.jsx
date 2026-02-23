@@ -63,7 +63,7 @@ export default function OnboardingPage() {
   });
 
   const [contextData, setContextData] = useState({
-    contextLimit: '200',
+    contextLimit: '100',
   });
 
   const [apiData, setApiData] = useState({

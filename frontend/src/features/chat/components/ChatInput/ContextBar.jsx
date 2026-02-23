@@ -10,7 +10,7 @@ export default function ContextBar() {
   const { totalMessageCount } = useSession();
   const { get } = useSettings();
 
-  const contextLimit = parseInt(get('contextLimit', 30), 10);
+  const contextLimit = parseInt(get('contextLimit', 100), 10);
 
   const { percentage, usedCount, level } = useMemo(() => {
     const used = Math.min(totalMessageCount, contextLimit);
