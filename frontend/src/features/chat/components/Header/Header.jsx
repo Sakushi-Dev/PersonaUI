@@ -184,6 +184,12 @@ export default function Header({
       clearTimeout(settingsTimerRef.current);
       settingsTimerRef.current = null;
     }
+    // Close community submenu (and cancel its pending timer)
+    if (communityTimerRef.current) {
+      clearTimeout(communityTimerRef.current);
+      communityTimerRef.current = null;
+    }
+    setCommunityOpen(false);
     setSettingsOpen(true);
   }, []);
 
@@ -213,6 +219,12 @@ export default function Header({
       clearTimeout(communityTimerRef.current);
       communityTimerRef.current = null;
     }
+    // Close settings submenu (and cancel its pending timer)
+    if (settingsTimerRef.current) {
+      clearTimeout(settingsTimerRef.current);
+      settingsTimerRef.current = null;
+    }
+    setSettingsOpen(false);
     setCommunityOpen(true);
   }, []);
 
