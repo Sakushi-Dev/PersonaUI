@@ -17,3 +17,4 @@ export { default as AccessControlOverlay } from './AccessControlOverlay';
 export { default as DebugOverlay } from './DebugOverlay';
 export { default as SupportOverlay } from './SupportOverlay';
 export { default as PatchNotesOverlay } from './PatchNotesOverlay';
+export { default as DisclaimerOverlay } from './DisclaimerOverlay';

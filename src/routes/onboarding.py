@@ -38,7 +38,7 @@ def complete_onboarding():
     try:
         os.makedirs(os.path.dirname(ONBOARDING_FILE), exist_ok=True)
         with open(ONBOARDING_FILE, 'w', encoding='utf-8') as f:
-            json.dump({'completed': True}, f, indent=2)
+            json.dump({'completed': True, 'disclaimer_accepted': False}, f, indent=2)
         log.info("Onboarding abgeschlossen.")
         return success_response()
     except Exception as e:
@@ -46,8 +46,54 @@ def complete_onboarding():
         return success_response()  # Trotzdem OK, damit Redirect funktioniert
 
 
+@onboarding_bp.route('/api/onboarding/accept-disclaimer', methods=['POST'])
+@handle_route_error('accept_disclaimer')
+def accept_disclaimer():
+    """Markiert den Disclaimer als akzeptiert."""
+    try:
+        data = {}
+        if os.path.exists(ONBOARDING_FILE):
+            with open(ONBOARDING_FILE, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+        data['disclaimer_accepted'] = True
+        os.makedirs(os.path.dirname(ONBOARDING_FILE), exist_ok=True)
+        with open(ONBOARDING_FILE, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=2)
+        log.info("Disclaimer akzeptiert.")
+        return success_response()
+    except Exception as e:
+        log.error("Fehler beim Akzeptieren des Disclaimers: %s", e)
+        return success_response()
+
+
+@onboarding_bp.route('/api/shutdown', methods=['POST'])
+@handle_route_error('shutdown')
+def shutdown_server():
+    """Fährt den Server herunter."""
+    import threading
+    import time
+
+    log.info("Server wird heruntergefahren (Benutzeranfrage).")
+
+    def do_shutdown():
+        time.sleep(0.5)
+        import os as _os
+        _os._exit(0)
+
+    threading.Thread(target=do_shutdown, daemon=True).start()
+    return success_response(message='Server wird beendet...')
+
+
 @onboarding_bp.route('/api/onboarding/status', methods=['GET'])
 @handle_route_error('onboarding_status')
 def onboarding_status():
     """Prüft ob das Onboarding bereits abgeschlossen wurde (für React SPA)."""
-    return success_response(completed=is_onboarding_complete())
+    disclaimer_accepted = False
+    try:
+        if os.path.exists(ONBOARDING_FILE):
+            with open(ONBOARDING_FILE, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            disclaimer_accepted = data.get('disclaimer_accepted', False)
+    except (json.JSONDecodeError, OSError):
+        pass
+    return success_response(completed=is_onboarding_complete(), disclaimer_accepted=disclaimer_accepted)

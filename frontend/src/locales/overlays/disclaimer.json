@@ -1,0 +1,30 @@
+{
+  "en": {
+    "title": "Important Notice",
+    "warningBanner": "Please read the following notice carefully.",
+    "fictionTitle": "Fictional Interactions",
+    "fictionText": "The personas presented in this application are <strong>fictional, interactive representations</strong>. You are not communicating with real people, but with an artificial intelligence assuming a role.",
+    "aiErrorTitle": "AI Can Make Mistakes",
+    "aiErrorText": "Please note that AI systems can produce inaccurate, incorrect, or inappropriate responses. Do not rely on AI statements for important decisions.",
+    "articleIntro": "If you would like to learn more about the dangers of emotional bonds with AI chatbots, read the article",
+    "articleLinkText": "Chatbot Psychosis – Risks of AI Relationships (Wikipedia)",
+    "quitBtn": "Quit",
+    "acceptBtn": "I Understand",
+    "savingText": "Saving…",
+    "fallbackText": "The application is shutting down. You can close this window now."
+  },
+  "de": {
+    "title": "Wichtiger Hinweis",
+    "warningBanner": "Bitte lesen Sie den folgenden Hinweis sorgfältig durch.",
+    "fictionTitle": "Fiktive Interaktionen",
+    "fictionText": "Bei den in dieser Anwendung dargestellten Personas handelt es sich um <strong>fiktive, interaktive Darstellungen</strong>. Sie kommunizieren hier nicht mit realen Personen, sondern mit einer künstlichen Intelligenz, die eine Rolle einnimmt.",
+    "aiErrorTitle": "KI kann Fehler machen",
+    "aiErrorText": "Bitte beachten Sie, dass KI-Systeme ungenaue, fehlerhafte oder unangemessene Antworten erzeugen können. Verlassen Sie sich nicht auf die Aussagen der KI für wichtige Entscheidungen.",
+    "articleIntro": "Falls Sie mehr über die Gefahren emotionaler Bindungen an KI-Chatbots erfahren möchten, lesen Sie den Artikel",
+    "articleLinkText": "Chatbot Psychosis – Risiken von KI-Beziehungen (Wikipedia)",
+    "quitBtn": "Beenden",
+    "acceptBtn": "Ich habe verstanden",
+    "savingText": "Wird gespeichert…",
+    "fallbackText": "Das Programm wird beendet. Sie können dieses Fenster jetzt schließen."
+  }
+}

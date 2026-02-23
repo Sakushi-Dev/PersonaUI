@@ -24,7 +24,6 @@ export default function StepFinish({ hasApiKey, onFinish, saving }) {
             disabled={saving}
           >
             {saving ? c.saving : s.launchBtn}
-            <span className={styles.btnArrow}>{saving ? '...' : '→'}</span>
           </button>
         </div>
       ) : (
