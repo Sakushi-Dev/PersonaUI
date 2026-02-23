@@ -7,7 +7,7 @@ Endpunkte für:
 - Genehmigen/Ablehnen von IPs (lokaler Nutzer)
 - Whitelist/Blacklist verwalten (lokaler Nutzer)
 """
-from flask import Blueprint, request, render_template
+from flask import Blueprint, request
 
 from utils.access_control import (
     request_access, poll_access_status, approve_ip, deny_ip,
@@ -16,7 +16,7 @@ from utils.access_control import (
 )
 from routes.helpers import success_response, error_response, handle_route_error
 from utils.logger import log
-from routes.react_frontend import has_react_build, serve_react_app
+from routes.react_frontend import serve_react_app
 
 
 access_bp = Blueprint('access', __name__)
@@ -26,10 +26,8 @@ access_bp = Blueprint('access', __name__)
 
 @access_bp.route('/access/waiting')
 def waiting_screen():
-    """Zeigt den Wartebildschirm für externe Geräte (React SPA oder Jinja-Fallback)"""
-    if has_react_build():
-        return serve_react_app()
-    return render_template('waiting.html')
+    """Zeigt den Wartebildschirm für externe Geräte (React SPA)."""
+    return serve_react_app()
 
 
 @access_bp.route('/api/access/request', methods=['POST'])

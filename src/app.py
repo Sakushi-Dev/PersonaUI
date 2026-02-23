@@ -16,7 +16,7 @@ from datetime import timedelta
 from utils.logger import log
 from utils.database import init_all_dbs
 from utils.provider import init_services
-from utils.helpers import format_message, ensure_env_file
+from utils.helpers import ensure_env_file
 from utils.access_control import check_access
 
 # Importiere Route-Registrierung
@@ -52,9 +52,6 @@ app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # CSRF-Schutz
 
 # Initialisiere Services (API-Client, Chat-Service)
 init_services()
-
-# Registriere Template-Filter
-app.jinja_env.filters['format_message'] = format_message
 
 # Registriere alle Route-Blueprints
 register_routes(app)

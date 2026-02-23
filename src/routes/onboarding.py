@@ -1,12 +1,12 @@
 """
-Onboarding Routes - First-Run Setup Sequenz
+Onboarding Routes – First-Run Setup Sequenz
 """
-from flask import Blueprint, render_template, redirect, url_for
+from flask import Blueprint, redirect, url_for
 import os
 import json
 from routes.helpers import success_response, handle_route_error
 from utils.logger import log
-from routes.react_frontend import has_react_build, serve_react_app
+from routes.react_frontend import serve_react_app
 
 onboarding_bp = Blueprint('onboarding', __name__)
 
@@ -27,12 +27,8 @@ def is_onboarding_complete():
 
 @onboarding_bp.route('/onboarding')
 def onboarding():
-    """Zeigt die Onboarding-Seite an (React SPA oder Jinja-Fallback)."""
-    if has_react_build():
-        return serve_react_app()
-    if is_onboarding_complete():
-        return redirect(url_for('main.index'))
-    return render_template('onboarding.html')
+    """Zeigt die Onboarding-Seite an (React SPA)."""
+    return serve_react_app()
 
 
 @onboarding_bp.route('/api/onboarding/complete', methods=['POST'])
