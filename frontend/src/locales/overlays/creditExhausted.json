@@ -1,0 +1,20 @@
+{
+  "en": {
+    "title": "API Credits Exhausted",
+    "text": "Your Anthropic API balance is used up.",
+    "instruction": "To continue chatting:",
+    "step1": "Open the Anthropic Dashboard",
+    "step2": "Go to <strong>Settings → Billing</strong>",
+    "step3": "Top up your balance",
+    "rechargeBtn": "Top Up Balance"
+  },
+  "de": {
+    "title": "API-Guthaben erschöpft",
+    "text": "Dein Anthropic API-Guthaben ist aufgebraucht.",
+    "instruction": "Um weiter chatten zu können:",
+    "step1": "Öffne das Anthropic Dashboard",
+    "step2": "Gehe zu <strong>Settings → Billing</strong>",
+    "step3": "Lade dein Guthaben auf",
+    "rechargeBtn": "Guthaben aufladen"
+  }
+}

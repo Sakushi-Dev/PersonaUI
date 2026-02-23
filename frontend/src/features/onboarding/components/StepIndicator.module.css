@@ -1,0 +1,50 @@
+/* ── StepIndicator – Legacy 1:1 ── */
+
+.dots {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 101;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+}
+
+.dot:disabled {
+  cursor: default;
+}
+
+.active {
+  background: #4f78e6;
+  transform: scale(1.3);
+  box-shadow: 0 0 8px rgba(79, 120, 230, 0.5);
+}
+
+.completed {
+  background: rgba(79, 120, 230, 0.4);
+}
+
+:root[data-theme="dark"] .dot {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+:root[data-theme="dark"] .active {
+  background: #4facfe;
+  box-shadow: 0 0 8px rgba(79, 172, 254, 0.5);
+}
+
+:root[data-theme="dark"] .completed {
+  background: rgba(79, 172, 254, 0.4);
+}

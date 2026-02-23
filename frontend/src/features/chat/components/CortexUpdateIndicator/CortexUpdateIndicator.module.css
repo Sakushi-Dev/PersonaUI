@@ -1,0 +1,48 @@
+/* ── Cortex Update Indicator ── */
+.indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  margin: 4px auto;
+  width: fit-content;
+  background: rgba(120, 90, 220, 0.12);
+  border: 1px solid rgba(120, 90, 220, 0.25);
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(90, 60, 180, 0.9);
+  animation: cortexSlideIn 0.3s ease-out, cortexPulse 2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+:global(body.dark-mode) .indicator {
+  background: rgba(140, 110, 240, 0.15);
+  border-color: rgba(140, 110, 240, 0.3);
+  color: rgba(180, 160, 255, 0.9);
+}
+
+.icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.text {
+  white-space: nowrap;
+}
+
+@keyframes cortexSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cortexPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}

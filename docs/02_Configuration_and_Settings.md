@@ -1,175 +1,206 @@
 # 02 — Configuration & Settings
 
-## Overview
-
-PersonaUI uses a **three-layer configuration system**: Factory defaults (versioned) → User overrides (generated) → Runtime environment (`.env`). All settings are stored as JSON files in the `src/settings/` directory.
+> How PersonaUI manages settings: JSON files, defaults, user overrides, and environment variables.
 
 ---
 
-## Configuration Hierarchy
+## Three-Layer Configuration Model
+
+PersonaUI uses a cascading configuration strategy:
 
 ```
-defaults.json (versioned, factory defaults)
-  ↓ overridden by
-user_settings.json (user overrides, generated at runtime)
-  ↓ read via
-settings_defaults.py (cached accessor with get_default())
-  ↓ supplemented by
-.env (API key, server mode, secret key)
+Layer 1 (lowest priority): defaults.json          — Factory defaults, never edited by user
+Layer 2:                    user_settings.json     — User overrides (saved via UI)
+Layer 3 (highest priority): .env                   — Environment variables (API keys, secrets)
 ```
+
+When a setting is read, the system checks `user_settings.json` first, then falls back to `defaults.json`. Environment variables (loaded via `python-dotenv`) override everything for sensitive values like API keys.
 
 ---
 
 ## Settings Files
 
-### `src/settings/defaults.json` — Factory Defaults
+All settings live in `src/settings/`:
 
-Versioned default settings shipped with updates:
+| File | Purpose | Edited By |
+|------|---------|-----------|
+| `defaults.json` | Factory defaults for all settings | Developers only |
+| `user_settings.json` | User overrides (theme, model, language, etc.) | UI / API |
+| `server_settings.json` | Server config (host, port, access control) | UI / API |
+| `user_profile.json` | User's name, persona language preference | UI |
+| `cortex_settings.json` | Cortex memory enabled/disabled, update frequency | UI |
+| `model_options.json` | Available AI models and their display names | Developers |
+| `onboarding.json` | Onboarding completed flag | System |
+| `window_settings.json` | PyWebView window position/size | System (auto-saved) |
+| `cycle_state.json` | Cortex update cycle tracking | System |
+| `emoji_usage.json` | Emoji usage tracking for personas | System |
+| `update_state.json` | App update state | System |
 
-| Key | Default Value | Description |
-|-----|--------------|-------------|
-| `apiModel` | `claude-sonnet-4-5-20250929` | Default AI model |
-| `apiAutofillModel` | `claude-sonnet-4-5-20250929` | Model for autofill features |
-| `apiModelOptions` | Array with 4 models | Available models with pricing data |
-| `apiTemperature` | `"0.7"` | Creativity temperature |
-| `contextLimit` | `"25"` | Max context messages |
-| `darkMode` | `false` | Dark mode on/off |
-| `dynamicBackground` | `true` | Animated background |
-| `experimentalMode` | `false` | Experimental mode |
-| `memoriesEnabled` | `true` | Memories enabled |
-| `nachgedankeEnabled` | `false` | Afterthought system |
-| `notificationSound` | `true` | Notification sound |
-| `backgroundColor_dark/light` | Color hex | Background colors per mode |
-| `bubbleFontFamily` | `"ubuntu"` | Chat font family |
-| `bubbleFontSize` | `"18"` | Chat font size |
-| `nonverbalColor` | `"#e4ba00"` | Color for *nonverbal* actions |
+### `defaults.json` — Factory Defaults
 
-**Model options** contain `value`, `label`, `pricingName`, `inputPrice`, `outputPrice` — the UI uses this data for model selection and cost display.
-
-### `src/settings/user_settings.json` — User Overrides
-
-Same schema as `defaults.json`, but only contains values changed by the user. Generated at runtime and overlays the defaults.
-
-### `src/settings/user_profile.json` — User Profile
+Contains the complete set of default values. Key sections:
 
 ```json
 {
-  "user_name": "Saiks",
-  "user_avatar": "697be4bc18ac.jpeg",
-  "user_avatar_type": "standard",
-  "user_type": "Menschlich",
-  "user_type_description": "Menschen kommen von der erde...",
-  "user_gender": "Männlich",
-  "user_interested_in": ["Weiblich"],
-  "user_info": ""
+    "api_model": "claude-sonnet-4-20250514",
+    "api_temperature": 0.7,
+    "api_max_tokens": 4096,
+    "context_limit": 25,
+    "theme": "dark",
+    "language": "en",
+    "cortexEnabled": true,
+    "cortexFrequency": "medium",
+    "afterthoughtEnabled": true,
+    "afterthoughtDelay": 15,
+    "experimentalMode": false,
+    "streamingEnabled": true
 }
 ```
 
-Used by the prompt builder for `{{user_name}}`, `{{user_type}}` etc. injection into system prompts. Validations:
-- `user_gender`: Only `Männlich`, `Weiblich`, `Divers` or `null`
-- `user_interested_in`: Filtered to valid genders
-- `user_info`: Max 500 characters
-- `user_name`: Max 30 characters, default "User"
+### `user_settings.json` — User Overrides
 
-### `src/settings/onboarding.json` — Onboarding Status
+Only contains values the user has explicitly changed. Missing keys fall back to `defaults.json`:
 
 ```json
-{ "completed": true }
+{
+    "api_model": "claude-sonnet-4-20250514",
+    "theme": "light",
+    "language": "de"
+}
 ```
 
-Boolean flag. When `false`, users are guided through the initial setup. Onboarding routes are always exempt from access control.
-
-### `src/settings/update_state.json` — Git Update Tracking
+### `user_profile.json` — User Identity
 
 ```json
-{ "commit": "34257b246e27737987fdbc90aea91e326d073ce4" }
+{
+    "user_name": "Alex",
+    "persona_language": "english",
+    "avatar": null
+}
 ```
 
-Stores the last seen Git commit hash. Compared with the remote HEAD on startup to indicate available updates.
-
-### `src/settings/window_settings.json` — Window State
-
-```json
-{ "width": 1280, "height": 860, "x": 373, "y": 412 }
-```
-
-Saved on close and restored on next startup.
-
-### `src/settings/server_settings.json` — Server Configuration
-
-Contains `server_mode` (`local`/`listen`), `port`, whitelist/blacklist for access control.
+The `persona_language` field determines the language the AI persona speaks. This is separate from the UI language (`language` in settings).
 
 ---
 
-## Settings Accessor (`src/utils/settings_defaults.py`)
+## Config Access Pattern
 
-### Functions
+### Backend: `settings_defaults.py`
 
-| Function | Description |
-|----------|-------------|
-| `load_defaults()` | Loads and caches `defaults.json` (singleton) |
-| `get_default(key, fallback)` | Get a single default value |
-| `get_api_model_default()` | Default API model |
-| `get_api_model_options()` | Model list with pricing metadata |
-| `get_autofill_model()` | AutoFill model (fallback to main model) |
+Provides accessor functions that implement the three-layer cascade:
 
-**Pattern:** Singleton cache. Defaults are loaded once and never reloaded at runtime — changes to `defaults.json` require an app restart.
+```python
+def get_setting(key, default=None):
+    """Read from user_settings.json, fallback to defaults.json."""
+    user_val = _read_json('user_settings.json').get(key)
+    if user_val is not None:
+        return user_val
+    return _read_json('defaults.json').get(key, default)
 
----
+def get_api_model_default():
+    return get_setting('api_model', 'claude-sonnet-4-20250514')
+```
 
-## Window Settings (`src/utils/window_settings.py`)
+### Backend: `config.py`
 
-### Functions
+The larger config module (`~802 lines`) handles persona-specific configuration:
 
-| Function | Description |
-|----------|-------------|
-| `load_window_settings()` | Loads from JSON, validates position, returns defaults if missing |
-| `save_window_settings(w, h, x, y)` | Sanitizes and saves to JSON |
-| `_get_virtual_screen_bounds()` | Multi-monitor detection via Win32 API (`ctypes.windll.user32`) |
-| `_sanitize_position(x, y, w, h)` | Validates coordinates on screen, detects minimized windows (`-32000`) |
-| `_sanitize_size(w, h)` | Enforces minimum dimensions (400×300) |
+```python
+def load_character(persona_id=None):
+    """Load the active persona's configuration."""
+    # Returns dict with char_name, persona_type, traits, knowledge, etc.
 
-**Windows-specific:** Uses Win32 API via `ctypes` for multi-monitor support. Off-screen detection is important because PyWebView can report `-32000` coordinates for minimized windows.
+def save_character(data, persona_id=None):
+    """Save persona configuration changes."""
+
+def get_active_persona_id():
+    """Get the ID of the currently active persona."""
+
+def get_config_path(relative_path):
+    """Resolve a path relative to src/ directory."""
+```
+
+### Frontend: `SettingsContext`
+
+React context that fetches settings from the API and provides them to all components:
+
+```jsx
+const { settings, updateSetting } = useSettings();
+// settings.theme, settings.language, settings.api_model, etc.
+```
 
 ---
 
 ## Environment Variables (`.env`)
 
-| Variable | Description |
-|----------|-------------|
-| `ANTHROPIC_API_KEY` | Claude API key |
-| `SECRET_KEY` | Flask session key (auto-generated via `secrets.token_hex(32)`) |
-| `SERVER_MODE` | `local` or `listen` |
-| `SERVER_PORT` | Server port (default 5000) |
+The `.env` file is auto-created by `helpers.py:ensure_env_file()` on first run:
 
-The `.env` file is automatically created if not present (`ensure_env_file()`).
+```env
+ANTHROPIC_API_KEY=sk-ant-...
+```
+
+| Variable | Purpose | Required |
+|----------|---------|----------|
+| `ANTHROPIC_API_KEY` | Claude API key | Yes (for chat) |
+
+The API key can also be set via the UI (Settings overlay), which writes to `.env`.
 
 ---
 
-## Dependencies
+## Settings Migration
 
+**File:** `src/utils/settings_migration.py`
+
+When the app updates, new settings may be introduced or old ones renamed. The migration system handles this:
+
+```python
+def migrate_settings():
+    """Check user_settings.json against defaults.json schema."""
+    # Remove deprecated keys
+    # Add new keys with default values
+    # Rename changed keys
 ```
-settings_defaults.py ← defaults.json
-                     ← Used by all routes and services
-                     
-window_settings.py   ← window_settings.json
-                     ← Used by app.py (start/close)
-                     ← Depends on ctypes (Win32 API)
 
-user_profile.json    ← Used by prompt_builder (placeholder resolution)
-                     ← Used by routes/user_profile.py (CRUD)
-                     ← Used by routes/main.py (chat rendering)
-
-user_settings.json   ← Used by routes/settings.py (CRUD)
-                     ← Used by UserSettings.js (frontend sync)
-```
+Migrations run automatically on startup.
 
 ---
 
-## Design Decisions
+## Window Settings
 
-1. **Layered config**: Factory defaults remain unchanged through updates, user overrides stored separately
-2. **JSON over database**: Simple settings as JSON files, not in SQLite
-3. **Singleton cache**: Defaults loaded only once for performance
-4. **Defaults-only keys**: Certain keys (`apiModelOptions`, `apiAutofillModel`) are never persisted in `user_settings.json`
-5. **Auto-creation**: Missing config files are automatically created with defaults
+**File:** `src/utils/window_settings.py`
+
+Persists PyWebView window position and size between sessions:
+
+```json
+{
+    "x": 100,
+    "y": 50,
+    "width": 1200,
+    "height": 800
+}
+```
+
+Values are saved on window close and restored on next launch using Win32 API calls where available.
+
+---
+
+## Settings API Endpoints
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| `GET` | `/api/settings` | Get all settings (merged defaults + user) |
+| `POST` | `/api/settings` | Update setting(s) |
+| `GET` | `/api/settings/defaults` | Get factory defaults only |
+| `POST` | `/api/settings/reset` | Reset to factory defaults |
+| `GET` | `/api/model-options` | Get available AI models |
+
+See [04 — Routes & API](04_Routes_and_API.md) for the complete endpoint reference.
+
+---
+
+## Related Documentation
+
+- [01 — App Core & Startup](01_App_Core_and_Startup.md) — Settings loaded during startup
+- [03 — Utils & Helpers](03_Utils_and_Helpers.md) — `.env` file creation
+- [09 — Persona & Instructions](09_Persona_and_Instructions.md) — Persona-specific configuration
+- [12 — Frontend React SPA](12_Frontend_React_SPA.md) — SettingsContext consumer

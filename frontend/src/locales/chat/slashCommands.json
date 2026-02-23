@@ -1,0 +1,22 @@
+{
+  "en": {
+    "reload": "Reload page",
+    "rebuild": "Recompile React frontend (separate window)",
+    "onboarding": "Re-activate setup sequence (Onboarding)",
+    "cortex": "Trigger Cortex update immediately (counter is reset)",
+    "unknownError": "Unknown error",
+    "buildFailed": "Build could not be started:",
+    "onboardingFailed": "Onboarding could not be reset:",
+    "networkError": "Network Error"
+  },
+  "de": {
+    "reload": "Seite neu laden",
+    "rebuild": "React-Frontend neu kompilieren (eigenes Fenster)",
+    "onboarding": "Start-Sequenz (Onboarding) erneut aktivieren",
+    "cortex": "Cortex-Update sofort auslösen (Zähler wird zurückgesetzt)",
+    "unknownError": "Unbekannter Fehler",
+    "buildFailed": "Build konnte nicht gestartet werden:",
+    "onboardingFailed": "Onboarding konnte nicht zurückgesetzt werden:",
+    "networkError": "Netzwerk-Fehler"
+  }
+}

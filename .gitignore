@@ -36,9 +36,20 @@ src/settings/user_settings.json
 src/settings/server_settings.json
 src/settings/user_profile.json
 src/settings/window_settings.json
+src/settings/emoji_usage.json
 
 # Benutzer-erstellte Personas
 src/instructions/created_personas/
+
+# Cortex-Dateien (Persona-Erinnerungen, benutzergeneriert)
+src/instructions/personas/cortex/default/*.md
+src/instructions/personas/cortex/custom/
+
+# Cortex-Settings (Benutzer-Konfiguration)
+src/settings/cortex_settings.json
+
+# Cortex Cycle State (auto-generiert, Session-Tracking)
+src/settings/cycle_state.json
 
 # Aktive Persona-Config (wird bei jeder Aktivierung überschrieben)
 src/instructions/personas/active/persona_config.json
@@ -51,9 +62,11 @@ src/instructions/prompts/_meta/_backups/
 # Custom Persona-Specs
 src/instructions/personas/spec/custom_spec/custom_spec.json
 
-# Benutzer-Uploads
-src/static/images/custom/*
-!src/static/images/custom/.gitkeep
+# Benutzer-Uploads (Custom-Avatare)
+frontend/public/avatar/costum/
+
+# Avatar-Index (wird zur Laufzeit generiert)
+frontend/public/avatar/index.json
 
 # Temporäre Dateien
 *.tmp
@@ -66,3 +79,18 @@ src/settings/update_state.json
 
 # pytest_cache
 .pytest_cache/
+
+# Lokale Node.js-Installation (automatisch heruntergeladen)
+bin/node/
+bin/node-*/
+
+# Frontend (React/Vite)
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json*

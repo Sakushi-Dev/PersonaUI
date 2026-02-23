@@ -1,0 +1,599 @@
+/* ── Chat Header ── */
+.header {
+  position: relative;
+  z-index: var(--z-header);
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 10.5px 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+  /* Isolate header fonts from bubble settings */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+}
+
+:global(body.dark-mode) .header {
+  background: rgba(17, 17, 22, 0.8);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.headerContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  position: relative;
+}
+
+/* ── Left: Character Info ── */
+.left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 1;
+}
+
+.characterInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+/* ── Header Avatar ring + hover/click effects ── */
+.characterInfo > div:first-child {
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.25s ease,
+              border-color 0.25s ease;
+}
+
+.characterInfo > div:first-child:hover {
+  border-color: var(--nonverbal-color) !important;
+  transform: scale(1.08);
+  box-shadow: 0 0 10px var(--nonverbal-color), 0 0 20px rgba(228, 186, 0, 0.2);
+}
+
+.characterInfo > div:first-child:active {
+  transform: scale(0.93);
+  box-shadow: 0 0 6px var(--nonverbal-color);
+  transition-duration: 0.1s;
+}
+
+.characterName {
+  font-size: 18px;
+  font-weight: 600;
+  color: #222;
+  margin: 0;
+}
+
+:global(body.dark-mode) .characterName {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* ── Center: Logo ── */
+.center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 0;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: bold;
+  background: linear-gradient(135deg, #000 0%, #000 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 2px;
+  white-space: nowrap;
+  filter: drop-shadow(0 2px 10px rgba(74, 99, 207, 0.3));
+}
+
+:global(body.dark-mode) .logo {
+  background: linear-gradient(135deg, #fff 0%, #ccc 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+/* ── Right: Header Actions ── */
+.right {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  z-index: 1;
+}
+
+/* ── Sound Toggle Wrapper ── */
+.soundToggleWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* ── Sound Toggle Button ── */
+.soundToggle {
+  background: none;
+  border: none;
+  font-size: 18px;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.25s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(0, 0, 0, 0.6);
+  opacity: 0.8;
+}
+
+.soundToggle:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+  color: var(--nonverbal-color);
+  opacity: 1;
+}
+
+.soundMuted {
+  color: rgba(0, 0, 0, 0.35);
+  opacity: 0.5;
+}
+
+:global(body.dark-mode) .soundToggle {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+:global(body.dark-mode) .soundToggle:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--nonverbal-color);
+}
+
+:global(body.dark-mode) .soundMuted {
+  color: rgba(255, 255, 255, 0.3);
+  opacity: 0.5;
+}
+
+/* ── Volume Slider Popup ── */
+.volumePopup {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding-top: 6px;
+  z-index: var(--z-dropdown, 300);
+  animation: volumeFadeIn 0.15s ease-out;
+}
+
+@keyframes volumeFadeIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-4px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.volumePopupInner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  white-space: nowrap;
+}
+
+:global(body.dark-mode) .volumePopupInner {
+  background: rgba(17, 17, 22, 0.85);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+.volumeSlider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.15);
+  outline: none;
+  cursor: pointer;
+}
+
+.volumeSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--nonverbal-color, #e4ba00);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease;
+}
+
+.volumeSlider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.volumeSlider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--nonverbal-color, #e4ba00);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
+}
+
+:global(body.dark-mode) .volumeSlider {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.volumeLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.5);
+  min-width: 30px;
+  text-align: right;
+}
+
+:global(body.dark-mode) .volumeLabel {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ── QR Code Button ── */
+.qrCodeBtn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.25s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(0, 0, 0, 0.6);
+  opacity: 0.8;
+}
+
+.qrCodeBtn:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+  color: var(--nonverbal-color);
+  opacity: 1;
+}
+
+.qrCodeBtn svg {
+  width: 24px;
+  height: 24px;
+}
+
+:global(body.dark-mode) .qrCodeBtn {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+:global(body.dark-mode) .qrCodeBtn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--nonverbal-color);
+}
+
+/* ── API Status Indicator ── */
+.apiStatus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  cursor: help;
+}
+
+.statusDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #888;
+  box-shadow: 0 0 8px rgba(136, 136, 136, 0.6);
+  transition: all 0.3s ease;
+  display: block;
+}
+
+.apiConnected .statusDot {
+  background-color: #00ff00;
+  box-shadow: 0 0 12px rgba(0, 255, 0, 0.8);
+}
+
+.apiDisconnected .statusDot {
+  background-color: #ff0000;
+  box-shadow: 0 0 12px rgba(255, 0, 0, 0.8);
+}
+
+/* ── Dropdown Toggle (hamburger ☰) ── */
+.dropdownToggle {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background-color 0.2s, color 0.25s;
+  color: rgba(0, 0, 0, 0.6);
+  opacity: 0.8;
+}
+
+.dropdownToggle:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+  color: var(--nonverbal-color);
+  opacity: 1;
+}
+
+.dropdownToggleActive {
+  color: var(--nonverbal-color);
+  opacity: 1;
+}
+
+:global(body.dark-mode) .dropdownToggle {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+:global(body.dark-mode) .dropdownToggle:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--nonverbal-color);
+}
+
+:global(body.dark-mode) .dropdownToggleActive {
+  color: var(--nonverbal-color);
+}
+
+/* ══════════════════════════════════════
+   Toolbar – centered icon bar below header
+   ══════════════════════════════════════ */
+.toolbar {
+  display: flex;
+  justify-content: center;
+  padding: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.3s ease, opacity 0.25s ease, padding 0.3s ease;
+}
+
+.toolbarVisible {
+  max-height: 80px;
+  opacity: 1;
+  padding: 6px 0 4px;
+  overflow: visible;
+}
+
+:global(body.dark-mode) .toolbar {
+  border-top-color: rgba(255, 255, 255, 0.06);
+}
+
+.toolbarInner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── Single toolbar button ── */
+.toolbarBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  padding: 6px 14px;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  color: rgba(0, 0, 0, 0.50);
+  transition: color 0.25s ease, filter 0.25s ease;
+  position: relative;
+}
+
+@media (hover: hover) {
+  .toolbarBtn:hover {
+    color: var(--nonverbal-color);
+    filter: drop-shadow(0 0 6px var(--nonverbal-color));
+  }
+
+  :global(body.dark-mode) .toolbarBtn:hover {
+    color: var(--nonverbal-color);
+    filter: drop-shadow(0 0 8px var(--nonverbal-color));
+  }
+
+  .toolbarBtn:hover .toolbarLabel {
+    opacity: 1;
+  }
+}
+
+:global(body.dark-mode) .toolbarBtn {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.toolbarLabel {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  line-height: 1;
+  pointer-events: none;
+  opacity: 0.7;
+  transition: opacity 0.25s ease;
+}
+
+/* ── Active toolbar button (matching open overlay) ── */
+.toolbarBtnActive {
+  color: var(--nonverbal-color) !important;
+  filter: drop-shadow(0 0 8px var(--nonverbal-color));
+}
+
+.toolbarBtnActive .toolbarLabel {
+  opacity: 1;
+}
+
+/* ── Settings group (with hover submenu) ── */
+.settingsGroup {
+  position: relative;
+}
+
+/* Portal-based submenu – rendered on document.body, outside header's backdrop-filter */
+.settingsPortal {
+  position: absolute;
+  transform: translateX(-50%);
+  padding-top: 10px;
+  min-width: 160px;
+  z-index: var(--z-dropdown, 300);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+}
+
+.settingsSubmenuInner {
+  position: relative;
+  border-radius: var(--border-radius-md, 10px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+:global(body.dark-mode) .settingsSubmenuInner {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+}
+
+/* Dedicated blur element – now truly outside header, backdrop-filter works */
+.submenuBackdrop {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  -webkit-backdrop-filter: blur(25px);
+  backdrop-filter: blur(25px);
+  pointer-events: none;
+}
+
+:global(body.dark-mode) .submenuBackdrop {
+  background: rgba(17, 17, 22, 0.8);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Actual button content above the backdrop */
+.submenuContent {
+  position: relative;
+  padding: 6px;
+}
+
+.submenuBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border: none;
+  background: none;
+  color: rgba(0, 0, 0, 0.7);
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: var(--border-radius-sm);
+  transition: color 0.2s ease, background 0.2s ease, filter 0.2s ease;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.submenuBtn:hover {
+  color: var(--nonverbal-color);
+  background: rgba(0, 0, 0, 0.04);
+  filter: drop-shadow(0 0 4px var(--nonverbal-color));
+}
+
+:global(body.dark-mode) .submenuBtn {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+:global(body.dark-mode) .submenuBtn:hover {
+  color: var(--nonverbal-color);
+  background: rgba(255, 255, 255, 0.06);
+  filter: drop-shadow(0 0 5px var(--nonverbal-color));
+}
+
+@keyframes toolbarFadeIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-4px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ── Responsive (Mobile ≤768px) ── */
+@media (max-width: 768px) {
+  .header {
+    padding: 0;
+    z-index: calc(var(--z-overlay) + 10);
+  }
+
+  .headerContent {
+    padding: 8px 12px;
+    transition: max-height 0.3s ease, opacity 0.25s ease, padding 0.3s ease;
+    max-height: 80px;
+    overflow: hidden;
+  }
+
+  .headerContentCollapsed {
+    max-height: 0;
+    opacity: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .center {
+    position: static;
+    transform: none;
+    order: -1;
+  }
+
+  .logo {
+    font-size: 16px;
+  }
+
+  .characterName {
+    display: none;
+  }
+
+  .left {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+  }
+
+  .qrCodeBtn {
+    display: none !important;
+  }
+
+  .toolbarInner {
+    gap: 2px;
+  }
+
+  .toolbarBtn {
+    padding: 6px 8px;
+  }
+
+  .toolbarBtn svg {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .toolbarLabel {
+    display: none;
+  }
+
+  .settingsPortal {
+    transform: none;
+    left: auto !important;
+    right: 8px;
+    z-index: calc(var(--z-overlay) + 50);
+  }
+
+  @keyframes toolbarFadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+}

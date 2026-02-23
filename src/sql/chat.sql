@@ -6,22 +6,12 @@
 -- Holt die neueste Session-ID
 SELECT id FROM chat_sessions ORDER BY updated_at DESC LIMIT 1;
 
--- name: get_memory_ranges
--- Holt aktive Memory-Ranges für eine Session
-SELECT start_message_id, end_message_id FROM memories 
-WHERE session_id = ? AND is_active = 1
-  AND start_message_id IS NOT NULL AND end_message_id IS NOT NULL;
-
--- name: get_session_memory_marker
--- Holt den Memory-Marker einer Session (Fallback)
-SELECT last_memory_message_id FROM chat_sessions WHERE id = ?;
-
 -- name: get_chat_history
--- Holt Chat-Nachrichten mit Pagination (neueste zuerst)
+-- Holt Chat-Nachrichten mit Pagination (neueste zuerst, nach ID sortiert)
 SELECT id, message, is_user, timestamp, character_name
 FROM chat_messages 
 WHERE session_id = ?
-ORDER BY timestamp DESC
+ORDER BY id DESC
 LIMIT ? OFFSET ?;
 
 -- name: get_message_count
@@ -31,11 +21,11 @@ FROM chat_messages
 WHERE session_id = ?;
 
 -- name: get_conversation_context
--- Holt die letzten N Nachrichten für den API-Kontext
+-- Holt die letzten N Nachrichten für den API-Kontext (nach ID sortiert)
 SELECT message, is_user, timestamp
 FROM chat_messages 
 WHERE session_id = ?
-ORDER BY timestamp DESC
+ORDER BY id DESC
 LIMIT ?;
 
 -- name: insert_message
@@ -65,36 +55,41 @@ SELECT COUNT(*) FROM chat_messages;
 -- Höchste Nachrichten-ID einer Session
 SELECT MAX(id) FROM chat_messages WHERE session_id = ?;
 
--- name: count_user_messages_since_marker
--- Zählt User-Nachrichten seit dem Memory-Marker
-SELECT COUNT(*) FROM chat_messages 
-WHERE session_id = ? AND is_user = 1 AND id > ?;
-
 -- name: count_all_user_messages
 -- Zählt alle User-Nachrichten einer Session
 SELECT COUNT(*) FROM chat_messages 
 WHERE session_id = ? AND is_user = 1;
 
--- name: get_messages_since_marker_count
--- Zählt Nachrichten seit dem Marker
-SELECT COUNT(*) FROM chat_messages WHERE session_id = ? AND id > ?;
-
 -- name: get_all_messages_count
--- Zählt alle Nachrichten einer Session (für Marker-Fallback)
+-- Zählt alle Nachrichten einer Session
 SELECT COUNT(*) FROM chat_messages WHERE session_id = ?;
 
--- name: get_messages_since_marker
--- Holt Nachrichten seit dem Marker (neueste zuerst, mit Limit)
-SELECT id, message, is_user, timestamp, character_name
-FROM chat_messages 
-WHERE session_id = ? AND id > ?
-ORDER BY timestamp DESC
-LIMIT ?;
 
 -- name: get_all_messages_limited
--- Holt alle Nachrichten einer Session (neueste zuerst, mit Limit)
+-- Holt alle Nachrichten einer Session (neueste zuerst, nach ID sortiert)
 SELECT id, message, is_user, timestamp, character_name
 FROM chat_messages 
 WHERE session_id = ?
-ORDER BY timestamp DESC
+ORDER BY id DESC
 LIMIT ?;
+
+-- name: get_last_message
+-- Holt die letzte Nachricht einer Session
+SELECT id, message, is_user, timestamp, character_name
+FROM chat_messages WHERE session_id = ? ORDER BY id DESC LIMIT 1;
+
+-- name: delete_last_message
+-- Löscht die letzte Nachricht einer Session
+DELETE FROM chat_messages WHERE id = (
+    SELECT id FROM chat_messages WHERE session_id = ? ORDER BY id DESC LIMIT 1
+);
+
+-- name: update_last_message_text
+-- Aktualisiert den Text der letzten Nachricht einer Session
+UPDATE chat_messages SET message = ? WHERE id = (
+    SELECT id FROM chat_messages WHERE session_id = ? ORDER BY id DESC LIMIT 1
+);
+
+-- name: upsert_db_info
+-- Setzt einen Wert in der DB-Info Tabelle
+INSERT OR REPLACE INTO db_info (key, value) VALUES (?, ?);

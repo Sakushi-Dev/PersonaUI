@@ -1,199 +1,293 @@
 # 03 — Utils & Helpers
 
+> Shared utilities: logging, service provider, access control, SQL loading, and helper functions.
+
+---
+
 ## Overview
 
-The utility layer forms the **foundation** of the application. It provides logging, service management, access control, database access, API communication, and general helper functions.
-
----
-
-## Architecture
+The `src/utils/` directory contains all shared infrastructure. These modules are used across routes, services, and the prompt system.
 
 ```
-Routes ──→ Route Helpers ──→ Services ──→ API Client ──→ Anthropic API
-                │                │
-                └── Config ◄─────┘
-                │                │
-                └── Database ◄───┘
-                      │
-                      └── SQL Loader ──→ .sql files
+src/utils/
+├── logger.py              Log system (rotating files + console)
+├── provider.py            Singleton service locator
+├── access_control.py      IP whitelist/blacklist + rate limiting
+├── sql_loader.py          Named SQL query loader
+├── helpers.py             .env creation, message formatting
+├── time_context.py        Localized date/time for prompts
+├── config.py              Persona config (see doc 09)
+├── settings_defaults.py   Settings accessor (see doc 02)
+├── settings_migration.py  Settings schema migration
+├── window_settings.py     PyWebView window position
+├── cortex_service.py      Cortex orchestration (see doc 10)
+├── api_request/           ApiClient package (see doc 11)
+├── services/              ChatService package (see doc 11)
+├── prompt_engine/         Prompt engine package (see doc 06)
+├── prompt_builder/        Legacy prompt builder (see doc 07)
+├── database/              Database package (see doc 08)
+└── cortex/                Cortex subsystem (see doc 10)
 ```
 
 ---
 
-## `src/utils/__init__.py` — Package Facade
+## Logger — `logger.py`
 
-Re-exports the most commonly used symbols for convenient imports:
+Provides a single `log` instance used throughout the application:
 
-**From `.database`:** `init_all_dbs`, `get_chat_history`, `get_conversation_context`, `save_message`, `clear_chat_history`, `get_message_count`
+```python
+from utils.logger import log
 
-**From `.api_request`:** `ApiClient`
+log.info("Server started on port %d", port)
+log.warning("Cortex update failed: %s", error)
+log.error("Database connection error: %s", e)
+```
 
-**From `.config`:** `load_character`, `load_char_config`, `load_char_profile`, `save_char_config`, `build_character_description`, `build_character_description_from_config`, `get_available_char_options`, `load_avatar`, `save_avatar_config`
-
----
-
-## Logger (`src/utils/logger.py`)
-
-Central logging system. **Most imported module** in the entire project.
+### Configuration
 
 | Setting | Value |
 |---------|-------|
-| Logger name | `'personaui'` |
-| Logger level | `DEBUG` |
-| File handler level | `DEBUG` |
-| Console handler level | `INFO` |
-| Log file | `src/logs/personaui.log` |
-| Max file size | 5 MB |
-| Backup count | 3 rotating files |
-| Format | `%(asctime)s %(levelname)-8s [%(name)s.%(module)s] %(message)s` |
+| **Log File** | `src/logs/personaui.log` |
+| **Rotation** | 5 MB max, 3 backup files |
+| **Console** | Colored output (INFO+) |
+| **File Level** | DEBUG (captures everything) |
+| **Format** | `[YYYY-MM-DD HH:MM:SS] LEVEL — message` |
 
-**Pattern:** Singleton logger with handler deduplication guard. Propagation disabled (prevents double output).
+The logger creates the `logs/` directory automatically. Both file and console handlers are attached to the same `log` instance.
 
 ---
 
-## Provider (`src/utils/provider.py`) — Service Locator
+## Provider — `provider.py`
 
-Central **Service Locator** for all singleton services.
+Implements the **Service Locator pattern** for singleton access to core services:
 
-### Module-Level Singletons
+```python
+from utils.provider import get_api_client, get_chat_service, get_cortex_service, get_prompt_engine
 
-| Variable | Type | Description |
-|----------|------|-------------|
-| `_api_client` | `ApiClient` | Anthropic API client |
-| `_chat_service` | `ChatService` | Chat orchestration |
-| `_memory_service` | `MemoryService` | Memory orchestration |
-| `_prompt_engine` | `PromptEngine` | Template resolution |
-
-### Functions
-
-| Function | Description |
-|----------|-------------|
-| `init_services(api_key=None)` | Called once in `app.py` — creates ApiClient, ChatService, MemoryService |
-| `get_api_client()` | Returns singleton, `RuntimeError` if not initialized |
-| `get_chat_service()` | Returns singleton, `RuntimeError` if not initialized |
-| `get_memory_service()` | Returns singleton, `RuntimeError` if not initialized |
-| `get_prompt_engine()` | Lazy-initializes PromptEngine on first call |
-| `reset_prompt_engine()` | Resets engine (for tests/reload) |
-
-**Dependency flow:** `app.py → init_services() → provider stores singletons → routes call get_*() `
-
----
-
-## Access Control (`src/utils/access_control.py`)
-
-IP-based access control for multi-device/network usage. **397 lines.**
-
-### Constants
-
-| Constant | Value | Description |
-|----------|-------|-------------|
-| `MAX_ATTEMPTS` | 3 | Max access attempts |
-| `BLOCK_DURATION` | 300s | Block duration (5 min) |
-| `PENDING_TIMEOUT` | 300s | Timeout for pending requests |
-
-### In-Memory State (thread-safe via `threading.Lock`)
-
-- `_pending_requests: dict` — `{ip: {timestamp, status}}`
-- `_rate_limits: dict` — `{ip: {attempts, blocked_until}}`
-
-### Functions
-
-| Function | Returns | Description |
-|----------|---------|-------------|
-| `check_access(ip)` | `'allowed'\|'blocked'\|'rate_limited'\|'pending'\|'unknown'` | Main access check — local IPs always allowed |
-| `request_access(ip)` | Status string | Submit access request |
-| `approve_ip(ip)` | `bool` | Approve IP (add to whitelist) |
-| `deny_ip(ip)` | `bool` | Block IP (add to blacklist) |
-| `poll_access_status(ip)` | `'pending'\|'approved'\|'denied'\|'expired'` | Polling endpoint for external devices |
-| `set_access_control_enabled(enabled)` | `bool` | Enable/disable access control |
-| `get_pending_requests()` | `dict` | Current pending requests |
-| `get_access_lists()` | `dict` | Whitelist and blacklist |
-
-**Pattern:** Hybrid persistence — whitelist/blacklist stored in JSON, pending requests and rate limits in-memory only.
-
-**Flow:** Unknown IP → `request_access()` → local user sees request → `approve_ip()`/`deny_ip()` → external device polls `poll_access_status()`
-
----
-
-## Time Context (`src/utils/time_context.py`)
-
-| Function | Description |
-|----------|-------------|
-| `get_german_weekday(date)` | German weekday names (`"Montag"`, `"Dienstag"`, etc.) |
-| `get_time_context(ip_address)` | Formatted date/time/weekday for prompt injection |
-
-Used by the Prompt Engine for `{{current_date}}`, `{{current_time}}`, `{{current_weekday}}` template variables.
-
----
-
-## SQL Loader (`src/utils/sql_loader.py`)
-
-Named SQL query loading system. Externalizes SQL into `.sql` files.
-
-### Functions
-
-| Function | Description |
-|----------|-------------|
-| `sql(query_path)` | Main API — `sql('chat.get_chat_history')` → loads `src/sql/chat.sql` on first access |
-| `load_schema()` | Loads `schema.sql` as raw text |
-| `reload()` | Clears all caches (for development/tests) |
-| `preload_all()` | Eager-loads all `.sql` files |
-
-**Convention:** SQL files use `-- name: query_name` comments as delimiters. Query paths use dot notation: `'module.query_name'` → file `module.sql`, query `query_name`.
-
----
-
-## General Helpers (`src/utils/helpers.py`)
-
-| Function | Description |
-|----------|-------------|
-| `ensure_env_file()` | Creates `.env` with empty `ANTHROPIC_API_KEY` and random `SECRET_KEY` |
-| `format_message(message)` | Formats DB messages for display — `*text*` → `<span class="non_verbal">`, code blocks → HTML |
-| `_extract_code_blocks(text)` | Internal: Replaces code blocks with placeholders |
-| `_insert_code_blocks_html(text, blocks)` | Internal: Replaces placeholders with HTML-escaped code |
-
-**Note:** Code block extraction/insertion is **duplicated** in `response_cleaner.py` — `helpers.py` for stored messages, `response_cleaner.py` for fresh API responses.
-
----
-
-## Route Helpers (`src/routes/helpers.py`)
-
-Shared utilities for all routes.
-
-| Function | Description |
-|----------|-------------|
-| `success_response(status_code=200, **data)` | Standard success response `{'success': True, ...}` |
-| `error_response(message, status_code=400)` | Standard error response `{'success': False, 'error': msg}` |
-| `handle_route_error(endpoint_name)` | Decorator: Wraps route functions with try/catch, logs errors |
-| `resolve_persona_id(session_id)` | Multi-source persona ID resolution: query param → JSON body → session DB → active persona |
-| `get_client_ip()` | Client IP (considers `X-Forwarded-For` for proxies) |
-
-**Pattern:** The `handle_route_error` decorator is a **cross-cutting concern** — every route can be wrapped with it for uniform error handling.
-
----
-
-## Dependency Diagram
-
+# Usage anywhere in the codebase:
+client = get_api_client()       # → ApiClient instance
+chat = get_chat_service()       # → ChatService instance
+cortex = get_cortex_service()   # → CortexService instance
+engine = get_prompt_engine()    # → PromptEngine instance
 ```
-                    ┌──────────────┐
-                    │  logger.py   │  ← Imported by ALL modules
-                    └──────────────┘
-                           │
-    ┌──────────┬───────────┼───────────┬──────────────┐
-    │          │           │           │              │
-┌───────┐ ┌────────┐ ┌─────────┐ ┌────────────┐ ┌──────────┐
-│helpers│ │provider│ │config   │ │access_ctrl │ │sql_loader│
-└───────┘ └────────┘ └─────────┘ └────────────┘ └──────────┘
-              │           │                          │
-         ┌────┴────┐      │                    ┌─────┴─────┐
-         │Services │      │                    │ database/ │
-         └─────────┘      │                    └───────────┘
-              │           │                          │
-         ┌────┴────┐      │                    ┌─────┴─────┐
-         │ApiClient│      │                    │ .sql Files│
-         └─────────┘      │                    └───────────┘
-              │           │
-         ┌────┴──────────┴──┐
-         │   Anthropic API  │
-         └──────────────────┘
+
+### How It Works
+
+```python
+class Provider:
+    _api_client = None
+    _chat_service = None
+    _cortex_service = None
+    _prompt_engine = None
+    
+    @classmethod
+    def set_api_client(cls, client):
+        cls._api_client = client
+    
+    @classmethod
+    def get_api_client(cls):
+        return cls._api_client
 ```
+
+- Services are set once during `app.py:init_services()` at startup
+- `PromptEngine` is lazy-initialized on first `get_prompt_engine()` call
+- Module-level functions (`get_api_client()`, etc.) delegate to `Provider` class methods
+
+---
+
+## Access Control — `access_control.py`
+
+**File:** `src/utils/access_control.py` (~397 lines)
+
+Manages IP-based access control for the Flask server. Useful when running in `--no-gui` mode where the app is accessible via browser.
+
+### Features
+
+| Feature | Description |
+|---------|-------------|
+| **IP Whitelist** | Only listed IPs can access the app |
+| **IP Blacklist** | Block specific IPs |
+| **Pending Queue** | Unknown IPs go to a pending approval queue |
+| **Rate Limiting** | Configurable request rate limits per IP |
+| **Bypass for localhost** | `127.0.0.1` always allowed |
+
+### Configuration
+
+Stored in `src/settings/server_settings.json`:
+
+```json
+{
+    "access_control_enabled": false,
+    "whitelist": ["127.0.0.1"],
+    "blacklist": [],
+    "pending": [],
+    "rate_limit": 60
+}
+```
+
+### Integration
+
+Applied as Flask middleware in `app.py`:
+
+```python
+from utils.access_control import apply_access_control
+apply_access_control(app)  # Registers before_request hook
+```
+
+---
+
+## SQL Loader — `sql_loader.py`
+
+**File:** `src/utils/sql_loader.py` (~150 lines)
+
+Loads named SQL queries from `.sql` files using a comment-based convention:
+
+### SQL File Convention
+
+```sql
+-- name: get_chat_history
+SELECT id, message, is_user, timestamp, character_name
+FROM chat_messages
+WHERE session_id = ?
+ORDER BY id DESC
+LIMIT ? OFFSET ?
+
+-- name: insert_message
+INSERT INTO chat_messages (session_id, message, is_user, character_name)
+VALUES (?, ?, ?, ?)
+```
+
+### Usage
+
+```python
+from utils.sql_loader import sql
+
+# Dot notation: file.query_name
+cursor.execute(sql('chat.get_chat_history'), (session_id, limit, offset))
+cursor.execute(sql('sessions.create_session'), (title, persona_id))
+```
+
+### How It Works
+
+1. On first call to `sql('chat.get_chat_history')`, loads `src/sql/chat.sql`
+2. Parses all `-- name: xyz` blocks into a dictionary
+3. Caches all queries — subsequent calls are instant dict lookups
+4. Raises `KeyError` if query name not found
+
+### Schema Loading
+
+```python
+from utils.sql_loader import load_schema
+
+schema_sql = load_schema()  # Returns full src/sql/schema.sql content
+cursor.executescript(schema_sql)
+```
+
+---
+
+## Helpers — `helpers.py`
+
+**File:** `src/utils/helpers.py` (~108 lines)
+
+Small utility functions used across the backend:
+
+### `ensure_env_file()`
+
+Creates the `.env` file on first run if it doesn't exist:
+
+```python
+def ensure_env_file():
+    env_path = os.path.join(BASE_DIR, '.env')
+    if not os.path.exists(env_path):
+        with open(env_path, 'w') as f:
+            f.write('ANTHROPIC_API_KEY=\n')
+```
+
+### `format_message(text)`
+
+Formats AI response text with HTML markup for non-verbal actions and code blocks:
+
+```python
+def format_message(text):
+    # *actions* → <span class="non_verbal">actions</span>
+    # ```code``` → <div class="code-block">...</div>
+    return formatted_text
+```
+
+> **Note:** This function generates HTML that the React frontend may render via `dangerouslySetInnerHTML`. The frontend also has its own `formatMessage.js` utility.
+
+### `extract_code_blocks(text)`
+
+Extracts fenced code blocks from markdown text, returning a list of `(language, code)` tuples.
+
+---
+
+## Time Context — `time_context.py`
+
+**File:** `src/utils/time_context.py` (~90 lines)
+
+Provides localized date, time, and weekday strings for prompt placeholders:
+
+```python
+from utils.time_context import get_time_context
+
+context = get_time_context()
+# {'current_date': '23. Februar 2026', 'current_time': '14:30', 'current_weekday': 'Montag'}
+```
+
+### Supported Languages
+
+German, English, French, Spanish, Italian, Portuguese, Russian, Japanese, Chinese, Korean.
+
+The language is determined from the user profile's `persona_language` setting.
+
+### Used By
+
+The `PlaceholderResolver` in the PromptEngine calls these functions to fill `{{current_date}}`, `{{current_time}}`, and `{{current_weekday}}` placeholders.
+
+---
+
+## Route Helpers — `routes/helpers.py`
+
+**File:** `src/routes/helpers.py` (~100 lines)
+
+Shared utilities for all route blueprints:
+
+### Unified Response Format
+
+```python
+def success_response(data=None, message=None, status=200):
+    return jsonify({'success': True, 'data': data, 'message': message}), status
+
+def error_response(message, error_type=None, status=400):
+    return jsonify({'success': False, 'error': message, 'error_type': error_type}), status
+```
+
+### Error Handling Decorator
+
+```python
+@handle_route_error('chat')
+def chat():
+    # If any exception occurs, returns error_response() automatically
+    # Logs the error via logger
+```
+
+### Persona Resolution
+
+```python
+def resolve_persona_id(session_id=None):
+    """Determine the active persona ID from session or active config."""
+
+def get_client_ip():
+    """Get the client's IP address (supports X-Forwarded-For)."""
+```
+
+---
+
+## Related Documentation
+
+- [02 — Configuration & Settings](02_Configuration_and_Settings.md) — Settings files and defaults
+- [04 — Routes & API](04_Routes_and_API.md) — Routes that use these helpers
+- [06 — Prompt Engine](06_Prompt_Engine.md) — Time context and placeholders
+- [08 — Database Layer](08_Database_Layer.md) — SQL loader usage
+- [11 — Services Layer](11_Services_Layer.md) — Provider pattern consumers

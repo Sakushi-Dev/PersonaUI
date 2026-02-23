@@ -9,7 +9,9 @@ from typing import Any, Dict, List, Optional
 
 _BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _DEFAULTS_FILE = os.path.join(_BASE_DIR, 'settings', 'defaults.json')
+_MODEL_OPTIONS_FILE = os.path.join(_BASE_DIR, 'settings', 'model_options.json')
 _DEFAULTS_CACHE: Optional[Dict[str, Any]] = None
+_MODEL_OPTIONS_CACHE: Optional[List[Dict[str, Any]]] = None
 
 
 def load_defaults() -> Dict[str, Any]:
@@ -36,9 +38,22 @@ def get_api_model_default() -> Optional[str]:
     return get_default('apiModel')
 
 
+def load_model_options() -> List[Dict[str, Any]]:
+    """Lädt Modell-Optionen aus model_options.json."""
+    global _MODEL_OPTIONS_CACHE
+    if _MODEL_OPTIONS_CACHE is not None:
+        return _MODEL_OPTIONS_CACHE
+    try:
+        with open(_MODEL_OPTIONS_FILE, 'r', encoding='utf-8') as f:
+            _MODEL_OPTIONS_CACHE = json.load(f)
+    except Exception:
+        _MODEL_OPTIONS_CACHE = []
+    return _MODEL_OPTIONS_CACHE
+
+
 def get_api_model_options() -> List[Dict[str, Any]]:
     """Gibt die Modell-Optionen inkl. Meta zurück."""
-    return get_default('apiModelOptions', [])
+    return load_model_options()
 
 
 def get_autofill_model() -> Optional[str]:

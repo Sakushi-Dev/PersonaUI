@@ -7,14 +7,16 @@ Exportiert:
 - ApiResponse: Einheitliche Response-Struktur für Non-Stream Requests
 - StreamEvent: Event innerhalb eines Streams
 - clean_api_response: Response-Bereinigung
+- ToolExecutor: Typ-Alias für Tool-Execution Callbacks
 """
 
-from .client import ApiClient
+from .client import ApiClient, ToolExecutor
 from .types import RequestConfig, ApiResponse, StreamEvent
 from .response_cleaner import clean_api_response
 
 __all__ = [
     'ApiClient',
+    'ToolExecutor',
     'RequestConfig',
     'ApiResponse',
     'StreamEvent',

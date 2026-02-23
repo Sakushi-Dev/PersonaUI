@@ -1,97 +1,115 @@
-# 07 — Prompt Builder (Legacy Bridge)
+# 07 — Prompt Builder
+
+> Legacy prompt builder with PromptEngine delegation — a bridge for backward compatibility.
+
+---
 
 ## Overview
 
-The **Prompt Builder** is the legacy bridge between the old `.txt`-based prompt system and the new JSON-based `PromptEngine`. It follows a dual-path pattern: first it attempts to delegate to the engine; on failure it falls back to legacy files.
+The Prompt Builder is the **original** prompt construction system. It has been largely superseded by the PromptEngine (see [06 — Prompt Engine](06_Prompt_Engine.md)) but remains as a fallback bridge.
 
----
-
-## Architecture
+**File:** `src/utils/prompt_builder/chat.py` (~368 lines)
 
 ```
-Routes/Services
-  └── ChatPromptBuilder (Facade)
-        ├── Has Engine? → PromptEngine.build_system_prompt()
-        └── No Engine? → _load_master_prompt() → .txt files
+src/utils/prompt_builder/
+└── chat.py    ChatPromptBuilder class
 ```
 
 ---
 
-## `src/utils/prompt_builder/chat.py` — ChatPromptBuilder
+## Dual-Path Pattern
 
-**383 lines.** Inherits from `PromptBase` (base class).
-
-### Methods
-
-| Method | Description |
-|--------|-------------|
-| `set_engine(engine)` | Injects the PromptEngine instance |
-| `build_system_prompt(character_data, ...)` | Main entry point: engine delegation or legacy assembly |
-| `build_core_prompt(char_name, language, ...)` | Builds core components: impersonation, system_rule, user_info, time_sense, output_format |
-| `build_persona_prompt(character_data, ...)` | Persona description from template (default vs experimental) |
-| `build_prefill(char_name, ...)` | Prefill: engine or legacy `.txt` |
-| `get_prefill_impersonation(char_name, ...)` | Engine → `resolve_prompt('prefill_impersonation')` or legacy |
-| `get_consent_dialog()` | Loads `consent_dialog.json` |
-| `get_dialog_injections(variant, ...)` | Engine → `get_dialog_injections()` or legacy consent dialog |
-| `get_greeting(character_data)` | Greeting message or None |
-
-### Dual-Path Pattern
-
-```python
-def build_system_prompt(self, character_data, ...):
-    if self._engine:
-        # New path: PromptEngine
-        variant = 'experimental' if experimental_mode else 'default'
-        runtime_vars = {'language': language, ...}
-        return self._engine.build_system_prompt(variant, runtime_vars)
-    else:
-        # Legacy path: .txt files
-        parts = self.build_core_prompt(...)
-        parts += self.build_persona_prompt(...)
-        return "\n\n".join(parts)
-```
-
----
-
-## Legacy Prompt System
-
-In legacy mode, `.txt` files are loaded from `instructions/system/main/`:
-- `_load_master_prompt(prompt_dir)` — Loads all `.txt` files from a directory
-- Placeholder syntax: `{char_name}` (single brace, instead of `{{char_name}}`)
-- `str.format()` for placeholder replacement
-
----
-
-## Variant Mapping
-
-```python
-variant = 'experimental' if experimental_mode else 'default'
-```
-
-The `experimental_mode` boolean is set in the frontend and sent along with all chat/afterthought requests.
-
----
-
-## Dependencies
+The builder implements a **delegation pattern**: it tries the PromptEngine first, falls back to legacy `.txt` files if the engine is unavailable.
 
 ```
 ChatPromptBuilder
-  ├── PromptBase (base class)
-  ├── config.get_config_path
-  ├── time_context.get_time_context
-  ├── PromptEngine (optional, via set_engine())
-  │
-  │  Consumers:
-  ├── ChatService (via provider.get_prompt_engine())
-  └── MemoryService (via provider.get_prompt_engine())
+    │
+    ├── Has engine? → PromptEngine.resolve_prompt(...)
+    │                  PromptEngine.build_system_prompt(...)
+    │
+    └── No engine? → Load .txt files from instructions/system/main/
+                     Manual placeholder replacement
+```
+
+### Engine Injection
+
+```python
+builder = ChatPromptBuilder()
+builder.set_engine(prompt_engine)  # Enables PromptEngine delegation
+```
+
+Once `set_engine()` is called, all prompt resolution goes through the engine. The legacy `.txt` fallback is only used if the engine is `None` or fails.
+
+---
+
+## Legacy File Structure
+
+The builder originally loaded prompts from plain text files:
+
+```
+src/instructions/system/main/
+├── impersonation.txt
+├── system_rule.txt
+├── char_description.txt
+├── sub_system_reminder.txt
+├── prefill_impersonation.txt
+└── prefill_system_rules.txt
+```
+
+These files are no longer the primary source — the JSON domain files in `src/instructions/prompts/` have replaced them. The builder's fallback hardcodes minimal defaults if even the `.txt` files are missing:
+
+```python
+def _get_master_prompt_fallback(self):
+    return {
+        'impersonation': '',
+        'system_rule': 'You are {char_name}. Respond in {language}.',
+        'char_description': '{char_description}',
+        'sub_system_reminder': '',
+        'prefill_impersonation': '',
+        'prefill_system_rules': 'I respond as {char_name}:'
+    }
 ```
 
 ---
 
-## Design Decisions
+## Key Methods
 
-1. **Graceful degradation**: Engine errors produce empty/safe return values, never crashes
-2. **No direct engine imports**: Sub-builders receive the engine via `set_engine()`, not via import
-3. **Facade via provider**: The facade imports the engine through the `provider` module
-4. **Architecture separation**: `prompt_engine/` has NO Flask/PyWebView imports (pure library)
-5. **Backward compatibility**: Legacy `.txt` system remains as a fallback
+### `build_system_prompt(character, user_name, persona_language, ...)`
+
+Builds the complete system prompt string:
+
+1. **Engine path:** Delegates to `engine.build_system_prompt()` with variant and runtime vars
+2. **Legacy path:** Concatenates `.txt` file contents with manual `{placeholder}` replacement
+
+### `build_core_prompt(character)`
+
+Builds just the persona description section. Used when only the character context is needed (e.g., title generation).
+
+### `_load_consent_dialog()`
+
+Loads experimental-mode consent dialog injections. These are user/assistant message pairs injected into the conversation to prime the AI for extended behavior.
+
+---
+
+## Relationship to ChatService
+
+The `ChatService` primarily uses the PromptEngine directly. The Prompt Builder is available as an alternative path:
+
+```
+ChatService
+    ├── self._engine (PromptEngine)     ← Primary path
+    └── ChatPromptBuilder                ← Available but rarely used
+```
+
+In practice, the PromptEngine handles all prompt resolution for active features. The builder remains for:
+- **Backward compatibility** — Code that references the builder doesn't break
+- **Graceful degradation** — If the PromptEngine fails to load, basic prompts still work
+- **Testing** — Some tests use the builder's simpler interface
+
+---
+
+## Related Documentation
+
+- [06 — Prompt Engine](06_Prompt_Engine.md) — The primary prompt system
+- [05 — Chat System](05_Chat_System.md) — How prompts are used in chat
+- [11 — Services Layer](11_Services_Layer.md) — ChatService that consumes prompts

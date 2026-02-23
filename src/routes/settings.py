@@ -4,19 +4,37 @@ Settings Routes - User Settings Verwaltung (serverseitig gespeichert)
 from flask import Blueprint, request
 import os
 import json
-from utils.settings_defaults import load_defaults
+from utils.settings_defaults import load_defaults, load_model_options
 from utils.logger import log
 from routes.helpers import success_response, error_response, handle_route_error
 
 settings_bp = Blueprint('settings', __name__)
 
 SETTINGS_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'settings', 'user_settings.json')
+AFTERTHOUGHT_SETTINGS_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'settings', 'afterthought_settings.json')
 
 # Default-Werte (aus settings/defaults.json)
 DEFAULT_SETTINGS = load_defaults()
 
+# Modell-Optionen aus eigener Datei
+MODEL_OPTIONS = load_model_options()
+
 # Keys die nur aus defaults kommen und nicht in user_settings gespeichert werden
-_DEFAULTS_ONLY_KEYS = {'apiModelOptions', 'apiAutofillModel'}
+_DEFAULTS_ONLY_KEYS = {'apiAutofillModel'}
+
+# Nachgedanke/Afterthought Defaults
+_AFTERTHOUGHT_DEFAULTS = {
+    "phases": [
+        [20000, 45000],
+        [45000, 60000],
+        [60000, 120000]
+    ],
+    "frequency": {
+        "selten": 3,
+        "mittel": 2,
+        "hoch": 1
+    }
+}
 
 
 def _load_settings():
@@ -53,7 +71,7 @@ def _save_settings(settings):
 def get_user_settings():
     """Gibt alle User-Settings zurück"""
     settings = _load_settings()
-    return success_response(settings=settings, defaults=DEFAULT_SETTINGS)
+    return success_response(settings=settings, defaults={**DEFAULT_SETTINGS, 'apiModelOptions': MODEL_OPTIONS})
 
 
 @settings_bp.route('/api/user-settings', methods=['PUT'])
@@ -68,7 +86,7 @@ def update_user_settings():
     current.update(data)
 
     if _save_settings(current):
-        return success_response(settings=current, defaults=DEFAULT_SETTINGS)
+        return success_response(settings=current, defaults={**DEFAULT_SETTINGS, 'apiModelOptions': MODEL_OPTIONS})
     else:
         return error_response('Speichern fehlgeschlagen', 500)
 
@@ -78,5 +96,58 @@ def update_user_settings():
 def reset_user_settings():
     """Setzt alle User-Settings auf Standardwerte zurück"""
     if _save_settings(dict(DEFAULT_SETTINGS)):
-        return success_response(settings=DEFAULT_SETTINGS, defaults=DEFAULT_SETTINGS)
+        return success_response(settings=DEFAULT_SETTINGS, defaults={**DEFAULT_SETTINGS, 'apiModelOptions': MODEL_OPTIONS})
     return error_response('Reset fehlgeschlagen', 500)
+
+
+# ── Nachgedanke / Afterthought Settings ──
+
+def load_afterthought_settings():
+    """Lädt Nachgedanke-Settings aus JSON-Datei (mit Defaults-Merge)"""
+    try:
+        if os.path.exists(AFTERTHOUGHT_SETTINGS_FILE):
+            with open(AFTERTHOUGHT_SETTINGS_FILE, 'r', encoding='utf-8') as f:
+                saved = json.load(f)
+            merged = {**_AFTERTHOUGHT_DEFAULTS, **saved}
+            return merged
+        return dict(_AFTERTHOUGHT_DEFAULTS)
+    except Exception as e:
+        log.error("Fehler beim Laden der Nachgedanke-Settings: %s", e)
+        return dict(_AFTERTHOUGHT_DEFAULTS)
+
+
+def _save_afterthought_settings(settings):
+    """Speichert Nachgedanke-Settings in JSON-Datei"""
+    try:
+        os.makedirs(os.path.dirname(AFTERTHOUGHT_SETTINGS_FILE), exist_ok=True)
+        with open(AFTERTHOUGHT_SETTINGS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(settings, f, indent=4, ensure_ascii=False)
+        return True
+    except Exception as e:
+        log.error("Fehler beim Speichern der Nachgedanke-Settings: %s", e)
+        return False
+
+
+@settings_bp.route('/api/afterthought-settings', methods=['GET'])
+@handle_route_error('get_afterthought_settings')
+def get_afterthought_settings():
+    """Gibt Nachgedanke-Settings zurück (Phasen-Zeiten, Frequenzen)"""
+    settings = load_afterthought_settings()
+    return success_response(settings=settings, defaults=_AFTERTHOUGHT_DEFAULTS)
+
+
+@settings_bp.route('/api/afterthought-settings', methods=['PUT'])
+@handle_route_error('update_afterthought_settings')
+def update_afterthought_settings():
+    """Aktualisiert Nachgedanke-Settings (partial update)"""
+    data = request.get_json()
+    if not data:
+        return error_response('Keine Daten')
+
+    current = load_afterthought_settings()
+    current.update(data)
+
+    if _save_afterthought_settings(current):
+        return success_response(settings=current, defaults=_AFTERTHOUGHT_DEFAULTS)
+    else:
+        return error_response('Speichern fehlgeschlagen', 500)

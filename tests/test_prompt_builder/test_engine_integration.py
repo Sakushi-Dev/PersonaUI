@@ -74,7 +74,7 @@ class TestPromptEngineParity:
         )
         assert isinstance(result, str)
         assert len(result) > 50
-        assert 'INNERER DIALOG' in result or 'innerer Dialog' in result.lower() or 'NACHGEDANKE' in result
+        assert 'INNER DIALOGUE' in result or 'INNERER DIALOG' in result or 'NACHGEDANKE' in result
 
     def test_afterthought_followup(self):
         """Afterthought Followup enthält sinnvollen Text."""
@@ -86,19 +86,10 @@ class TestPromptEngineParity:
         assert len(result) > 30
 
     def test_afterthought_system_note(self):
-        """Afterthought System Note (append) enthält NACHGEDANKE."""
+        """Afterthought System Note (append) enthält AFTERTHOUGHT oder NACHGEDANKE."""
         result = self.engine.get_system_prompt_append(variant='default')
         assert isinstance(result, str)
-        assert 'NACHGEDANKE' in result
-
-    def test_summary_prompt_has_system_and_prefill(self):
-        """Summary Prompt enthält system_prompt und prefill."""
-        result = self.engine.build_summary_prompt(variant='default')
-        assert isinstance(result, dict)
-        assert 'system_prompt' in result
-        assert 'prefill' in result
-        assert len(result['system_prompt']) > 100
-        assert len(result['prefill']) > 10
+        assert 'AFTERTHOUGHT' in result or 'NACHGEDANKE' in result
 
     def test_spec_autofill_persona_type(self):
         """Spec-Autofill Persona-Type enthält Input."""
@@ -122,16 +113,6 @@ class TestPromptEngineParity:
         )
         assert isinstance(result, str)
         assert 'Hallo Welt' in result
-
-    def test_memory_context_prompt(self):
-        """Memory Context Prompt enthält Memory-Einträge."""
-        result = self.engine.resolve_prompt(
-            'memory_context', variant='default',
-            runtime_vars={'memory_entries': 'Test Memory Content'}
-        )
-        assert isinstance(result, str)
-        assert 'Test Memory Content' in result
-        assert 'MEMORY CONTEXT' in result
 
 
 # ============================================================

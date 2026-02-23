@@ -2,8 +2,7 @@
 Chat Service – Orchestriert Chat-Requests.
 
 Verwendet die PromptEngine als einzige Prompt-Quelle.
-- Memory-Loading
-- Message-Assembly (Memory + Prefill + Dialog-Injections + History + User-Message + Remember)
+- Message-Assembly (Prefill + Dialog-Injections + History + User-Message + Remember)
 - Stats-Berechnung (Token-Schätzungen)
 - Afterthought Decision-Parsing (Ja/Nein Erkennung)
 """
@@ -12,9 +11,38 @@ from typing import Dict, Any, List, Generator
 
 from ..api_request import ApiClient, RequestConfig, StreamEvent
 from ..api_request.response_cleaner import clean_api_response
-from ..prompt_engine.memory_context import format_memories_for_prompt
 from ..logger import log
 from ..config import load_character
+
+
+def _read_setting(key: str, default=None):
+    """Liest ein Setting aus user_settings.json mit defaults.json Fallback."""
+    import os
+    import json
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+    # user_settings.json
+    path = os.path.join(base_dir, 'settings', 'user_settings.json')
+    try:
+        if os.path.exists(path):
+            with open(path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            if key in data:
+                return data[key]
+    except Exception:
+        pass
+
+    # defaults.json Fallback
+    path = os.path.join(base_dir, 'settings', 'defaults.json')
+    try:
+        if os.path.exists(path):
+            with open(path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            return data.get(key, default)
+    except Exception:
+        pass
+
+    return default
 
 
 class ChatService:
@@ -39,31 +67,52 @@ class ChatService:
         except Exception as e:
             log.error("ChatService: PromptEngine konnte nicht geladen werden: %s", e)
 
-    def _load_memory_context(self, persona_id: str = None) -> str:
+    def _load_cortex_context(self, persona_id: str = None) -> Dict[str, str]:
         """
-        Lädt und formatiert Memories aus der DB.
-        Zentrale Memory-Loading-Logik (statt 3x dupliziert).
+        Lädt Cortex-Dateien als Placeholder-Werte für die PromptEngine.
+
+        Prüft zuerst das cortexEnabled-Setting. Gibt bei deaktiviertem Cortex
+        oder Fehler leere Strings zurück (der requires_any-Check in der Engine
+        überspringt dann den Cortex-Block).
+
+        Args:
+            persona_id: Optional Persona-ID (Default: aktive Persona)
+
+        Returns:
+            Dict mit cortex_memory, cortex_soul, cortex_relationship
         """
+        empty = {
+            'cortex_memory': '',
+            'cortex_soul': '',
+            'cortex_relationship': '',
+        }
+
+        # Setting-Check: Cortex global deaktiviert?
+        if not _read_setting('cortexEnabled', True):
+            return empty
+
         try:
-            from ..database import get_active_memories
+            from ..provider import get_cortex_service
+            cortex_service = get_cortex_service()
+
             if persona_id is None:
                 from ..config import get_active_persona_id
                 persona_id = get_active_persona_id()
-            memories = get_active_memories(persona_id=persona_id)
-            return format_memories_for_prompt(memories, engine=self._engine)
+
+            return cortex_service.get_cortex_for_prompt(persona_id)
         except Exception as e:
-            log.warning("Memories konnten nicht geladen werden: %s", e)
-            return ''
+            log.warning("Cortex-Kontext konnte nicht geladen werden: %s", e)
+            return empty
 
     def _build_chat_messages(self, user_message: str, conversation_history: list,
-                              memory_context: str, char_name: str, user_name: str,
-                              nsfw_mode: bool) -> tuple:
+                              char_name: str, user_name: str,
+                              nsfw_mode: bool, pending_afterthought: str = None) -> tuple:
         """
         Baut die Messages-Liste für den Chat-Request auf.
 
         Die Reihenfolge wird durch die PromptEngine-Sequenz bestimmt:
-        - first_assistant: Memory + Prefill-Impersonation
-        - history: Konversationsverlauf ({{history}}) – Greeting ist bereits in DB gespeichert
+        - first_assistant: Prefill-Impersonation
+        - history: Konversationsverlauf ({{history}})
         - prefill: Remember als letzte Assistant-Message
 
         Returns:
@@ -109,10 +158,8 @@ class ChatService:
             position = template['position']
 
             if position == 'first_assistant':
-                # Memory + Prefill-Impersonation kombiniert
+                # Prefill-Impersonation
                 first_parts = []
-                if memory_context:
-                    first_parts.append(memory_context)
                 if prefill_imp_text:
                     first_parts.append(prefill_imp_text)
 
@@ -146,14 +193,12 @@ class ChatService:
                 history_processed = True
                 if effective_history:
                     # Wenn History mit assistant beginnt und letzte Message auch assistant ist
-                    # (z.B. Memory + Greeting), Bridge einfügen statt zu mergen.
-                    # Sonst wird das Greeting im Memory-Text versteckt und die KI
-                    # erkennt nicht, dass sie bereits begrüßt hat.
+                    # (z.B. Auto-First-Message), Bridge einfügen statt zu mergen.
                     if messages and effective_history[0]['role'] == messages[-1]['role']:
                         if effective_history[0]['role'] == 'assistant':
-                            # Bridge-Message damit Greeting als eigene Nachricht bleibt
+                            # Bridge-Message damit erste Nachricht als eigene Nachricht bleibt
                             messages.append({'role': 'user', 'content': '[Beginn der Konversation]'})
-                            log.debug("History-Bridge eingefügt (Memory → Greeting)")
+                            log.debug("History-Bridge eingefügt (Auto-First-Message)")
                         else:
                             # Seltener Fall: beide user → zusammenführen
                             messages[-1]['content'] += "\n\n" + effective_history[0]['content']
@@ -198,6 +243,17 @@ class ChatService:
                 messages.append(msg)
                 history_tokens_est += len(msg.get('content', ''))
 
+        # Pending Afterthought: inject the persona's last inner dialogue (from [i_can_wait])
+        # as context before the user message so the persona remembers what it was thinking.
+        if pending_afterthought:
+            afterthought_note = f"[Dein letzter innerer Gedanke, {user_name} könnte auch aufgefallen sein das du in Gedanken warst — nutze ihn als Kontext:]\n{pending_afterthought}"
+            if messages and messages[-1]['role'] == 'assistant':
+                messages[-1]['content'] += "\n\n" + afterthought_note
+            else:
+                messages.append({'role': 'assistant', 'content': afterthought_note})
+            history_tokens_est += len(afterthought_note)
+            log.info("Pending afterthought injected (%d chars)", len(pending_afterthought))
+
         # User-Nachricht hinzufügen
         # Falls History mit user endet, zusammenführen um doppelte user-Rolle zu vermeiden
         if messages and messages[-1]['role'] == 'user':
@@ -219,11 +275,11 @@ class ChatService:
         }
 
     def chat_stream(self, user_message: str, conversation_history: list,
-                    character_data: dict, language: str = 'de',
+                    character_data: dict, language: str = 'english',
                     user_name: str = 'User', api_model: str = None,
-                    api_temperature: float = None, include_memories: bool = True,
+                    api_temperature: float = None,
                     ip_address: str = None, experimental_mode: bool = False,
-                    persona_id: str = None) -> Generator:
+                    persona_id: str = None, pending_afterthought: str = None) -> Generator:
         """
         Haupt-Chat-Stream.
 
@@ -241,26 +297,22 @@ class ChatService:
         variant = 'experimental' if experimental_mode else 'default'
         system_prompt = ''
         if self._engine:
-            runtime_vars = {'language': language}
+            runtime_vars = {}
             if ip_address:
                 runtime_vars['ip_address'] = ip_address
+            # Cortex-Daten laden und als runtime_vars hinzufügen
+            cortex_data = self._load_cortex_context(persona_id)
+            runtime_vars.update(cortex_data)
             system_prompt = self._engine.build_system_prompt(variant=variant, runtime_vars=runtime_vars) or ''
         else:
             log.error("ChatService: Kein System-Prompt — PromptEngine nicht verfügbar!")
         system_prompt_est = len(system_prompt)
 
-        # 2. Memories laden
-        memory_context = ''
-        memory_tokens_est = 0
-        if include_memories:
-            memory_context = self._load_memory_context(persona_id)
-            if memory_context:
-                memory_tokens_est = len(memory_context)
-
-        # 3. Messages zusammenbauen
+        # 2. Messages zusammenbauen
         messages, msg_stats = self._build_chat_messages(
-            user_message, conversation_history, memory_context,
-            char_name, user_name, experimental_mode
+            user_message, conversation_history,
+            char_name, user_name, experimental_mode,
+            pending_afterthought=pending_afterthought
         )
 
         # Debug: Zeige was tatsächlich an die API gesendet wird
@@ -272,7 +324,7 @@ class ChatService:
                       len(conversation_history),
                       conversation_history[0]['role'] if conversation_history else 'empty')
 
-        # 4. RequestConfig erstellen
+        # 3. RequestConfig erstellen
         config = RequestConfig(
             system_prompt=system_prompt,
             messages=messages,
@@ -283,20 +335,19 @@ class ChatService:
             request_type='chat'
         )
 
-        # 5. Stream über ApiClient
+        # 4. Stream über ApiClient
         for event in self.api_client.stream(config):
             if event.event_type == 'chunk':
                 yield ('chunk', event.data)
             elif event.event_type == 'done':
                 # Stats berechnen
-                total_est = system_prompt_est + memory_tokens_est + msg_stats['history_est'] + msg_stats['user_msg_est'] + msg_stats['prefill_est']
+                total_est = system_prompt_est + msg_stats['history_est'] + msg_stats['user_msg_est'] + msg_stats['prefill_est']
                 yield ('done', {
                     'response': event.data['response'],
                     'stats': {
                         'api_input_tokens': event.data.get('api_input_tokens', 0),
                         'output_tokens': event.data.get('output_tokens', 0),
                         'system_prompt_est': system_prompt_est,
-                        'memory_est': memory_tokens_est,
                         'history_est': msg_stats['history_est'],
                         'user_msg_est': msg_stats['user_msg_est'],
                         'prefill_est': msg_stats['prefill_est'],
@@ -307,7 +358,7 @@ class ChatService:
                 yield ('error', event.data)
 
     def afterthought_decision(self, conversation_history: list, character_data: dict,
-                               elapsed_time: str, language: str = 'de', user_name: str = 'User',
+                               elapsed_time: str, language: str = 'english', user_name: str = 'User',
                                api_model: str = None, api_temperature: float = None,
                                ip_address: str = None, nsfw_mode: bool = False,
                                persona_id: str = None) -> dict:
@@ -331,11 +382,13 @@ class ChatService:
             # Baue den inneren Dialog Prompt via Engine
             variant = 'experimental' if nsfw_mode else 'default'
             runtime_vars = {
-                'language': language,
                 'elapsed_time': elapsed_time,
             }
             if ip_address:
                 runtime_vars['ip_address'] = ip_address
+            # Cortex-Daten laden und als runtime_vars hinzufügen
+            cortex_data = self._load_cortex_context(persona_id)
+            runtime_vars.update(cortex_data)
 
             if not self._engine:
                 return {'decision': False, 'inner_dialogue': '', 'error': 'PromptEngine nicht verfügbar'}
@@ -349,13 +402,8 @@ class ChatService:
                 variant=variant, runtime_vars=runtime_vars
             ) or ''
 
-            # Memories laden (zentral, nicht dupliziert)
-            memory_context = self._load_memory_context(persona_id)
-
             # Nachrichtenverlauf + innere Dialog-Anweisung
             messages = []
-            if memory_context:
-                messages.append({'role': 'assistant', 'content': memory_context})
             if conversation_history:
                 messages.extend(conversation_history)
 
@@ -380,7 +428,7 @@ class ChatService:
             # Decision-Parsing: letztes Wort prüfen
             words = inner_dialogue.split()
             last_word = words[-1].strip('.,!?:;') if words else ''
-            decision = last_word.lower() == 'ja'
+            decision = last_word.lower() == '[afterthought_ok]'
 
             log.debug(
                 "NACHGEDANKE INNERER DIALOG (%s) | Wörter: %d | Zeichen: %d | "
@@ -389,7 +437,11 @@ class ChatService:
                 words[-1] if words else '', last_word,
                 response.stop_reason
             )
-            log.info("Nachgedanke-Entscheidung: %s", 'JA → Ergänzung' if decision else 'NEIN → Schweigen')
+            log.info(
+                "Nachgedanke-Entscheidung: %s (letztes Wort: '%s')",
+                '[afterthought_OK] → Ergänzung' if decision else '[i_can_wait] → Schweigen',
+                last_word
+            )
 
             return {
                 'decision': decision,
@@ -403,7 +455,7 @@ class ChatService:
 
     def afterthought_followup(self, conversation_history: list, character_data: dict,
                                inner_dialogue: str, elapsed_time: str,
-                               language: str = 'de', user_name: str = 'User',
+                               language: str = 'english', user_name: str = 'User',
                                api_model: str = None, api_temperature: float = None,
                                ip_address: str = None, nsfw_mode: bool = False,
                                persona_id: str = None) -> Generator:
@@ -428,12 +480,14 @@ class ChatService:
             # Baue den Followup-Prompt via Engine
             variant = 'experimental' if nsfw_mode else 'default'
             runtime_vars = {
-                'language': language,
                 'elapsed_time': elapsed_time,
                 'inner_dialogue': inner_dialogue,
             }
             if ip_address:
                 runtime_vars['ip_address'] = ip_address
+            # Cortex-Daten laden und als runtime_vars hinzufügen
+            cortex_data = self._load_cortex_context(persona_id)
+            runtime_vars.update(cortex_data)
 
             if not self._engine:
                 yield ('error', 'PromptEngine nicht verfügbar')
@@ -445,13 +499,8 @@ class ChatService:
             ) or ''
             system_prompt_est = len(system_prompt)
 
-            # Memories laden (zentral)
-            memory_context = self._load_memory_context(persona_id)
-
             # Nachrichtenverlauf + Followup-Anweisung
             messages = []
-            if memory_context:
-                messages.append({'role': 'assistant', 'content': memory_context})
             if conversation_history:
                 messages.extend(conversation_history)
 
@@ -482,7 +531,6 @@ class ChatService:
                             'api_input_tokens': event.data.get('api_input_tokens', 0),
                             'output_tokens': event.data.get('output_tokens', 0),
                             'system_prompt_est': system_prompt_est,
-                            'memory_est': 0,
                             'history_est': 0,
                             'user_msg_est': 0,
                             'prefill_est': prefill_est,
@@ -508,8 +556,3 @@ class ChatService:
         response = self.api_client.request(config)
         return response.content if response.success else 'Neue Konversation'
 
-    def get_greeting(self, character_data: dict = None) -> str | None:
-        """Gibt die Begrüßungsnachricht zurück, oder None wenn deaktiviert"""
-        if character_data is None:
-            character_data = load_character()
-        return character_data.get('greeting')

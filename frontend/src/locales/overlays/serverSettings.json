@@ -1,0 +1,40 @@
+{
+  "en": {
+    "title": "Server Settings",
+    "serverMode": "Server Mode",
+    "local": "Local (127.0.0.1)",
+    "public": "Public (0.0.0.0 - Listen)",
+    "localHint": "<strong>Local:</strong> Only accessible on this computer",
+    "publicHint": "<strong>Public:</strong> All devices on the same network (e.g. phone, tablet) can access the chat",
+    "accessControl": "IP Access Control",
+    "accessControlHint": "Unknown devices must be approved by the host before gaining access. Only active in public mode.",
+    "accessActive": "Active",
+    "accessInactive": "Inactive",
+    "tipAccess": "Manage approved and blocked IPs via <em>Settings → Access Control</em>.",
+    "tipRestart": "Server mode changes require a restart.",
+    "restarting": "Server is restarting...",
+    "restartSlow": "Server restart is taking longer than expected.",
+    "autoReload": "The page will reload automatically",
+    "reloadPage": "Reload Page",
+    "saveRestart": "Save & Restart"
+  },
+  "de": {
+    "title": "Server-Einstellungen",
+    "serverMode": "Server-Modus",
+    "local": "Lokal (127.0.0.1)",
+    "public": "Öffentlich (0.0.0.0 - Listen)",
+    "localHint": "<strong>Lokal:</strong> Nur auf diesem Computer erreichbar",
+    "publicHint": "<strong>Öffentlich:</strong> Alle Geräte im selben Netzwerk (z.B. Handy, Tablet) können auf den Chat zugreifen",
+    "accessControl": "IP-Zugangskontrolle",
+    "accessControlHint": "Unbekannte Geräte müssen vom Host genehmigt werden, bevor sie Zugang erhalten. Nur im öffentlichen Modus aktiv.",
+    "accessActive": "Aktiv",
+    "accessInactive": "Inaktiv",
+    "tipAccess": "Verwalte genehmigte und blockierte IPs über <em>Einstellungen → Zugangskontrolle</em>.",
+    "tipRestart": "Server-Modus Änderungen erfordern einen Neustart.",
+    "restarting": "Server wird neu gestartet...",
+    "restartSlow": "Server-Neustart dauert länger als erwartet.",
+    "autoReload": "Die Seite wird automatisch neu geladen",
+    "reloadPage": "Seite neu laden",
+    "saveRestart": "Speichern & Neustart"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "en": {
+    "back": "Back",
+    "next": "Next",
+    "saving": "Saving...",
+    "optional": "(optional)"
+  },
+  "de": {
+    "back": "Zurück",
+    "next": "Weiter",
+    "saving": "Speichert...",
+    "optional": "(optional)"
+  }
+}

@@ -1,0 +1,291 @@
+/* ── EmojiPicker ── */
+
+.panel {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  width: 340px;
+  height: 400px;
+  max-height: 400px;
+  display: flex;
+  flex-direction: column;
+  background: var(--overlay-bg, rgba(255,255,255,0.92));
+  backdrop-filter: var(--overlay-backdrop-blur, blur(8px));
+  -webkit-backdrop-filter: var(--overlay-backdrop-blur, blur(8px));
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+  z-index: 200;
+  overflow: hidden;
+  animation: emojiSlideUp 0.18s ease-out;
+}
+.favoTab {
+  color: var(--nonverbal-color, #e4ba00);
+  font-weight: bold;
+  border-bottom: 2px solid var(--nonverbal-color, #e4ba00);
+  background: rgba(228, 186, 0, 0.08);
+}
+
+@keyframes emojiSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Search ── */
+
+.searchRow {
+  padding: 10px 10px 6px;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  font-family: inherit;
+  color: #1a1a1a;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.searchInput:focus {
+  border-color: rgba(0, 0, 0, 0.25);
+}
+
+.searchInput::placeholder {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+/* ── Category Tabs ── */
+
+.categories {
+  display: flex;
+  gap: 2px;
+  padding: 4px 8px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.categories::-webkit-scrollbar {
+  display: none;
+}
+
+.catBtn {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 18px;
+  transition: background 0.15s;
+  padding: 0;
+}
+
+.catBtn:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.catActive {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* ── Category Title ── */
+
+.catTitle {
+  padding: 6px 12px 2px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(0, 0, 0, 0.4);
+}
+
+/* ── Emoji Grid ── */
+
+.grid {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 4px 8px 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  align-content: flex-start;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
+
+.grid::-webkit-scrollbar {
+  width: 4px;
+}
+
+.grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.grid::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+}
+
+.emojiBtn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 22px;
+  padding: 0;
+  transition: background 0.12s, transform 0.12s;
+  line-height: 1;
+}
+
+.emojiBtn:hover {
+  background: rgba(0, 0, 0, 0.08);
+  transform: scale(1.15);
+}
+
+.emojiBtn:active {
+  transform: scale(0.95);
+}
+
+.empty {
+  width: 100%;
+  padding: 24px 12px;
+  text-align: center;
+  color: rgba(0, 0, 0, 0.35);
+  font-size: 13px;
+}
+
+/* ── Dark Mode ── */
+
+:root[data-theme="dark"] .panel {
+  background: rgba(20, 20, 30, 0.88);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+:root[data-theme="dark"] .searchInput {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: white;
+}
+
+:root[data-theme="dark"] .searchInput:focus {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+:root[data-theme="dark"] .searchInput::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+:root[data-theme="dark"] .categories {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+:root[data-theme="dark"] .catBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+:root[data-theme="dark"] .catActive {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+:root[data-theme="dark"] .catTitle {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+:root[data-theme="dark"] .emojiBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme="dark"] .grid::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+:root[data-theme="dark"] .grid {
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+:root[data-theme="dark"] .empty {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 768px) {
+  .panel {
+    width: calc(100vw - 24px);
+    left: 50%;
+    transform: translateX(-50%);
+    height: 240px;
+    max-height: 240px;
+    border-radius: 12px;
+  }
+
+  .searchRow {
+    padding: 6px 8px 4px;
+  }
+
+  .searchInput {
+    padding: 5px 8px;
+    font-size: 12px;
+  }
+
+  .categories {
+    padding: 2px 6px;
+    gap: 1px;
+  }
+
+  .catBtn {
+    width: 28px;
+    height: 28px;
+    font-size: 15px;
+  }
+
+  .catTitle {
+    padding: 4px 8px 1px;
+    font-size: 10px;
+  }
+
+  .grid {
+    padding: 2px 6px 6px;
+    gap: 1px;
+  }
+
+  .emojiBtn {
+    width: 30px;
+    height: 30px;
+    font-size: 18px;
+  }
+
+  @keyframes emojiSlideUp {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+}

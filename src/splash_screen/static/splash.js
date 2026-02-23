@@ -4,9 +4,9 @@ function addLog(text) {
     line.className = 'log-line';
     if (text.indexOf('WARNING') !== -1 || text.indexOf('WARN') !== -1) {
         line.classList.add('warn');
-    } else if (text.indexOf('ERROR') !== -1 || text.indexOf('Fehler') !== -1) {
+    } else if (text.indexOf('ERROR') !== -1 || text.indexOf('error') !== -1) {
         line.classList.add('error');
-    } else if (text.indexOf('running') !== -1 || text.indexOf('ready') !== -1 || text.indexOf('bereit') !== -1) {
+    } else if (text.indexOf('running') !== -1 || text.indexOf('ready') !== -1 || text.indexOf('Ready') !== -1) {
         line.classList.add('info');
     } else {
         line.classList.add('default');

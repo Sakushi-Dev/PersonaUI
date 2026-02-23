@@ -1,0 +1,21 @@
+{
+  "cortex_update_tools": {
+    "variants": {
+      "default": {
+        "content": ""
+      }
+    },
+    "tool_descriptions": {
+      "read_file": {
+        "tool_description": "Reads the current content of one of your Cortex files. Use this tool to see the current state of a file before updating it.",
+        "filename_description": "Name of the Cortex file to read"
+      },
+      "write_file": {
+        "tool_description": "Writes new content to one of your Cortex files. Overwrites the entire file content. Always write the COMPLETE new content — not just the changes.",
+        "filename_description": "Name of the Cortex file to write",
+        "content_description": "The new complete file content (Markdown format). Write from your first-person perspective."
+      }
+    },
+    "placeholders_used": []
+  }
+}

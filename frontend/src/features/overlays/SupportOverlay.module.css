@@ -1,0 +1,120 @@
+/* ── SupportOverlay Styles ── */
+
+.supportContent {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── About Section ── */
+.aboutSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sectionTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--overlay-heading, #222);
+  margin: 0 0 4px;
+}
+
+.aboutText a {
+  color: var(--nonverbal-color, #e4ba00);
+  text-decoration: none;
+}
+
+.aboutText a:hover {
+  text-decoration: underline;
+}
+
+.aboutText {
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--overlay-text, #444);
+  margin: 0;
+}
+
+/* ── Note Box (Open Source transparency) ── */
+.noteBox {
+  padding: 12px 14px;
+  background: rgba(228, 186, 0, 0.06);
+  border: 1px solid rgba(228, 186, 0, 0.15);
+  border-radius: var(--border-radius-md, 10px);
+}
+
+:global(body.dark-mode) .noteBox {
+  background: rgba(228, 186, 0, 0.08);
+  border-color: rgba(228, 186, 0, 0.2);
+}
+
+.noteText {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--overlay-text-secondary, #666);
+  margin: 0;
+}
+
+/* ── Ko-fi Section ── */
+.kofiSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: var(--border-radius-md, 10px);
+  overflow: hidden;
+}
+
+.kofiIframe {
+  border: none;
+  width: 100%;
+  border-radius: var(--border-radius-md, 10px);
+  background: #f9f9f9;
+}
+
+/* ── GitHub Star Section ── */
+.starSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.starText {
+  font-size: 13px;
+  color: var(--overlay-text, #444);
+  margin: 0;
+}
+
+.githubLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  background: none;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  color: var(--overlay-text, #444);
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+
+.githubLink:hover {
+  border-color: var(--nonverbal-color, #e4ba00);
+  color: var(--nonverbal-color, #e4ba00);
+  background: rgba(228, 186, 0, 0.05);
+}
+
+:global(body.dark-mode) .githubLink {
+  border-color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+:global(body.dark-mode) .githubLink:hover {
+  border-color: var(--nonverbal-color, #e4ba00);
+  color: var(--nonverbal-color, #e4ba00);
+  background: rgba(228, 186, 0, 0.08);
+}

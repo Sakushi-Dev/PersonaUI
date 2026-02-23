@@ -2,8 +2,7 @@
 Integration Test: Chat E2E Flow (Mock-API).
 Testet den kompletten Pfad: PromptEngine → Message-Assembly → API → Response.
 """
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 
 def _make_chat_service(mock_api_client, mock_engine):
@@ -19,8 +18,8 @@ def _make_chat_service(mock_api_client, mock_engine):
 class TestChatFlowE2E:
     """End-to-End Test für den Chat-Flow mit gemockter API"""
 
-    def test_full_chat_request(self, mock_api_client, test_character_data, sample_memories, mock_engine):
-        """Complete chat flow: Prompt + Memory + History → Stream"""
+    def test_full_chat_request(self, mock_api_client, test_character_data, mock_engine):
+        """Kompletter Chat-Flow: Prompt + History → Stream"""
         from utils.api_request.types import StreamEvent
 
         service = _make_chat_service(mock_api_client, mock_engine)
@@ -35,24 +34,22 @@ class TestChatFlowE2E:
                     'api_input_tokens': 200,
                     'output_tokens': 30,
                     'system_prompt_est': 5000,
-                    'memory_est': 300,
                     'history_est': 100,
                     'user_msg_est': 15,
                     'prefill_est': 50,
-                    'total_est': 5465,
+                    'total_est': 5165,
                 },
             }),
         ])
 
-        with patch.object(service, '_load_memory_context', return_value='Memory context here'):
-            events = list(service.chat_stream(
-                user_message='Hallo TestPersona!',
-                conversation_history=[],
-                character_data=test_character_data,
-                language='de',
-                user_name='Tester',
-                persona_id='default',
-            ))
+        events = list(service.chat_stream(
+            user_message='Hallo TestPersona!',
+            conversation_history=[],
+            character_data=test_character_data,
+            language='de',
+            user_name='Tester',
+            persona_id='default',
+        ))
 
         # Expected events
         chunks = [e for e in events if e[0] == 'chunk']
@@ -77,13 +74,12 @@ class TestChatFlowE2E:
             StreamEvent('done', {'response': 'Antwort', 'stats': {}}),
         ])
 
-        with patch.object(service, '_load_memory_context', return_value=''):
-            events = list(service.chat_stream(
-                user_message='Noch eine Frage',
-                conversation_history=sample_conversation,
-                character_data=test_character_data,
-                persona_id='default',
-            ))
+        events = list(service.chat_stream(
+            user_message='Noch eine Frage',
+            conversation_history=sample_conversation,
+            character_data=test_character_data,
+            persona_id='default',
+        ))
 
         assert len(events) > 0
 
@@ -96,13 +92,12 @@ class TestChatFlowE2E:
             StreamEvent('error', 'credit_balance_exhausted'),
         ])
 
-        with patch.object(service, '_load_memory_context', return_value=''):
-            events = list(service.chat_stream(
-                user_message='Test',
-                conversation_history=[],
-                character_data=test_character_data,
-                persona_id='default',
-            ))
+        events = list(service.chat_stream(
+            user_message='Test',
+            conversation_history=[],
+            character_data=test_character_data,
+            persona_id='default',
+        ))
 
         errors = [e for e in events if e[0] == 'error']
         assert len(errors) == 1
@@ -122,14 +117,13 @@ class TestPromptReachesApi:
             StreamEvent('done', {'response': 'ok', 'api_input_tokens': 10, 'output_tokens': 5}),
         ])
 
-        with patch.object(service, '_load_memory_context', return_value=''):
-            list(service.chat_stream(
-                user_message='Hallo!',
-                conversation_history=[],
-                character_data=test_character_data,
-                user_name='Tester',
-                persona_id='default',
-            ))
+        list(service.chat_stream(
+            user_message='Hallo!',
+            conversation_history=[],
+            character_data=test_character_data,
+            user_name='Tester',
+            persona_id='default',
+        ))
 
         # stream() must have been called exactly once
         mock_api_client.stream.assert_called_once()
@@ -152,46 +146,18 @@ class TestPromptReachesApi:
 
         user_msg = 'Erzähl mir etwas über dich!'
 
-        with patch.object(service, '_load_memory_context', return_value=''):
-            list(service.chat_stream(
-                user_message=user_msg,
-                conversation_history=[],
-                character_data=test_character_data,
-                persona_id='default',
-            ))
+        list(service.chat_stream(
+            user_message=user_msg,
+            conversation_history=[],
+            character_data=test_character_data,
+            persona_id='default',
+        ))
 
         config = mock_api_client.stream.call_args[0][0]
         user_messages = [m for m in config.messages if m['role'] == 'user']
         user_contents = [m['content'] for m in user_messages]
         assert user_msg in user_contents, (
             f"User-Nachricht '{user_msg}' nicht in API-Messages gefunden: {user_contents}"
-        )
-
-    def test_memory_context_in_api_messages(self, mock_api_client, test_character_data, mock_engine):
-        """Memory context must appear in an assistant message in the API request"""
-        from utils.api_request.types import StreamEvent
-
-        service = _make_chat_service(mock_api_client, mock_engine)
-        mock_api_client.stream.return_value = iter([
-            StreamEvent('done', {'response': 'ok', 'api_input_tokens': 10, 'output_tokens': 5}),
-        ])
-
-        memory_text = 'Der User mag Katzen und heißt Max.'
-
-        with patch.object(service, '_load_memory_context', return_value=memory_text):
-            list(service.chat_stream(
-                user_message='Hi',
-                conversation_history=[],
-                character_data=test_character_data,
-                persona_id='default',
-            ))
-
-        config = mock_api_client.stream.call_args[0][0]
-        all_content = ' '.join(m['content'] for m in config.messages)
-        assert memory_text in all_content, (
-            f"Memory-Kontext nicht im API-Request gefunden.\n"
-            f"Erwartet: '{memory_text}'\n"
-            f"Messages: {config.messages}"
         )
 
     def test_conversation_history_in_api_messages(self, mock_api_client, test_character_data,
@@ -204,13 +170,12 @@ class TestPromptReachesApi:
             StreamEvent('done', {'response': 'ok', 'api_input_tokens': 10, 'output_tokens': 5}),
         ])
 
-        with patch.object(service, '_load_memory_context', return_value=''):
-            list(service.chat_stream(
-                user_message='Neue Frage',
-                conversation_history=sample_conversation,
-                character_data=test_character_data,
-                persona_id='default',
-            ))
+        list(service.chat_stream(
+            user_message='Neue Frage',
+            conversation_history=sample_conversation,
+            character_data=test_character_data,
+            persona_id='default',
+        ))
 
         config = mock_api_client.stream.call_args[0][0]
         all_content = ' '.join(m['content'] for m in config.messages)
@@ -233,13 +198,12 @@ class TestPromptReachesApi:
 
         expected_prefill = mock_engine.build_prefill.return_value
 
-        with patch.object(service, '_load_memory_context', return_value=''):
-            list(service.chat_stream(
-                user_message='Test',
-                conversation_history=[],
-                character_data=test_character_data,
-                persona_id='default',
-            ))
+        list(service.chat_stream(
+            user_message='Test',
+            conversation_history=[],
+            character_data=test_character_data,
+            persona_id='default',
+        ))
 
         config = mock_api_client.stream.call_args[0][0]
 
@@ -264,15 +228,14 @@ class TestPromptReachesApi:
             StreamEvent('done', {'response': 'ok', 'api_input_tokens': 10, 'output_tokens': 5}),
         ])
 
-        with patch.object(service, '_load_memory_context', return_value=''):
-            list(service.chat_stream(
-                user_message='Test',
-                conversation_history=[],
-                character_data=test_character_data,
-                api_model='claude-sonnet-4-20250514',
-                api_temperature=0.9,
-                persona_id='default',
-            ))
+        list(service.chat_stream(
+            user_message='Test',
+            conversation_history=[],
+            character_data=test_character_data,
+            api_model='claude-sonnet-4-20250514',
+            api_temperature=0.9,
+            persona_id='default',
+        ))
 
         config = mock_api_client.stream.call_args[0][0]
         assert config.stream is True
@@ -292,18 +255,16 @@ class TestPromptReachesApi:
             StreamEvent('done', {'response': 'Antwort', 'api_input_tokens': 200, 'output_tokens': 30}),
         ])
 
-        memory = 'User liebt Musik und spielt Gitarre.'
         user_msg = 'Spielst du auch ein Instrument?'
 
-        with patch.object(service, '_load_memory_context', return_value=memory):
-            events = list(service.chat_stream(
-                user_message=user_msg,
-                conversation_history=sample_conversation,
-                character_data=test_character_data,
-                user_name='Max',
-                language='de',
-                persona_id='default',
-            ))
+        events = list(service.chat_stream(
+            user_message=user_msg,
+            conversation_history=sample_conversation,
+            character_data=test_character_data,
+            user_name='Max',
+            language='de',
+            persona_id='default',
+        ))
 
         # 1. API was called
         mock_api_client.stream.assert_called_once()
@@ -319,8 +280,7 @@ class TestPromptReachesApi:
 
         # 4. All content present in request
         all_content = ' '.join(m['content'] for m in config.messages)
-        assert memory in all_content, "Memory missing in API request"
-        assert user_msg in all_content, "User message missing in API request"
+        assert user_msg in all_content, "User-Message fehlt im API-Request"
         for msg in sample_conversation:
             assert msg['content'] in all_content, f"History '{msg['content']}' missing"
 
@@ -338,11 +298,11 @@ class TestPromptReachesApi:
         assert len(done_events) == 1
 
 
-class TestGreetingInHistory:
-    """Verifies that the greeting message is preserved as its own assistant message."""
+class TestAutoFirstMessageInHistory:
+    """Prüft, dass die Auto-First-Message als eigene Assistant-Message erhalten bleibt."""
 
-    def test_greeting_not_merged_with_memory(self, mock_api_client, test_character_data, mock_engine):
-        """Greeting must NOT be merged into the memory message."""
+    def test_auto_first_msg_is_standalone_assistant_message(self, mock_api_client, test_character_data, mock_engine):
+        """Auto-First-Message muss als eigene Assistant-Message erhalten bleiben."""
         from utils.api_request.types import StreamEvent
 
         service = _make_chat_service(mock_api_client, mock_engine)
@@ -350,43 +310,35 @@ class TestGreetingInHistory:
             StreamEvent('done', {'response': 'ok', 'api_input_tokens': 10, 'output_tokens': 5}),
         ])
 
-        greeting_text = 'Hallo, wie kann ich dir heute helfen?'
-        memory_text = 'Der User mag Katzen.'
+        first_msg_text = 'Hallo, wie kann ich dir heute helfen?'
 
-        # History wie aus DB: Greeting als erste assistant-Nachricht
-        history_with_greeting = [
-            {'role': 'assistant', 'content': greeting_text},
+        # History wie aus DB: Auto-First-Message als erste assistant-Nachricht
+        history_with_first_msg = [
+            {'role': 'assistant', 'content': first_msg_text},
             {'role': 'user', 'content': 'hey'},
         ]
 
-        with patch.object(service, '_load_memory_context', return_value=memory_text):
-            list(service.chat_stream(
-                user_message='wie gehts dir?',
-                conversation_history=history_with_greeting,
-                character_data=test_character_data,
-                persona_id='default',
-            ))
+        list(service.chat_stream(
+            user_message='wie gehts dir?',
+            conversation_history=history_with_first_msg,
+            character_data=test_character_data,
+            persona_id='default',
+        ))
 
         config = mock_api_client.stream.call_args[0][0]
 
-        # Greeting must exist as its own message, NOT merged into memory
+        # Auto-First-Message muss als eigene Assistant-Message existieren
         assistant_messages = [m for m in config.messages if m['role'] == 'assistant']
-        greeting_found_standalone = any(
-            m['content'] == greeting_text for m in assistant_messages
+        first_msg_found_standalone = any(
+            m['content'] == first_msg_text for m in assistant_messages
         )
-        assert greeting_found_standalone, (
-            f"Greeting '{greeting_text}' is not its own assistant message!\n"
+        assert first_msg_found_standalone, (
+            f"Auto-First-Message '{first_msg_text}' ist keine eigene Assistant-Message!\n"
             f"Messages: {[(m['role'], m['content'][:60]) for m in config.messages]}"
         )
 
-        # Memory must NOT contain the greeting
-        memory_msg = assistant_messages[0]  # first assistant = memory
-        assert greeting_text not in memory_msg['content'], (
-            "Greeting was merged into the memory message!"
-        )
-
-    def test_greeting_visible_on_second_turn(self, mock_api_client, test_character_data, mock_engine):
-        """On the second user turn, the entire previous conversation including greeting must be visible."""
+    def test_first_msg_visible_on_second_turn(self, mock_api_client, test_character_data, mock_engine):
+        """Beim zweiten User-Turn muss die gesamte bisherige Konversation inkl. First-Message sichtbar sein."""
         from utils.api_request.types import StreamEvent
 
         service = _make_chat_service(mock_api_client, mock_engine)
@@ -394,20 +346,19 @@ class TestGreetingInHistory:
             StreamEvent('done', {'response': 'ok', 'api_input_tokens': 10, 'output_tokens': 5}),
         ])
 
-        # History nach erstem Austausch: Greeting + 1. Frage + 1. Antwort
+        # History nach erstem Austausch: Auto-First-Message + 1. Frage + 1. Antwort
         history = [
             {'role': 'assistant', 'content': 'Hallo, wie kann ich dir heute helfen?'},
             {'role': 'user', 'content': 'hey'},
             {'role': 'assistant', 'content': 'Hey! Schön, dass du da bist.'},
         ]
 
-        with patch.object(service, '_load_memory_context', return_value=''):
-            list(service.chat_stream(
-                user_message='mir gehts gut und dir?',
-                conversation_history=history,
-                character_data=test_character_data,
-                persona_id='default',
-            ))
+        list(service.chat_stream(
+            user_message='mir gehts gut und dir?',
+            conversation_history=history,
+            character_data=test_character_data,
+            persona_id='default',
+        ))
 
         config = mock_api_client.stream.call_args[0][0]
         all_content = ' '.join(m['content'] for m in config.messages)
@@ -418,8 +369,8 @@ class TestGreetingInHistory:
                 f"History '{msg['content']}' fehlt im API-Request"
             )
 
-    def test_no_consecutive_same_roles_with_greeting(self, mock_api_client, test_character_data, mock_engine):
-        """No consecutive duplicate roles — even with memory + greeting."""
+    def test_no_consecutive_same_roles_with_first_msg(self, mock_api_client, test_character_data, mock_engine):
+        """Keine doppelten gleichen Rollen — auch mit Auto-First-Message."""
         from utils.api_request.types import StreamEvent
 
         service = _make_chat_service(mock_api_client, mock_engine)
@@ -432,13 +383,12 @@ class TestGreetingInHistory:
             {'role': 'user', 'content': 'hey'},
         ]
 
-        with patch.object(service, '_load_memory_context', return_value='Memory data here'):
-            list(service.chat_stream(
-                user_message='Test',
-                conversation_history=history,
-                character_data=test_character_data,
-                persona_id='default',
-            ))
+        list(service.chat_stream(
+            user_message='Test',
+            conversation_history=history,
+            character_data=test_character_data,
+            persona_id='default',
+        ))
 
         config = mock_api_client.stream.call_args[0][0]
 

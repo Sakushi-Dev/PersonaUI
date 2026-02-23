@@ -1,0 +1,45 @@
+/* ── OnboardingPage ── */
+
+.page {
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  font-family: 'Ubuntu', 'Roboto', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+/* ── Step Container ── */
+
+.container {
+  position: relative;
+  z-index: 10;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px 40px;
+}
+
+.stepWrapper {
+  width: 100%;
+  max-width: 640px;
+  animation: obStepIn 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes obStepIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 680px) {
+  .container {
+    padding: 50px 12px 30px;
+  }
+}

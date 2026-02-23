@@ -8,6 +8,7 @@ import uuid
 import shutil
 from typing import Dict, Any, List, Optional
 from utils.database import create_persona_db, delete_persona_db
+from utils.cortex_service import create_cortex_dir, delete_cortex_dir
 from utils.logger import log
 
 # Base directory for config files (src/)
@@ -32,7 +33,6 @@ def load_character() -> Dict[str, Any]:
         return {
             'char_name': 'Assistant',
             'desc': 'Eine freundliche Assistentin die gerne hilft.',
-            'greeting': None,
             'start_msg_enabled': False,
             'background': ''
         }
@@ -390,7 +390,6 @@ def list_created_personas() -> list:
         "scenarios": default_config.get("scenarios", []),
         "background": default_config.get("background", ""),
         "start_msg_enabled": default_config.get("start_msg_enabled", False),
-        "start_msg": default_config.get("start_msg", ""),
         "avatar": default_config.get("avatar", None),
         "avatar_type": default_config.get("avatar_type", None),
         "is_default": True,
@@ -419,7 +418,6 @@ def list_created_personas() -> list:
                     "scenarios": settings.get("scenarios", []),
                     "background": settings.get("background", ""),
                     "start_msg_enabled": settings.get("start_msg_enabled", False),
-                    "start_msg": settings.get("start_msg", ""),
                     "avatar": settings.get("avatar", None),
                     "avatar_type": settings.get("avatar_type", None),
                     "is_default": False,
@@ -444,8 +442,7 @@ def _configs_match(config_a: Dict, config_b: Dict) -> bool:
         config_a.get("expression") == config_b.get("expression") and
         sorted(config_a.get("scenarios", [])) == sorted(config_b.get("scenarios", [])) and
         config_a.get("background", "") == config_b.get("background", "") and
-        config_a.get("start_msg_enabled", False) == config_b.get("start_msg_enabled", False) and
-        config_a.get("start_msg", "") == config_b.get("start_msg", "")
+        config_a.get("start_msg_enabled", False) == config_b.get("start_msg_enabled", False)
     )
 
 
@@ -471,6 +468,9 @@ def save_created_persona(config_data: Dict[str, Any]) -> Optional[str]:
         
         # Create the associated persona database
         create_persona_db(persona_id)
+        
+        # Erstelle den Cortex-Ordner mit Templates
+        create_cortex_dir(persona_id)
         
         return persona_id
     except Exception as e:
@@ -533,6 +533,8 @@ def delete_created_persona(persona_id: str) -> bool:
             os.remove(filepath)
             # Delete the associated persona database
             delete_persona_db(persona_id)
+            # Lösche den Cortex-Ordner
+            delete_cortex_dir(persona_id)
             return True
         return False
     except Exception as e:
@@ -612,7 +614,7 @@ def build_character_description_from_config(
         profile_file: Pfad zur persona_spec.json (alle verfügbaren Optionen)
         
     Returns:
-        Dictionary mit char_name, identity, core, behavior, comms, voice, greeting, desc
+        Dictionary mit char_name, identity, core, behavior, comms, voice, desc
     """
     return _build_character_description_impl(config, profile_file)
 
@@ -629,7 +631,7 @@ def build_character_description(
         profile_file: Pfad zur persona_spec.json (alle verfügbaren Optionen)
         
     Returns:
-        Dictionary mit char_name, identity, core, behavior, comms, voice, greeting
+        Dictionary mit char_name, identity, core, behavior, comms, voice
     """
     config = load_char_config(config_file)
     return _build_character_description_impl(config, profile_file)
@@ -751,14 +753,8 @@ def _build_character_description_impl(
         # === BACKGROUND (Hintergrundgeschichte) ===
         background_text = config.get('background', '').strip()
         
-        # Greeting: Nur wenn start_msg aktiviert ist
+        # Auto First Message: Nur bool ob aktiviert
         start_msg_enabled = config.get('start_msg_enabled', False)
-        start_msg_text = config.get('start_msg', '').strip()
-        
-        if start_msg_enabled and start_msg_text:
-            greeting = start_msg_text
-        else:
-            greeting = None
         
         # === BEHAVIOR & VOICE (optional) ===
         behavior = ''
@@ -784,7 +780,6 @@ def _build_character_description_impl(
             'behavior': behavior,
             'comms': comms,
             'voice': voice,
-            'greeting': greeting,
             'start_msg_enabled': start_msg_enabled,
             'background': background_text,
             'desc': '\n\n'.join(desc_parts)
@@ -800,7 +795,6 @@ def _build_character_description_impl(
             'behavior': '',
             'comms': '',
             'voice': '',
-            'greeting': None,
             'start_msg_enabled': False,
             'background': '',
             'desc': 'Eine freundliche Assistentin'

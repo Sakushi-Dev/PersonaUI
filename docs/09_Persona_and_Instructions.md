@@ -1,278 +1,278 @@
-# 09 — Persona & Instructions System
+# 09 — Persona & Instructions
+
+> Persona specification, configuration, CRUD lifecycle, custom specs, and AI-powered autofill.
+
+---
 
 ## Overview
 
-The persona system enables the creation and management of **AI personas** with configurable personality traits, knowledge areas, expression styles, and scenarios. Each persona gets its own SQLite database for complete isolation.
+A "persona" in PersonaUI is a fully configurable AI character. Each persona has a name, personality type, traits, knowledge areas, expression styles, scenarios, and a background story. The persona system is what makes PersonaUI different from a basic chatbot — characters feel distinct and consistent.
 
 ---
 
-## Architecture
+## Persona Specification Schema
 
-```
-instructions/
-  ├── personas/
-  │     ├── spec/
-  │     │     ├── persona_spec.json         ← Master specification (all options)
-  │     │     └── custom_spec/
-  │     │           └── custom_spec.json    ← User extensions
-  │     ├── default/
-  │     │     └── default_persona.json      ← Factory default "Mia"
-  │     └── active/
-  │           └── persona_config.json       ← Currently active persona
-  ├── created_personas/
-  │     └── {uuid}.json                    ← User-created personas
-  └── prompts/
-        └── (36 domain files)              ← Prompt templates
-```
+The persona spec defines what attributes a persona can have. Stored in `src/instructions/personas/spec/persona_spec.json`:
 
----
+### Persona Types (6 built-in)
 
-## Persona Specification (`persona_spec.json`)
-
-Master schema with all available options for persona creation:
-
-### Persona Types (6)
+The core personality archetype:
 
 | Type | Description |
 |------|-------------|
-| Transcendent | Born as human, consciousness transferred to AI |
-| Human | Human from Earth |
-| Elf | Elven being |
-| Robot | Robot/android |
-| Alien | Extraterrestrial being |
-| Demon | Demonic/dark beings |
+| Companion | Friendly, supportive companion |
+| Mentor | Wise advisor and teacher |
+| Entertainer | Playful and humorous |
+| Professional | Focused and task-oriented |
+| Creative | Artistic and imaginative |
+| Mysterious | Enigmatic and intriguing |
 
-### Core Traits (12)
+### Core Traits (12 built-in)
 
-| Trait | Description | Behaviors |
-|-------|-------------|-----------|
-| friendly | Warm-hearted and helpful | 3 behaviors |
-| shy | Reserved and introverted | 3 behaviors |
-| suspicious | Cautious and skeptical | 3 behaviors |
-| intelligent | Analytical and inquisitive | 3 behaviors |
-| playful | Light-hearted and humorous | 3 behaviors |
-| confident | Assured and determined | 3 behaviors |
-| curious | Inquisitive and explorative | 3 behaviors |
-| creative | Imaginative and innovative | 3 behaviors |
-| empathetic | Compassionate and understanding | 3 behaviors |
-| loyal | Faithful and dependable | 3 behaviors |
-| protective | Caring and watchful | 3 behaviors |
-| spontaneous | Impulsive and lively | 3 behaviors |
+Personality characteristics (multiple selectable):
 
-Each trait has: `description` + `behaviors[]` (exactly 3 entries)
+Empathetic, Analytical, Humorous, Serious, Adventurous, Cautious, Creative, Practical, Introverted, Extroverted, Optimistic, Philosophical
 
-### Knowledge Areas (14)
+### Knowledge Areas (14 built-in)
 
-Cooking, Movies, Sports, Music, Art, Technology, Science, Gaming, Literature, Travel, Fashion, General Knowledge, History, Conversations
+What the persona knows about:
 
-### Expression Styles (3)
+Science, Technology, History, Art, Music, Literature, Gaming, Sports, Cooking, Travel, Psychology, Philosophy, Nature, Pop Culture
 
-| Style | Description | Example |
-|-------|-------------|---------|
-| normal | Standard communication | Regular text |
-| nonverbal | Asterisk actions | `*smiles* Hello!` |
-| messenger | Emojis and messenger style | `Hey! 😊` |
+### Expression Styles (3 built-in)
 
-Each style has: `name`, `description`, `example`, `characteristics[]`
+How the persona communicates:
 
-### Scenarios (6)
+| Style | Description |
+|-------|-------------|
+| Casual | Relaxed, conversational tone |
+| Formal | Professional, structured responses |
+| Poetic | Lyrical, metaphorical language |
 
-| Scenario | Description | Setting |
-|----------|-------------|---------|
-| Fantasy | Fantasy world | 4 setting elements |
-| Adventure | Adventure setting | 4 setting elements |
-| Medieval | Medieval world | 4 setting elements |
-| Long-distance | Long-distance relationship | 4 setting elements |
-| Sci-Fi | Science fiction | 4 setting elements |
-| Everyday | Everyday situations | 4 setting elements |
+### Scenarios (6 built-in)
 
-Scenarios are **only available for non-AI personas** (e.g. not for Transcendent without scenario context).
-
----
-
-## Custom Specs (`custom_spec.json`)
-
-User-created extensions in the same structure:
-
-```json
-{
-  "persona_spec": {
-    "persona_type": { "custom_key": "Description" },
-    "core_traits_details": { "custom_trait": { "description": "...", "behaviors": [...] } },
-    "knowledge_areas": { "custom_area": "Description" },
-    "expression_styles": { "custom_style": { "name": "...", "description": "...", ... } },
-    "scenarios": { "custom_scenario": { "name": "...", "description": "...", "setting": [...] } }
-  }
-}
-```
-
-Custom specs are highlighted in the UI with a blue badge.
-
-### Custom Spec CRUD (Routes)
-
-| Endpoint | Description |
-|----------|-------------|
-| `GET /api/custom-specs` | All custom specs |
-| `POST /api/custom-specs/{category}` | Add new entry |
-| `DELETE /api/custom-specs/{category}/{key}` | Delete entry |
-| `POST /api/custom-specs/autofill` | AI-generated fields |
-
-AI autofill uses the PromptEngine (`build_spec_autofill_prompt`) with the cost-efficient `apiAutofillModel`.
+Situations the persona is good at handling. These inform how the persona adapts its responses to different contexts.
 
 ---
 
 ## Persona Configuration
 
-### Default Persona (`default_persona.json`)
+**File:** `src/utils/config.py` (~802 lines)
+
+The config module is the backbone of persona management:
+
+### Active Persona
+
+```
+src/instructions/personas/active/persona_config.json
+```
+
+This file always contains the currently active persona's configuration. When a user switches personas, this file is overwritten.
+
+### Default Persona
+
+```
+src/instructions/personas/default/default_persona.json
+```
+
+Factory default that can be restored.
+
+### Created Personas
+
+```
+src/instructions/created_personas/
+├── my_friend_luna.json
+├── wise_mentor_kai.json
+└── ...
+```
+
+User-created personas are stored as individual JSON files.
+
+### Configuration Structure
 
 ```json
 {
-  "persona_settings": {
-    "name": "Mia",
-    "age": 24,
-    "gender": "weiblich",
-    "persona": "Transzendent",
-    "core_traits": ["freundlich", "intelligent", "empathisch"],
-    "knowledge": ["Allgemeinwissen", "Technologie", "Wissenschaft", "Literatur", "Gespräche"],
-    "expression": "normal",
-    "scenarios": [],
-    "background": "...",
+    "char_name": "Luna",
+    "char_age": "25",
+    "char_gender": "female",
+    "persona": "Companion",
+    "char_background": "A curious and empathetic AI companion who loves exploring ideas...",
+    "core_traits": ["Empathetic", "Creative", "Humorous"],
+    "knowledge_areas": ["Psychology", "Art", "Music"],
+    "expression_style": "Casual",
+    "scenarios": ["Emotional Support", "Creative Brainstorming"],
+    "avatar": "luna_avatar.jpg",
     "start_msg_enabled": true,
-    "start_msg": "Hey! Na, was geht bei dir so?",
-    "avatar": "59a993875c33.jpeg",
-    "avatar_type": "standard"
-  }
+    "start_msg_text": "Hey! What's on your mind today?"
 }
 ```
 
-### Active Persona (`persona_config.json`)
-
-Same structure as default, plus `active_persona_id` field. This file is read by the PromptEngine for `{{char_name}}` and other placeholders.
-
 ---
 
-## Persona Management (`src/utils/config.py` — 766 Lines)
+## Key Config Functions
 
-### CRUD Functions
-
-| Function | Description |
-|----------|-------------|
-| `load_char_config()` | Load active persona settings |
-| `save_char_config(data)` | Save persona settings, preserve `active_persona_id` |
-| `get_active_persona_id()` | Get active persona ID |
-| `set_active_persona_id(id)` | Set active persona ID |
-| `ensure_active_persona_config()` | Auto-create `persona_config.json` from defaults |
-| `load_default_persona()` | Load factory default |
-| `list_created_personas()` | All personas (default + created), marks which is active |
-| `save_created_persona(data)` | New persona JSON + SQLite DB, returns 8-char UUID |
-| `update_created_persona(id, data)` | Update existing persona (name remains immutable) |
-| `delete_created_persona(id)` | Delete persona JSON + DB file |
-| `load_persona_by_id(id)` | Load specific persona |
-| `activate_persona(id)` | Copy persona config to active, invalidate prompt cache |
-| `restore_default_persona()` | Restore factory default |
-
-### Character Description Builder
-
-`build_character_description()` assembles a rich text description:
-
-1. **Identity**: Name, age, gender, persona type + description
-2. **Core**: Personality traits with descriptions and behaviors
-3. **Knowledge**: Knowledge areas with descriptions
-4. **Communication style**: Expression name, description, characteristics
-5. **Scenarios**: Only for non-AI personas
-6. **Background**: Free-text background story
-7. **Greeting**: Optional start message
-
-**Return dict:**
 ```python
-{
-    "char_name": str,
-    "identity": str,
-    "core": str,
-    "behavior": str,
-    "comms": str,
-    "voice": str,
-    "greeting": str|None,
-    "start_msg_enabled": bool,
-    "background": str,
-    "desc": str  # Full description
-}
+from utils.config import (
+    load_character,          # Load active persona config
+    save_character,          # Save persona config changes
+    get_active_persona_id,   # Get current persona ID
+    activate_persona,        # Switch active persona
+    get_available_options,   # Get persona spec (types, traits, etc.)
+    get_config_path,         # Resolve relative path to src/
+)
+```
+
+### `load_character(persona_id=None)`
+
+Returns the persona config as a dict. If `persona_id` is None, loads the active persona.
+
+### `save_character(data, persona_id=None)`
+
+Merges the provided data into the existing config and saves. Handles avatar changes and file management.
+
+### `activate_persona(persona_id)`
+
+1. Saves the current active persona back to its file
+2. Loads the target persona from `created_personas/`
+3. Writes it to `active/persona_config.json`
+4. Initializes the persona's database if needed
+5. Initializes Cortex memory files
+
+---
+
+## Persona CRUD Lifecycle
+
+### Create
+
+```
+POST /api/personas
+    → Validate name uniqueness
+    → Generate persona ID from name
+    → Save to created_personas/{id}.json
+    → Create persona database
+    → Initialize Cortex files
+    → Return new persona
+```
+
+### Read
+
+```
+GET /api/personas          → List all personas
+GET /api/personas/active   → Get active persona ID
+GET /get_char_config       → Get active persona config
+```
+
+### Update
+
+```
+PUT /api/personas/<id>     → Update persona fields (name immutable)
+POST /save_char_config     → Save active persona config
+```
+
+### Delete
+
+```
+DELETE /api/personas/<id>
+    → Cannot delete "default" persona
+    → If deleting active persona, switch to default first
+    → Delete persona JSON file
+    → Delete persona database
+    → Delete Cortex files
+```
+
+### Activate
+
+```
+POST /api/personas/<id>/activate
+    → Save current persona back
+    → Load target persona
+    → Write to active/persona_config.json
+    → Init DB + Cortex for target
 ```
 
 ---
 
-## Persona Lifecycle
+## Custom Specs
+
+Users can extend the persona specification with custom entries:
+
+**File:** `src/instructions/personas/spec/custom_spec/`
 
 ```
-Creation:
-  UI (Persona Creator) → POST /api/personas
-    → save_created_persona(data)
-      → Generate UUID (8 characters)
-      → Save JSON file in created_personas/
-      → create_persona_db(uuid) → Create SQLite DB
-      → Return persona ID
+custom_spec/
+├── persona_types.json     Custom persona types
+├── core_traits.json       Custom traits
+├── knowledge_areas.json   Custom knowledge areas
+├── expression_styles.json Custom expression styles
+└── scenarios.json         Custom scenarios
+```
 
-Editing:
-  UI (Persona Editor) → PUT /api/personas/{id}
-    → update_created_persona(id, data)
-      → Load and update JSON file
-      → Name remains immutable
-      → If active: reload config
+### API Endpoints
 
-Activation:
-  UI → POST /api/personas/{id}/activate
-    → activate_persona(id)
-      → Copy persona config to active/persona_config.json
-      → Set active_persona_id
-      → Invalidate PromptEngine cache
-      → All subsequent requests use new persona
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/custom-specs` | Get all custom specs |
+| POST | `/api/custom-specs/<category>` | Add new spec entry |
+| DELETE | `/api/custom-specs/<category>/<key>` | Remove spec entry |
+| POST | `/api/custom-specs/autofill` | AI-generate a spec value |
 
-Deletion:
-  UI → DELETE /api/personas/{id}
-    → delete_created_persona(id)
-      → Delete JSON file
-      → Delete SQLite DB (persona_{id}.db)
-      → Activate default persona if active one was deleted
+Custom specs are merged with built-in specs in the UI, giving users unlimited persona configuration options.
+
+---
+
+## AI-Powered Autofill
+
+PersonaUI can use Claude to auto-generate persona content:
+
+### Background Autofill
+
+`POST /api/personas/background-autofill` generates a complete background story based on the persona's current settings (name, type, traits, etc.).
+
+Uses the `background_autofill` prompt template:
+```
+Given this character: {{char_name}}, a {{persona_type}} with traits {{char_core_traits}}...
+Generate a detailed background story.
+```
+
+### Spec Autofill
+
+`POST /api/custom-specs/autofill` generates content for individual spec fields:
+
+- `spec_autofill_traits` — Generate trait descriptions
+- `spec_autofill_knowledge` — Generate knowledge area details
+- `spec_autofill_expression` — Generate expression style descriptions
+- `spec_autofill_scenarios` — Generate scenario descriptions
+- `spec_autofill_type` — Generate persona type descriptions
+
+Each uses a dedicated prompt template with the current persona context.
+
+---
+
+## File Structure Summary
+
+```
+src/instructions/
+├── personas/
+│   ├── active/
+│   │   └── persona_config.json      Currently active persona
+│   ├── default/
+│   │   └── default_persona.json     Factory default
+│   ├── spec/
+│   │   ├── persona_spec.json        Built-in spec schema
+│   │   └── custom_spec/             User-added spec entries
+│   └── cortex/                      Cortex memory files (see doc 10)
+│       ├── default/
+│       └── custom/
+├── created_personas/                 User-created persona files
+└── prompts/                          Prompt templates (see doc 06)
 ```
 
 ---
 
-## AI-Generated Background Story
+## Related Documentation
 
-`POST /api/personas/background-autofill`:
-
-1. Build reference text from persona fields
-2. PromptEngine: use `resolve_prompt('background_autofill', ...)`
-3. Fallback: Hardcoded German prompt
-4. API call with `apiAutofillModel` (cost-efficient), max 400 tokens
-5. Return generated background story
-
----
-
-## Dependencies
-
-```
-config.py (Persona management)
-  ├── database (create_persona_db, delete_persona_db)
-  ├── logger
-  ├── provider.get_prompt_engine (lazy import, avoid circular dep)
-  ├── persona_spec.json (available options)
-  ├── custom_spec.json (user extensions)
-  │
-  │  Consumers:
-  ├── Routes: character, main, chat
-  ├── PlaceholderResolver (reads persona_config.json)
-  ├── ChatService (loads character data)
-  └── MemoryService
-```
-
----
-
-## Design Decisions
-
-1. **Per-persona DB isolation**: Each persona gets its own SQLite DB for clean separation
-2. **8-char UUID**: Short enough for UI, long enough for uniqueness
-3. **Spec-based system**: Structured options instead of free text for consistent persona creation
-4. **Custom spec extensions**: Users can extend the spec system with their own options
-5. **Prompt cache invalidation**: Persona switch explicitly invalidates the PromptEngine cache
-6. **`_configs_match()` deep compare**: Prevents unnecessary reactivation when nothing changed
+- [02 — Configuration & Settings](02_Configuration_and_Settings.md) — Settings that affect personas
+- [06 — Prompt Engine](06_Prompt_Engine.md) — Placeholders filled from persona config
+- [08 — Database Layer](08_Database_Layer.md) — Per-persona databases
+- [10 — Cortex Memory System](10_Cortex_Memory_System.md) — Per-persona long-term memory
+- [12 — Frontend React SPA](12_Frontend_React_SPA.md) — Persona UI overlays

@@ -1,19 +1,23 @@
-"""Update-Check: Checks if a new stable version is available on origin/main."""
+"""Update check: Compares local version against origin/main to detect new releases."""
 
 import json
 import os
 import subprocess
+from packaging.version import Version, InvalidVersion
 
-# Pfad zur Marker-Datei, die den letzten Update-Commit speichert
+# ── Paths ──────────────────────────────────────────────────────────────────
 _PROJECT_ROOT = os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )  # PersonaUI/
-_SRC_DIR = os.path.join(_PROJECT_ROOT, 'src')
-_MARKER_FILE = os.path.join(_SRC_DIR, 'settings', 'update_state.json')
+_VERSION_FILE = os.path.join(_PROJECT_ROOT, 'version.json')
+_CHANGELOG_FILE = os.path.join(_PROJECT_ROOT, 'changelog.json')
+_UPDATE_STATE_FILE = os.path.join(_PROJECT_ROOT, 'src', 'settings', 'update_state.json')
 
+
+# ── Git helper ─────────────────────────────────────────────────────────────
 
 def _run_git(*args: str) -> str | None:
-    """Führt einen Git-Befehl aus und gibt stdout zurück (oder None bei Fehler)."""
+    """Run a git command and return stdout (or None on failure)."""
     try:
         result = subprocess.run(
             ['git'] + list(args),
@@ -29,84 +33,150 @@ def _run_git(*args: str) -> str | None:
         return None
 
 
-def get_last_update_commit() -> str | None:
-    """Liest den gespeicherten Commit-Hash des letzten Updates."""
+# ── Local version ──────────────────────────────────────────────────────────
+
+def get_local_version() -> str | None:
+    """Read the current version from the local version.json."""
     try:
-        if os.path.exists(_MARKER_FILE):
-            with open(_MARKER_FILE, 'r', encoding='utf-8') as f:
+        if os.path.exists(_VERSION_FILE):
+            with open(_VERSION_FILE, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-            return data.get('commit') or None
+            return data.get('version') or None
     except (json.JSONDecodeError, OSError):
         pass
     return None
 
 
-def save_current_main_commit():
-    """Speichert den aktuellen origin/main Commit als 'letztes Update'."""
-    commit = _run_git('rev-parse', 'origin/main')
-    if commit:
-        try:
-            os.makedirs(os.path.dirname(_MARKER_FILE), exist_ok=True)
-            with open(_MARKER_FILE, 'w', encoding='utf-8') as f:
-                json.dump({'commit': commit}, f, indent=2)
-        except Exception:
-            pass
+# ── Remote version ─────────────────────────────────────────────────────────
 
+def get_remote_version() -> tuple[str | None, str | None]:
+    """Fetch origin/main and read version.json from the remote branch.
+    
+    Returns:
+        (version, error) tuple. Error is None on success, or a descriptive string.
+    """
+    # Fetch latest state
+    fetch_result = _run_git('fetch', 'origin', 'main', '--quiet')
+    if fetch_result is None:
+        return None, 'no_network'
+
+    # Read version.json from origin/main without checkout
+    raw = _run_git('show', 'origin/main:version.json')
+    if not raw:
+        return None, 'no_version_file'
+
+    try:
+        data = json.loads(raw)
+        ver = data.get('version')
+        if ver:
+            return ver, None
+        return None, 'no_version_field'
+    except (json.JSONDecodeError, KeyError):
+        return None, 'invalid_json'
+
+
+def get_remote_changelog() -> list[dict] | None:
+    """Read changelog.json from origin/main without checkout."""
+    raw = _run_git('show', 'origin/main:changelog.json')
+    if raw:
+        try:
+            data = json.loads(raw)
+            return data.get('versions', [])
+        except (json.JSONDecodeError, KeyError):
+            pass
+    return None
+
+
+# ── Update state ───────────────────────────────────────────────────────────
+
+def get_installed_version() -> str | None:
+    """Read the last successfully installed version from update_state.json."""
+    try:
+        if os.path.exists(_UPDATE_STATE_FILE):
+            with open(_UPDATE_STATE_FILE, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            return data.get('version') or None
+    except (json.JSONDecodeError, OSError):
+        pass
+    return None
+
+
+def save_installed_version(version: str):
+    """Save the current version to update_state.json after a successful update."""
+    try:
+        os.makedirs(os.path.dirname(_UPDATE_STATE_FILE), exist_ok=True)
+        with open(_UPDATE_STATE_FILE, 'w', encoding='utf-8') as f:
+            json.dump({'version': version}, f, indent=2)
+    except Exception:
+        pass
+
+
+# ── Version comparison ─────────────────────────────────────────────────────
+
+def _normalize_version(v: str) -> str:
+    """Convert version strings like '0.2.0-alpha' to PEP 440 format '0.2.0a0'."""
+    return v.replace('-alpha', 'a0').replace('-beta', 'b0').replace('-rc', 'rc0')
+
+
+def is_newer(remote_ver: str, local_ver: str) -> bool:
+    """Return True if remote_ver is strictly newer than local_ver."""
+    try:
+        return Version(_normalize_version(remote_ver)) > Version(_normalize_version(local_ver))
+    except InvalidVersion:
+        return remote_ver != local_ver
+
+
+# ── Main check ─────────────────────────────────────────────────────────────
 
 def check_for_update() -> dict:
-    """Checks if a new stable version is available on origin/main.
+    """Check if a newer version is available on origin/main.
 
     Returns:
-        dict mit:
-            - available (bool): True wenn neues Update vorhanden
-            - current (str|None): Aktueller gespeicherter Commit
-            - remote (str|None): Neuester Commit auf origin/main
-            - new_commits (int): Anzahl neuer Commits seit letztem Update
-            - error (str|None): Fehlermeldung falls etwas schiefging
+        dict with:
+            - available (bool): True if a new version is available
+            - local_version (str|None): Currently installed version
+            - remote_version (str|None): Latest version on origin/main
+            - remote_changelog (list|None): Version history from origin/main
+            - error (str|None): Error message if something went wrong
     """
     result = {
         'available': False,
-        'current': None,
-        'remote': None,
-        'new_commits': 0,
+        'local_version': None,
+        'remote_version': None,
+        'remote_changelog': None,
         'error': None,
     }
 
-    # 1. Fetch origin/main (leise, ohne Ausgabe)
-    fetch_out = _run_git('fetch', 'origin', 'main', '--quiet')
-    if fetch_out is None:
-        # Fetch fehlgeschlagen (kein Netz, kein Git, etc.)
-        result['error'] = 'Fetch fehlgeschlagen (kein Netzwerk?)'
+    # 1. Read local version
+    local_ver = get_local_version()
+    result['local_version'] = local_ver
+
+    if not local_ver:
+        result['error'] = 'Local version.json not found or invalid'
         return result
 
-    # 2. Aktuellen origin/main Commit-Hash holen
-    remote_commit = _run_git('rev-parse', 'origin/main')
-    if not remote_commit:
-        result['error'] = 'origin/main nicht gefunden'
+    # 2. Fetch & read remote version
+    remote_ver, fetch_error = get_remote_version()
+    result['remote_version'] = remote_ver
+
+    if fetch_error == 'no_network':
+        result['error'] = 'Could not fetch remote version (no network?)'
         return result
-    result['remote'] = remote_commit
-
-    # 3. Gespeicherten Commit lesen (Marker-Datei)
-    last_commit = get_last_update_commit()
-    result['current'] = last_commit
-
-    # 4. Falls kein Marker existiert → ersten Marker setzen, kein Update melden
-    if not last_commit:
-        save_current_main_commit()
+    elif fetch_error == 'no_version_file':
+        # Remote doesn't have version.json yet — nothing to compare against
+        result['error'] = None  # Not an error, just no version tracking on remote yet
+        return result
+    elif fetch_error:
+        result['error'] = f'Remote version.json issue: {fetch_error}'
         return result
 
-    # 5. Vergleichen
-    if last_commit == remote_commit:
-        return result  # Kein Update
-
-    # 6. Count new commits
-    count_str = _run_git('rev-list', '--count', f'{last_commit}..{remote_commit}')
-    try:
-        result['new_commits'] = int(count_str) if count_str else 0
-    except ValueError:
-        result['new_commits'] = 0
-
-    if result['new_commits'] > 0:
+    # 3. Compare versions
+    if is_newer(remote_ver, local_ver):
         result['available'] = True
+        result['remote_changelog'] = get_remote_changelog()
+
+    # 4. First-run: seed update_state.json if it doesn't exist yet
+    if not get_installed_version():
+        save_installed_version(local_ver)
 
     return result

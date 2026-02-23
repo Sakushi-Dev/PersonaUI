@@ -5,7 +5,7 @@ from flask import Blueprint, request
 
 from utils.database import (
     get_all_sessions, create_session, get_session,
-    delete_session, get_chat_history, save_message, get_message_count,
+    delete_session, get_chat_history, get_message_count,
     get_persona_session_summary, get_session_persona_id
 )
 from utils.config import load_character, get_active_persona_id, activate_persona, load_char_config
@@ -47,14 +47,12 @@ def new_session():
     # Erstelle neue Session in der Persona-DB
     session_id = create_session(persona_id=persona_id)
     
-    # Lade Charakterdaten für Greeting
+    # Lade Charakterdaten
     character = load_character()
     character_name = character.get('char_name', 'Assistant')
-    greeting = character.get('greeting')
     
-    # Speichere Greeting-Nachricht nur wenn First Message aktiviert ist
-    if greeting:
-        save_message(greeting, False, character_name, session_id, persona_id=persona_id)
+    # Prüfe ob Auto-First-Message aktiviert ist
+    auto_first_message = character.get('start_msg_enabled', False)
     
     # Hole die erstellte Session
     session = get_session(session_id, persona_id=persona_id)
@@ -67,7 +65,7 @@ def new_session():
         'avatar_type': config.get('avatar_type')
     }
     
-    # Hole Chat-Historie (enthält Greeting falls vorhanden)
+    # Hole Chat-Historie
     chat_history = get_chat_history(session_id=session_id, persona_id=persona_id)
     
     # Gesamtanzahl Nachrichten für Load-More-Button
@@ -79,7 +77,8 @@ def new_session():
         persona_id=persona_id,
         character=character_data,
         chat_history=chat_history,
-        total_message_count=total_message_count
+        total_message_count=total_message_count,
+        auto_first_message=auto_first_message
     )
 
 
@@ -144,7 +143,7 @@ def delete_session_endpoint(session_id):
 @sessions_bp.route('/api/sessions/<int:session_id>/is_empty', methods=['GET'])
 @handle_route_error('check_session_is_empty')
 def check_session_is_empty(session_id):
-    """Prüft ob eine Session leer ist (nur Greeting, keine User-Nachrichten)"""
+    """Prüft ob eine Session leer ist (keine User-Nachrichten)"""
     persona_id = resolve_persona_id(session_id=session_id)
     chat_history = get_chat_history(session_id=session_id, persona_id=persona_id)
     

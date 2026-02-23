@@ -19,7 +19,10 @@ class RequestConfig:
     stream: bool = False                  # True only for chat + afterthought followup
     prefill: Optional[str] = None         # Appended as last assistant message
     request_type: str = 'generic'         # 'chat', 'afterthought_decision', 'afterthought_followup',
-                                          # 'memory_summary', 'spec_autofill', 'session_title', 'test'
+                                          # 'memory_summary', 'spec_autofill', 'session_title', 'test',
+                                          # 'cortex_update'
+    tools: Optional[List[Dict[str, Any]]] = None   # Tool-Definitionen für Anthropic tool_use
+                                                     # Nur verwendet bei request_type='cortex_update'
 
 
 @dataclass
@@ -31,6 +34,7 @@ class ApiResponse:
     usage: Optional[Dict[str, int]] = None  # {'input_tokens': x, 'output_tokens': y}
     raw_response: Any = None                # Originale Anthropic-Response (optional)
     stop_reason: Optional[str] = None
+    tool_results: Optional[List[Dict[str, Any]]] = None  # Ergebnisse aller Tool-Calls
 
 
 @dataclass

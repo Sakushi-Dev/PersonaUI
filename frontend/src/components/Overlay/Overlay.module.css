@@ -1,0 +1,125 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay-backdrop);
+  -webkit-backdrop-filter: var(--overlay-backdrop-blur, blur(8px));
+  backdrop-filter: var(--overlay-backdrop-blur, blur(8px));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-overlay-backdrop);
+  animation: fadeIn 0.2s ease;
+  padding: 20px;
+}
+
+.stacked {
+  z-index: calc(var(--z-overlay-backdrop) + 100);
+}
+
+.panel {
+  background: var(--overlay-bg);
+  -webkit-backdrop-filter: blur(25px);
+  backdrop-filter: blur(25px);
+  border: 1px solid var(--overlay-border);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--overlay-shadow);
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: scaleIn 0.2s ease;
+  z-index: var(--z-overlay);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--overlay-divider);
+  flex-shrink: 0;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--overlay-heading);
+  margin: 0;
+}
+
+.titleIcon {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 20px 24px;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px 20px;
+  border-top: 1px solid var(--overlay-divider);
+  flex-shrink: 0;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ── Carousel panel mode: no backdrop, fullscreen, no animations ── */
+.carouselPanel {
+  animation: none;
+  border-radius: 0;
+  border: none;
+  max-width: 100% !important;
+  width: 100% !important;
+  max-height: 100% !important;
+  height: 100% !important;
+  box-shadow: none;
+  z-index: auto;
+}
+
+/* ── Responsive: fullscreen overlays on mobile ── */
+@media (max-width: 768px) {
+  .backdrop {
+    padding: 0;
+    top: var(--toolbar-height-mobile, 50px);
+  }
+
+  .panel {
+    max-width: 100% !important;
+    width: 100% !important;
+    max-height: 100%;
+    height: 100%;
+    border-radius: 0;
+    border: none;
+  }
+}

@@ -12,37 +12,47 @@ from routes.helpers import success_response, error_response, handle_route_error
 
 avatar_bp = Blueprint('avatar', __name__)
 
+# ── Pfad-Hilfsfunktionen ──
+
+def _avatar_dirs():
+    """Gibt (base_dir, avatar_dir, costum_dir) zurück."""
+    base_dir = os.path.dirname(os.path.dirname(__file__))
+    frontend_public = os.path.normpath(os.path.join(base_dir, '..', 'frontend', 'public'))
+    avatar_dir = os.path.join(frontend_public, 'avatar')
+    costum_dir = os.path.join(avatar_dir, 'costum')
+    return avatar_dir, costum_dir
+
+
+def _rebuild_avatar_index():
+    """Scannt avatar/ und avatar/costum/ und schreibt index.json."""
+    avatar_dir, costum_dir = _avatar_dirs()
+    os.makedirs(costum_dir, exist_ok=True)
+
+    ext = ('.jpg', '.jpeg', '.png', '.webp')
+    avatars = []
+
+    if os.path.exists(avatar_dir):
+        for f in sorted(os.listdir(avatar_dir)):
+            if f.lower().endswith(ext) and os.path.isfile(os.path.join(avatar_dir, f)):
+                avatars.append({'filename': f, 'type': 'standard'})
+
+    if os.path.exists(costum_dir):
+        for f in sorted(os.listdir(costum_dir)):
+            if f.lower().endswith(ext):
+                avatars.append({'filename': f, 'type': 'custom'})
+
+    index_path = os.path.join(avatar_dir, 'index.json')
+    with open(index_path, 'w', encoding='utf-8') as fh:
+        json.dump({'avatars': avatars}, fh, ensure_ascii=False, indent=2)
+
+    return avatars
+
 
 @avatar_bp.route('/api/get_available_avatars', methods=['GET'])
 @handle_route_error('get_available_avatars')
 def get_available_avatars():
-    """Gibt alle verfügbaren Avatar-Bilder aus static/images/avatars und static/images/custom zurück"""
-    base_dir = os.path.dirname(os.path.dirname(__file__))
-    images_dir = os.path.join(base_dir, 'static', 'images', 'avatars')
-    custom_images_dir = os.path.join(base_dir, 'static', 'images', 'custom')
-    
-    # Stelle sicher, dass custom_images existiert
-    os.makedirs(custom_images_dir, exist_ok=True)
-    
-    avatars = []
-    
-    # Hole Standard-Bilder (nur JPEG)
-    if os.path.exists(images_dir):
-        standard_files = [f for f in os.listdir(images_dir) 
-                         if f.lower().endswith(('.jpg', '.jpeg'))]
-        for f in standard_files:
-            avatars.append({'filename': f, 'type': 'standard'})
-    
-    # Hole Custom-Bilder (nur JPEG)
-    if os.path.exists(custom_images_dir):
-        custom_files = [f for f in os.listdir(custom_images_dir) 
-                       if f.lower().endswith(('.jpg', '.jpeg'))]
-        for f in custom_files:
-            avatars.append({'filename': f, 'type': 'custom'})
-    
-    # Sortiere nach Dateiname
-    avatars.sort(key=lambda x: x['filename'])
-    
+    """Rebuilds index.json and returns avatar list (Fallback für Backend-Clients)."""
+    avatars = _rebuild_avatar_index()
     return success_response(avatars=avatars)
 
 
@@ -148,9 +158,10 @@ def upload_avatar():
         elif img.mode != 'RGB':
             img = img.convert('RGB')
         
-        # Erstelle custom_images Verzeichnis
+        # Erstelle costum Verzeichnis
         base_dir = os.path.dirname(os.path.dirname(__file__))
-        custom_images_dir = os.path.join(base_dir, 'static', 'images', 'custom')
+        frontend_public = os.path.join(base_dir, '..', 'frontend', 'public')
+        custom_images_dir = os.path.join(frontend_public, 'avatar', 'costum')
         os.makedirs(custom_images_dir, exist_ok=True)
         
         # Generiere eindeutigen Dateinamen
@@ -159,7 +170,10 @@ def upload_avatar():
         
         # Speichere als JPEG
         img.save(file_path, 'JPEG', quality=90)
-        
+
+        # index.json aktualisieren
+        _rebuild_avatar_index()
+
         return success_response(filename=unique_filename)
         
     except Exception as e:
@@ -172,7 +186,8 @@ def upload_avatar():
 def delete_avatar(filename):
     """Löscht ein Custom-Avatar-Bild"""
     base_dir = os.path.dirname(os.path.dirname(__file__))
-    custom_images_dir = os.path.join(base_dir, 'static', 'images', 'custom')
+    frontend_public = os.path.join(base_dir, '..', 'frontend', 'public')
+    custom_images_dir = os.path.join(frontend_public, 'avatar', 'costum')
     file_path = os.path.join(custom_images_dir, filename)
     
     # Sicherheitsprüfung
@@ -181,9 +196,10 @@ def delete_avatar(filename):
     
     if not os.path.exists(file_path):
         return error_response('Datei nicht gefunden', 404)
-    
+
     os.remove(file_path)
-    
+    _rebuild_avatar_index()
+
     return success_response()
 
 
@@ -198,7 +214,8 @@ def delete_custom_avatar():
         return error_response('Kein Dateiname angegeben')
     
     base_dir = os.path.dirname(os.path.dirname(__file__))
-    custom_images_dir = os.path.join(base_dir, 'static', 'images', 'custom')
+    frontend_public = os.path.join(base_dir, '..', 'frontend', 'public')
+    custom_images_dir = os.path.join(frontend_public, 'avatar', 'costum')
     file_path = os.path.join(custom_images_dir, filename)
     
     if not os.path.abspath(file_path).startswith(os.path.abspath(custom_images_dir)):
@@ -206,7 +223,31 @@ def delete_custom_avatar():
     
     if not os.path.exists(file_path):
         return error_response('Datei nicht gefunden', 404)
-    
+
     os.remove(file_path)
-    
+    _rebuild_avatar_index()
+
     return success_response()
+
+
+@avatar_bp.route('/api/save_user_avatar', methods=['POST'])
+@handle_route_error('save_user_avatar')
+def save_user_avatar():
+    """Speichert die Avatar-Auswahl für das User-Profil."""
+    data = request.get_json()
+    avatar_filename = data.get('avatar')
+    avatar_type = data.get('avatar_type', 'standard')
+
+    if not avatar_filename:
+        return error_response('Kein Avatar ausgewählt')
+
+    from routes.user_profile import _load_profile, _save_profile
+    profile = _load_profile()
+    profile['user_avatar'] = avatar_filename
+    profile['user_avatar_type'] = avatar_type
+    success = _save_profile(profile)
+
+    if success:
+        return success_response()
+    else:
+        return error_response('Fehler beim Speichern', 500)

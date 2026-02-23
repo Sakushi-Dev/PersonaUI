@@ -28,10 +28,10 @@ class PromptMigrator:
     KNOWN_PLACEHOLDERS = {
         'char_name', 'user_name', 'language', 'char_description',
         'current_date', 'current_time', 'current_weekday',
-        'user_type', 'user_type_description', 'user_info',
+        'user_info',
         'elapsed_time', 'inner_dialogue', 'input',
         'experimental_01', 'experimental_02', 'experimental_03',
-        'prompt_id_3', 'memory_entries'
+        'prompt_id_3'
     }
 
     # Mapping: .txt Datei → (prompt_id, domain_file, variante)

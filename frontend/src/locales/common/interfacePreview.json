@@ -1,0 +1,12 @@
+{
+  "en": {
+    "previewText": "This is a preview.",
+    "nonverbal": "*smiles softly*",
+    "previewEnd": "This is how your chat looks."
+  },
+  "de": {
+    "previewText": "Das ist eine Vorschau.",
+    "nonverbal": "*lächelt sanft*",
+    "previewEnd": "So sieht dein Chat aus."
+  }
+}

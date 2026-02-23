@@ -14,8 +14,8 @@ from typing import Dict, Any, List
 from ..logger import log
 
 
-# Valid values for manifest fields
-VALID_CATEGORIES = {'system', 'persona', 'context', 'prefill', 'dialog_injection', 'afterthought', 'summary', 'spec_autofill', 'utility', 'custom'}
+# Gültige Werte für Manifest-Felder
+VALID_CATEGORIES = {'system', 'persona', 'context', 'prefill', 'dialog_injection', 'afterthought', 'summary', 'spec_autofill', 'utility', 'custom', 'cortex'}
 VALID_TYPES = {'text', 'multi_turn'}
 VALID_TARGETS = {'system_prompt', 'message', 'prefill'}
 VALID_POSITIONS = {'system_prompt', 'first_assistant', 'consent_dialog', 'user_message', 'prefill', 'system_prompt_append', 'history'}
@@ -212,7 +212,10 @@ class PromptValidator:
         # 2. Check cross-references
         errors.extend(self.validate_cross_references(manifest, set(domains.keys())))
 
-        # 3. Domain-Dateien validieren
+        # 3. requires_any Referenzen prüfen
+        warnings.extend(self.validate_requires_any(manifest, registry))
+
+        # 4. Domain-Dateien validieren
         prompts_by_domain: Dict[str, Dict] = {}
         for prompt_id, meta in manifest.get('prompts', {}).items():
             domain_file = meta.get('domain_file', '')
@@ -229,3 +232,25 @@ class PromptValidator:
             'errors': errors,
             'warnings': warnings
         }
+
+    def validate_requires_any(self, manifest: Dict[str, Any],
+                               registry: Dict[str, Any]) -> List[str]:
+        """
+        Prüft ob requires_any-Referenzen in der Registry existieren.
+
+        Returns:
+            Liste von Warnungen (leer = alles OK)
+        """
+        warnings: List[str] = []
+        registry_keys = set(registry.get('placeholders', {}).keys())
+
+        for prompt_id, meta in manifest.get('prompts', {}).items():
+            requires = meta.get('requires_any', [])
+            for key in requires:
+                if key not in registry_keys:
+                    warnings.append(
+                        f"Manifest[{prompt_id}]: requires_any referenziert "
+                        f"unbekannten Placeholder '{key}'"
+                    )
+
+        return warnings

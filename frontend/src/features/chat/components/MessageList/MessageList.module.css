@@ -1,0 +1,399 @@
+/* ── MessageList ── */
+
+.container {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 15px;
+  padding-top: 70px;
+  padding-bottom: 120px;
+  margin-bottom: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+.container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+
+/* ── LoadMore ── */
+
+.loadMore {
+  display: flex;
+  justify-content: center;
+  padding: 12px 0 20px;
+}
+
+/* ── Message Row ── */
+
+.message {
+  display: flex;
+  max-width: 1200px;
+  margin: 0 auto 50px;
+  position: relative;
+  animation: fadeInSlide 0.6s ease-out;
+}
+
+.userMessage {
+  margin-left: auto;
+  flex-direction: row-reverse;
+}
+
+.botMessage {
+  margin-right: auto;
+}
+
+/* ── Avatar ── */
+
+.messageAvatar {
+  top: -40px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin: 0 10px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+/* ── Content ── */
+
+.messageContent {
+  display: flex;
+  flex-direction: column;
+  width: 900px;
+  max-width: 85%;
+  position: relative;
+}
+
+/* ── Sender Row ── */
+
+.messageSenderRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.userMessage .messageSenderRow {
+  flex-direction: row-reverse;
+}
+
+.messageSender {
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  background-color: rgba(0, 0, 0, 0.4);
+  padding: 2px 10px;
+  border-radius: 10px;
+  display: inline-block;
+  width: fit-content;
+}
+
+/* ── Prompt Info Link ── */
+
+.promptInfoBtn {
+  background: rgba(0, 0, 0, 0.25);
+  border: none;
+  font-size: 11px;
+  font-weight: 500;
+  opacity: 0.7;
+  cursor: pointer;
+  padding: 2px 8px;
+  color: white;
+  border-radius: 10px;
+  transition: opacity 0.2s, background 0.2s;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.promptInfoBtn:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+/* ── Bubble ── */
+
+.messageBubble {
+  position: relative;
+  padding: 10px;
+  border-radius: 18px;
+  width: 100%;
+  padding-bottom: 38px;
+  font-family: var(--bubble-font-family, 'Ubuntu', 'Roboto', 'Segoe UI', system-ui, -apple-system, sans-serif);
+  font-weight: 400;
+  font-size: var(--bubble-font-size, 18px);
+  line-height: 1.6;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.userBubble {
+  background: rgba(255, 255, 255, 0.65);
+  color: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  border-top-right-radius: 4px;
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+}
+
+.botBubble {
+  background: rgba(255, 255, 255, 0.6);
+  color: #1a1a1a;
+  border: 1px solid rgb(255, 255, 255);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  border-top-left-radius: 4px;
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+}
+
+/* ── Time ── */
+
+.messageTime {
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.4);
+  position: absolute;
+  bottom: 10px;
+}
+
+.botMessage .messageTime {
+  left: 10px;
+}
+
+.userMessage .messageTime {
+  right: 10px;
+}
+
+/* ── Streaming Cursor ── */
+
+.streamingCursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: currentColor;
+  margin-left: 2px;
+  animation: streamingBlink 0.8s infinite;
+  vertical-align: text-bottom;
+}
+
+@keyframes streamingBlink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+/* ── Prompt Info Overlay Stats (moved to PromptInfoOverlay.module.css) ── */
+
+/* ── Thinking / Spinner ── */
+
+.thinking {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 0;
+  animation: fadeInSlide 0.6s ease-out;
+}
+
+/* ── Dark Mode ── */
+
+:root[data-theme="dark"] .userBubble {
+  background: rgba(40, 40, 50, 0.45);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15),
+    inset 0 1px 2px rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme="dark"] .botBubble {
+  background: rgba(30, 30, 40, 0.5);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15),
+    inset 0 1px 2px rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme="dark"] .messageTime {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+:root[data-theme="dark"] .messageSender {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+
+
+/* ── Fade-In Animation ── */
+
+@keyframes fadeInSlide {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Message Actions ── */
+
+.messageActions {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+  animation: fadeInSlide 0.3s ease-out;
+}
+
+.messageActionsUser {
+  justify-content: flex-end;
+}
+
+.actionBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.25);
+  border: none;
+  font-size: 11px;
+  font-weight: 500;
+  color: white;
+  opacity: 0.7;
+  cursor: pointer;
+  padding: 3px 8px;
+  border-radius: 10px;
+  transition: opacity 0.2s, background 0.2s, color 0.2s;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.actionBtn:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.actionBtn svg {
+  flex-shrink: 0;
+}
+
+/* ── Edit Mode ── */
+
+.editContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.editTextarea {
+  width: 100%;
+  min-height: 60px;
+  max-height: 300px;
+  padding: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.7);
+  color: #1a1a1a;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: 1.6;
+  resize: none;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.editTextarea:focus {
+  border-color: rgba(0, 120, 255, 0.5);
+}
+
+.editButtons {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.editSaveBtn,
+.editCancelBtn {
+  padding: 4px 14px;
+  border: none;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.editSaveBtn {
+  background: rgba(0, 120, 255, 0.8);
+  color: white;
+}
+
+.editSaveBtn:hover {
+  background: rgba(0, 120, 255, 1);
+  transform: scale(1.02);
+}
+
+.editCancelBtn {
+  background: rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.editCancelBtn:hover {
+  background: rgba(0, 0, 0, 0.18);
+}
+
+/* ── Dark Mode: Actions & Edit ── */
+
+:root[data-theme="dark"] .actionBtn {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+:root[data-theme="dark"] .actionBtn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+:root[data-theme="dark"] .editTextarea {
+  background: rgba(30, 30, 40, 0.6);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+:root[data-theme="dark"] .editTextarea:focus {
+  border-color: rgba(100, 180, 255, 0.5);
+}
+
+:root[data-theme="dark"] .editCancelBtn {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+:root[data-theme="dark"] .editCancelBtn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 768px) {
+  .messageContent {
+    max-width: 95%;
+  }
+
+  .message {
+    margin-bottom: 30px;
+  }
+
+  .messageAvatar {
+    display: none;
+  }
+
+  .messageBubble {
+    font-size: 14px;
+  }
+}

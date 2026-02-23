@@ -8,7 +8,6 @@ Chat Prompt Builder – Prompt-Generierung für Chat-Requests.
 - build_prefill()
 - get_prefill_impersonation()
 - get_consent_dialog()
-- get_greeting()
 
 Phase 2: Optionale Engine-Delegation via set_engine().
 """
@@ -101,7 +100,7 @@ class ChatPromptBuilder(PromptBase):
         # Fallback auf main/
         return self._master_prompts.get('consent_agreement', '')
 
-    def build_core_prompt(self, char_name: str, language: str = 'de', user_name: str = 'User',
+    def build_core_prompt(self, char_name: str, language: str = 'english', user_name: str = 'User',
                           ip_address: str = None, experimental_mode: bool = False) -> Dict[str, str]:
         """
         Erstellt nur den Core System Prompt OHNE Charakterbeschreibung.
@@ -192,7 +191,7 @@ class ChatPromptBuilder(PromptBase):
 
         return char_desc
 
-    def build_system_prompt(self, character_data: Dict[str, str], language: str = 'de',
+    def build_system_prompt(self, character_data: Dict[str, str], language: str = 'english',
                             user_name: str = 'User', ip_address: str = None,
                             experimental_mode: bool = False) -> str:
         """
@@ -215,7 +214,7 @@ class ChatPromptBuilder(PromptBase):
         if self._engine and hasattr(self._engine, 'build_system_prompt'):
             try:
                 variant = 'experimental' if experimental_mode else 'default'
-                runtime_vars = {'language': language}
+                runtime_vars = {}
                 if ip_address:
                     runtime_vars['ip_address'] = ip_address
                 result = self._engine.build_system_prompt(variant=variant, runtime_vars=runtime_vars)
@@ -227,6 +226,11 @@ class ChatPromptBuilder(PromptBase):
 
         # Legacy-Pfad: .txt-basierte Prompt-Generierung
         char_name = character_data.get('char_name', 'Assistant')
+
+        # Sprache aus user_profile laden (gleiche Quelle wie Engine)
+        from routes.user_profile import get_user_profile_data
+        profile = get_user_profile_data()
+        language = profile.get('persona_language', 'english') or 'english'
 
         # Baue Core Prompt
         core_dict = self.build_core_prompt(char_name, language, user_name, ip_address, experimental_mode)
@@ -361,15 +365,3 @@ class ChatPromptBuilder(PromptBase):
         # Legacy Fallback: consent_dialog als einzige Injection
         legacy = self._load_consent_dialog()
         return legacy if legacy else []
-
-    def get_greeting(self, character_data: Dict[str, str]) -> Optional[str]:
-        """
-        Gibt die Begrüßungsnachricht des Charakters zurück, oder None wenn deaktiviert.
-
-        Args:
-            character_data: Dictionary mit Charakterinformationen
-
-        Returns:
-            Die Begrüßungsnachricht oder None
-        """
-        return character_data.get('greeting')

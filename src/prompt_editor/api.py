@@ -185,8 +185,9 @@ class EditorApi:
             return {"status": "error", "message": str(e)}
 
     def get_placeholder_values(self, variant: str = 'default') -> dict:
-        """Alle aufgelösten Placeholder-Werte."""
+        """Alle aufgelösten Placeholder-Werte (Cache wird vorher geleert für aktuelle Daten)."""
         try:
+            self.engine.invalidate_cache()
             values = self.engine.get_current_values(variant)
             return {"status": "ok", "values": values}
         except Exception as e:
@@ -296,6 +297,7 @@ class EditorApi:
     def preview_prompt(self, prompt_id: str, variant: str = 'default') -> dict:
         """Einzelnen Prompt aufgelöst anzeigen."""
         try:
+            self.engine.invalidate_cache()
             resolved = self.engine.resolve_prompt(prompt_id, variant)
             return {"status": "ok", "content": resolved or ''}
         except Exception as e:
@@ -304,6 +306,7 @@ class EditorApi:
     def preview_full_system(self, variant: str = 'default') -> dict:
         """Vollständigen System-Prompt als Preview."""
         try:
+            self.engine.invalidate_cache()
             system_prompt = self.engine.build_system_prompt(variant)
             prefill = self.engine.build_prefill(variant)
             first_assistant = self.engine.get_first_assistant_content(variant)
@@ -324,6 +327,7 @@ class EditorApi:
     def preview_category(self, category: str, variant: str = 'default') -> dict:
         """Preview für eine bestimmte Kategorie (chat, afterthought, summary, spec_autofill)."""
         try:
+            self.engine.invalidate_cache()
             blocks = []
             total_tokens = 0
 
@@ -377,6 +381,7 @@ class EditorApi:
         - 'message': target=message oder target=prefill (Messages/Prefill)
         """
         try:
+            self.engine.invalidate_cache()
             chat_categories = {'system', 'persona', 'context', 'prefill', 'dialog_injection'}
             system_blocks = []
             message_blocks = []
@@ -439,6 +444,7 @@ class EditorApi:
         Innerhalb jeder Gruppe: System- und Message-Blöcke getrennt.
         """
         try:
+            self.engine.invalidate_cache()
             prompts = self.engine.get_all_prompts()
             blocks = []
 
@@ -453,6 +459,7 @@ class EditorApi:
                 'summary': 'summary',
                 'spec_autofill': 'spec_autofill',
                 'utility': 'utility',
+                'cortex': 'cortex',
                 'custom': 'chat',
             }
 

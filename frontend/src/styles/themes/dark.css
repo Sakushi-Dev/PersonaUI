@@ -1,0 +1,79 @@
+/* ── Dark Mode Theme ── */
+
+:root[data-theme="dark"] {
+  /* Static page background */
+  --bg-color-1: #121220;
+  --bg-color-2: #1a1a35;
+  --bg-gradient-1: #1e1640;
+  --bg-gradient-2: #251530;
+
+  /* Overlay */
+  --overlay-backdrop: transparent;
+  --overlay-backdrop-blur: blur(8px);
+  --overlay-bg: rgba(17, 17, 22, 0.8);
+  --overlay-bg-gradient: rgba(17, 17, 22, 0.8);
+  --overlay-border: rgba(255, 255, 255, 0.1);
+  --overlay-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+  --overlay-text: rgba(255, 255, 255, 0.88);
+  --overlay-text-color: rgba(255, 255, 255, 0.88);
+  --overlay-text-secondary: rgba(255, 255, 255, 0.65);
+  --overlay-text-muted: rgba(255, 255, 255, 0.4);
+  --overlay-heading: #ffffff;
+  --overlay-divider: rgba(255, 255, 255, 0.08);
+  --overlay-border-color: rgba(255, 255, 255, 0.08);
+
+  /* Overlay Inputs */
+  --overlay-input-bg: rgba(0, 0, 0, 0.25);
+  --overlay-input-border: rgba(255, 255, 255, 0.1);
+  --overlay-input-text: #ffffff;
+  --overlay-input-focus-border: rgba(79, 172, 254, 0.5);
+  --overlay-input-focus-shadow: 0 0 0 3px rgba(79, 172, 254, 0.12);
+
+  /* Overlay Interactive */
+  --overlay-hover-bg: rgba(255, 255, 255, 0.04);
+  --overlay-section-bg: rgba(255, 255, 255, 0.03);
+  --overlay-section-border: rgba(255, 255, 255, 0.06);
+  --overlay-close-color: rgba(248, 113, 113, 0.7);
+  --overlay-close-hover-bg: rgba(220, 38, 38, 0.15);
+  --overlay-close-hover-color: #f87171;
+
+  /* Overlay Scrollbar */
+  --overlay-scrollbar-track: rgba(255, 255, 255, 0.04);
+  --overlay-scrollbar-thumb: rgba(255, 255, 255, 0.15);
+  --overlay-scrollbar-thumb-hover: rgba(255, 255, 255, 0.25);
+
+  /* Overlay Accent */
+  --overlay-accent: #4facfe;
+  --overlay-accent-light: rgba(79, 172, 254, 0.12);
+  --overlay-hint-color: rgba(255, 255, 255, 0.45);
+
+  /* Overlay Tags */
+  --overlay-tag-bg: rgba(255, 255, 255, 0.05);
+  --overlay-tag-border: rgba(255, 255, 255, 0.15);
+  --overlay-tag-text: rgba(255, 255, 255, 0.85);
+
+  /* Overlay Info */
+  --overlay-info-bg: rgba(79, 172, 254, 0.08);
+  --overlay-info-border: #4facfe;
+  --overlay-info-text: rgba(255, 255, 255, 0.8);
+
+  /* Overlay Warning */
+  --overlay-warning-bg: rgba(239, 68, 68, 0.1);
+  --overlay-warning-border: #ef4444;
+
+  /* Overlay Switch */
+  --overlay-switch-bg: rgba(255, 255, 255, 0.15);
+  --overlay-switch-border: rgba(255, 255, 255, 0.2);
+
+  /* Overlay Buttons */
+  --overlay-btn-secondary-bg: rgba(255, 255, 255, 0.08);
+  --overlay-btn-secondary-border: rgba(255, 255, 255, 0.15);
+  --overlay-btn-secondary-text: rgba(255, 255, 255, 0.88);
+  --overlay-btn-secondary-hover-bg: rgba(255, 255, 255, 0.12);
+
+  /* Page Background */
+  --background-color: #1a2332;
+  --color-white: #1a2332;
+  --color-gradient1: #2a3f5f;
+  --color-sky: #3d4f66;
+}

@@ -8,9 +8,15 @@
 #
 #  Verfügbare Optionen:
 #
-#    # --no-gui       Startet ohne PyWebView-Fenster (reiner Browser-Modus).
-#                   Die App ist dann unter http://localhost:PORT erreichbar.
+#    --no-gui        Startet ohne PyWebView-Fenster (reiner Browser-Modus).
+#                    Die App ist dann unter http://localhost:PORT erreichbar.
+#
+#    --dev           Startet den Vite Dev-Server (npm run dev) für
+#                    Live-HMR im PyWebView-Fenster oder Browser.
+#                    React-Änderungen werden sofort angezeigt.
+#                    Frontend: http://localhost:5173
 #
 # ══════════════════════════════════════════════════════════════════════
 
-# --no-gui
+#--no-gui
+#--dev

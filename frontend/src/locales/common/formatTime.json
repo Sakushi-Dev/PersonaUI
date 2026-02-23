@@ -1,0 +1,18 @@
+{
+  "en": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "justNow": "Just now",
+    "minutesAgo": "{n} min. ago",
+    "hoursAgo": "{n} hr. ago",
+    "daysAgo": "{n} days ago"
+  },
+  "de": {
+    "today": "Heute",
+    "yesterday": "Gestern",
+    "justNow": "Gerade eben",
+    "minutesAgo": "Vor {n} Min.",
+    "hoursAgo": "Vor {n} Std.",
+    "daysAgo": "Vor {n} Tagen"
+  }
+}

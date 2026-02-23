@@ -1,205 +1,206 @@
-# 14 — Onboarding, Splash Screen & Reset Screen
+# 14 — Onboarding, Splash & Reset
+
+> First-run wizard, retro splash screen, and factory reset — standalone PyWebView mini-apps.
+
+---
 
 ## Overview
 
-PersonaUI has three special PyWebView screens for its lifecycle: **Splash Screen** (boot), **Onboarding** (first-time setup), and **Reset Screen** (factory reset). Splash and Reset are native PyWebView windows; Onboarding is a Flask-rendered page.
+PersonaUI includes three standalone mini-applications that run as PyWebView windows. They are **separate from the main React SPA** and use self-contained HTML with inline CSS/JS.
+
+```
+src/splash_screen/     Retro terminal boot animation
+src/reset_screen/      Factory reset tool
+src/prompt_editor/     Prompt editing (see doc 13)
+```
+
+The **onboarding wizard** is part of the React SPA (not a standalone tool).
 
 ---
 
-## Splash Screen (`src/splash_screen/`)
+## Splash Screen
 
-### Purpose
-
-Displayed during app startup (PyWebView window, not Flask-served). Shows console output in retro terminal style with typewriter effect.
-
-### Files
-
-| File | Description |
-|------|-------------|
-| `__init__.py` | HTML bundling + exports: `load_splash_html()`, `hide_console_window()`, `show_console_window()`, `startup_sequence()` |
-| `templates/splash.html` | Layout: glow-bloom effect, console, title "PERSONA UI" + spinner |
-| `static/splash.css` | Dark theme (#0a0a0a), 1200px radial gradient glow, typewriter animation |
-| `static/splash.js` | `addLog()`, `typeLine()`, `typeLineWithBar()`, queue system for sequential output |
-| `utils/startup.py` | `startup_sequence()` — main boot logic |
-| `utils/console.py` | Windows `ctypes`: `hide_console_window()` / `show_console_window()` |
-
-### Startup Sequence (`startup.py`)
+**Directory:** `src/splash_screen/`
 
 ```
-1. Update check (compares local Git hash with remote)
-2. DB initialization (init_all_dbs)
-3. Fun persona-specific loading messages
-   e.g. "{name}'s emotions are loading"
-4. Start Flask server in background thread
-5. Socket polling until server responds
-6. PyWebView navigates to http://127.0.0.1:{port}
+splash_screen/
+├── __init__.py
+├── static/
+└── templates/
 ```
 
-### Communication: Python → JS
+### What It Does
 
-```python
-# Python calls JS via evaluate_js():
-window.evaluate_js(f"typeLine('{text}', '{css_class}')")
-window.evaluate_js(f"typeLineWithBar('{text}', '{css_class}', {duration})")
-time.sleep(delay)  # Synchronized with typewriter animation
+A retro terminal-style boot animation that plays while the app initializes:
+
+```
+PersonaUI v2.0
+> Initializing system.............. OK
+> Loading persona engine........... OK
+> Connecting to Anthropic API...... OK
+> Starting web server.............. OK
+
+Ready. Press any key to continue.
 ```
 
-### Visual Design
+### Design
 
-- **Background**: #0a0a0a with pulsating radial gradient (glow bloom)
-- **Console**: Radial mask (transparent center → opaque edges)
-- **Log colors**: info=green, warn=yellow, error=red, fun=purple
-- **Progress bar**: Gradient fill (purple → green)
+- **Typewriter effect** — Text appears character by character
+- **Retro terminal aesthetic** — Green/white text on dark background, monospace font
+- **Loading stages** — Each step maps to actual initialization tasks
+- Displays in a PyWebView window that closes automatically when startup completes
+
+### HTML Inlining
+
+All CSS and JavaScript are embedded directly in the HTML template to work with PyWebView without external asset loading.
 
 ---
 
-## Onboarding (`src/routes/onboarding.py` + Templates)
+## Onboarding Wizard
 
-### Purpose
+**Location:** React SPA (`frontend/src/features/onboarding/`)
 
-5-step first-time setup wizard on initial launch. Checks `onboarding.json` for `completed: true`.
+The onboarding wizard runs on first launch (when `onboarding.json` has `completed: false`).
 
 ### Steps
 
-| Step | Template | Description |
-|------|----------|-------------|
-| 1 | `_step_welcome.html` | Logo, title, 3 feature highlights, "Start setup" button |
-| 2 | `_step_profile.html` | Avatar, name, type grid, gender chips, interest chips, about-me |
-| 3 | `_step_interface.html` | Live preview, dark mode, colors, nonverbal color |
-| 4 | `_step_api.html` | Context limit, afterthought toggle, API key input + test |
-| 5 | `_step_finish.html` | Two variants: with API key (celebration) / without (explore mode) |
+The wizard guides users through initial setup:
 
-### Avatar Gallery (`_avatar_gallery.html`)
+1. **Welcome** — Introduction to PersonaUI
+2. **API Key** — Enter Anthropic API key
+3. **User Profile** — Set user name and language
+4. **Persona Setup** — Configure the default persona (or skip)
+5. **Complete** — Summary and "Start chatting" button
 
-Inline overlay with:
-- Drop zone for drag & drop
-- File input
-- Avatar grid with pre-made avatars
-- Crop step with canvas + preview circle
+### Flow
 
-### Onboarding Completion
-
-```javascript
-// onboarding.js → finishOnboarding()
-1. PUT /api/user-profile     → Save profile
-2. PUT /api/user-settings    → Save settings
-3. POST /api/save_api_key    → Save API key (if provided)
-4. POST /api/onboarding/complete → Mark as completed
-5. window.location.href = '/' → Redirect to chat page
+```
+App.jsx checks /api/onboarding/status
+    │
+    ├── completed: true → Show ChatPage
+    └── completed: false → Redirect to /onboarding
+                             │
+                             └── OnboardingPage.jsx
+                                   ├── Step 1: Welcome
+                                   ├── Step 2: API Key
+                                   ├── Step 3: User Profile
+                                   ├── Step 4: Persona
+                                   └── Step 5: Done
+                                         │
+                                         └── POST /api/onboarding/complete
+                                               → sets onboarding.json to {completed: true}
+                                               → redirect to /
 ```
 
-### Styling (`onboarding.css` — 1415 Lines)
+### API Endpoints
 
-- Dedicated design token system (`--ob-*` variables)
-- Step cards with slide-in animation, glassmorphism
-- Progress bar with gradient fill
-- Responsive: 680px breakpoint
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/onboarding/status` | Check completion status |
+| POST | `/api/onboarding/complete` | Mark as completed |
+
+### Reset
+
+The onboarding can be re-triggered via:
+- Slash command `/onboarding` (calls `POST /api/commands/reset-onboarding`)
+- Manually setting `completed: false` in `src/settings/onboarding.json`
 
 ---
 
-## Reset Screen (`src/reset_screen/`)
+## Factory Reset
 
-### Purpose
-
-Native PyWebView window for factory reset. Invoked via `src/reset.py`.
-
-### Files
-
-| File | Description |
-|------|-------------|
-| `__init__.py` | HTML bundling, exports `reset_sequence()` |
-| `templates/reset.html` | Confirmation dialog + finish buttons |
-| `static/reset.css` | **Red** color scheme (glow in red/orange) |
-| `static/reset.js` | Bridge variables, confirmation logic |
-| `utils/reset.py` | 9-step reset process |
-
-### Reset Process (9 Steps)
+**Directory:** `src/reset_screen/`
 
 ```
-1. Delete databases
-2. Remove .env
-3. Reset settings files
-4. Delete created personas
-   → Farewell messages: "{name} waves goodbye"
-5. Delete custom avatars
-6. Reset active persona
-7. Delete custom specs
-8. Delete logs
-9. Clear __pycache__
+reset_screen/
+├── __init__.py
+├── static/
+├── templates/
+└── utils/
 ```
 
-### Python ↔ JS Communication
+### What It Does
 
-```python
-# Python polls JS variables:
-confirmed = window.evaluate_js("isConfirmed()")
-cancelled = window.evaluate_js("isCancelled()")
+A standalone PyWebView tool that performs a complete factory reset, launched via `bin/reset.bat`.
 
-# JS sets bridge variables:
-function onConfirm() {
-    _confirmed = true;
-    // Hides confirmation box, shows spinner
-}
-```
+### Reset Steps
 
-### Visual Design
+The reset process follows a **9-step sequence**:
 
-- Identical layout to splash, but **red color scheme**
-- Confirmation box: "All data will be irreversibly deleted"
-- Cancel (dark) + Confirm (red) buttons
-- Finish buttons: Start (green), Close (gray)
+| # | Step | Action |
+|---|------|--------|
+| 1 | Confirm | User confirms they want to reset |
+| 2 | Stop server | Kill running Flask/Vite processes |
+| 3 | Clear databases | Delete all SQLite files in `src/data/` |
+| 4 | Reset settings | Delete all JSON files in `src/settings/`, restore defaults |
+| 5 | Reset persona | Restore `active/persona_config.json` from default |
+| 6 | Clear created personas | Delete all files in `created_personas/` |
+| 7 | Reset prompts | PromptEngine factory reset (restore `_defaults/`) |
+| 8 | Clear Cortex | Reset all Cortex memory files to templates |
+| 9 | Clear logs | Delete log files from `src/logs/` |
+
+### Safety
+
+- Confirmation dialog before proceeding
+- Each step is shown with status (pending → running → done)
+- Errors in one step don't prevent other steps from running
+- Summary displayed after completion
+
+### Design
+
+- Same retro terminal aesthetic as the splash screen
+- Step-by-step progress display
+- Uses PyWebView's JS-Python bridge for executing reset operations
 
 ---
 
 ## Shared Patterns
 
+All three mini-apps share common patterns:
+
 ### HTML Inlining
 
-All three screens (splash, reset, editor) use the same bundling pattern:
+PyWebView works best with self-contained HTML. External CSS/JS files are embedded at build time:
 
 ```python
-def load_html():
-    html = read('template.html')
-    html = html.replace('{{CSS}}', read('style.css'))
-    html = html.replace('{{JS}}', read('script.js'))
-    return html
+# Inline all assets into a single HTML string
+html = template.render()  # Jinja2 template with embedded CSS/JS
+webview.create_window('Title', html=html)
 ```
 
-Everything in a single HTML string for PyWebView (avoids `file://` issues with `webview.create_window(html=...)`).
+### PyWebView JS-Python Bridge
 
-### Typewriter Engine
+Python methods are exposed to JavaScript:
 
-Splash and reset share the same typewriter engine:
-- `addLog(text)` — Instant log with auto-color detection
-- `typeLine(text, cls)` — Queued typewriter at 18ms/character
-- `typeLineWithBar(text, cls, duration)` — Typewriter + animated progress bar
-- Queue system (`_typeQueue`, `_processQueue`) for sequential output
+```python
+class Api:
+    def do_something(self, param):
+        # Python code
+        return result
 
-### Windows Native Integration
+window = webview.create_window('App', html=html, js_api=Api())
+```
 
-`console.py` uses `ctypes.windll.user32`:
-- `ShowWindow(hwnd, 0)` — Hide console window
-- `ShowWindow(hwnd, 5)` — Show console window
+```javascript
+// JavaScript in the HTML
+const result = await pywebview.api.do_something('value');
+```
+
+### Standalone Execution
+
+Each tool can run independently:
+
+```bash
+python src/prompt_editor/editor.py  # Prompt Editor
+bin/reset.bat                        # Factory Reset
+# Splash screen is launched automatically by app.py
+```
 
 ---
 
-## Dependencies
+## Related Documentation
 
-```
-Splash Screen
-  ├── PyWebView (native window)
-  ├── startup.py → init_all_dbs, load_character, server start
-  ├── console.py → ctypes (Windows)
-  └── update_check.py → update_state.json, Git
-
-Onboarding
-  ├── Flask (render_template, redirect)
-  ├── onboarding.json (status file)
-  ├── onboarding.js → /api/user-profile, /api/user-settings, /api/save_api_key
-  └── Standalone CSS (onboarding.css)
-
-Reset Screen
-  ├── PyWebView (native window)
-  ├── reset.py → filesystem operations
-  └── console.py → ctypes (Windows)
-```
+- [01 — App Core & Startup](01_App_Core_and_Startup.md) — Splash screen during startup
+- [12 — Frontend React SPA](12_Frontend_React_SPA.md) — Onboarding wizard in React
+- [13 — Prompt Editor](13_Prompt_Editor.md) — Prompt Editor details
+- [16 — Slash Commands](16_Slash_Commands.md) — `/onboarding` reset command

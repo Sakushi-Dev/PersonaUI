@@ -378,9 +378,9 @@ class PromptEngine:
         prompts = self.get_prompts_by_target('system_prompt', category_filter)
         parts: List[str] = []
 
-        # Categories that are only intended for specific contexts
-        # and do NOT belong in regular chat prompts
-        NON_CHAT_CATEGORIES = {'summary', 'spec_autofill'}
+        # Kategorien die nur für spezifische Kontexte bestimmt sind
+        # und NICHT in reguläre Chat-Prompts gehören
+        NON_CHAT_CATEGORIES = {'summary', 'spec_autofill', 'cortex'}
 
         for prompt_data in prompts:
             meta = prompt_data['meta']
@@ -390,9 +390,13 @@ class PromptEngine:
             if position == 'system_prompt_append':
                 continue
 
-            # If no explicit category_filter is set,
-            # exclude non-chat categories (Summary, Spec-Autofill)
+            # Wenn kein expliziter category_filter gesetzt ist,
+            # nicht-chat Kategorien ausschließen (Summary, Spec-Autofill, Cortex-Update)
             if not category_filter and meta.get('category') in NON_CHAT_CATEGORIES:
+                continue
+
+            # requires_any-Check (z.B. Cortex-Block nur bei vorhandenem Content)
+            if not self._should_include_block(meta, runtime_vars, variant):
                 continue
 
             content = self._resolve_prompt_content(prompt_data, variant, runtime_vars)
@@ -584,46 +588,6 @@ class PromptEngine:
 
         return self._resolve_prompt_content(prompt_data, variant, runtime_vars)
 
-    def build_summary_prompt(self, variant: str = 'default',
-                              runtime_vars: Optional[Dict[str, str]] = None) -> Dict[str, str]:
-        """
-        Baut System-Prompt und Prefill für Memory-Zusammenfassungen.
-
-        Returns:
-            Dict mit 'system_prompt' und 'prefill'
-        """
-        # System Prompt: nur summary-category Prompts mit target=system_prompt
-        system_parts: List[str] = []
-        prefill_parts: List[str] = []
-
-        for prompt_id, meta in sorted(
-            self._manifest.get('prompts', {}).items(),
-            key=lambda x: x[1].get('order', 9999)
-        ):
-            if meta.get('category') != 'summary':
-                continue
-            if not meta.get('enabled', True):
-                continue
-
-            prompt_data = self.get_prompt(prompt_id)
-            if not prompt_data:
-                continue
-
-            content = self._resolve_prompt_content(prompt_data, variant, runtime_vars)
-            if not content:
-                continue
-
-            target = meta.get('target', '')
-            if target == 'system_prompt':
-                system_parts.append(content)
-            elif target == 'prefill':
-                prefill_parts.append(content)
-
-        return {
-            'system_prompt': "\n\n".join(system_parts),
-            'prefill': "\n\n".join(prefill_parts)
-        }
-
     def build_afterthought_inner_dialogue(self, variant: str = 'default',
                                            runtime_vars: Optional[Dict[str, str]] = None) -> Optional[str]:
         """Baut den Afterthought Inner Dialogue Prompt."""
@@ -693,10 +657,101 @@ class PromptEngine:
 
         # Resolve placeholders
         if self._resolver:
-            return self._resolver.resolve_text(raw_content, variant, runtime_vars)
+            resolved = self._resolver.resolve_text(raw_content, variant, runtime_vars)
+            return self._clean_resolved_text(resolved)
         return raw_content
 
-    # ===== Mutation (for Editor) =====
+    def _should_include_block(self, meta: Dict[str, Any],
+                               runtime_vars: Optional[Dict[str, str]] = None,
+                               variant: str = 'default') -> bool:
+        """
+        Prüft ob ein Prompt-Block ins Ergebnis aufgenommen werden soll.
+
+        Prüft requires_any — Block nur einschließen wenn mindestens ein
+        gelisteter Placeholder einen non-empty Wert hat.
+
+        Args:
+            meta: Manifest-Metadaten des Prompts
+            runtime_vars: Aufrufer-Variablen (für requires_any-Check)
+            variant: Aktive Variante
+
+        Returns:
+            True wenn Block eingeschlossen werden soll
+        """
+        if not meta.get('enabled', True):
+            return False
+
+        requires = meta.get('requires_any')
+        if requires:
+            if runtime_vars:
+                has_content = any(
+                    runtime_vars.get(key, '').strip()
+                    for key in requires
+                )
+            else:
+                has_content = False
+            if not has_content:
+                return False
+
+        return True
+
+    def _clean_resolved_text(self, text: str) -> str:
+        """
+        Bereinigt aufgelösten Prompt-Text: überschüssige Leerzeilen entfernen.
+
+        Nach der Placeholder-Resolution können 3+ aufeinanderfolgende Newlines
+        entstehen (wenn Placeholders zu leeren Strings resolven). Diese werden
+        auf maximal 2 Newlines reduziert.
+        """
+        return re.sub(r'\n{3,}', '\n\n', text).strip()
+
+    def resolve_prompt_by_id(self, prompt_id: str, variant: str = 'default',
+                              runtime_vars: Optional[Dict[str, str]] = None) -> str:
+        """
+        Löst einen einzelnen Prompt per ID auf.
+
+        Nützlich für Prompts, die nicht über build_system_prompt() oder
+        andere Build-Methoden laufen (z.B. Cortex-Update User-Message).
+
+        Args:
+            prompt_id: ID des Prompts im Manifest
+            variant: Variante ('default', 'experimental')
+            runtime_vars: Runtime-Variablen für Placeholder-Auflösung
+
+        Returns:
+            Aufgelöster Prompt-Text
+
+        Raises:
+            KeyError: Prompt-ID nicht im Manifest
+        """
+        prompt_data = self.get_prompt(prompt_id)
+        if not prompt_data:
+            raise KeyError(f"Prompt '{prompt_id}' nicht im Manifest gefunden")
+
+        return self._resolve_prompt_content(prompt_data, variant, runtime_vars)
+
+    def get_domain_data(self, prompt_id: str) -> Dict[str, Any]:
+        """
+        Gibt die rohen Domain-Daten für einen Prompt zurück.
+
+        Nützlich für nicht-standard Felder wie 'tool_descriptions' in
+        cortex_update_tools.json, die nicht über den Template-Resolver laufen.
+
+        Args:
+            prompt_id: ID des Prompts im Manifest
+
+        Returns:
+            Dict mit dem kompletten Domain-Inhalt für diesen Prompt
+        """
+        meta = self._manifest.get('prompts', {}).get(prompt_id)
+        if not meta:
+            return {}
+
+        domain_file = meta.get('domain_file', '')
+        domain_data = self._domains.get(domain_file, {})
+        return domain_data.get(prompt_id, {})
+
+    # ===== Mutation (für Editor) =====
 
     def save_prompt(self, prompt_id: str, data: Dict[str, Any]) -> bool:
         """Speichert einen Prompt (Content + Metadata). Atomarer Write."""

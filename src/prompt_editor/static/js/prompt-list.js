@@ -17,7 +17,7 @@ const PromptList = {
     /** Sortierreihenfolge der Kategorien. */
     CATEGORY_ORDER: [
         'system', 'persona', 'context', 'prefill', 'dialog_injection',
-        'afterthought', 'summary', 'spec_autofill', 'utility', 'custom'
+        'afterthought', 'summary', 'spec_autofill', 'utility', 'cortex', 'custom'
     ],
 
     /** Anzeigenamen. */
@@ -31,6 +31,7 @@ const PromptList = {
         summary: 'Summary',
         spec_autofill: 'Spec Autofill',
         utility: 'Utility',
+        cortex: 'Cortex',
         custom: 'Custom'
     },
 
@@ -45,6 +46,7 @@ const PromptList = {
         summary: '#22c55e',
         spec_autofill: '#eab308',
         utility: '#6b7280',
+        cortex: '#06b6d4',
         custom: '#94a3b8'
     },
 

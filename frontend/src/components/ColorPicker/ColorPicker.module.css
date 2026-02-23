@@ -1,0 +1,42 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--overlay-text-secondary);
+}
+
+.picker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.input {
+  width: 40px;
+  height: 32px;
+  border: 1px solid var(--overlay-input-border);
+  border-radius: var(--border-radius-xs);
+  cursor: pointer;
+  padding: 2px;
+  background: var(--overlay-input-bg);
+}
+
+.input::-webkit-color-swatch-wrapper {
+  padding: 2px;
+}
+
+.input::-webkit-color-swatch {
+  border: none;
+  border-radius: 3px;
+}
+
+.value {
+  font-size: 13px;
+  color: var(--overlay-text-muted);
+  font-family: monospace;
+}

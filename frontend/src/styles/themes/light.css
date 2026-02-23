@@ -1,0 +1,79 @@
+/* ── Light Mode Theme ── */
+
+:root[data-theme="light"] {
+  /* Static page background */
+  --bg-color-1: #e8dff5;
+  --bg-color-2: #b8d0ff;
+  --bg-gradient-1: #c9b8ff;
+  --bg-gradient-2: #f0c6ff;
+
+  /* Overlay */
+  --overlay-backdrop: transparent;
+  --overlay-backdrop-blur: blur(8px);
+  --overlay-bg: rgba(255, 255, 255, 0.6);
+  --overlay-bg-gradient: rgba(255, 255, 255, 0.6);
+  --overlay-border: rgba(0, 0, 0, 0.1);
+  --overlay-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+  --overlay-text: #1a1a2e;
+  --overlay-text-color: #1a1a2e;
+  --overlay-text-secondary: #3a3a4a;
+  --overlay-text-muted: #6a6a7a;
+  --overlay-heading: #111122;
+  --overlay-divider: rgba(0, 0, 0, 0.12);
+  --overlay-border-color: rgba(0, 0, 0, 0.12);
+
+  /* Overlay Inputs */
+  --overlay-input-bg: rgba(255, 255, 255, 0.55);
+  --overlay-input-border: rgba(0, 0, 0, 0.2);
+  --overlay-input-text: #1a1a2e;
+  --overlay-input-focus-border: rgba(79, 120, 230, 0.6);
+  --overlay-input-focus-shadow: 0 0 0 3px rgba(79, 120, 230, 0.15);
+
+  /* Overlay Interactive */
+  --overlay-hover-bg: rgba(0, 0, 0, 0.05);
+  --overlay-section-bg: rgba(0, 0, 0, 0.04);
+  --overlay-section-border: rgba(0, 0, 0, 0.12);
+  --overlay-close-color: rgba(220, 38, 38, 0.7);
+  --overlay-close-hover-bg: rgba(220, 38, 38, 0.1);
+  --overlay-close-hover-color: #dc2626;
+
+  /* Overlay Scrollbar */
+  --overlay-scrollbar-track: rgba(0, 0, 0, 0.08);
+  --overlay-scrollbar-thumb: rgba(0, 0, 0, 0.25);
+  --overlay-scrollbar-thumb-hover: rgba(0, 0, 0, 0.4);
+
+  /* Overlay Accent */
+  --overlay-accent: #4f78e6;
+  --overlay-accent-light: rgba(79, 120, 230, 0.12);
+  --overlay-hint-color: #5a5a6a;
+
+  /* Overlay Tags */
+  --overlay-tag-bg: rgba(0, 0, 0, 0.06);
+  --overlay-tag-border: rgba(0, 0, 0, 0.2);
+  --overlay-tag-text: #333344;
+
+  /* Overlay Info */
+  --overlay-info-bg: rgba(79, 120, 230, 0.1);
+  --overlay-info-border: #4f78e6;
+  --overlay-info-text: #3a5bc7;
+
+  /* Overlay Warning */
+  --overlay-warning-bg: rgba(239, 68, 68, 0.08);
+  --overlay-warning-border: #ef4444;
+
+  /* Overlay Switch */
+  --overlay-switch-bg: rgba(0, 0, 0, 0.2);
+  --overlay-switch-border: rgba(0, 0, 0, 0.3);
+
+  /* Overlay Buttons */
+  --overlay-btn-secondary-bg: rgba(0, 0, 0, 0.08);
+  --overlay-btn-secondary-border: rgba(0, 0, 0, 0.2);
+  --overlay-btn-secondary-text: #333344;
+  --overlay-btn-secondary-hover-bg: rgba(0, 0, 0, 0.12);
+
+  /* Page Background */
+  --background-color: #f8f9fa;
+  --color-white: #d7dce4;
+  --color-gradient1: #66cfff;
+  --color-sky: #fd91ee;
+}

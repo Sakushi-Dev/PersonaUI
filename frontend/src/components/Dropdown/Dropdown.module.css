@@ -1,0 +1,85 @@
+.wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.trigger {
+  cursor: pointer;
+}
+
+.menu {
+  position: absolute;
+  top: 100%;
+  margin-top: 8px;
+  min-width: 200px;
+  background: var(--overlay-bg);
+  border: 1px solid var(--overlay-border);
+  border-radius: var(--border-radius-md);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  z-index: var(--z-dropdown);
+  padding: 6px;
+  animation: fadeIn 0.15s ease;
+}
+
+.right {
+  right: 0;
+}
+
+.left {
+  left: 0;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: none;
+  color: var(--overlay-text);
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: var(--border-radius-sm);
+  transition: background var(--transition-fast);
+  text-align: left;
+}
+
+.item:hover {
+  background: var(--overlay-hover-bg);
+}
+
+.danger {
+  color: var(--color-danger);
+}
+
+.icon {
+  font-size: 16px;
+  width: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.submenuWrapper {
+  position: relative;
+}
+
+.submenu {
+  padding-left: 12px;
+}
+
+.arrow {
+  margin-left: auto;
+  font-size: 16px;
+  transition: transform var(--transition-fast);
+}
+
+.arrowOpen {
+  transform: rotate(90deg);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}

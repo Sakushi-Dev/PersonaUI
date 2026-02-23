@@ -1,0 +1,53 @@
+/* ── ChatPage Layout ── */
+
+.page {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: transparent;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* ── Overlay Carousel (mobile swipe navigation) ── */
+@media (max-width: 768px) {
+  .carouselBackdrop {
+    position: fixed;
+    inset: 0;
+    top: var(--toolbar-height-mobile, 50px);
+    background: var(--overlay-backdrop);
+    -webkit-backdrop-filter: var(--overlay-backdrop-blur, blur(8px));
+    backdrop-filter: var(--overlay-backdrop-blur, blur(8px));
+    z-index: var(--z-overlay-backdrop);
+    overflow: hidden;
+    animation: carouselFadeIn 0.2s ease;
+  }
+
+  .carouselStrip {
+    display: flex;
+    height: 100%;
+    will-change: transform;
+  }
+
+  .carouselSmooth {
+    transition: transform 0.3s ease-out;
+  }
+
+  .carouselSlot {
+    flex-shrink: 0;
+    width: 100vw;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+}
+
+@keyframes carouselFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

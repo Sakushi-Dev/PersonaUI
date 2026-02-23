@@ -1,0 +1,34 @@
+{
+  "en": {
+    "you": "You",
+    "tokenInfo": "Token Info",
+    "deleteMsg": "Delete message",
+    "editMsg": "Edit message",
+    "regenerateMsg": "Regenerate response",
+    "resendMsg": "Resend message",
+    "deleteLabel": "Delete",
+    "editLabel": "Edit",
+    "regenerateLabel": "Regenerate",
+    "resendLabel": "Resend",
+    "deleteConfirm": "Really delete message?",
+    "regenerateConfirm": "Really regenerate response?",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "de": {
+    "you": "Du",
+    "tokenInfo": "Token Info",
+    "deleteMsg": "Nachricht löschen",
+    "editMsg": "Nachricht bearbeiten",
+    "regenerateMsg": "Antwort neu generieren",
+    "resendMsg": "Nachricht erneut senden",
+    "deleteLabel": "Löschen",
+    "editLabel": "Bearbeiten",
+    "regenerateLabel": "Neu generieren",
+    "resendLabel": "Erneut senden",
+    "deleteConfirm": "Nachricht wirklich löschen?",
+    "regenerateConfirm": "Antwort wirklich neu generieren?",
+    "save": "Speichern",
+    "cancel": "Abbrechen"
+  }
+}

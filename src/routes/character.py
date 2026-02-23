@@ -44,8 +44,9 @@ def get_available_options():
     expression_full = persona_profile.get('expression_styles', {})
     scenarios_full = persona_profile.get('scenarios', {})
     
-    # Lade Custom Spec Keys für Highlighting
+    # Lade Custom Spec Keys für Highlighting + Titles für Anzeige
     custom_keys = {}
+    custom_titles = {}
     try:
         import os, json
         custom_spec_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 
@@ -54,12 +55,28 @@ def get_available_options():
             with open(custom_spec_path, 'r', encoding='utf-8') as f:
                 custom_data = json.load(f)
             cs = custom_data.get('persona_spec', {})
+            stored_titles = custom_data.get('_titles', {})
             custom_keys = {
                 'persona_types': list(cs.get('persona_type', {}).keys()),
                 'core_traits': list(cs.get('core_traits_details', {}).keys()),
                 'knowledge': list(cs.get('knowledge_areas', {}).keys()),
                 'expression_styles': list(cs.get('expression_styles', {}).keys()),
                 'scenarios': list(cs.get('scenarios', {}).keys())
+            }
+            # Build custom_titles: use stored _titles for simple types,
+            # use 'name' field for structured types (scenarios, expression_styles)
+            custom_titles = {
+                'persona_types': stored_titles.get('persona_type', {}),
+                'core_traits': stored_titles.get('core_traits_details', {}),
+                'knowledge': stored_titles.get('knowledge_areas', {}),
+                'expression_styles': {
+                    k: v.get('name', k) if isinstance(v, dict) else k
+                    for k, v in cs.get('expression_styles', {}).items()
+                },
+                'scenarios': {
+                    k: v.get('name', k) if isinstance(v, dict) else k
+                    for k, v in cs.get('scenarios', {}).items()
+                }
             }
     except Exception as e:
         log.warning("Custom Keys konnten nicht geladen werden: %s", e)
@@ -73,7 +90,8 @@ def get_available_options():
             'expression_styles': expression_full,
             'scenarios': scenarios_full
         },
-        custom_keys=custom_keys
+        custom_keys=custom_keys,
+        custom_titles=custom_titles
     )
 
 
@@ -196,6 +214,11 @@ def background_autofill():
     if not data or not data.get('name'):
         return error_response('Persona-Name ist erforderlich')
     
+    # Sprache aus User-Profil
+    from routes.user_profile import get_user_profile_data
+    profile = get_user_profile_data()
+    language = profile.get('persona_language', 'english') or 'english'
+    
     # Persona-Daten für Referenz zusammenbauen
     char_name = data.get('name', 'Assistant')
     char_age = data.get('age', 18)
@@ -229,20 +252,21 @@ def background_autofill():
         if engine:
             prompt = engine.resolve_prompt(
                 'background_autofill', variant='default',
-                runtime_vars={'reference_text': reference_text, 'user_hint_section': user_hint_section}
+                runtime_vars={'reference_text': reference_text, 'user_hint_section': user_hint_section, 'language': language}
             )
     except Exception:
         pass
 
     if not prompt:
-        prompt = f"""Erstelle eine kurze, stimmige Hintergrundgeschichte für folgende Persona:
+        prompt = f"""Create a short, coherent background story for the following persona:
 
 {reference_text}
 
 {user_hint_section}
 
-Schreibe eine kompakte Hintergrundgeschichte (max 800 Zeichen) in der dritten Person die zur Persona passt. 
-Nur den Hintergrund-Text zurückgeben, keine Erklärungen oder Formatierung."""
+Write a compact background story (max 800 characters) in third person that fits the persona.
+Respond in {language}.
+Return only the background text, no explanations or formatting."""
     
     try:
         config = RequestConfig(

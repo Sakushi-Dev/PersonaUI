@@ -121,26 +121,6 @@
       "category": "user",
       "resolve_phase": "static"
     },
-    "user_type": {
-      "name": "User Type",
-      "description": "Type of the user",
-      "source": "user_profile",
-      "source_path": "user_type",
-      "type": "string",
-      "default": "Not specified",
-      "category": "user",
-      "resolve_phase": "static"
-    },
-    "user_type_description": {
-      "name": "User Type Description",
-      "description": "Description of the user type",
-      "source": "user_profile",
-      "source_path": "user_type_description",
-      "type": "string",
-      "default": "No description",
-      "category": "user",
-      "resolve_phase": "static"
-    },
     "user_gender": {
       "name": "User Gender",
       "description": "Gender of the user",
@@ -172,13 +152,14 @@
       "resolve_phase": "static"
     },
     "language": {
-      "name": "Language",
-      "description": "Language for the conversation",
-      "source": "runtime",
+      "name": "Sprache",
+      "description": "Sprache für die Konversation",
+      "source": "user_profile",
+      "source_path": "persona_language",
       "type": "string",
-      "default": "de",
-      "category": "system",
-      "resolve_phase": "runtime"
+      "default": "english",
+      "category": "user",
+      "resolve_phase": "static"
     },
     "current_date": {
       "name": "Current Date",
@@ -226,15 +207,6 @@
       "type": "string",
       "default": "",
       "category": "afterthought",
-      "resolve_phase": "runtime"
-    },
-    "memory_entries": {
-      "name": "Memories",
-      "description": "Formatted memory entries for prompt context",
-      "source": "runtime",
-      "type": "string",
-      "default": "",
-      "category": "context",
       "resolve_phase": "runtime"
     },
     "input": {
@@ -325,6 +297,52 @@
       "type": "string",
       "default": "",
       "category": "system",
+      "resolve_phase": "runtime"
+    },
+    "cortex_memory": {
+      "name": "Cortex Memory",
+      "description": "Inhalt der memory.md — Faktenwissen, Vorlieben, wichtige Details über den User",
+      "source": "runtime",
+      "type": "string",
+      "default": "",
+      "category": "cortex",
+      "resolve_phase": "runtime"
+    },
+    "cortex_soul": {
+      "name": "Cortex Soul",
+      "description": "Inhalt der soul.md — Persönlichkeitsentwicklung, innere Haltung, emotionale Muster",
+      "source": "runtime",
+      "type": "string",
+      "default": "",
+      "category": "cortex",
+      "resolve_phase": "runtime"
+    },
+    "cortex_relationship": {
+      "name": "Cortex Relationship",
+      "description": "Inhalt der relationship.md — Beziehungsdynamik, gemeinsame Geschichte, Vertrauenslevel",
+      "source": "runtime",
+      "type": "string",
+      "default": "",
+      "category": "cortex",
+      "resolve_phase": "runtime"
+    },
+    "cortex_persona_context": {
+      "name": "Cortex Persona-Kontext",
+      "description": "Persona-Beschreibung für Cortex-Update (identity + core + background)",
+      "source": "computed",
+      "compute_function": "build_cortex_persona_context",
+      "type": "string",
+      "default": "",
+      "category": "cortex",
+      "resolve_phase": "computed"
+    },
+    "cortex_conversation_text": {
+      "name": "Cortex Gesprächsverlauf",
+      "description": "Formatierter Gesprächsverlauf für Cortex-Update (via runtime_vars)",
+      "source": "runtime",
+      "type": "string",
+      "default": "",
+      "category": "cortex",
       "resolve_phase": "runtime"
     }
   }

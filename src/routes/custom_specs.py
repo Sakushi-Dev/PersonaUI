@@ -4,11 +4,13 @@ Custom Specs Routes - Verwaltung von benutzerdefinierten Persona-Spezifikationen
 from flask import Blueprint, request
 import os
 import json
+import re
 from utils.settings_defaults import get_autofill_model
 from utils.logger import log
-from utils.provider import get_api_client, get_prompt_engine
+from utils.provider import get_api_client
 from utils.api_request import RequestConfig
 from routes.helpers import success_response, error_response, handle_route_error
+from routes.user_profile import get_user_profile_data
 custom_specs_bp = Blueprint('custom_specs', __name__)
 
 # Pfade
@@ -82,6 +84,7 @@ def add_persona_type():
     """Fügt einen neuen Persona-Typ hinzu"""
     data = request.get_json()
     key = data.get('key', '').strip()
+    name = data.get('name', '').strip()
     description = data.get('description', '').strip()
     
     if not key:
@@ -91,6 +94,9 @@ def add_persona_type():
     
     specs = _load_custom_spec()
     specs['persona_spec']['persona_type'][key] = description
+    # Save display title
+    titles = specs.setdefault('_titles', {}).setdefault('persona_type', {})
+    titles[key] = name or key
     
     if _save_custom_spec(specs):
         return success_response()
@@ -103,19 +109,23 @@ def add_core_trait():
     """Fügt ein neues Core Trait hinzu"""
     data = request.get_json()
     key = data.get('key', '').strip()
+    name = data.get('name', '').strip()
     description = data.get('description', '').strip()
     behaviors = data.get('behaviors', [])
     
     if not key:
         return error_response('Name ist erforderlich')
-    if len(behaviors) != 3:
-        return error_response('Genau 3 Verhaltensmuster erforderlich')
+    if not behaviors or len(behaviors) > 6:
+        return error_response('1-6 Verhaltensmuster erforderlich')
     
     specs = _load_custom_spec()
     specs['persona_spec']['core_traits_details'][key] = {
         "description": description,
         "behaviors": behaviors
     }
+    # Save display title
+    titles = specs.setdefault('_titles', {}).setdefault('core_traits_details', {})
+    titles[key] = name or key
     
     if _save_custom_spec(specs):
         return success_response()
@@ -128,6 +138,7 @@ def add_knowledge():
     """Fügt ein neues Wissensgebiet hinzu"""
     data = request.get_json()
     key = data.get('key', '').strip()
+    name = data.get('name', '').strip()
     description = data.get('description', '').strip()
     
     if not key:
@@ -135,6 +146,9 @@ def add_knowledge():
     
     specs = _load_custom_spec()
     specs['persona_spec']['knowledge_areas'][key] = description
+    # Save display title
+    titles = specs.setdefault('_titles', {}).setdefault('knowledge_areas', {})
+    titles[key] = name or key
     
     if _save_custom_spec(specs):
         return success_response()
@@ -153,8 +167,8 @@ def add_scenario():
     
     if not key:
         return error_response('Key ist erforderlich')
-    if len(setting) != 4:
-        return error_response('Genau 4 Setting-Elemente erforderlich')
+    if not setting or len(setting) > 6:
+        return error_response('1-6 Setting-Elemente erforderlich')
     
     specs = _load_custom_spec()
     specs['persona_spec']['scenarios'][key] = {
@@ -214,6 +228,9 @@ def delete_custom_spec(category, key):
     specs = _load_custom_spec()
     if key in specs['persona_spec'].get(spec_key, {}):
         del specs['persona_spec'][spec_key][key]
+        # Also remove stored title if present
+        if '_titles' in specs and spec_key in specs['_titles']:
+            specs['_titles'][spec_key].pop(key, None)
         if _save_custom_spec(specs):
             return success_response()
         return error_response('Speichern fehlgeschlagen', 500)
@@ -224,24 +241,41 @@ def delete_custom_spec(category, key):
 @custom_specs_bp.route('/api/custom-specs/autofill', methods=['POST'])
 @handle_route_error('autofill_spec')
 def autofill_spec():
-    """KI-gestützte Auto-Generierung von Spec-Feldern"""
+    """KI-gestützte Auto-Generierung einzelner Spec-Felder (Plaintext, kein JSON).
+
+    Request-Body:
+        type:   z.B. 'core_trait', 'expression_style', ...
+        field:  'description' | 'example' | 'items'
+        input:  Name des Specs (Pflicht)
+        hint:   Optionaler Freitext-Hinweis des Users
+        item_count: Anzahl der gewünschten Items (nur für field=items)
+    
+    Response:
+        { success: true, text: "...", tokens: {...} }
+    """
     data = request.get_json()
     spec_type = data.get('type', '').strip()
+    field = data.get('field', 'description').strip()
     input_text = data.get('input', '').strip()
-    
+    hint = data.get('hint', '').strip()
+    item_count = data.get('item_count', 3)
+
     if not spec_type or not input_text:
         return error_response('Typ und Input sind erforderlich')
     
-    # Prompt über PromptEngine bauen
-    engine = get_prompt_engine()
-    if not engine or not engine.is_loaded:
-        return error_response('PromptEngine nicht verfügbar', 500)
+    if field not in ('description', 'example', 'items'):
+        return error_response('Ungültiges Feld')
 
-    prompt = engine.build_spec_autofill_prompt(spec_type, input_text, variant='default')
+    # ── Sprache aus User-Profil ──
+    profile = get_user_profile_data()
+    language = profile.get('persona_language', 'english') or 'english'
+
+    # ── Prompt bauen ──
+    prompt = _build_field_prompt(spec_type, field, input_text, hint, item_count, language)
     if not prompt:
-        return error_response(f'Prompt-Template für "{spec_type}" nicht gefunden', 404)
-    
-    # Generiere mit Claude via ApiClient (kostengünstiges Modell, geringe max_tokens)
+        return error_response(f'Prompt konnte nicht gebaut werden für "{spec_type}/{field}"', 400)
+
+    # ── API-Call ──
     try:
         config = RequestConfig(
             system_prompt='',
@@ -251,32 +285,104 @@ def autofill_spec():
             request_type='spec_autofill'
         )
         response = get_api_client().request(config)
-        
+
         if not response.success:
             return error_response(f'API-Fehler: {response.error}', 500)
-        
+
         result_text = response.content.strip()
+        # Bereinige: Anführungszeichen am Anfang/Ende entfernen
+        if result_text.startswith('"') and result_text.endswith('"'):
+            result_text = result_text[1:-1]
+
         tokens = {
             'input': response.usage.get('input_tokens', 0) if response.usage else 0,
             'output': response.usage.get('output_tokens', 0) if response.usage else 0
         }
-        
-        # Versuche JSON zu parsen (für Traits, Scenarios, Expression)
-        if spec_type in ['core_trait', 'scenario', 'expression_style']:
-            try:
-                # Bereinige mögliche Markdown-Wrapper
-                clean_text = result_text
-                if clean_text.startswith('```'):
-                    clean_text = clean_text.split('\n', 1)[1] if '\n' in clean_text else clean_text
-                    clean_text = clean_text.rsplit('```', 1)[0]
-                parsed = json.loads(clean_text.strip())
-                return success_response(result=parsed, tokens=tokens)
-            except json.JSONDecodeError:
-                # Fallback: Rohtext zurückgeben
-                return success_response(result=result_text, tokens=tokens)
-        else:
-            return success_response(result=result_text, tokens=tokens)
-            
+
+        # Für Items: in Liste aufteilen (Line-by-line)
+        if field == 'items':
+            lines = _parse_items_response(result_text, item_count)
+            return success_response(items=lines, tokens=tokens)
+
+        return success_response(text=result_text, tokens=tokens)
+
     except Exception as api_error:
         log.error("Claude API Fehler bei Auto-Fill: %s", api_error)
         return error_response(f'API-Fehler: {str(api_error)}', 500)
+
+
+# ── Prompt-Builder für Einzelfeld-Autofill ──
+
+# Feldnamen pro Kategorie (für besseren Kontext im Prompt)
+_FIELD_LABELS = {
+    'persona_type': {'description': 'a persona type'},
+    'core_trait': {'description': 'a personality trait', 'items': 'behavioral patterns for this trait'},
+    'knowledge': {'description': 'a field of knowledge'},
+    'scenario': {'description': 'a roleplay scenario', 'items': 'setting elements for this scenario'},
+    'expression_style': {'description': 'a writing/communication style', 'example': 'a writing style', 'items': 'characteristics of this style'},
+}
+
+def _build_field_prompt(spec_type: str, field: str, name: str, hint: str, item_count: int, language: str = 'english') -> str:
+    """Baut einen Plaintext-Prompt für ein einzelnes Feld."""
+
+    labels = _FIELD_LABELS.get(spec_type, {})
+    context_label = labels.get(field, labels.get('description', 'a spec'))
+    hint_section = f'\nThe user adds this hint: "{hint}"' if hint else ''
+    lang_rule = f'- Respond in {language}'
+
+    if field == 'description':
+        return (
+            f'Generate a brief description for {context_label}.\n'
+            f'Name: "{name}"{hint_section}\n\n'
+            f'Rules:\n'
+            f'{lang_rule}\n'
+            f'- Maximum 120 characters\n'
+            f'- One or two sentences\n'
+            f'- Be creative but clear\n'
+            f'- Return ONLY the description text, nothing else'
+        )
+
+    elif field == 'example':
+        return (
+            f'Generate a short example sentence that demonstrates {context_label}.\n'
+            f'Style name: "{name}"{hint_section}\n\n'
+            f'Rules:\n'
+            f'{lang_rule}\n'
+            f'- A short greeting or statement in this style\n'
+            f'- Maximum 150 characters\n'
+            f'- Return ONLY the example text, nothing else'
+        )
+
+    elif field == 'items':
+        item_label = labels.get('items', 'items')
+        count = min(max(item_count, 1), 6)
+        return (
+            f'Generate exactly {count} {item_label}.\n'
+            f'Name: "{name}"{hint_section}\n\n'
+            f'Rules:\n'
+            f'{lang_rule}\n'
+            f'- Each item on its own line\n'
+            f'- Each item: maximum 60 characters, short and concise\n'
+            f'- No numbering, no bullet points, no dashes — just the text\n'
+            f'- No extra explanations\n'
+            f'- Return exactly {count} lines'
+        )
+
+    return ''
+
+
+def _parse_items_response(text: str, expected_count: int) -> list:
+    """Parst eine mehrzeilige AI-Antwort in eine Liste von Items."""
+    lines = []
+    for line in text.split('\n'):
+        cleaned = line.strip()
+        if not cleaned:
+            continue
+        # Nummerierung/Aufzählungszeichen entfernen
+        cleaned = re.sub(r'^[\d]+[.):\-]\s*', '', cleaned)
+        cleaned = re.sub(r'^[-•*]\s*', '', cleaned)
+        cleaned = cleaned.strip(' "\'')
+        if cleaned:
+            lines.append(cleaned)
+    # Auf erwartete Anzahl begrenzen
+    return lines[:expected_count]

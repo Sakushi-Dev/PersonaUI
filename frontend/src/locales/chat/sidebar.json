@@ -1,0 +1,30 @@
+{
+  "en": {
+    "chats": "Chats",
+    "sessions": "Sessions",
+    "backToPersonas": "Back to persona overview",
+    "hideSidebar": "Hide sidebar",
+    "newChat": "New Chat",
+    "noChats": "No chats yet.",
+    "startChat": "Start a new chat!",
+    "noPersonas": "No personas available",
+    "noChatAvailable": "No chat available",
+    "created": "Created:",
+    "deleteChat": "Delete chat",
+    "unnamed": "Unnamed"
+  },
+  "de": {
+    "chats": "Chats",
+    "sessions": "Sessions",
+    "backToPersonas": "Zurück zur Persona-Übersicht",
+    "hideSidebar": "Sidebar ausblenden",
+    "newChat": "Neuer Chat",
+    "noChats": "Noch keine Chats.",
+    "startChat": "Starte einen neuen Chat!",
+    "noPersonas": "Keine Personas vorhanden",
+    "noChatAvailable": "Kein Chat vorhanden",
+    "created": "Erstellt:",
+    "deleteChat": "Chat löschen",
+    "unnamed": "Unbenannt"
+  }
+}

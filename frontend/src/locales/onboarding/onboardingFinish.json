@@ -1,0 +1,24 @@
+{
+  "en": {
+    "titleDone": "Have Fun!",
+    "textDone": "All set up. You can now start chatting, discover personas, or create your own.",
+    "hintDone": "All settings can be adjusted anytime via the menu.",
+    "launchBtn": "Launch PersonaUI",
+    "titleExplore": "Have Fun Exploring!",
+    "textExplore": "Feel free to look around. To chat with personas, enter your API key later via the dropdown menu under <strong>Set API-Key</strong>.",
+    "hintExplore": "If you have questions, feel free to reach out to the project lead:",
+    "githubLink": "Sakushi-Dev on GitHub",
+    "exploreBtn": "Explore PersonaUI"
+  },
+  "de": {
+    "titleDone": "Viel Spaß!",
+    "textDone": "Alles eingerichtet. Du kannst jetzt chatten, Personas entdecken oder eigene erstellen.",
+    "hintDone": "Alle Einstellungen können jederzeit über das Menü angepasst werden.",
+    "launchBtn": "PersonaUI starten",
+    "titleExplore": "Viel Spaß beim Erkunden!",
+    "textExplore": "Schau dich gerne um. Um mit Personas zu chatten, gib später deinen API-Key über das Dropdown-Menü unter <strong>API-Key setzen</strong> ein.",
+    "hintExplore": "Bei Fragen kannst du dich gerne an den Projektleiter wenden:",
+    "githubLink": "Sakushi-Dev auf GitHub",
+    "exploreBtn": "PersonaUI erkunden"
+  }
+}

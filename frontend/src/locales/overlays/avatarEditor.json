@@ -1,0 +1,22 @@
+{
+  "en": {
+    "titleCrop": "Crop Avatar",
+    "titleSelect": "Select Avatar",
+    "dropText": "Drag image here or click to upload",
+    "dropHint": ".png, .jpg, .webp",
+    "galleryDivider": "or choose from gallery",
+    "confirmSelect": "Select",
+    "saveCrop": "Save Crop",
+    "cancelCrop": "Cancel"
+  },
+  "de": {
+    "titleCrop": "Avatar zuschneiden",
+    "titleSelect": "Avatar auswählen",
+    "dropText": "Bild hierher ziehen oder klicken zum Hochladen",
+    "dropHint": ".png, .jpg, .webp",
+    "galleryDivider": "oder aus der Galerie wählen",
+    "confirmSelect": "Auswählen",
+    "saveCrop": "Zuschnitt speichern",
+    "cancelCrop": "Abbrechen"
+  }
+}

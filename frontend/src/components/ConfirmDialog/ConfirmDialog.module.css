@@ -1,0 +1,90 @@
+/* ── ConfirmDialog ── */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-toast, 1100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  animation: fadeIn 0.15s ease;
+}
+
+.dialog {
+  background: var(--overlay-bg);
+  border: 1px solid var(--overlay-border);
+  border-radius: 14px;
+  padding: 20px 24px;
+  min-width: 260px;
+  max-width: 360px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  animation: scaleIn 0.15s ease;
+  text-align: center;
+}
+
+.message {
+  margin: 0 0 18px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--overlay-text);
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.confirmBtn,
+.cancelBtn {
+  padding: 6px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.confirmBtn:active,
+.cancelBtn:active {
+  transform: scale(0.96);
+}
+
+.confirmBtn {
+  background: rgba(220, 60, 60, 0.85);
+  color: #fff;
+}
+
+.confirmBtn:hover {
+  background: rgba(220, 60, 60, 1);
+}
+
+.cancelBtn {
+  background: var(--overlay-border);
+  color: var(--overlay-text-secondary);
+}
+
+.cancelBtn:hover {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+/* ── Dark overrides ── */
+
+:root[data-theme="dark"] .cancelBtn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* ── Animations ── */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}

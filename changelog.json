@@ -1,0 +1,16 @@
+{
+  "versions": [
+    {
+      "version": "0.2.0-alpha",
+      "date": "2026-02-23",
+      "tag": "redesign",
+      "summary": "Complete frontend redesign with React SPA, Cortex memory system, and new onboarding flow."
+    },
+    {
+      "version": "0.1.0-alpha",
+      "date": "2026-01-15",
+      "tag": "initial",
+      "summary": "Initial release of PersonaUI with basic chat, persona system, and prompt engine."
+    }
+  ]
+}

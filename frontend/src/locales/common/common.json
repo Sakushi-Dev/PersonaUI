@@ -1,0 +1,40 @@
+{
+  "en": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "reset": "Reset",
+    "back": "Back",
+    "close": "Close",
+    "delete": "Delete",
+    "edit": "Edit",
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "yes": "Yes",
+    "no": "No",
+    "remove": "Remove",
+    "approve": "Approve",
+    "deny": "Deny",
+    "test": "Test",
+    "noEntries": "No entries",
+    "error": "Error"
+  },
+  "de": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "reset": "Zurücksetzen",
+    "back": "Zurück",
+    "close": "Schließen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "loading": "Laden...",
+    "saving": "Speichert...",
+    "yes": "Ja",
+    "no": "Nein",
+    "remove": "Entfernen",
+    "approve": "Genehmigen",
+    "deny": "Ablehnen",
+    "test": "Testen",
+    "noEntries": "Keine Einträge",
+    "error": "Fehler"
+  }
+}
