@@ -62,10 +62,11 @@ src/instructions/prompts/_meta/_backups/
 # Custom Persona-Specs
 src/instructions/personas/spec/custom_spec/custom_spec.json
 
-# Benutzer-Uploads
-frontend/public/avatar/costum/*
-frontend/public/avatar/costum/.gitkeep
-frontend/public/avatar/index.json*
+# Benutzer-Uploads (Custom-Avatare)
+frontend/public/avatar/costum/
+
+# Avatar-Index (wird zur Laufzeit generiert)
+frontend/public/avatar/index.json
 
 # Temporäre Dateien
 *.tmp

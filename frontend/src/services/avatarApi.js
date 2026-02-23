@@ -1,15 +1,13 @@
 // ── Avatar API Service ──
 
-import { apiPost, apiDelete, apiUpload } from './apiClient';
+import { apiGet, apiPost, apiDelete, apiUpload } from './apiClient';
 
 /**
- * Lädt die Avatar-Liste direkt aus frontend/public/avatar/index.json.
- * Das Backend hält diese Datei bei Upload/Delete aktuell.
+ * Lädt die Avatar-Liste über die API.
+ * Der Endpunkt generiert index.json automatisch und gibt die Liste zurück.
  */
 export async function getAvailableAvatars() {
-  const res = await fetch('/avatar/index.json', { cache: 'no-store' });
-  if (!res.ok) throw new Error('Avatar-Index konnte nicht geladen werden');
-  return res.json();
+  return apiGet('/api/get_available_avatars');
 }
 
 export function saveAvatar(personaId, avatarData, avatarType) {
