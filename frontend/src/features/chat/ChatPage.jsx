@@ -49,7 +49,7 @@ import {
 import styles from './ChatPage.module.css';
 
 // Wrapper that shows a loading spinner until session + settings are ready
-export default function ChatPage() {
+export default function ChatPage({ disclaimerAccepted = true }) {
   const { loading } = useSession();
   const { loaded: settingsLoaded } = useSettings();
   const { t } = useLanguage();
@@ -72,12 +72,12 @@ export default function ChatPage() {
 
   return (
     <ErrorBoundary>
-      <ChatPageContent />
+      <ChatPageContent disclaimerAccepted={disclaimerAccepted} />
     </ErrorBoundary>
   );
 }
 
-function ChatPageContent() {
+function ChatPageContent({ disclaimerAccepted = true }) {
   const { sessionId, personaId, character, switchPersona, switchSession, createSession, pendingAutoFirstMessage, setPendingAutoFirstMessage } = useSession();
   const { get } = useSettings();
   const { setIsDark, updateColors, setFontSize: setThemeFontSize, setFontFamily: setThemeFontFamily, setDynamicBackground: setThemeDynBg } = useTheme();
@@ -121,12 +121,13 @@ function ChatPageContent() {
   } = useMessages();
 
   // ── Auto First Message: consume pending signal from SessionContext ──
+  // Wait until disclaimer is accepted before triggering (post-onboarding flow)
   useEffect(() => {
-    if (pendingAutoFirstMessage && sessionId && !isLoading && !isStreaming) {
+    if (pendingAutoFirstMessage && sessionId && !isLoading && !isStreaming && disclaimerAccepted) {
       setPendingAutoFirstMessage(false);
       triggerAutoFirstMessage(sessionId, personaId);
     }
-  }, [pendingAutoFirstMessage, sessionId, isLoading, isStreaming, personaId, triggerAutoFirstMessage, setPendingAutoFirstMessage]);
+  }, [pendingAutoFirstMessage, sessionId, isLoading, isStreaming, personaId, triggerAutoFirstMessage, setPendingAutoFirstMessage, disclaimerAccepted]);
 
   const {
     isThinking: afterthoughtThinking,

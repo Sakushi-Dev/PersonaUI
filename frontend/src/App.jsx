@@ -56,7 +56,7 @@ function AppRoutes() {
           element={
             onboardingDone
               ? <>
-                  <ChatPage />
+                  <ChatPage disclaimerAccepted={disclaimerAccepted} />
                   <DisclaimerOverlay
                     open={!disclaimerAccepted}
                     onAccept={() => setDisclaimerAccepted(true)}
