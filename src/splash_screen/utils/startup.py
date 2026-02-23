@@ -1,4 +1,4 @@
-"""Startup-Sequenz und Helfer für den Splash-Screen."""
+"""Startup sequence and helpers for the splash screen."""
 
 import os
 import time
@@ -12,11 +12,11 @@ from splash_screen.utils.update_check import check_for_update
 
 
 # ---------------------------------------------------------------------------
-# Splash-Typing Helfer
+# Splash typing helpers
 # ---------------------------------------------------------------------------
 
 def splash_type(window, text, cls='default'):
-    """Tippt eine Zeile im Splash-Fenster mit Typewriter-Effekt."""
+    """Type a line in the splash window with typewriter effect."""
     safe = text.replace(chr(92), chr(92) + chr(92))
     safe = safe.replace(chr(39), chr(92) + chr(39))
     safe = safe.replace(chr(34), chr(92) + chr(34))
@@ -24,12 +24,12 @@ def splash_type(window, text, cls='default'):
         window.evaluate_js("typeLine('" + safe + "', '" + cls + "')")
     except Exception:
         pass
-    # Warte bis Tipp-Animation fertig (18ms pro Zeichen + 80ms Pause)
+    # Wait for typing animation to finish (18ms per char + 80ms pause)
     time.sleep(len(text) * 0.018 + 0.12)
 
 
 def splash_type_bar(window, text, cls='fun', duration=1500):
-    """Tippt eine Zeile mit Ladebalken-Animation."""
+    """Type a line with loading bar animation."""
     safe = text.replace(chr(92), chr(92) + chr(92))
     safe = safe.replace(chr(39), chr(92) + chr(39))
     safe = safe.replace(chr(34), chr(92) + chr(34))
@@ -39,16 +39,16 @@ def splash_type_bar(window, text, cls='fun', duration=1500):
         )
     except Exception:
         pass
-    # Warte: Tipp-Zeit + Balken-Dauer
+    # Wait: typing time + bar duration
     time.sleep(len(text) * 0.018 + duration / 1000.0 + 0.15)
 
 
 # ---------------------------------------------------------------------------
-# Lustige Lademeldungen
+# Fun loading messages
 # ---------------------------------------------------------------------------
 
 def get_fun_messages():
-    """Liest Persona-Namen und generiert lustige Lademeldungen."""
+    """Read persona names and generate fun loading messages."""
     import json as j
 
     base = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # src/
@@ -59,7 +59,7 @@ def get_fun_messages():
 
     names = []
 
-    # Aktive Persona lesen
+    # Read active persona
     try:
         with open(active_path, 'r', encoding='utf-8') as f:
             data = j.load(f)
@@ -69,7 +69,7 @@ def get_fun_messages():
     except Exception:
         pass
 
-    # Erstellte Personas lesen
+    # Read created personas
     try:
         for fn in os.listdir(personas_dir):
             if fn.endswith('.json'):
@@ -85,93 +85,100 @@ def get_fun_messages():
         names = ['Persona']
 
     templates = [
-        ("{name}'s Emotionen werden geladen", 1800),
-        ("{name}'s Persönlichkeit wird kalibriert", 1500),
-        ("{name} wird aus dem Schlaf geweckt", 1200),
-        ("{name}'s Erinnerungen werden sortiert", 1600),
-        ("{name} übt gerade ihren ersten Satz", 1400),
-        ("Kaffee für {name} wird gekocht", 1000),
-        ("{name}'s Laune wird auf 'gut' gestellt", 1300),
-        ("{name} macht sich hübsch", 1100),
-        ("{name}'s Gesprächsthemen werden gemischt", 1500),
-        ("{name} wärmt ihre Neuronen auf", 1200),
-        ("{name}'s Humor-Modul wird aktiviert", 1400),
-        ("{name} liest heimlich deine alten Chats", 1700),
-        ("{name}'s Reaktionszeit wird optimiert", 1300),
-        ("{name} entscheidet sich für ein Outfit", 1100),
-        ("{name}'s Empathie-Level wird hochgefahren", 1500),
+        ("Loading {name}'s emotions", 1800),
+        ("Calibrating {name}'s personality", 1500),
+        ("Waking {name} from sleep", 1200),
+        ("Sorting {name}'s memories", 1600),
+        ("{name} is practicing their first sentence", 1400),
+        ("Brewing coffee for {name}", 1000),
+        ("Setting {name}'s mood to 'good'", 1300),
+        ("{name} is getting ready", 1100),
+        ("Shuffling {name}'s conversation topics", 1500),
+        ("{name} is warming up their neurons", 1200),
+        ("Activating {name}'s humor module", 1400),
+        ("{name} is secretly reading your old chats", 1700),
+        ("Optimizing {name}'s response time", 1300),
+        ("{name} is choosing an outfit", 1100),
+        ("Boosting {name}'s empathy level", 1500),
     ]
 
-    # 1 zufällige Nachricht mit EINER zufälligen Persona
+    # 1 random message with ONE random persona
     name = random.choice(names)
     tmpl, dur = random.choice(templates)
     return [(tmpl.format(name=name), dur)]
 
 
 # ---------------------------------------------------------------------------
-# Startup-Sequenz
+# Startup sequence
 # ---------------------------------------------------------------------------
 
 def startup_sequence(window, server_mode, server_port, start_flask_fn, host, dev_mode=False):
-    """Initialisiert alles und tippt Output ins Splash-Fenster.
+    """Initialize everything and type output into the splash window.
 
     Args:
-        window:          pywebview-Fenster-Instanz
-        server_mode:     'local' oder 'listen'
-        server_port:     Port-Nummer
-        start_flask_fn:  Callable zum Starten des Flask-Servers
-        host:            Host-Adresse
-        dev_mode:        True wenn --dev Flag gesetzt (Vite Dev-Server)
+        window:          pywebview window instance
+        server_mode:     'local' or 'listen'
+        server_port:     port number
+        start_flask_fn:  callable to start the Flask server
+        host:            host address
+        dev_mode:        True if --dev flag is set (Vite dev server)
     """
-    # Tippe Startmeldungen
-    splash_type(window, '> Starte PersonaUI...', 'info')
-    splash_type(window, f'> Arbeitsverzeichnis: {os.getcwd()}', 'default')
+    from splash_screen.utils.update_check import get_local_version
+
+    local_ver = get_local_version() or 'unknown'
+
+    # Type startup messages
+    splash_type(window, f'> Starting PersonaUI v{local_ver}...', 'info')
+    cwd = os.getcwd()
+    short_path = os.path.join(os.path.basename(os.path.dirname(cwd)), os.path.basename(cwd))
+    splash_type(window, f'> Working directory: .../{short_path}', 'default')
     splash_type(window, '', 'default')
 
-    # Update-Check: Prüfe origin/main auf neue stabile Version
-    splash_type(window, '> Prüfe auf Updates...', 'default')
+    # Update check: compare local version against origin/main
+    splash_type(window, '> Checking for updates...', 'default')
     try:
         update_info = check_for_update()
-        if update_info.get('error'):
-            splash_type(window, '  Update-Check übersprungen (kein Netzwerk).', 'default')
+        error = update_info.get('error')
+        if error and 'no network' in error:
+            splash_type(window, '  Update check skipped (no network).', 'default')
         elif update_info.get('available'):
-            n = update_info.get('new_commits', 0)
+            remote_ver = update_info.get('remote_version', '?')
             splash_type(window, '', 'default')
-            splash_type(window, f'  *** Neue stabile Version verfügbar! ({n} neue Commits) ***', 'warn')
-            splash_type(window, '  → Führe bin/update.bat aus, um zu aktualisieren.', 'warn')
+            splash_type(window, f'  *** New version available: v{remote_ver} (current: v{local_ver}) ***', 'warn')
+            splash_type(window, '  Run bin/update.bat to update.', 'warn')
             splash_type(window, '', 'default')
         else:
-            splash_type(window, '  PersonaUI ist aktuell.', 'info')
+            splash_type(window, f'  PersonaUI is up to date (v{local_ver}).', 'info')
     except Exception:
-        splash_type(window, '  Update-Check übersprungen.', 'default')
+        splash_type(window, '  Update check skipped.', 'default')
     splash_type(window, '', 'default')
 
-    # Datenbanken initialisieren
-    splash_type(window, '> Initialisiere Datenbanken...', 'default')
+    # Initialize databases
+    splash_type(window, '> Initializing databases...', 'default')
     init_all_dbs()
-    splash_type(window, '  Datenbanken bereit.', 'info')
+    splash_type(window, '  Databases ready.', 'info')
     splash_type(window, '', 'default')
 
-    # Cortex-Verzeichnisse sicherstellen
-    splash_type(window, '> Cortex-Verzeichnisse prüfen...', 'default')
+    # Ensure Cortex directories
+    splash_type(window, '> Checking Cortex directories...', 'default')
     ensure_cortex_dirs()
-    splash_type(window, '  Cortex bereit.', 'info')
+    splash_type(window, '  Cortex ready.', 'info')
     splash_type(window, '', 'default')
 
-    # Settings-Migration (memoriesEnabled → cortexEnabled)
-    splash_type(window, '> Prüfe Settings-Migration...', 'default')
+    # Settings migration (memoriesEnabled → cortexEnabled)
+    splash_type(window, '> Checking settings migration...', 'default')
     from utils.settings_migration import migrate_settings
     migrate_settings()
-    splash_type(window, '  Settings bereit.', 'info')
+    splash_type(window, '  Settings ready.', 'info')
     splash_type(window, '', 'default')
 
-    # Lustige Persona-Lademeldungen
+    # Fun persona loading messages
     fun_msgs = get_fun_messages()
     for msg, dur in fun_msgs:
         splash_type_bar(window, '  ' + msg + ' ', 'fun', dur)
     splash_type(window, '', 'default')
 
-    # Host/IP bestimmen und anzeigen
+    # Determine and display host/IP
     if server_mode == 'listen':
         try:
             s = sock.socket(sock.AF_INET, sock.SOCK_DGRAM)
@@ -179,17 +186,17 @@ def startup_sequence(window, server_mode, server_port, start_flask_fn, host, dev
             s.connect(('8.8.8.8', 80))
             primary_ip = s.getsockname()[0]
             s.close()
-            splash_type(window, f'> Server-Modus: listen ({primary_ip})', 'default')
+            splash_type(window, f'> Server mode: listen ({primary_ip})', 'default')
         except Exception:
-            splash_type(window, '> Server-Modus: listen', 'default')
+            splash_type(window, '> Server mode: listen', 'default')
     else:
-        splash_type(window, '> Server-Modus: lokal', 'default')
+        splash_type(window, '> Server mode: local', 'default')
 
     splash_type(window, f'> Port: {server_port}', 'default')
     splash_type(window, '', 'default')
-    splash_type(window, '> Flask-Server wird hochgefahren...', 'default')
+    splash_type(window, '> Starting Flask server...', 'default')
 
-    # Flask-Server im Hintergrund starten
+    # Start Flask server in background
     server_thread = threading.Thread(
         target=start_flask_fn,
         args=(host, server_port),
@@ -197,7 +204,7 @@ def startup_sequence(window, server_mode, server_port, start_flask_fn, host, dev
     )
     server_thread.start()
 
-    # Warten bis Server antwortet (schneller Socket-Check)
+    # Wait until server responds (fast socket check)
     max_wait = 30
     waited = 0
     ready = False
@@ -214,22 +221,22 @@ def startup_sequence(window, server_mode, server_port, start_flask_fn, host, dev
             time.sleep(0.3)
             waited += 0.3
             if waited % 3 < 0.5:
-                splash_type(window, f'  Server startet... ({int(waited)}s)', 'default')
+                splash_type(window, f'  Server starting... ({int(waited)}s)', 'default')
 
     if ready:
         splash_type(window, '', 'default')
-        splash_type(window, '> Server bereit!', 'info')
+        splash_type(window, '> Server ready!', 'info')
 
         if dev_mode:
             # Dev-Modus: Auf Vite Dev-Server warten und laden
             vite_port = 5173
-            splash_type(window, '> Warte auf Vite Dev-Server (Port 5173)...', 'info')
+            splash_type(window, '> Waiting for Vite dev server (port 5173)...', 'info')
             vite_waited = 0
             vite_ready = False
-            vite_max_wait = 30  # npm + Vite brauchen auf Windows oft >15s
+            vite_max_wait = 30  # npm + Vite can take >15s on Windows
             while vite_waited < vite_max_wait:
                 try:
-                    # Echten HTTP-Request statt nur Socket-Check
+                    # Actual HTTP request instead of just socket check
                     from urllib.request import urlopen
                     resp = urlopen(f'http://localhost:{vite_port}/', timeout=2)
                     resp.close()
@@ -239,20 +246,20 @@ def startup_sequence(window, server_mode, server_port, start_flask_fn, host, dev
                     time.sleep(0.5)
                     vite_waited += 0.5
                     if vite_waited % 5 < 0.6:
-                        splash_type(window, f'  Vite startet... ({int(vite_waited)}s)', 'default')
+                        splash_type(window, f'  Vite starting... ({int(vite_waited)}s)', 'default')
             if vite_ready:
-                splash_type(window, '> Vite Dev-Server bereit! (HMR aktiv)', 'info')
+                splash_type(window, '> Vite dev server ready! (HMR active)', 'info')
                 time.sleep(0.5)
                 window.load_url(f"http://localhost:{vite_port}")
             else:
-                splash_type(window, '> Vite Dev-Server nicht erreichbar nach 30s, lade Flask-UI...', 'warn')
+                splash_type(window, '> Vite dev server unreachable after 30s, loading Flask UI...', 'warn')
                 time.sleep(0.5)
                 window.load_url(f"http://127.0.0.1:{server_port}")
         else:
-            splash_type(window, '> Lade Oberflaeche...', 'info')
+            splash_type(window, '> Loading interface...', 'info')
             time.sleep(0.5)
-            # App im selben Fenster laden
+            # Load app in the same window
             window.load_url(f"http://127.0.0.1:{server_port}")
     else:
-        splash_type(window, '> Server konnte nicht gestartet werden!', 'error')
-        splash_type(window, f'  Timeout nach {max_wait} Sekunden.', 'error')
+        splash_type(window, '> Server could not be started!', 'error')
+        splash_type(window, f'  Timeout after {max_wait} seconds.', 'error')

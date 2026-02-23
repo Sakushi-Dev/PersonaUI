@@ -1,4 +1,4 @@
-"""Hilfsfunktionen zum Verstecken/Anzeigen des Windows-Konsolenfensters."""
+"""Helper functions to hide/show the Windows console window."""
 
 
 def hide_console_window():

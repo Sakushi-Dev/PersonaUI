@@ -1,15 +1,15 @@
-"""splash_screen – Splash-Screen-Paket für PersonaUI.
+"""splash_screen – Splash screen package for PersonaUI.
 
-Stellt bereit:
-  - load_splash_html()        → Gibt den fertigen HTML-String zurück
-  - hide_console_window()     → Windows-Konsole verstecken
-  - show_console_window()     → Windows-Konsole anzeigen
-  - startup_sequence(...)     → Komplette Startup-Logik im Splash
+Provides:
+  - load_splash_html()        → Returns the complete HTML string
+  - hide_console_window()     → Hide the Windows console
+  - show_console_window()     → Show the Windows console
+  - startup_sequence(...)     → Complete startup logic in splash
 """
 
 import os
 
-# Re-Exports aus utils
+# Re-exports from utils
 from .utils import (
     hide_console_window,
     show_console_window,
@@ -20,7 +20,7 @@ _PACKAGE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def load_splash_html() -> str:
-    """Liest splash.html, splash.css und splash.js und gibt fertigen HTML-String zurück."""
+    """Read splash.html, splash.css, and splash.js and return the complete HTML string."""
     template_path = os.path.join(_PACKAGE_DIR, 'templates', 'splash.html')
     css_path = os.path.join(_PACKAGE_DIR, 'static', 'splash.css')
     js_path = os.path.join(_PACKAGE_DIR, 'static', 'splash.js')
