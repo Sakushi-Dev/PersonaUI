@@ -331,6 +331,13 @@ def afterthought():
     Phase 1: Entscheidung ob die Persona etwas ergänzen möchte.
     Phase 2: Falls ja, streame die Ergänzung.
     """
+    # Guard: Nachgedanke muss aktiviert sein
+    from routes.settings import _load_settings
+    user_settings = _load_settings()
+    nachgedanke_mode = user_settings.get('nachgedankeMode', 'off')
+    if nachgedanke_mode == 'off' or not nachgedanke_mode:
+        return success_response(decision=False, inner_dialogue='', blocked=True)
+
     data = request.get_json()
     session_id = data.get('session_id')
     elapsed_time = data.get('elapsed_time', '10 Sekunden')

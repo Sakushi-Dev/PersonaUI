@@ -51,8 +51,22 @@ export function useAfterthought() {
     return `${Math.round(elapsed / 3600000)} Stunden`;
   };
 
+  const stopTimer = useCallback(() => {
+    activeRef.current = false;
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = null;
+    setTimer(null);
+    setIsThinking(false);
+  }, []);
+
   // ── Core check: decision → optional followup ──
   const executeCheck = useCallback(async () => {
+    // Re-check enabled state from settings (guards against stale closure)
+    const currentMode = get('nachgedankeMode', 'off');
+    if (currentMode === 'off' || currentMode === false || currentMode === undefined) {
+      stopTimer();
+      return;
+    }
     if (!sessionId || isThinking) return;
 
     try {
@@ -139,7 +153,7 @@ export function useAfterthought() {
       setIsThinking(false);
       scheduleNext();
     }
-  }, [sessionId, personaId, isThinking, character, addMessage, updateLastMessage, removeLastMessage, get]);
+  }, [sessionId, personaId, isThinking, character, addMessage, updateLastMessage, removeLastMessage, get, stopTimer]);
 
   // ── Schedule next check using phased random delay ──
   const scheduleNext = useCallback(() => {
@@ -177,20 +191,20 @@ export function useAfterthought() {
     return thought;
   }, []);
 
-  const stopTimer = useCallback(() => {
-    activeRef.current = false;
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = null;
-    setTimer(null);
-    setIsThinking(false);
-  }, []);
-
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, []);
+
+  // ── Immediately stop when nachgedankeMode is set to 'off' ──
+  useEffect(() => {
+    if (!enabled) {
+      stopTimer();
+      msgCountRef.current = 0;
+    }
+  }, [enabled, stopTimer]);
 
   // Stop timer & reset counter when session changes
   useEffect(() => {
