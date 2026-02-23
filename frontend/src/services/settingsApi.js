@@ -13,3 +13,13 @@ export function updateSettings(settings) {
 export function resetSettings() {
   return apiPost('/api/user-settings/reset');
 }
+
+// ── Nachgedanke / Afterthought Settings ──
+
+export function getAfterthoughtSettings() {
+  return apiGet('/api/afterthought-settings');
+}
+
+export function updateAfterthoughtSettings(settings) {
+  return apiPut('/api/afterthought-settings', settings);
+}

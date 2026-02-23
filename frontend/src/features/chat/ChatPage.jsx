@@ -132,8 +132,19 @@ function ChatPageContent() {
     isThinking: afterthoughtThinking,
     onUserMessage: onAfterthoughtMessage,
     stopTimer: stopAfterthought,
+    pauseTimer: pauseAfterthought,
+    resumeTimer: resumeAfterthought,
     consumePendingThought,
   } = useAfterthought();
+
+  // ── Pause afterthought while AI is streaming, resume when done ──
+  useEffect(() => {
+    if (isStreaming) {
+      pauseAfterthought();
+    } else {
+      resumeAfterthought();
+    }
+  }, [isStreaming, pauseAfterthought, resumeAfterthought]);
 
   const sidebar = useSidebar();
 

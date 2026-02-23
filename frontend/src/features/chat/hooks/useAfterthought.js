@@ -1,13 +1,14 @@
 // ── useAfterthought Hook ──
 // Nachgedanke v2: message-count triggered with 3-phase random delay escalation.
 // Modes: "selten" (every 3rd msg), "mittel" (every 2nd), "hoch" (every msg).
-// Phases: 1→45-120s, 2→120-300s, 3+→280-320s. After trigger → restart at phase 3.
+// Phase ranges & frequencies loaded from server (afterthought_settings.json).
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useSession } from '../../../hooks/useSession';
 import { useSettings } from '../../../hooks/useSettings';
 import { sendAfterthought } from '../../../services/chatApi';
-import { AFTERTHOUGHT_PHASES, AFTERTHOUGHT_FREQUENCY } from '../../../utils/constants';
+import { getAfterthoughtSettings } from '../../../services/settingsApi';
+import { AFTERTHOUGHT_PHASES as FALLBACK_PHASES, AFTERTHOUGHT_FREQUENCY as FALLBACK_FREQUENCY } from '../../../utils/constants';
 import { playNotificationSound } from '../../../utils/audioUtils';
 import { formatMessage } from '../../../utils/formatMessage';
 
@@ -16,19 +17,17 @@ function randomBetween(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-/** Return the delay (ms) for the given phase index (0-based). */
-function phaseDelay(phaseIndex) {
-  const idx = Math.min(phaseIndex, AFTERTHOUGHT_PHASES.length - 1);
-  const [lo, hi] = AFTERTHOUGHT_PHASES[idx];
-  return randomBetween(lo, hi);
-}
-
 export function useAfterthought() {
   const { sessionId, personaId, character, addMessage, updateLastMessage, removeLastMessage } = useSession();
   const { get } = useSettings();
 
   const [isThinking, setIsThinking] = useState(false);
   const [timer, setTimer] = useState(null);
+
+  // Server-loaded afterthought config (phases + frequency)
+  const phasesRef = useRef(FALLBACK_PHASES);
+  const frequencyRef = useRef(FALLBACK_FREQUENCY);
+  const configLoadedRef = useRef(false);
 
   // Phase index within the current afterthought cycle (0 = phase 1, 1 = phase 2, 2+ = phase 3)
   const phaseRef = useRef(0);
@@ -42,6 +41,35 @@ export function useAfterthought() {
 
   const mode = get('nachgedankeMode', 'off');
   const enabled = mode !== 'off' && mode !== false && mode !== undefined;
+
+  // ── Load afterthought config from server on mount ──
+  useEffect(() => {
+    getAfterthoughtSettings()
+      .then((data) => {
+        if (data?.success && data.settings) {
+          const s = data.settings;
+          if (Array.isArray(s.phases) && s.phases.length > 0) {
+            phasesRef.current = s.phases;
+          }
+          if (s.frequency && typeof s.frequency === 'object') {
+            frequencyRef.current = s.frequency;
+          }
+          configLoadedRef.current = true;
+          console.log('[Afterthought] Config loaded from server:', s);
+        }
+      })
+      .catch((err) => {
+        console.warn('[Afterthought] Failed to load config, using fallback:', err);
+      });
+  }, []);
+
+  /** Return the delay (ms) for the given phase index (0-based). */
+  const phaseDelay = useCallback((phaseIndex) => {
+    const phases = phasesRef.current;
+    const idx = Math.min(phaseIndex, phases.length - 1);
+    const [lo, hi] = phases[idx];
+    return randomBetween(lo, hi);
+  }, []);
 
   const getElapsedTime = () => {
     if (!lastResponseTimeRef.current) return '10 Sekunden';
@@ -57,6 +85,13 @@ export function useAfterthought() {
     timerRef.current = null;
     setTimer(null);
     setIsThinking(false);
+  }, []);
+
+  /** Pause timer without resetting the cycle (e.g. while AI is responding). */
+  const pauseTimer = useCallback(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = null;
+    setTimer(null);
   }, []);
 
   // ── Core check: decision → optional followup ──
@@ -91,7 +126,7 @@ export function useAfterthought() {
           pendingThoughtRef.current = decision.inner_dialogue;
         }
         // Advance to next phase and schedule again
-        phaseRef.current = Math.min(phaseRef.current + 1, AFTERTHOUGHT_PHASES.length - 1);
+        phaseRef.current = Math.min(phaseRef.current + 1, phasesRef.current.length - 1);
         scheduleNext();
         return;
       }
@@ -145,7 +180,7 @@ export function useAfterthought() {
         onError: () => {
           setIsThinking(false);
           removeLastMessage();
-          phaseRef.current = Math.min(phaseRef.current + 1, AFTERTHOUGHT_PHASES.length - 1);
+          phaseRef.current = Math.min(phaseRef.current + 1, phasesRef.current.length - 1);
           scheduleNext();
         },
       });
@@ -163,14 +198,21 @@ export function useAfterthought() {
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => executeCheck(), delay);
     setTimer(delay);
-  }, [enabled, executeCheck]);
+  }, [enabled, executeCheck, phaseDelay]);
+
+  /** Resume timer from current phase (e.g. after AI finished responding). */
+  const resumeTimer = useCallback(() => {
+    if (!activeRef.current || !enabled || isThinking) return;
+    lastResponseTimeRef.current = Date.now();
+    scheduleNext();
+  }, [enabled, isThinking, scheduleNext]);
 
   // ── Called after every user message from ChatPage ──
   const onUserMessage = useCallback(() => {
     if (!enabled) return;
 
     msgCountRef.current += 1;
-    const freq = AFTERTHOUGHT_FREQUENCY[mode] ?? 3;
+    const freq = frequencyRef.current[mode] ?? 3;
 
     if (msgCountRef.current >= freq) {
       // Reset counter, start a new afterthought cycle
@@ -218,6 +260,8 @@ export function useAfterthought() {
     timer,
     onUserMessage,
     stopTimer,
+    pauseTimer,
+    resumeTimer,
     executeCheck,
     consumePendingThought,
   };
