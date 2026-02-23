@@ -11,7 +11,9 @@
     "regenerateLabel": "Regenerate",
     "resendLabel": "Resend",
     "deleteConfirm": "Really delete message?",
-    "regenerateConfirm": "Really regenerate response?"
+    "regenerateConfirm": "Really regenerate response?",
+    "save": "Save",
+    "cancel": "Cancel"
   },
   "de": {
     "you": "Du",
@@ -25,6 +27,8 @@
     "regenerateLabel": "Neu generieren",
     "resendLabel": "Erneut senden",
     "deleteConfirm": "Nachricht wirklich löschen?",
-    "regenerateConfirm": "Antwort wirklich neu generieren?"
+    "regenerateConfirm": "Antwort wirklich neu generieren?",
+    "save": "Speichern",
+    "cancel": "Abbrechen"
   }
 }
