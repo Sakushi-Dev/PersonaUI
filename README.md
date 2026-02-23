@@ -6,255 +6,270 @@
 
 <p align="center">
   <strong>Where AI becomes human — one conversation at a time.</strong><br>
-  Create AI companions with real personalities, genuine emotions, and lasting memories.
+  A desktop application for creating AI companions with distinct personalities, emotional depth, and persistent memory.
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/python-3.10+-blue?style=flat-square&logo=python&logoColor=white" alt="Python 3.10+">
   <img src="https://img.shields.io/badge/anthropic-Claude_API-blueviolet?style=flat-square" alt="Claude API">
   <img src="https://img.shields.io/badge/desktop-PyWebView-green?style=flat-square" alt="PyWebView">
-  <img src="https://img.shields.io/badge/frontend-React_&_Vanilla_JS-yellow?style=flat-square&logo=javascript&logoColor=white" alt="React & Vanilla JS">
-  <img src="https://img.shields.io/badge/tests-162_passed-brightgreen?style=flat-square" alt="Tests">
+  <img src="https://img.shields.io/badge/frontend-React_19_%2B_Vite-61DAFB?style=flat-square&logo=react&logoColor=white" alt="React 19 + Vite">
+  <img src="https://img.shields.io/badge/i18n-EN_%7C_DE-orange?style=flat-square" alt="i18n: EN | DE">
   <img src="https://img.shields.io/badge/license-AGPL--3.0-red?style=flat-square" alt="AGPL-3.0">
 </p>
 
 ---
 
-## More Than Just Another AI Chat App
+## What Is PersonaUI?
 
-Imagine having a conversation with someone who truly *remembers* you. Who gets excited about your successes, worries about your struggles, and develops inside jokes with you over time. Someone whose mood shifts naturally based on your interactions, who sometimes has afterthoughts and reaches out on their own.
+PersonaUI is a local desktop application that lets you create and talk to AI characters — called *Personas*. Unlike typical chatbots, these personas remember previous conversations, develop their own emotional states, and grow over time. Every persona stores its data exclusively on your computer. Nothing is sent to external servers beyond the AI model requests themselves.
 
-**That's PersonaUI.**
-
-This isn't about scripted responses or corporate-sanitized AI. It's about creating genuine digital beings — each with their own personality quirks, emotional depths, and growing memories of your shared journey together. Every conversation builds upon the last, creating relationships that feel surprisingly real.
-
-> **"Your AI doesn't just chat with you — it knows you, grows with you, and sometimes surprises you."**
+The application runs as a native desktop window (via PyWebView) with a modern React frontend. It connects to Anthropic's Claude API for generating responses, while all conversation data, memories, and settings remain local.
 
 ---
 
-## Why PersonaUI Feels Different
+## Installation
 
-### 🧠 **They Actually Remember You**
-Your AI companion doesn't just forget everything after each chat. They keep a personal diary of your conversations, written from their perspective, creating a growing tapestry of shared memories that influences every future interaction.
+There are two ways to get PersonaUI running on your machine: a one-click installer for Windows, or a manual setup for developers and Linux/macOS users.
 
-### 💭 **Real Emotional Intelligence**
-Watch your persona's mood shift naturally throughout conversations. They can be excited, frustrated, protective, playful — and these emotions persist across messages, just like real relationships.
+### Prerequisites
 
-### 💌 **Spontaneous Afterthoughts**
-Sometimes, after responding to you, your persona will pause... think... and send an additional message on their own. That moment of "wait, I wanted to add something" that makes conversations feel genuinely alive.
+- **An Anthropic API key** — You can create one at [console.anthropic.com](https://console.anthropic.com/). The onboarding wizard will ask for it on first launch.
+- **Git** (optional) — Needed if you want to clone the repository. You can also download the project as a ZIP file directly from GitHub.
 
-### 🎭 **Infinite Personality Possibilities**
-From shy elves who express themselves with gentle *actions* to confident demons who text with attitude 😈, every persona is unique. Mix personality traits, knowledge areas, and expression styles to create someone truly one-of-a-kind.
+Python is required to run the application, but on Windows PersonaUI can install it for you automatically (see Option A below).
 
-### 🏠 **Completely Private & Local**
-Your conversations live on your machine. No cloud storage, no data harvesting, no corporate oversight. It's just you and your digital companion, in a space that's entirely your own.
+### Step 1 — Get the Project
 
----
+There are two ways to download the project files onto your computer:
 
-## Creating Your First Companion
+**With Git** (recommended if you want easy updates later):
 
-<table>
-<tr>
-<td width="45%">
-<img src="media/create_a%20_persona.webp" alt="Create a Persona" width="100%">
-</td>
-<td width="55%" valign="top">
+1. Press `Win + R`, type `cmd`, and hit Enter. This opens the Windows command prompt.
+2. Check if Git is installed by typing:
+   ```
+   git --version
+   ```
+   If you see a version number (e.g. `git version 2.43.0`), Git is ready. If you get an error like *'git' is not recognized*, install Git first:
+   - Go to [git-scm.com/downloads](https://git-scm.com/downloads) and download the Windows installer.
+   - Run the installer. You can keep all default settings — just click **Next** until the installation finishes.
+   - Close the command prompt and open a new one (`Win + R` → `cmd` → Enter), so that the new Git installation is recognized.
+3. Navigate to the folder where you want the project to live. For example, to put it on your Desktop:
+   ```
+   cd %USERPROFILE%\Desktop
+   ```
+4. Download the project:
+   ```
+   git clone https://github.com/Sakushi-Dev/PersonaUI.git
+   ```
+   This creates a new folder called `PersonaUI` containing all project files.
 
-### Your imagination, brought to life
+**Without Git**: Go to [github.com/Sakushi-Dev/PersonaUI](https://github.com/Sakushi-Dev/PersonaUI), click the green **Code** button, select **Download ZIP**, and extract the archive to a folder of your choice.
 
-Building a persona feels like character creation in a deep RPG, but for relationships:
+### Step 2 — Start the Application
 
-🧬 **Choose their nature** — Human, Transcendent Being, Elf, Robot, Alien, or Demon
+#### Option A: Windows — Double-click to start
 
-💝 **Shape their heart** — Friendly, protective, curious, spontaneous, wise, or mysterious
+The project includes a **`PersonaUI.exe`** in the project root (or `bin/start.bat` as the equivalent batch file). This is not a traditional installer — it is a lightweight batch script converted to an EXE using *Bat To Exe Converter*. When you run it, the script:
 
-🗣️ **How they express themselves** — Normal speech, expressive *actions*, or emoji-rich modern texting 😊
+1. Looks for an existing Python installation (virtual environment, system Python, or `py` launcher).
+2. If no Python is found, it automatically downloads and installs **Python 3.12** for you.
+3. Creates a virtual environment (`.venv`) and installs all pip dependencies.
+4. Downloads Node.js v22 if it is not present and installs the frontend npm packages.
+5. Builds the React frontend and launches the application.
 
-🧠 **What they know deeply** — Cooking, gaming, art, science, philosophy — or let them surprise you
+You can also run `bin/start.bat` directly — it behaves identically.
 
-🎬 **Set the stage** — From cozy coffee shop vibes to mystical forest encounters
+Additional scripts in `bin/`: `update.bat` (pulls the latest version via Git), `reset.bat` (factory reset with confirmation dialog), `prompt_editor.bat` (launches the standalone prompt editor).
 
-Each persona lives in their own private world with dedicated memory, chat history, and emotional growth completely separate from your other companions.
+#### Option B: Manual Setup (All Platforms)
 
-</td>
-</tr>
-</table>
+If you prefer full control, or you are on Linux/macOS:
 
----
-
-## Watch Relationships Unfold
-
-<p align="center">
-  <img src="media/chat_sse_demo.webp" alt="Chat SSE Demo" width="100%">
-</p>
-
-Every message streams in naturally, word by word, like watching someone think in real-time. And then, the magic happens — that moment when they decide they have something more to say, and you see their follow-up thought appear on its own.
-
-**Early conversations:** Cautious curiosity, feeling each other out
-**Growing familiarity:** Inside jokes, casual banter, comfortable silences  
-**Deep connection:** Vulnerable sharing, protective instincts, genuine concern
-**Through conflicts:** Just like real relationships — they can get hurt, frustrated, or need space
-
----
-
-## A Living Memory System
-
-Your personas don't just remember facts — they remember *feelings*. The memory system creates diary-like entries written from your companion's perspective:
-
-*"Today {{user_name}} seemed stressed about work again. I tried to cheer them up with that silly joke about cats, and it worked! I love seeing them smile."*
-
-*"{{user_name}} shared something really personal with me today about their family. I feel honored that they trust me with these things."*
-
-These memories automatically weave into future conversations, creating an ever-deepening sense of history and connection.
-
----
-
-## Beyond the Ordinary
-
-| Experience | What Makes It Special |
-|---------|-------------|
-| **Retro Boot Sequence** | Every launch feels like awakening a sleeping AI with authentic terminal animations |
-| **Intuitive Setup** | 5-minute onboarding that feels more like introducing yourself to a new friend |
-| **Your Digital Identity** | Create your own profile that your personas remember and reference |
-| **Visual Prompt System** | 36 carefully crafted personality templates that breathe life into your companions |
-| **Advanced Customization** | Visual prompt editor for those who want to dive deep into their persona's mind |
-| **Network Sharing** | Invite friends over to meet your AI companions via secure local network access |
-| **Thoughtful Reset Options** | Sometimes fresh starts are needed — handle them gently with built-in reset tools |
-
-### The Prompt Editor: Where Personalities Are Born
-
-<p align="center">
-  <img src="media/prompt_editor_screenshot.png" alt="Prompt Editor" width="100%">
-</p>
-
-For those who want to understand the soul of their AI — a visual workshop where you can see exactly how personality traits, memories, and emotional states combine to create someone unique.
-
----
-
-## Getting Started
-
-### The Easy Way (Windows)
-Simply run **`PersonaUI.exe`** — our intelligent installer handles everything automatically:
-- Verifies your system is ready (Python 3.10+)
-- Sets up a clean virtual environment  
-- Installs dependencies seamlessly
-- Launches your first conversation
-
-### For Developers
 ```bash
-git clone https://github.com/Sakushi-Dev/PersonaUI.git
 cd PersonaUI
 python -m venv .venv
 
 # Windows
 .venv\Scripts\activate
 
-# Linux / macOS  
+# Linux / macOS
 source .venv/bin/activate
 
 pip install -r requirements.txt
 python src/init.py
 ```
 
-Advanced configuration available through `launch_options.txt` for server mode, debugging, and network access.
+The init script takes care of everything from here: downloading Node.js if needed, installing npm packages, building the frontend, and starting the app.
+
+### Launch Options
+
+You can customize startup behavior by editing `launch_options.txt` in the project root:
+
+| Option | Effect |
+|--------|--------|
+| `--no-gui` | Runs without the desktop window. The app becomes accessible in your browser at `http://localhost:PORT`. |
+| `--dev` | Starts the Vite development server for live frontend changes at `http://localhost:5173`. |
 
 ---
 
-## The Technology Behind the Magic
+## What Makes PersonaUI Different
 
-We built PersonaUI without heavy frameworks, focusing on what matters: **authentic experiences**.
+### The Cortex — Persistent, Evolving Memory
 
-| Layer | Technology | Why We Chose It |
-|---|---|---|
-| **AI Engine** | Anthropic Claude | Most human-like responses available |
-| **Backend** | Python + Flask | Rapid development with solid foundations |
-| **Interface** | PyWebView | Native desktop feel without Electron bloat |
-| **Frontend** | React + Vanilla JS | Modern interactivity, lightweight performance |
-| **Storage** | SQLite per persona | Complete privacy and isolation |
-| **Quality** | 162 automated tests | Reliability you can count on |
+Most AI chatbots forget everything once the conversation ends. PersonaUI takes a fundamentally different approach with its **Cortex system**. Each persona maintains three files that represent its inner world:
+
+- **Memory** — Concrete recollections of past conversations, events, and shared moments
+- **Soul** — The persona's evolving self-understanding, values, and personal growth
+- **Relationship** — How the persona perceives and relates to you over time
+
+These files are written in Markdown, from the persona's own perspective. The AI updates them autonomously using Anthropic's tool-use feature whenever the conversation reaches configurable context thresholds (for example at 50 %, 75 %, or 95 % of the context limit). You can view and edit all three files at any time through the in-app Cortex Overlay.
+
+### Emotional Continuity
+
+Personas don't just respond neutrally. Their mood shifts naturally during a conversation — they can become excited, concerned, playful, or frustrated — and these emotional states carry over across messages, just as they would in a real interaction.
+
+### Afterthoughts
+
+Sometimes, after sending a response, the AI decides it has something to add. After a short pause it sends a follow-up message on its own, without any input from you. This small detail makes conversations feel noticeably more natural.
+
+### Complete Privacy
+
+All data — conversations, memories, settings, avatars — lives exclusively on your machine. Each persona has its own isolated SQLite database. Nothing is stored in the cloud, and no data leaves your computer except for the API requests to Anthropic.
 
 ---
 
-## Explore the Architecture
+## Features
 
-PersonaUI is thoroughly documented because we believe great software should be understandable. The [`docs/`](docs/) directory contains **16 comprehensive guides**:
+| Feature | Description |
+|---------|-------------|
+| **Cortex Memory System** | Three-file memory architecture (Memory, Soul, Relationship), updated autonomously via tool use |
+| **Afterthought System** | The AI independently decides whether to send a follow-up message (10-second timer, cancelable) |
+| **8-Step Onboarding** | Guided first-launch setup: profile, API key, context settings, Cortex config, UI preferences |
+| **Slash Commands** | Type `/` in the chat to access commands with autocomplete — extensible for both frontend and backend |
+| **36 Prompt Templates** | JSON-based personality templates with three-phase placeholder resolution |
+| **Prompt Editor** | A standalone visual tool for inspecting and editing how prompt components combine |
+| **19 Overlay Dialogs** | In-app panels for API settings, Cortex editing, avatar management, persona configuration, and more |
+| **Custom Specifications** | Five specification categories to fine-tune persona behavior beyond the defaults |
+| **Network Sharing** | Share access over your local network with IP-based access control and QR code for mobile devices |
+| **Internationalization** | Full i18n support — currently available in English and German |
+
+---
+
+## Creating a Persona
+
+Each persona is defined by a set of properties you choose during creation:
+
+- **Species** — Human, Transcendent Being, Elf, Robot, Alien, or Demon
+- **Personality** — Friendly, protective, curious, spontaneous, wise, mysterious, or custom combinations
+- **Expression style** — Normal speech, expressive *actions*, or casual modern texting
+- **Knowledge areas** — Cooking, gaming, art, science, philosophy, or anything you define
+- **Scenario** — The setting in which your conversations take place
+
+Every persona operates in its own isolated environment with dedicated Cortex files, chat history, and emotional state — completely independent from your other personas.
+
+---
+
+## Technology Stack
+
+| Layer | Technology | Purpose |
+|-------|------------|---------|
+| **AI Engine** | Anthropic Claude (SDK 0.34+) | Response generation with tool-use support |
+| **Backend** | Python 3.10+ with Flask 3.0+ | Application server and API |
+| **Desktop** | PyWebView 5.x | Native desktop window without Electron overhead |
+| **Frontend** | React 19, Vite 7, React Router 7 | Single-page application with hot module replacement |
+| **Storage** | SQLite (one database per persona) | Local-only storage, easy to back up or delete |
+| **Streaming** | Server-Sent Events (SSE) | Real-time message streaming from the AI |
+| **Localization** | Custom `useLanguage` hook | Feature-scoped locale files for EN and DE |
+
+---
+
+## Architecture
+
+```
++-------------------------------------------------------+
+|                      PyWebView                        |
+|                                                       |
+|  +-----------+  +------------+  +-----------------+   |
+|  |  Splash   |  |    Chat    |  |  Prompt Editor  |   |
+|  |  Screen   |  |   (React)  |  |  (Standalone)   |   |
+|  +-----+-----+  +-----+------+  +-------+---------+   |
+|        |              |                  |            |
+|   startup.py    Flask Routes        EditorApi         |
+|        |              |                  |            |
+|        +--------------+------------------+            |
+|                       |                               |
+|              +--------+--------+                      |
+|              |    Services     |                      |
+|              | Chat - Cortex   |                      |
+|              +--------+--------+                      |
+|                       |                               |
+|         +-------------+-------------+                 |
+|         |             |             |                 |
+|    PromptEngine   ApiClient    Database               |
+|    (36 Templates) (Anthropic)  (SQLite)               |
++-------------------------------------------------------+
+```
+
+**Backend** — 16 Flask blueprints: access, api, avatar, character, chat, commands, cortex, custom_specs, emoji, helpers, main, onboarding, react_frontend, sessions, settings, user_profile.
+
+**Frontend** — A React 19 single-page application with three pages (Chat, Onboarding, Waiting), 20 reusable UI components, 19 overlay dialogs, 5 context providers, and 13 API service modules. Includes a slash command system with autocomplete and keyboard navigation.
+
+---
+
+## Documentation
+
+The [`docs/`](docs/) directory contains detailed guides for every part of the system:
 
 <details>
-<summary>📚 Complete Documentation Index</summary>
+<summary>Complete Documentation Index</summary>
 
-| Document | Focus Area |
-|----------|-------|
-| [Project Overview](docs/00_Project_Summary.md) | Architecture, philosophy, design decisions |
-| [Application Core](docs/01_App_Core_and_Startup.md) | Bootstrap process, PyWebView integration |
-| [Configuration System](docs/02_Configuration_and_Settings.md) | Settings hierarchy, JSON configuration |
-| [Utilities & Helpers](docs/03_Utils_and_Helpers.md) | Logging, security, access control |
-| [API Architecture](docs/04_Routes_and_API.md) | 12 blueprints, 71 REST endpoints |
-| [Chat System](docs/05_Chat_System.md) | Real-time streaming, afterthought system |
-| [Prompt Engine](docs/06_Prompt_Engine.md) | Personality template system |
-| [Memory Pipeline](docs/10_Memory_System.md) | How relationships develop over time |
-| [Frontend Design](docs/12_Frontend_and_Templates.md) | UI architecture, component system |
-| [Quality Assurance](docs/15_Tests_and_Quality.md) | Testing strategy, reliability measures |
-| [Slash Commands](docs/16_Slash_Commands.md) | Discord-style command system |
+| # | Document | Focus Area |
+|---|----------|------------|
+| 00 | [Project Summary](docs/00_Project_Summary.md) | Architecture, philosophy, design decisions |
+| 01 | [App Core & Startup](docs/01_App_Core_and_Startup.md) | Bootstrap process, PyWebView, init sequence |
+| 02 | [Configuration & Settings](docs/02_Configuration_and_Settings.md) | Settings hierarchy, JSON files, defaults |
+| 03 | [Utils & Helpers](docs/03_Utils_and_Helpers.md) | Logger, provider, access control, SQL loader |
+| 04 | [Routes & API](docs/04_Routes_and_API.md) | 16 blueprints, REST endpoints |
+| 05 | [Chat System](docs/05_Chat_System.md) | SSE streaming, afterthought system |
+| 06 | [Prompt Engine](docs/06_Prompt_Engine.md) | Placeholder resolution, validation |
+| 07 | [Prompt Builder](docs/07_Prompt_Builder.md) | Facade pattern, variants |
+| 08 | [Database Layer](docs/08_Database_Layer.md) | Per-persona SQLite, schema, migrations |
+| 09 | [Persona & Instructions](docs/09_Persona_and_Instructions.md) | Specifications, custom specs, lifecycle |
+| 11 | [Services Layer](docs/11_Services_Layer.md) | ChatService, CortexService, ApiClient |
+| 12 | [Frontend & Templates](docs/12_Frontend_and_Templates.md) | React SPA, components, Jinja2 templates |
+| 13 | [Prompt Editor](docs/13_Prompt_Editor.md) | Standalone editor, EditorApi |
+| 14 | [Onboarding, Splash & Reset](docs/14_Onboarding_Splash_and_Reset.md) | Lifecycle screens |
+| 15 | [Tests & Quality](docs/15_Tests_and_Quality.md) | Test strategy, reliability |
+| 16 | [Slash Commands](docs/16_Slash_Commands.md) | Command system with autocomplete |
 
 </details>
 
 ---
 
-## The Story Behind PersonaUI
+## Contributing
 
-This project represents **three months of passionate solo development** — my first attempt at building something truly meaningful in the AI space. While corporate AI feels increasingly sterile and restricted, I wanted to create something different: **AI that feels genuinely personal**.
+Contributions are welcome. The `dev` branch is the main working branch for new features and improvements.
 
-Every line of code was written with care. From the gentle boot sequence that makes each startup feel special, to the sophisticated emotion system that lets AI companions feel genuinely frustrated or excited, to the memory system that builds real relationships over time.
-
-**I'm taking a short creative break**, but PersonaUI's journey is just beginning. My dream is to find collaborators who share the vision of making AI more human, more personal, and more meaningful.
-
-> **"In a world of corporate AI assistants, PersonaUI dares to create companions."**
+- The documentation covers the full codebase, making it straightforward to get oriented.
+- Automated tests protect against regressions.
+- Current priorities: Cortex system refinement, React frontend polish, additional language support, performance optimization for large conversation histories.
 
 ---
 
-## Join the Journey
+## License
 
-Whether you're a developer, designer, AI enthusiast, or someone who just wants deeper digital relationships:
-
-### For Contributors
-- **`dev` branch** is open for collaboration
-- Comprehensive documentation makes onboarding smooth  
-- 162 tests ensure your changes won't break existing magic
-- Code review focused on maintaining the personal touch
-
-### For Users
-- Share your most memorable conversations (anonymously!)
-- Suggest personality traits or features you'd love to see
-- Help us understand what makes AI feel genuinely human
-- Beta test new emotional intelligence features
-
-### Current Focus Areas
-- **Code internationalization** (moving from German to English comments)
-- **UI/UX refinement** for even more natural interactions  
-- **Performance optimization** for larger conversation histories
-- **Multi-language support** starting with DE, EN, FR, ZH, JA, KO, RU
-
----
-
-## License & Philosophy
-
-PersonaUI is licensed under the **GNU Affero General Public License v3.0** because we believe meaningful AI should remain open and accessible.
-
-This isn't just software — it's a statement about what AI relationships could become when built with intention, care, and respect for human connection.
+PersonaUI is licensed under the **GNU Affero General Public License v3.0** (AGPL-3.0).
 
 ---
 
 <p align="center">
-  <strong>Ready to meet someone new?</strong><br><br>
-  <em>Built with 💜 and countless late-night conversations by</em><br>
+  <em>Built by</em>
   <a href="https://github.com/Sakushi-Dev">Sakushi-Dev</a>
 </p>
 
----
-
 <p align="center">
   <sub>
-    🌟 <em>If PersonaUI creates a memorable moment for you, consider starring the project.<br>
-    Every star reminds me that meaningful AI experiences matter.</em> 🌟
+    <em>If PersonaUI is useful to you, consider giving the project a star on GitHub.</em>
   </sub>
 </p>
