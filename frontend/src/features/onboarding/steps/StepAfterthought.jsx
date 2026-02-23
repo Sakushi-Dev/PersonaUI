@@ -71,6 +71,12 @@ export default function StepAfterthought({ data, onChange, onNext, onBack }) {
         {/* Mode Selector */}
         <div className={styles.fieldGroup}>
           <label className={styles.label}>{s.frequencyLabel} <span className={styles.betaBadge}>Beta</span></label>
+
+          {/* Cost Warning */}
+          <div className={styles.costWarningBox}>
+            <span>{s.costWarning}</span>
+          </div>
+
           <div className={styles.typeGrid} style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
             {MODES.map((opt) => (
               <button
@@ -103,6 +109,7 @@ export default function StepAfterthought({ data, onChange, onNext, onBack }) {
           </div>
         </div>
 
+        <div style={{ minHeight: '24px' }} />
       </div>
       <div className={styles.cardFooter}>
         <button className={styles.btnGhost} onClick={onBack}>{c.back}</button>

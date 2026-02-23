@@ -22,7 +22,8 @@
     "modeInfoMediumExtra": "Moderate additional API costs. Good balance between liveliness and costs.",
     "modeInfoHigh": "Every message triggers an inner dialogue. The persona fully lives out its inner world – spontaneous, impulsive, and approachable.",
     "modeInfoHighExtra": "Higher additional API costs. For the most intense experience.",
-    "apiNote": "Afterthought generates additional API requests in the background."
+    "apiNote": "Afterthought generates additional API requests in the background.",
+    "costWarning": "⚠️ Warning: This feature is currently very expensive! Afterthought sends requests to the API in a continuous loop. This can lead to significant ongoing costs."
   },
   "de": {
     "title": "Nachgedanke",
@@ -47,6 +48,7 @@
     "modeInfoMediumExtra": "Moderate zusätzliche API-Kosten. Gute Balance zwischen Lebendigkeit und Kosten.",
     "modeInfoHigh": "Jede Nachricht löst einen inneren Dialog aus. Die Persona lebt ihre innere Welt voll aus – spontan, impulsiv und nahbar.",
     "modeInfoHighExtra": "Höhere zusätzliche API-Kosten. Für das intensivste Erlebnis.",
-    "apiNote": "Nachgedanke erzeugt zusätzliche API-Anfragen im Hintergrund."
+    "apiNote": "Nachgedanke erzeugt zusätzliche API-Anfragen im Hintergrund.",
+    "costWarning": "⚠️ Achtung: Dieses Feature ist aktuell sehr teuer! Nachgedanke sendet Anfragen an die API in einer Dauerschleife. Dies kann dazu führen, dass dauerhaft Kosten entstehen."
   }
 }
