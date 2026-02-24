@@ -248,6 +248,232 @@ The [`docs/`](docs/) directory contains detailed guides for every part of the sy
 
 ---
 
+## Troubleshooting
+
+<details>
+<summary><strong>Application won't start / Python not found</strong></summary>
+
+- Make sure **Python 3.12+** is installed and added to your `PATH`. Verify with `python --version` in a terminal.
+- On Windows, the `start.bat` / `PersonaUI.exe` script tries to detect Python automatically. If it fails, install Python manually from [python.org](https://www.python.org/downloads/) and check **"Add Python to PATH"** during installation.
+- If you use a virtual environment, make sure it is activated before running any commands:
+  ```
+  # Windows
+  .venv\Scripts\activate
+
+  # Linux / macOS
+  source .venv/bin/activate
+  ```
+
+</details>
+
+<details>
+<summary><strong>Blank window / PyWebView doesn't render</strong></summary>
+
+- PyWebView relies on the system's WebView2 runtime on Windows. If you see a blank or white window, install the [Microsoft Edge WebView2 Runtime](https://developer.microsoft.com/en-us/microsoft-edge/webview2/).
+- Make sure the frontend was built successfully. Check that the `frontend/dist/` folder exists and contains files. If not, rebuild it:
+  ```
+  cd frontend
+  npm install
+  npm run build
+  ```
+- Try launching with `--no-gui` in `launch_options.txt` to open the app in your browser instead. This helps isolate whether the issue is PyWebView or the app itself.
+
+</details>
+
+<details>
+<summary><strong>Window opens off-screen or at wrong position</strong></summary>
+
+- After changing your monitor setup (disconnecting a display, changing resolution), the app window may open off-screen because it restores the last saved position.
+- **Fix:** Delete `src/settings/window_settings.json` and restart PersonaUI. The window will open centered with default dimensions.
+
+</details>
+
+<details>
+<summary><strong>API key errors / "Authentication failed"</strong></summary>
+
+- Verify your Anthropic API key is correct and active at [console.anthropic.com](https://console.anthropic.com/).
+- Re-enter your API key through the **in-app settings** (API overlay). The key is stored in the `src/.env` file and can also be edited manually if needed.
+- The key format must start with `sk-ant-api`. If the onboarding wizard rejects your key, double-check for leading/trailing spaces.
+- Ensure your API key has sufficient credits. You can check your usage and billing at the Anthropic console. If you see a `credit_balance_exhausted` error, you need to add credits to your Anthropic account.
+- After changing the key via the in-app settings, it takes effect immediately — no restart required.
+
+</details>
+
+<details>
+<summary><strong>Port already in use</strong></summary>
+
+- The default port is **5000** (configurable via `src/settings/server_settings.json`). If you see an error like `Address already in use` or `OSError: [Errno 98]`, another process is occupying the port.
+- On Windows, find and kill the blocking process:
+  ```
+  netstat -ano | findstr :5000
+  taskkill /PID <PID> /F
+  ```
+- On Linux/macOS:
+  ```
+  lsof -i :5000
+  kill -9 <PID>
+  ```
+- This commonly happens when a previous PersonaUI instance didn't shut down cleanly.
+
+</details>
+
+<details>
+<summary><strong>Frontend build fails / Node.js not found</strong></summary>
+
+- The init script downloads Node.js v22 automatically. If this fails (e.g. due to network restrictions or firewall blocks), install Node.js manually from [nodejs.org](https://nodejs.org/).
+- Delete `frontend/node_modules/` and `frontend/package-lock.json`, then retry:
+  ```
+  cd frontend
+  rm -rf node_modules package-lock.json
+  npm install
+  npm run build
+  ```
+- On Windows, long file paths in `node_modules` can cause issues. Enable long paths:
+  ```
+  git config --system core.longpaths true
+  ```
+
+</details>
+
+<details>
+<summary><strong>Database errors / corrupt chat history</strong></summary>
+
+- Each persona has its own SQLite database (`src/data/main.db` for the default persona, `src/data/persona_<uuid>.db` for custom ones). If a specific persona's chat is broken, try deleting its database file and restarting the app. The database will be recreated automatically (note: chat history for that persona will be lost).
+- If you see migration errors after an update, make sure you are running the latest version — database migrations are applied automatically on startup.
+- **Orphaned database files:** If you deleted a persona's JSON definition manually but its database file still exists, it will not be cleaned up automatically. You can safely delete any `.db` file in `src/data/` that no longer corresponds to an existing persona.
+
+</details>
+
+<details>
+<summary><strong>Cortex memory not updating</strong></summary>
+
+- The Cortex system updates persona memory (Memory, Soul, Relationship files) via background API calls triggered at configurable context thresholds (50 %, 75 %, 95 %). If memory seems stale:
+  - Check that Cortex is enabled in the Cortex settings overlay.
+  - Cortex updates have a **30-second cooldown** between triggers — rapid messages may skip updates.
+  - Background cortex updates fail silently if the API call errors out (e.g. insufficient credits, network issue). Check `src/logs/personaui.log` for warnings.
+  - Each Cortex file is capped at **8,000 characters**. Excess content is silently truncated.
+- Cortex update calls use additional API credits — one extra API request per update cycle.
+- If `src/settings/cycle_state.json` becomes corrupt, delete it. It will be recreated with default values, which may trigger an immediate cortex update on the next conversation.
+
+</details>
+
+<details>
+<summary><strong>Onboarding keeps restarting</strong></summary>
+
+- The onboarding wizard is controlled by `src/settings/onboarding.json`. If this file is missing, empty, or corrupt (e.g. due to a crash during write), the onboarding will re-trigger on the next launch.
+- **Fix:** Create or fix the file manually:
+  ```json
+  {"completed": true, "disclaimer_accepted": true}
+  ```
+- This also applies after a factory reset — the onboarding is intentionally shown again.
+
+</details>
+
+<details>
+<summary><strong>Settings corruption / app behaves unexpectedly</strong></summary>
+
+- PersonaUI stores settings as JSON files in `src/settings/`. If any of these files become malformed (e.g. crash during write, accidental manual edit), the app may fail to start or behave unexpectedly.
+- **Fix:** Delete the corrupt settings file. PersonaUI recreates most settings files with defaults on the next launch. Key files:
+  - `user_settings.json` — User preferences
+  - `cortex_settings.json` — Cortex system configuration
+  - `window_settings.json` — Window position and size
+  - `onboarding.json` — Onboarding completion state
+  - `cycle_state.json` — Cortex trigger tracking
+  - `user_profile.json` — User name, avatar, language
+- The `defaults.json` file contains static defaults shipped with the app — do not modify or delete it.
+
+</details>
+
+<details>
+<summary><strong>Avatar upload fails</strong></summary>
+
+- Avatar uploads require **Pillow** (included in `requirements.txt`). If Pillow is not installed, the upload will fail. Reinstall dependencies with `pip install -r requirements.txt`.
+- Maximum upload size is **10 MB**. Images are automatically cropped and resized to 1024×1024 JPEG.
+- Custom avatars are stored in `frontend/public/avatar/costum/`. If this directory is missing, create it manually.
+- Custom avatars are **deleted by a factory reset**. Back them up before resetting if needed.
+
+</details>
+
+<details>
+<summary><strong>Network sharing not working</strong></summary>
+
+- Make sure both devices are on the **same local network** (same Wi-Fi / LAN).
+- Check your **firewall settings** — the port PersonaUI uses (default: 5000) must be allowed for incoming connections.
+- On Windows, you may need to allow Python (or the specific port) through Windows Defender Firewall:
+  - Open **Windows Security → Firewall & network protection → Allow an app through firewall**
+  - Add `python.exe` (from your `.venv/Scripts/` folder) or allow the port manually.
+- Verify the correct local IP is displayed. You can check with `ipconfig` (Windows) or `ifconfig` / `ip addr` (Linux/macOS).
+- If you are locked out by the IP whitelist/blacklist, edit or delete `src/settings/server_settings.json` and restart.
+
+</details>
+
+<details>
+<summary><strong>Streaming interruptions / incomplete responses</strong></summary>
+
+- PersonaUI uses Server-Sent Events (SSE) for real-time message streaming. Long responses can be interrupted by:
+  - **Proxies or firewalls** with idle-connection timeouts — if you're behind a corporate proxy, try connecting directly.
+  - **Unstable network connections** — the stream will error out and the partial response is shown.
+- If streaming frequently breaks, try switching to `--no-gui` mode and using a modern browser, which tends to handle SSE more reliably.
+- Check `src/logs/personaui.log` for detailed error messages from the streaming endpoint.
+
+</details>
+
+<details>
+<summary><strong>Windows Defender / Antivirus blocks PersonaUI.exe</strong></summary>
+
+- The `PersonaUI.exe` is a batch script converted with *Bat To Exe Converter*. Some antivirus tools flag this as suspicious — it is a **false positive**.
+- You can add an exception for the PersonaUI folder in your antivirus settings, or simply use `bin/start.bat` directly instead of the EXE.
+
+</details>
+
+<details>
+<summary><strong>Git update fails / merge conflicts</strong></summary>
+
+- If `bin/update.bat` or `git pull` fails with merge conflicts, you likely have local changes that conflict with the update.
+- **Important:** `bin/update.bat` uses `git reset --hard origin/main` internally — this **discards all local code changes**. Settings and persona data in `.gitignore`d directories are not affected.
+- To update manually while preserving local changes:
+  ```
+  git stash
+  git pull
+  git stash pop   # re-apply your changes (may need manual conflict resolution)
+  ```
+- **Settings and persona data are never overwritten** by Git updates — they live in directories that are `.gitignore`d.
+
+</details>
+
+<details>
+<summary><strong>CORS errors in dev mode</strong></summary>
+
+- When running with `--dev`, the Vite dev server runs on `http://localhost:5173` while the Flask backend runs on a different port. CORS is pre-configured for this setup.
+- If you still see CORS errors, make sure you're accessing the frontend through `http://localhost:5173` (not through the Flask port).
+- Clear your browser cache or try an incognito window — stale service workers can cause unexpected CORS issues.
+
+</details>
+
+<details>
+<summary><strong>Checking logs for errors</strong></summary>
+
+- PersonaUI writes detailed logs to `src/logs/personaui.log` (rotating file, 5 MB max, 3 backups).
+- When reporting a bug or debugging an issue, check this log file first — it contains stack traces, API errors, and background task failures that are not visible in the UI.
+- Console output (when running from a terminal) also shows INFO-level messages and above.
+
+</details>
+
+<details>
+<summary><strong>Factory reset</strong></summary>
+
+- If nothing else helps, you can perform a full factory reset using `bin/reset.bat` (or `python src/reset.py`).
+- This deletes all personas, databases, settings, chat history, custom avatars, Cortex memory, logs, and caches — effectively returning PersonaUI to its first-launch state.
+- **Back up** any data you want to keep before resetting:
+  - `src/data/` — Databases (chat history)
+  - `src/settings/` — All settings
+  - `src/instructions/created_personas/` — Custom persona definitions
+  - `frontend/public/avatar/costum/` — Custom avatars
+
+</details>
+
+---
+
 ## Contributing
 
 Contributions are welcome. The `dev` branch is the main working branch for new features and improvements.
