@@ -1,6 +1,187 @@
 {
   "versions": [
     {
+      "id": "0.3.0_alpha",
+      "label": "v0.3.0 Alpha",
+      "date": "2026-02-24",
+      "en": {
+        "subtitle": "This update focuses on cleanup, stability, and a brand-new reset experience.",
+        "infoNote": "This is an Alpha release — some features may still change. If you find issues, let us know via GitHub Issues!",
+        "categories": {
+          "newFeatures": {
+            "title": "New Features",
+            "items": [
+              "Selectable Reset Options — The reset screen has been completely rebuilt with individual reset choices instead of a single full reset.",
+              "Cortex Reset on Chat Clear — Clearing a chat now resets all Cortex memory files back to their templates.",
+              "Persona Cleanup — Deleting a persona now removes all associated data: cycle state, Cortex files, and persona notes."
+            ]
+          },
+          "improvements": {
+            "title": "Improvements",
+            "items": [
+              "Reset Screen UI — Modernized design with English translations and improved progress feedback.",
+              "Session Cleanup — Deleting a session now properly removes its cycle state tracking entry.",
+              "Tier Tracker — New reset_persona() function for bulk removal of all cycle state entries per persona.",
+              "Documentation — README expanded with Cortex system details, troubleshooting section, and updated test documentation."
+            ]
+          },
+          "technical": {
+            "title": "Under the Hood",
+            "items": [
+              "Refactored reset module with helper functions for recursive directory deletion.",
+              "Improved persona detection logic with structured persona collection.",
+              "Removed outdated concept documents."
+            ]
+          }
+        }
+      },
+      "de": {
+        "subtitle": "Dieses Update konzentriert sich auf Bereinigung, Stabilität und ein komplett neues Reset-Erlebnis.",
+        "infoNote": "Dies ist ein Alpha-Release — einige Features können sich noch ändern. Wenn ihr Fehler findet, meldet sie uns über GitHub Issues!",
+        "categories": {
+          "newFeatures": {
+            "title": "Neue Features",
+            "items": [
+              "Wählbare Reset-Optionen — Der Reset-Bildschirm wurde komplett neu aufgebaut mit einzelnen Reset-Auswahlmöglichkeiten statt eines einzigen Komplett-Resets.",
+              "Cortex-Reset bei Chat-Löschung — Das Löschen eines Chats setzt jetzt alle Cortex-Dateien auf ihre Vorlagen zurück.",
+              "Persona-Bereinigung — Das Löschen einer Persona entfernt jetzt alle zugehörigen Daten: Cycle-State, Cortex-Dateien und Persona-Notizen."
+            ]
+          },
+          "improvements": {
+            "title": "Verbesserungen",
+            "items": [
+              "Reset-Screen UI — Modernisiertes Design mit englischen Übersetzungen und verbessertem Fortschritts-Feedback.",
+              "Session-Bereinigung — Das Löschen einer Session entfernt jetzt korrekt den zugehörigen Cycle-State-Eintrag.",
+              "Tier Tracker — Neue reset_persona()-Funktion zur Massenentfernung aller Cycle-State-Einträge pro Persona.",
+              "Dokumentation — README erweitert mit Cortex-System-Details, Fehlerbehebungs-Abschnitt und aktualisierter Test-Dokumentation."
+            ]
+          },
+          "technical": {
+            "title": "Unter der Haube",
+            "items": [
+              "Reset-Modul refaktoriert mit Hilfsfunktionen für rekursive Verzeichnis-Löschung.",
+              "Verbesserte Persona-Erkennung mit strukturierter Persona-Sammlung.",
+              "Veraltete Konzeptdokumente entfernt."
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "0.2.2_alpha",
+      "label": "v0.2.2 Alpha",
+      "date": "2026-02-24",
+      "en": {
+        "subtitle": "A quick hotfix for the update script to keep everything running smoothly.",
+        "infoNote": "This is a patch release focused on the update process.",
+        "categories": {
+          "bugFixes": {
+            "title": "Bug Fixes",
+            "items": [
+              "Self-Copy Guard — The update script no longer corrupts itself mid-execution by skipping its own file during updates.",
+              "PowerShell Version Parsing — Version comparison now uses native PowerShell JSON parsing instead of fragile regex.",
+              "Frontend Rebuild — The update process now runs npm install + vite build automatically to ensure the frontend dist is always up to date."
+            ]
+          },
+          "technical": {
+            "title": "Under the Hood",
+            "items": [
+              "Replaced legacy batch-based version check with PowerShell-native approach.",
+              "Added git reset --hard before pull to prevent merge conflicts during updates.",
+              "Reverted debug changes: min context limit back to 10, removed verbose cortex logging."
+            ]
+          }
+        }
+      },
+      "de": {
+        "subtitle": "Ein schneller Hotfix für das Update-Skript, damit alles reibungslos läuft.",
+        "infoNote": "Dies ist ein Patch-Release mit Fokus auf den Update-Prozess.",
+        "categories": {
+          "bugFixes": {
+            "title": "Fehlerbehebungen",
+            "items": [
+              "Self-Copy Guard — Das Update-Skript beschädigt sich nicht mehr selbst während der Ausführung, da es seine eigene Datei beim Update überspringt.",
+              "PowerShell Version Parsing — Der Versionsvergleich nutzt jetzt natives PowerShell-JSON-Parsing statt fragiler Regex-Ausdrücke.",
+              "Frontend Rebuild — Der Update-Prozess führt jetzt automatisch npm install + vite build aus, damit das Frontend-Dist immer aktuell ist."
+            ]
+          },
+          "technical": {
+            "title": "Unter der Haube",
+            "items": [
+              "Legacy-Batch-basierte Versionsprüfung durch PowerShell-nativen Ansatz ersetzt.",
+              "git reset --hard vor Pull hinzugefügt, um Merge-Konflikte bei Updates zu vermeiden.",
+              "Debug-Änderungen zurückgesetzt: Min-Kontext-Limit zurück auf 10, verbose Cortex-Logging entfernt."
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "0.2.1_alpha",
+      "label": "v0.2.1 Alpha",
+      "date": "2026-02-24",
+      "en": {
+        "subtitle": "Cortex is now more reliable than ever, and the UI got some polish.",
+        "infoNote": "This is a patch release with important Cortex fixes.",
+        "categories": {
+          "bugFixes": {
+            "title": "Bug Fixes",
+            "items": [
+              "Cortex Trigger Fix — Resolved settings desync between frontend and backend that prevented Cortex from triggering.",
+              "Removed rebuild_cycle_base — This was blocking the very first Cortex trigger for new personas."
+            ]
+          },
+          "improvements": {
+            "title": "Improvements",
+            "items": [
+              "ContextBar Dual-Bar — The context bar now shows both message count and Cortex progress (C/X) side by side.",
+              "CortexUpdateIndicator Redesign — Glass-morphism style, no emoji, cleaner look.",
+              "Cortex Progress API — New endpoint to query Cortex update progress from the frontend.",
+              "Cortex Overlay — Improved display of Cortex status information."
+            ]
+          },
+          "technical": {
+            "title": "Under the Hood",
+            "items": [
+              "Improved tier_checker logic to prevent false-negative trigger conditions.",
+              "Updated Cortex service tests for new behavior.",
+              "Onboarding flow adjustments for smoother first-run experience."
+            ]
+          }
+        }
+      },
+      "de": {
+        "subtitle": "Cortex ist jetzt zuverlässiger als je zuvor, und die Oberfläche wurde aufpoliert.",
+        "infoNote": "Dies ist ein Patch-Release mit wichtigen Cortex-Fixes.",
+        "categories": {
+          "bugFixes": {
+            "title": "Fehlerbehebungen",
+            "items": [
+              "Cortex Trigger Fix — Einstellungs-Desync zwischen Frontend und Backend behoben, der das Auslösen von Cortex verhinderte.",
+              "rebuild_cycle_base entfernt — Blockierte den allerersten Cortex-Trigger bei neuen Personas."
+            ]
+          },
+          "improvements": {
+            "title": "Verbesserungen",
+            "items": [
+              "ContextBar Dual-Bar — Die Kontext-Leiste zeigt jetzt Nachrichten-Anzahl und Cortex-Fortschritt (C/X) nebeneinander.",
+              "CortexUpdateIndicator Redesign — Glass-Morphism-Stil, keine Emojis, saubereres Design.",
+              "Cortex Progress API — Neuer Endpunkt zum Abfragen des Cortex-Update-Fortschritts vom Frontend.",
+              "Cortex Overlay — Verbesserte Darstellung der Cortex-Statusinformationen."
+            ]
+          },
+          "technical": {
+            "title": "Unter der Haube",
+            "items": [
+              "Verbesserte tier_checker-Logik zur Vermeidung von Falsch-Negativ-Triggern.",
+              "Aktualisierte Cortex-Service-Tests für neues Verhalten.",
+              "Onboarding-Flow-Anpassungen für ein reibungsloseres Erststart-Erlebnis."
+            ]
+          }
+        }
+      }
+    },
+    {
       "id": "0.2.0_alpha",
       "label": "v0.2.0 Alpha",
       "date": "2026-02-22",
@@ -122,6 +303,61 @@
               "CORS-Unterstützung für flexible API-Kommunikation.",
               "Verbesserte Datenbankmodul-Struktur und Query-Handling.",
               "Umfassende Test-Suite für Cortex-Services und Prompt Engine."
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "0.1.0_alpha",
+      "label": "v0.1.0 Alpha",
+      "date": "2026-01-15",
+      "en": {
+        "subtitle": "The very first release of PersonaUI — welcome aboard!",
+        "infoNote": "This is the initial Alpha release. Expect rough edges and exciting new things!",
+        "categories": {
+          "newFeatures": {
+            "title": "New Features",
+            "items": [
+              "Chat System — Real-time AI chat with streaming responses and session management.",
+              "Persona System — Create and switch between custom AI personas with unique personalities.",
+              "Prompt Engine — Intelligent prompt building that combines persona instructions, context, and user input.",
+              "Settings Management — Configure API providers, model parameters, and application preferences.",
+              "Jinja Frontend — Server-rendered web interface for chatting with your personas."
+            ]
+          },
+          "technical": {
+            "title": "Under the Hood",
+            "items": [
+              "Flask backend with Blueprint-based route architecture.",
+              "SQLite database for chat history and session storage.",
+              "Multi-provider API support (OpenAI, Anthropic, Google, and more).",
+              "Configurable prompt templates with persona-specific instructions."
+            ]
+          }
+        }
+      },
+      "de": {
+        "subtitle": "Das allererste Release von PersonaUI — willkommen an Bord!",
+        "infoNote": "Dies ist das erste Alpha-Release. Es wird noch ecken und kanten geben, aber auch viel Spannendes!",
+        "categories": {
+          "newFeatures": {
+            "title": "Neue Features",
+            "items": [
+              "Chat System — Echtzeit-KI-Chat mit Streaming-Antworten und Sitzungsverwaltung.",
+              "Persona System — Erstellt und wechselt zwischen eigenen KI-Personas mit einzigartigen Persönlichkeiten.",
+              "Prompt Engine — Intelligenter Prompt-Aufbau, der Persona-Anweisungen, Kontext und Nutzereingabe kombiniert.",
+              "Einstellungen — Konfiguriert API-Provider, Modell-Parameter und App-Einstellungen.",
+              "Jinja Frontend — Server-gerenderte Web-Oberfläche zum Chatten mit euren Personas."
+            ]
+          },
+          "technical": {
+            "title": "Unter der Haube",
+            "items": [
+              "Flask-Backend mit Blueprint-basierter Route-Architektur.",
+              "SQLite-Datenbank für Chat-Verlauf und Sitzungsspeicherung.",
+              "Multi-Provider-API-Unterstützung (OpenAI, Anthropic, Google und mehr).",
+              "Konfigurierbare Prompt-Vorlagen mit Persona-spezifischen Anweisungen."
             ]
           }
         }

@@ -1,6 +1,12 @@
 {
   "versions": [
     {
+      "version": "0.3.0-alpha",
+      "date": "2026-02-24",
+      "tag": "improvement",
+      "summary": "Reset screen overhaul with selectable reset options and modernized UI. Chat clear now resets Cortex files and cycle state. Session and persona deletion properly cleans up all related data (cycle state, persona notes). New reset_persona() in tier tracker. Documentation updates across README and test docs."
+    },
+    {
       "version": "0.2.2-alpha",
       "date": "2026-02-24",
       "tag": "fix",
