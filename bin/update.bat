@@ -4,22 +4,37 @@ setlocal enabledelayedexpansion
 title PersonaUI - Update
 color 0B
 
+REM ----------------------------------------------
+REM  Self-copy guard: git merge overwrites this file mid-execution.
+REM  CMD reads .bat by byte offset, so a changed file causes random jumps.
+REM  Solution: copy to %TEMP% and re-launch from there, passing project dir.
+REM ----------------------------------------------
+if not defined _PERSONAUI_UPDATE_SAFE (
+    set "_PERSONAUI_UPDATE_SAFE=1"
+    set "PROJECT_DIR=%~dp0.."
+    copy /y "%~f0" "%TEMP%\personaui_update.bat" >nul 2>&1
+    call "%TEMP%\personaui_update.bat" "!PROJECT_DIR!"
+    set "_EXIT_CODE=!errorlevel!"
+    del /q "%TEMP%\personaui_update.bat" >nul 2>&1
+    exit /b !_EXIT_CODE!
+)
+
 echo ╔══════════════════════════════════════════════╗
 echo ║         PersonaUI - Update                   ║
 echo ╚══════════════════════════════════════════════╝
 echo.
 
 REM ----------------------------------------------
-REM  Change to project directory
+REM  Change to project directory (passed as argument from self-copy)
 REM ----------------------------------------------
-cd /d "%~dp0.."
+cd /d "%~1"
 echo [INFO] Project directory: %CD%
 echo.
 
 REM ----------------------------------------------
 REM  1. Check Git
 REM ----------------------------------------------
-echo [1/5] Checking Git...
+echo [1/6] Checking Git...
 where git >nul 2>&1
 if %errorlevel% neq 0 (
     echo   [ERROR] Git is not installed or not in PATH!
@@ -32,7 +47,7 @@ echo.
 REM ----------------------------------------------
 REM  2. Fetch remote
 REM ----------------------------------------------
-echo [2/5] Fetching latest information from origin/main...
+echo [2/6] Fetching latest information from origin/main...
 git fetch origin main
 if %errorlevel% neq 0 (
     echo   [ERROR] Could not fetch origin/main!
@@ -43,53 +58,26 @@ echo   [OK] Remote updated.
 echo.
 
 REM ----------------------------------------------
-REM  3. Compare versions
+REM  3. Compare versions (uses PowerShell for reliable JSON parsing)
 REM ----------------------------------------------
-echo [3/5] Checking for updates...
+echo [3/6] Checking for updates...
 
-REM Read local version from version.json
-set "VERSION_FILE=%CD%\version.json"
+REM Parse local version via PowerShell
 set "LOCAL_VERSION="
-if exist "%VERSION_FILE%" (
-    for /f "tokens=2 delims=:" %%i in ('findstr /C:"version" "%VERSION_FILE%" 2^>nul') do (
-        set "RAW=%%i"
-    )
-    if defined RAW (
-        set "RAW=!RAW: =!"
-        set "RAW=!RAW:"=!"
-        set "RAW=!RAW:}=!"
-        set "RAW=!RAW:,=!"
-        set "LOCAL_VERSION=!RAW!"
-    )
+for /f "usebackq delims=" %%v in (`powershell -NoProfile -Command "(Get-Content '%CD%\version.json' -Raw | ConvertFrom-Json).version"`) do (
+    set "LOCAL_VERSION=%%v"
 )
-
 if not defined LOCAL_VERSION (
     echo   [WARNING] Could not read local version.json
     set "LOCAL_VERSION=unknown"
 )
 echo   [INFO] Current version: !LOCAL_VERSION!
 
-REM Read remote version from origin/main:version.json
+REM Parse remote version via PowerShell (reads git show output)
 set "REMOTE_VERSION="
-for /f "tokens=*" %%i in ('git show origin/main:version.json 2^>nul') do (
-    echo %%i | findstr /C:"version" >nul 2>&1
-    if !errorlevel! equ 0 (
-        set "RAWLINE=%%i"
-    )
+for /f "usebackq delims=" %%v in (`powershell -NoProfile -Command "(git show origin/main:version.json | ConvertFrom-Json).version"`) do (
+    set "REMOTE_VERSION=%%v"
 )
-if defined RAWLINE (
-    for /f "tokens=2 delims=:" %%i in ("!RAWLINE!") do (
-        set "RAW2=%%i"
-    )
-    if defined RAW2 (
-        set "RAW2=!RAW2: =!"
-        set "RAW2=!RAW2:"=!"
-        set "RAW2=!RAW2:}=!"
-        set "RAW2=!RAW2:,=!"
-        set "REMOTE_VERSION=!RAW2!"
-    )
-)
-
 if not defined REMOTE_VERSION (
     echo   [WARNING] Could not read remote version.
     echo   Update will proceed anyway.
@@ -99,34 +87,32 @@ echo   [INFO] Remote version:  !REMOTE_VERSION!
 
 if "!LOCAL_VERSION!"=="!REMOTE_VERSION!" (
     echo.
-    echo   PersonaUI is already up to date! (v!LOCAL_VERSION!)
+    echo   PersonaUI is already up to date! ^(v!LOCAL_VERSION!^)
     echo.
     goto :clean_exit
 )
 
-echo   [INFO] New version available: v!REMOTE_VERSION! (current: v!LOCAL_VERSION!)
+echo.
+echo   [INFO] New version available: v!REMOTE_VERSION! ^(current: v!LOCAL_VERSION!^)
 echo.
 
 REM ----------------------------------------------
-REM  4. Perform update: merge origin/main
+REM  4. Perform update: reset to origin/main
 REM ----------------------------------------------
-echo [4/5] Performing update (merge origin/main)...
+echo [4/6] Performing update...
 echo.
 
-REM Stash current changes
-git stash --quiet 2>nul
+REM Abort any stuck merge from a previous attempt
+git merge --abort >nul 2>&1
 
-REM Merge origin/main into current branch
-git merge origin/main --no-edit
-if %errorlevel% neq 0 (
+REM Reset to remote version (clean update)
+git reset --hard origin/main
+if !errorlevel! neq 0 (
     echo.
-    echo   [ERROR] Merge conflict! Please resolve manually.
-    echo   Tip: Resolve the conflicts and run 'git merge --continue'.
+    echo   [ERROR] Could not reset to origin/main.
+    echo   Try deleting the folder and cloning fresh.
     goto :error_exit
 )
-
-REM Restore stashed changes (if any)
-git stash pop --quiet 2>nul
 
 echo   [OK] Code updated.
 echo.
@@ -134,7 +120,7 @@ echo.
 REM ----------------------------------------------
 REM  5. Update dependencies
 REM ----------------------------------------------
-echo [5/5] Updating dependencies...
+echo [5/6] Updating dependencies...
 
 if exist ".venv\Scripts\activate.bat" (
     call .venv\Scripts\activate.bat
@@ -143,6 +129,19 @@ if exist ".venv\Scripts\activate.bat" (
 ) else (
     echo   [WARNING] No virtual environment found.
     echo   Run bin\install.bat first.
+)
+REM ----------------------------------------------
+REM  6. Rebuild frontend (so new UI elements land in dist)
+REM ----------------------------------------------
+echo [6/6] Rebuilding frontend...
+
+if exist "src\dev\frontend\build_frontend.bat" (
+    call "src\dev\frontend\build_frontend.bat"
+    if !errorlevel! neq 0 (
+        echo   [WARNING] Frontend build failed. UI may be outdated.
+    )
+) else (
+    echo   [WARNING] build_frontend.bat not found. Skipping frontend build.
 )
 echo.
 

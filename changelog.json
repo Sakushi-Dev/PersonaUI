@@ -1,6 +1,12 @@
 {
   "versions": [
     {
+      "version": "0.2.2-alpha",
+      "date": "2026-02-24",
+      "tag": "fix",
+      "summary": "Update script overhaul: self-copy guard prevents mid-execution file corruption, PowerShell-based JSON version parsing, git reset --hard for clean updates, added frontend rebuild step (npm install + vite build) to ensure dist is up to date."
+    },
+    {
       "version": "0.2.1-alpha",
       "date": "2026-02-24",
       "tag": "fix",
