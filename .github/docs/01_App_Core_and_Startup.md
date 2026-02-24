@@ -46,7 +46,7 @@ This is the **entry point** for all startup methods (`start.bat`, manual `python
 
 ### Launch Options
 
-Read from `launch_options.txt` in the project root:
+Read from `config/launch_options.txt`:
 
 ```
 # PersonaUI – Launch Options
@@ -187,7 +187,7 @@ Window position and size are persisted in `src/settings/window_settings.json` an
 |------|-------|---------|
 | `src/init.py` | ~570 | Environment bootstrap (venv, pip, node, npm) |
 | `src/app.py` | ~374 | Flask app creation, service init, window launch |
-| `launch_options.txt` | 4 | CLI flags (`--no-gui`, `--dev`) |
+| `config/launch_options.txt` | 4 | CLI flags (`--no-gui`, `--dev`) |
 | `bin/start.bat` | — | Windows launcher (calls `init.py`) |
 | `bin/install_py12.bat` | — | Python 3.12 installer helper |
 | `bin/reset.bat` | — | Factory reset launcher |

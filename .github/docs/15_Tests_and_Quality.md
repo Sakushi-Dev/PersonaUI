@@ -9,7 +9,7 @@
 PersonaUI uses **pytest** with **356 tests** across **16 test files** (~4,700 lines of test code). Tests run without any real API calls or database connections — everything is mocked. The frontend uses **ESLint** with React-specific plugins.
 
 ```
-tests/
+src/tests/
 ├── conftest.py                              Shared fixtures (11)
 ├── test_api_client.py                       ApiClient & data types (23 tests)
 ├── test_provider.py                         Provider pattern (6 tests)
@@ -38,11 +38,11 @@ tests/
 
 ```ini
 [pytest]
-testpaths = tests
+testpaths = src/tests
 python_files = test_*.py
 python_classes = Test*
 python_functions = test_*
-addopts = -v --tb=short --ignore=src
+addopts = -v --tb=short
 ```
 
 ### Running Tests
@@ -52,13 +52,13 @@ addopts = -v --tb=short --ignore=src
 pytest
 
 # Specific test file
-pytest tests/test_api_client.py
+pytest src/tests/test_api_client.py
 
 # Specific test class
-pytest tests/test_api_client.py::TestApiClientStream
+pytest src/tests/test_api_client.py::TestApiClientStream
 
 # Specific test
-pytest tests/test_api_client.py::TestApiClientStream::test_stream_yields_events
+pytest src/tests/test_api_client.py::TestApiClientStream::test_stream_yields_events
 
 # With coverage (if pytest-cov installed)
 pytest --cov=src
@@ -71,7 +71,7 @@ pytest -k "not test_externalized_template"
 
 ## Fixtures — `conftest.py`
 
-**File:** `tests/conftest.py` (~160 lines)
+**File:** `src/tests/conftest.py` (~160 lines)
 
 Shared fixtures provide consistent test data and mocked dependencies:
 
