@@ -115,30 +115,36 @@ You can customize startup behavior by editing `launch_options.txt` in the projec
 
 ## What Makes PersonaUI Different
 
-<div align="center">
-<table border="1" cellpadding="16" cellspacing="0" style="border-collapse: collapse; border: 1px solid #30363d;">
-<tr>
-<td width="250" style="border: 1px solid #30363d;">
-<img src="https://iili.io/qKrHYFI.png" alt="Cortex system" width="250">
-</td>
-<td style="border: 1px solid #30363d;">
 
-**The Cortex — Persistent, Evolving Memory**
+<p align="center"><strong>The Cortex — Persistent, Evolving Memory</strong></p>
+
+<div align="center">
+<table>
+<tr>
+<td width="300">
+<img src="https://iili.io/qKrHYFI.png" alt="Cortex system" width="300">
+</td>
+<td>
 
 Most AI chatbots forget everything once the conversation ends. PersonaUI gives each persona three files that represent its inner world:
 
-- **Memory** — Recollections of past conversations and shared moments
-- **Soul** — Evolving self-understanding, values, and personal growth
-- **Relationship** — How the persona perceives and relates to you over time
+- **Memory** — Recollections of past conversations and shared moments  
+- **Soul** — Evolving self-understanding, values, and personal growth  
+- **Relationship** — How the persona perceives and relates to you over time  
 
 Written from the persona's own perspective and updated autonomously via tool use at configurable context thresholds (50 %, 75 %, 95 %). Viewable and editable through the in-app Cortex Overlay.
 
 </td>
 </tr>
-<tr>
-<td style="border: 1px solid #30363d;">
+</table>
+</div>
 
-**Afterthoughts and Emotional Continuity**
+<p align="center"><strong>Afterthoughts and Emotional Continuity</strong></p>
+
+<div align="center">
+<table>
+<tr>
+<td>
 
 After sending a response, the AI may decide it has something to add — a follow-up message sent on its own, without any input from you.
 
@@ -148,17 +154,22 @@ After sending a response, the AI may decide it has something to add — a follow
 - Makes conversations feel noticeably more human
 
 </td>
-<td width="250" style="border: 1px solid #30363d;">
-<img src="https://iili.io/qKrHEwG.png" alt="Afterthought system" width="250">
+<td width="300">
+<img src="https://iili.io/qKrHEwG.png" alt="Afterthought system" width="300">
 </td>
 </tr>
-<tr>
-<td width="250" style="border: 1px solid #30363d;">
-<img src="https://iili.io/qKrHGtf.png" alt="Creating a persona" width="250">
-</td>
-<td style="border: 1px solid #30363d;">
+</table>
+</div>
 
-**Creating a Persona**
+<p align="center"><strong>Creating a Persona</strong></p>
+
+<div align="center">
+<table>
+<tr>
+<td width="300">
+<img src="https://iili.io/qKrHGtf.png" alt="Creating a persona" width="300">
+</td>
+<td>
 
 Each persona is defined by a set of properties you choose during creation:
 
@@ -172,10 +183,15 @@ Every persona operates in its own isolated environment with dedicated Cortex fil
 
 </td>
 </tr>
-<tr>
-<td style="border: 1px solid #30363d;">
+</table>
+</div>
 
-**Network Sharing and Privacy**
+<p align="center"><strong>Network Sharing and Privacy</strong></p>
+
+<div align="center">
+<table>
+<tr>
+<td>
 
 All data lives exclusively on your machine — nothing is stored in the cloud. Despite full local privacy, you can still share access over your local network:
 
@@ -185,8 +201,8 @@ All data lives exclusively on your machine — nothing is stored in the cloud. D
 - No data leaves your computer except the API requests to Anthropic
 
 </td>
-<td width="250" style="border: 1px solid #30363d;">
-<img src="https://iili.io/qKrHc8X.png" alt="Network sharing" width="250">
+<td width="300">
+<img src="https://iili.io/qKrHc8X.png" alt="Network sharing" width="300">
 </td>
 </tr>
 </table>
