@@ -1,19 +1,22 @@
-"""reset_screen – Reset-Screen-Paket für PersonaUI.
+"""reset_screen – Reset screen package for PersonaUI.
 
-Stellt bereit:
-  - load_reset_html()        → Gibt den fertigen HTML-String zurück
-  - reset_sequence(...)      → Komplette Reset-Logik mit GUI-Ausgabe
+Provides:
+  - load_reset_html()        → Returns the complete HTML string
+  - reset_sequence(...)      → Reset logic with selectable options and GUI output
+  - collect_personas()       → Collects all available personas
+  - PRESETS / PRESET_ORDER   → Reset preset definitions
 """
 
 import os
 
 from .utils import reset_sequence
+from .utils.reset import collect_personas, PRESETS, PRESET_ORDER
 
 _PACKAGE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def load_reset_html() -> str:
-    """Liest reset.html, reset.css und reset.js und gibt fertigen HTML-String zurück."""
+    """Reads reset.html, reset.css and reset.js and returns complete HTML string."""
     template_path = os.path.join(_PACKAGE_DIR, 'templates', 'reset.html')
     css_path = os.path.join(_PACKAGE_DIR, 'static', 'reset.css')
     js_path = os.path.join(_PACKAGE_DIR, 'static', 'reset.js')

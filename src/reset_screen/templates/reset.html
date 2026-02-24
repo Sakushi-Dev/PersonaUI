@@ -20,20 +20,44 @@
         <div id="title">PERSONA UI</div>
         <div id="subtitle">SYSTEM RESET</div>
         <div id="spinner"></div>
-        <div id="confirm-box">
-            <div id="confirm-text">
-                Alle Daten werden unwiderruflich gelöscht:<br>
-                <span class="detail">Chat-Nachrichten, Sitzungen, Einstellungen,<br>
-                erstellte Personas, Avatare, API-Schlüssel</span>
+
+        <!-- Phase 1: Preset Selection -->
+        <div id="preset-box">
+            <div id="preset-label">What would you like to reset?</div>
+            <div id="preset-list">
+                <!-- Dynamically populated via JS -->
             </div>
-            <div id="confirm-buttons">
-                <button id="btn-cancel" onclick="onCancel()">Abbrechen</button>
-                <button id="btn-confirm" onclick="onConfirm()">Reset ausführen</button>
+
+            <!-- Persona Selection (only visible for "personas_select") -->
+            <div id="persona-select-box" style="display:none;">
+                <div id="persona-select-label">Select personas to delete:</div>
+                <div id="persona-list">
+                    <!-- Dynamically populated via JS -->
+                </div>
+            </div>
+
+            <div id="preset-buttons">
+                <button id="btn-preset-cancel" onclick="onCancel()">Cancel</button>
+                <button id="btn-preset-next" onclick="onPresetNext()" disabled>Next</button>
             </div>
         </div>
+
+        <!-- Phase 2: Confirmation -->
+        <div id="confirm-box" style="display:none;">
+            <div id="confirm-text">
+                <span id="confirm-preset-name"></span><br>
+                <span class="detail" id="confirm-detail"></span>
+            </div>
+            <div id="confirm-buttons">
+                <button id="btn-back" onclick="onBack()">Back</button>
+                <button id="btn-confirm" onclick="onConfirm()">Run Reset</button>
+            </div>
+        </div>
+
+        <!-- Phase 3: Finished -->
         <div id="finish-buttons" style="display:none;">
-            <button id="btn-start" onclick="onStart()">PersonaUI starten</button>
-            <button id="btn-close" onclick="onClose()">Schließen</button>
+            <button id="btn-start" onclick="onStart()">Launch PersonaUI</button>
+            <button id="btn-close" onclick="onClose()">Close</button>
         </div>
     </div>
 <script>

@@ -107,6 +107,19 @@ def reset_session(persona_id: str, session_id: int) -> None:
             _save_to_disk()
 
 
+def reset_persona(persona_id: str) -> None:
+    """Entfernt ALLE cycle_state-Einträge einer Persona (bei Persona-Löschung oder Chat-Reset)."""
+    prefix = f"{persona_id}:"
+    with _lock:
+        _load_from_disk()
+        keys_to_remove = [k for k in _cycle_state if k.startswith(prefix)]
+        if keys_to_remove:
+            for k in keys_to_remove:
+                del _cycle_state[k]
+            _save_to_disk()
+            log.debug("[tier_tracker] %d Einträge für Persona '%s' entfernt", len(keys_to_remove), persona_id)
+
+
 def reset_all() -> None:
     """Setzt den gesamten State zurück (z.B. bei App-Reset). Löscht die Datei."""
     global _loaded

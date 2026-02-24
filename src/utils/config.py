@@ -9,6 +9,7 @@ import shutil
 from typing import Dict, Any, List, Optional
 from utils.database import create_persona_db, delete_persona_db
 from utils.cortex_service import create_cortex_dir, delete_cortex_dir
+from utils.cortex.tier_tracker import reset_persona as reset_persona_cycle_state
 from utils.logger import log
 
 # Base directory for config files (src/)
@@ -535,6 +536,17 @@ def delete_created_persona(persona_id: str) -> bool:
             delete_persona_db(persona_id)
             # Lösche den Cortex-Ordner
             delete_cortex_dir(persona_id)
+            # Cycle-State-Einträge entfernen
+            reset_persona_cycle_state(persona_id)
+            # Persona-Notizen löschen
+            notes_dir = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                'data', 'persona_notes', persona_id
+            )
+            if os.path.isdir(notes_dir):
+                import shutil
+                shutil.rmtree(notes_dir, ignore_errors=True)
+                log.info("Persona-Notizen gelöscht: %s", persona_id)
             return True
         return False
     except Exception as e:

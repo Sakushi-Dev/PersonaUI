@@ -10,6 +10,7 @@ from utils.database import (
 )
 from utils.config import load_character, get_active_persona_id, activate_persona, load_char_config
 from utils.logger import log
+from utils.cortex.tier_tracker import reset_session as reset_session_cycle_state
 from routes.helpers import success_response, error_response, handle_route_error, resolve_persona_id
 
 sessions_bp = Blueprint('sessions', __name__)
@@ -135,6 +136,8 @@ def delete_session_endpoint(session_id):
     success = delete_session(session_id, persona_id=persona_id)
     
     if success:
+        # Cycle-State-Eintrag für diese Session entfernen
+        reset_session_cycle_state(persona_id, session_id)
         return success_response()
     else:
         return error_response('Fehler beim Löschen', 500)

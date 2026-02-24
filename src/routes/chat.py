@@ -10,8 +10,10 @@ from utils.database import (
 )
 from utils.config import load_character
 from utils.logger import log
-from utils.provider import get_chat_service, get_api_client
+from utils.provider import get_chat_service, get_api_client, get_cortex_service
 from utils.cortex.tier_checker import check_and_trigger_cortex_update
+from utils.cortex.tier_tracker import reset_persona as reset_persona_cycle_state
+from utils.cortex_service import TEMPLATES
 from routes.helpers import success_response, error_response, handle_route_error, resolve_persona_id, get_client_ip
 from routes.user_profile import get_user_profile_data
 
@@ -158,8 +160,22 @@ def chat_stream():
 @chat_bp.route('/clear_chat', methods=['POST'])
 @handle_route_error('clear_chat')
 def clear_chat():
-    """Löscht die Chat-Historie"""
-    clear_chat_history()
+    """Löscht die Chat-Historie und setzt Cortex-Dateien zurück."""
+    persona_id = resolve_persona_id()
+    clear_chat_history(persona_id)
+
+    # Cortex-Dateien auf Templates zurücksetzen
+    try:
+        cortex = get_cortex_service()
+        for filename, template_content in TEMPLATES.items():
+            cortex.write_file(persona_id, filename, template_content)
+        log.info("Cortex-Dateien zurückgesetzt für Persona: %s", persona_id)
+    except Exception as e:
+        log.warning("Cortex-Reset fehlgeschlagen für %s: %s", persona_id, e)
+
+    # Cycle-State-Einträge für diese Persona entfernen
+    reset_persona_cycle_state(persona_id)
+
     return success_response()
 
 

@@ -1,29 +1,54 @@
-"""PersonaUI Reset – Startet den Reset mit pywebview-GUI."""
+"""PersonaUI Reset – Starts the reset with pywebview GUI."""
 
 import os
 import sys
+import json
 import time
 import threading
 import subprocess
 
-# WICHTIG: Wechsle ins src Verzeichnis für korrekte Pfade
+# IMPORTANT: Change to src directory for correct paths
 script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
 
 from reset_screen import load_reset_html, reset_sequence
+from reset_screen import collect_personas, PRESETS, PRESET_ORDER
+
+
+def _inject_data(window):
+    """Injects preset and persona data into JS and initializes the UI."""
+    personas = collect_personas()
+
+    presets_json = json.dumps(PRESETS, ensure_ascii=False)
+    order_json = json.dumps(PRESET_ORDER, ensure_ascii=False)
+    personas_json = json.dumps(personas, ensure_ascii=False)
+
+    window.evaluate_js(f"window._PRESETS = {presets_json};")
+    window.evaluate_js(f"window._PRESET_ORDER = {order_json};")
+    window.evaluate_js(f"window._PERSONAS = {personas_json};")
+    window.evaluate_js("initResetUI();")
 
 
 def run_reset(window):
-    """Wartet auf Bestätigung im GUI und führt dann den Reset aus."""
+    """Waits for confirmation in the GUI, then executes the reset."""
 
-    # Warte auf Bestätigung oder Abbruch
+    # Brief wait until DOM is ready
+    time.sleep(0.5)
+
+    # Inject data
+    try:
+        _inject_data(window)
+    except Exception:
+        pass
+
+    # Wait for confirmation or cancellation
     while True:
         time.sleep(0.2)
         try:
             confirmed = window.evaluate_js("isConfirmed()")
             cancelled = window.evaluate_js("isCancelled()")
         except Exception:
-            return  # Fenster geschlossen
+            return  # Window closed
 
         if cancelled:
             time.sleep(1)
@@ -36,17 +61,28 @@ def run_reset(window):
         if confirmed:
             break
 
-    # Reset ausführen
-    reset_sequence(window)
+    # Read selected preset and personas
+    preset_id = 'full'
+    selected_personas = []
+    try:
+        preset_id = window.evaluate_js("getSelectedPreset()") or 'full'
+        raw = window.evaluate_js("getSelectedPersonas()")
+        if raw:
+            selected_personas = json.loads(raw)
+    except Exception:
+        pass
 
-    # Warte auf "Starten" oder "Schließen"
+    # Execute reset
+    reset_sequence(window, preset_id=preset_id, selected_persona_ids=selected_personas)
+
+    # Wait for "Launch" or "Close"
     while True:
         time.sleep(0.3)
         try:
             should_start = window.evaluate_js("shouldStartApp()")
             should_close = window.evaluate_js("shouldCloseApp()")
         except Exception:
-            return  # Fenster geschlossen
+            return  # Window closed
 
         if should_close:
             try:
@@ -60,7 +96,7 @@ def run_reset(window):
                 window.destroy()
             except Exception:
                 pass
-            # PersonaUI starten
+            # Launch PersonaUI
             root_dir = os.path.dirname(script_dir)
             exe_path = os.path.join(root_dir, 'PersonaUI.exe')
             if os.path.exists(exe_path):
@@ -109,22 +145,22 @@ if __name__ == '__main__':
         os._exit(0)
 
     except ImportError:
-        # Fallback: Einfacher Konsolen-Reset
+        # Fallback: Simple console reset
         print()
         print("========================================")
         print("  PERSONAUI - RESET")
         print("========================================")
         print()
-        print("PyWebView nicht installiert. Konsolen-Modus.")
+        print("PyWebView not installed. Console mode.")
         print()
-        print("WARNUNG: Alle Daten werden geloescht!")
-        print("  - Chat-Nachrichten, Sitzungen")
-        print("  - Einstellungen, API-Schluessel")
-        print("  - Erstellte Personas, Avatare")
+        print("WARNING: All data will be deleted!")
+        print("  - Chat messages, sessions")
+        print("  - Settings, API key")
+        print("  - Created personas, avatars")
         print()
-        confirm = input("Fortfahren? (ja/nein): ").strip().lower()
-        if confirm != 'ja':
-            print("Abbruch.")
+        confirm = input("Continue? (yes/no): ").strip().lower()
+        if confirm != 'yes':
+            print("Cancelled.")
             sys.exit(0)
 
         print()
@@ -135,27 +171,27 @@ if __name__ == '__main__':
         src = script_dir
         data_dir = os.path.join(src, 'data')
 
-        # Datenbanken
+        # Databases
         for f in glob.glob(os.path.join(data_dir, '*.db')):
             try: os.remove(f)
             except: pass
         for f in glob.glob(os.path.join(data_dir, '*.db.backup')):
             try: os.remove(f)
             except: pass
-        print("[1/11] Datenbanken geloescht")
+        print("[1/11] Databases deleted")
 
         # .env
         env_path = os.path.join(src, '.env')
         if os.path.exists(env_path):
             os.remove(env_path)
-        print("[2/11] .env geloescht")
+        print("[2/11] .env deleted")
 
         # Settings
         for name in ['server_settings.json', 'user_settings.json', 'user_profile.json', 'window_settings.json', 'onboarding.json', 'cycle_state.json', 'emoji_usage.json', 'cortex_settings.json']:
             fp = os.path.join(src, 'settings', name)
             if os.path.exists(fp):
                 os.remove(fp)
-        print("[3/11] Einstellungen geloescht")
+        print("[3/11] Settings deleted")
 
         # Personas + Custom Specs
         for f in glob.glob(os.path.join(src, 'instructions', 'created_personas', '*.json')):
@@ -164,13 +200,13 @@ if __name__ == '__main__':
         cs = os.path.join(src, 'instructions', 'personas', 'spec', 'custom_spec', 'custom_spec.json')
         if os.path.exists(cs):
             os.remove(cs)
-        print("[4/11] Personas & Custom Specs geloescht")
+        print("[4/11] Personas & custom specs deleted")
 
         # Active persona
         ac = os.path.join(src, 'instructions', 'personas', 'active', 'persona_config.json')
         if os.path.exists(ac):
             os.remove(ac)
-        print("[5/11] Aktive Persona entfernt")
+        print("[5/11] Active persona removed")
 
         # Cortex custom memory files
         cortex_custom = os.path.join(src, 'instructions', 'personas', 'cortex', 'custom')
@@ -185,7 +221,7 @@ if __name__ == '__main__':
                 elif os.path.isfile(entry_path):
                     try: os.remove(entry_path)
                     except: pass
-        print("[6/11] Cortex-Speicher geloescht")
+        print("[6/11] Cortex memory deleted")
 
         # Persona notes
         persona_notes_dir = os.path.join(src, 'data', 'persona_notes')
@@ -200,13 +236,13 @@ if __name__ == '__main__':
                 elif os.path.isfile(entry_path):
                     try: os.remove(entry_path)
                     except: pass
-        print("[7/11] Persona-Notizen geloescht")
+        print("[7/11] Persona notes deleted")
 
         # Logs
         for f in glob.glob(os.path.join(src, 'logs', '*.log*')):
             try: os.remove(f)
             except: pass
-        print("[8/11] Logs geloescht")
+        print("[8/11] Logs deleted")
 
         # Custom Avatare (now in frontend/public/avatar/costum/)
         root_dir = os.path.dirname(src)
@@ -221,7 +257,7 @@ if __name__ == '__main__':
         if os.path.exists(avatar_index):
             try: os.remove(avatar_index)
             except: pass
-        print("[9/11] Custom Avatare geloescht")
+        print("[9/11] Custom avatars deleted")
 
         # __pycache__
         for root, dirs, _ in os.walk(src, topdown=False):
@@ -229,9 +265,9 @@ if __name__ == '__main__':
                 if d == '__pycache__':
                     try: shutil.rmtree(os.path.join(root, d))
                     except: pass
-        print("[10/11] Cache geloescht")
+        print("[10/11] Cache deleted")
 
-        # Prompts auf Factory-Defaults
+        # Prompts to factory defaults
         instructions_dir = os.path.join(src, 'instructions')
         prompts_dir = os.path.join(instructions_dir, 'prompts')
         defaults_dir = os.path.join(prompts_dir, '_defaults')
@@ -246,7 +282,7 @@ if __name__ == '__main__':
                     shutil.copy2(s, d)
                     restored += 1
                 except: pass
-            # _meta/ Unterordner
+            # _meta/ subdirectory
             defaults_meta = os.path.join(defaults_dir, '_meta')
             if os.path.isdir(defaults_meta):
                 meta_dir = os.path.join(prompts_dir, '_meta')
@@ -260,12 +296,12 @@ if __name__ == '__main__':
                         shutil.copy2(s, d)
                         restored += 1
                     except: pass
-            print(f"[11/11] {restored} Prompt-Dateien wiederhergestellt")
+            print(f"[11/11] {restored} prompt file(s) restored")
         else:
-            print("[11/11] WARNUNG: _defaults/ nicht gefunden, Prompt-Reset uebersprungen")
+            print("[11/11] WARNING: _defaults/ not found, prompt reset skipped")
 
         print()
-        print("Reset abgeschlossen!")
-        print("Starten Sie PersonaUI mit start.bat")
+        print("Reset complete!")
+        print("Start PersonaUI with start.bat")
         print()
-        input("Druecke Enter zum Beenden...")
+        input("Press Enter to exit...")
