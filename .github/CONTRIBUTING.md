@@ -21,7 +21,7 @@ Thank you for your interest in contributing to **PersonaUI**! This document expl
 - **Bug reports** — Open a [GitHub Issue](https://github.com/Sakushi-Dev/PersonaUI/issues) and label it `bug`. Include steps to reproduce, expected behavior, and actual behavior.
 - **Feature requests** — Open an issue labeled `enhancement`. Describe the use case and why it fits the project.
 - **Pull Requests** — For fixes or new features. Always target the `dev` branch, never `main`. See the workflow below.
-- **Documentation** — Improvements to `README.md`, `docs/`, or inline code comments are always welcome.
+- **Documentation** — Improvements to `README.md`, `.github/docs/`, or inline code comments are always welcome.
 - **Translations** — Locale files live in `frontend/src/locales/`. Currently English (`en`) and German (`de`) are supported.
 
 ---
@@ -122,14 +122,14 @@ The Flask backend runs on `http://localhost:5000`. In `--no-gui` mode, open `htt
 
 ## Testing
 
-Tests live in the `tests/` directory and are run with **pytest**.
+Tests live in the `src/tests/` directory and are run with **pytest**.
 
 ```bash
 # Run all tests
 pytest
 
 # Run a specific file
-pytest tests/test_api_client.py
+pytest src/tests/test_api_client.py
 
 # Run with output
 pytest -s
