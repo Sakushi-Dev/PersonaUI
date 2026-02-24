@@ -1,6 +1,57 @@
 {
   "versions": [
     {
+      "id": "0.3.1_alpha",
+      "label": "v0.3.1 Alpha",
+      "date": "2026-02-24",
+      "en": {
+        "subtitle": "A structural cleanup release — the project root is now lean and organized.",
+        "infoNote": "This is an Alpha release — some features may still change. If you find issues, let us know via GitHub Issues!",
+        "categories": {
+          "improvements": {
+            "title": "Improvements",
+            "items": [
+              "Clean Root Directory — Reduced root clutter from 12+ items to just 4 folders (src, frontend, bin, config) plus essential files.",
+              "Documentation Moved — All docs now live in .github/docs/, community files (CODE_OF_CONDUCT, CONTRIBUTING, SECURITY) in .github/.",
+              "Tests Relocated — Test suite moved from tests/ to src/tests/ for better project cohesion.",
+              "Config Folder — version.json, changelog.json, and launch_options.txt now live in config/."
+            ]
+          },
+          "technical": {
+            "title": "Under the Hood",
+            "items": [
+              "Backward-compatible update check: version.json is read from config/ first, with automatic fallback to root for older installations.",
+              "All path references updated across Python code, batch scripts, pytest config, and documentation.",
+              "Root fallback copies of version.json and changelog.json maintained for legacy client compatibility."
+            ]
+          }
+        }
+      },
+      "de": {
+        "subtitle": "Ein strukturelles Aufräum-Release — das Projektverzeichnis ist jetzt schlank und organisiert.",
+        "infoNote": "Dies ist ein Alpha-Release — einige Features können sich noch ändern. Wenn ihr Fehler findet, meldet sie uns über GitHub Issues!",
+        "categories": {
+          "improvements": {
+            "title": "Verbesserungen",
+            "items": [
+              "Aufgeräumtes Stammverzeichnis — Root-Ordner von 12+ Einträgen auf nur 4 Ordner (src, frontend, bin, config) plus essenzielle Dateien reduziert.",
+              "Dokumentation verschoben — Alle Docs liegen jetzt in .github/docs/, Community-Dateien (CODE_OF_CONDUCT, CONTRIBUTING, SECURITY) in .github/.",
+              "Tests umgezogen — Test-Suite von tests/ nach src/tests/ für bessere Projektkohäsion.",
+              "Config-Ordner — version.json, changelog.json und launch_options.txt liegen jetzt in config/."
+            ]
+          },
+          "technical": {
+            "title": "Unter der Haube",
+            "items": [
+              "Abwärtskompatible Update-Prüfung: version.json wird zuerst aus config/ gelesen, mit automatischem Fallback auf Root für ältere Installationen.",
+              "Alle Pfad-Referenzen aktualisiert in Python-Code, Batch-Skripten, Pytest-Konfiguration und Dokumentation.",
+              "Root-Fallback-Kopien von version.json und changelog.json für Legacy-Client-Kompatibilität beibehalten."
+            ]
+          }
+        }
+      }
+    },
+    {
       "id": "0.3.0_alpha",
       "label": "v0.3.0 Alpha",
       "date": "2026-02-24",
