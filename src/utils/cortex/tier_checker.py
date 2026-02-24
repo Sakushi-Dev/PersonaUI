@@ -14,7 +14,7 @@ from typing import Dict, Optional
 from utils.logger import log
 from utils.database import get_message_count
 from utils.cortex.tier_tracker import (
-    get_cycle_base, set_cycle_base, rebuild_cycle_base, get_progress
+    get_cycle_base, set_cycle_base, get_progress
 )
 
 
@@ -84,7 +84,7 @@ def _get_context_limit() -> int:
             raw = '100'
 
     try:
-        return max(10, int(raw))
+        return max(2, int(raw))  # Minimum 2 für Tests (Normal: 10)
     except (TypeError, ValueError):
         return 100
 
@@ -150,13 +150,12 @@ def check_and_trigger_cortex_update(
     if message_count == 0:
         return None
 
-    # 3. cycle_base laden (oder rebuilden nach Restart)
+    # 3. cycle_base laden
     cycle_base = get_cycle_base(persona_id, session_id)
 
-    # Rebuild wenn cycle_base noch nicht initialisiert (= 0)
-    # und die Session schon Nachrichten hat
-    if cycle_base == 0 and message_count > threshold:
-        cycle_base = rebuild_cycle_base(persona_id, session_id, message_count, threshold)
+    # cycle_base wird persistent auf Disk gespeichert (cycle_state.json).
+    # Kein Rebuild nötig — wenn cycle_base=0 und message_count > threshold,
+    # bedeutet das: erster Zyklus, noch nie getriggert → SOLL triggern.
 
     # 4. Prüfen ob Schwelle erreicht
     messages_since_reset = message_count - cycle_base

@@ -1,6 +1,12 @@
 {
   "versions": [
     {
+      "version": "0.2.1-alpha",
+      "date": "2026-02-24",
+      "tag": "fix",
+      "summary": "Cortex trigger fix: Resolved settings desync between frontend and backend, removed rebuild_cycle_base (was preventing first trigger), redesigned CortexUpdateIndicator (glass-morphism, no emoji), extended ContextBar with cortex progress display (C/X dual-bar), added progress API endpoint."
+    },
+    {
       "version": "0.2.0-alpha",
       "date": "2026-02-23",
       "tag": "redesign",

@@ -371,22 +371,36 @@ function ChatPageContent({ disclaimerAccepted = true }) {
     finaliseCarouselSwipe(carouselIdx);
   }, [carouselIdx, finaliseCarouselSwipe]);
 
-  // ── Cortex update indicator ──
+  // ── Cortex progress + update indicator ──
   const [cortexUpdating, setCortexUpdating] = useState(false);
+  const [cortexProgress, setCortexProgress] = useState(null);
   const cortexTimerRef = useRef(null);
 
   useEffect(() => {
-    const handleCortexUpdate = () => {
-      setCortexUpdating(true);
-      clearTimeout(cortexTimerRef.current);
-      cortexTimerRef.current = setTimeout(() => {
-        setCortexUpdating(false);
-      }, 4000);
+    const handleCortexProgress = (e) => {
+      const { triggered, progress, frequency } = e.detail;
+
+      // Always update progress bar data
+      if (triggered) {
+        // Reset to 0 on trigger, then update with post-reset progress
+        setCortexProgress({ ...progress, progress_percent: 0, frequency });
+      } else {
+        setCortexProgress({ ...progress, frequency });
+      }
+
+      // Show indicator only when triggered
+      if (triggered) {
+        setCortexUpdating(true);
+        clearTimeout(cortexTimerRef.current);
+        cortexTimerRef.current = setTimeout(() => {
+          setCortexUpdating(false);
+        }, 8000);
+      }
     };
 
-    window.addEventListener('cortex-update', handleCortexUpdate);
+    window.addEventListener('cortex-progress', handleCortexProgress);
     return () => {
-      window.removeEventListener('cortex-update', handleCortexUpdate);
+      window.removeEventListener('cortex-progress', handleCortexProgress);
       clearTimeout(cortexTimerRef.current);
     };
   }, []);
@@ -500,9 +514,10 @@ function ChatPageContent({ disclaimerAccepted = true }) {
       />
 
       <div style={{ position: 'relative', height: 0, zIndex: 50 }}>
-        <ContextBar />
-        {cortexUpdating && <CortexUpdateIndicator />}
+        <ContextBar cortexProgress={cortexProgress} />
       </div>
+
+      {cortexUpdating && <CortexUpdateIndicator />}
 
       <Sidebar
         isOpen={sidebar.isOpen}

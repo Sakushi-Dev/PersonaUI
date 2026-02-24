@@ -108,12 +108,14 @@ register({
 
       console.log('[SlashCommand] /cortex – Update gestartet.');
 
-      // Dispatch cortex-update event so the CortexUpdateIndicator shows
+      // Dispatch cortex-progress event so the CortexUpdateIndicator shows
       if (data.cortex) {
         window.dispatchEvent(
-          new CustomEvent('cortex-update', {
+          new CustomEvent('cortex-progress', {
             detail: {
-              ...data.cortex,
+              triggered: true,
+              progress: data.cortex.progress || { progress_percent: 0 },
+              frequency: data.cortex.frequency,
               manual: true,
             },
           })

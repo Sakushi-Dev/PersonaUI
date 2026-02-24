@@ -168,7 +168,7 @@ class TestCortexServiceReadFile:
     def test_read_existing_file(self, cortex_service, temp_cortex_dir):
         ensure_cortex_dir('default')
         content = cortex_service.read_file('default', 'memory.md')
-        assert '# Memories' in content
+        assert '# Memory' in content
 
     def test_read_invalid_filename_raises(self, cortex_service):
         with pytest.raises(ValueError, match="Ungültige Cortex-Datei"):
@@ -178,7 +178,7 @@ class TestCortexServiceReadFile:
         ensure_cortex_dir('default')
         result = cortex_service.read_all('default')
         assert set(result.keys()) == {'memory', 'soul', 'relationship'}
-        assert '# Memories' in result['memory']
+        assert '# Memory' in result['memory']
         assert '# Soul' in result['soul']
         assert '# Relationship' in result['relationship']
 
@@ -232,7 +232,7 @@ class TestCortexServiceToolCallHandler:
         result = cortex_service._handle_tool_call(
             'default', 'cortex_read_file', {'filename': 'memory.md'}
         )
-        assert '# Memories' in result
+        assert '# Memory' in result
 
     def test_handle_write_tool_call(self, cortex_service, temp_cortex_dir):
         ensure_cortex_dir('default')

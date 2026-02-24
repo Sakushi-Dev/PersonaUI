@@ -12,6 +12,9 @@ from flask import Blueprint, request
 
 from utils.provider import get_cortex_service
 from utils.cortex_service import CORTEX_FILES, TEMPLATES
+from utils.cortex.tier_checker import _load_cortex_config, _get_context_limit, _calculate_threshold
+from utils.cortex.tier_tracker import get_progress
+from utils.database import get_message_count
 from utils.logger import log
 from routes.helpers import (
     success_response,
@@ -310,3 +313,55 @@ def update_cortex_settings():
         return success_response(settings=current, defaults=CORTEX_SETTINGS_DEFAULTS)
     else:
         return error_response('Speichern fehlgeschlagen', 500)
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+#  CORTEX PROGRESS ENDPOINT
+# ═════════════════════════════════════════════════════════════════════════════
+
+
+@cortex_bp.route('/api/cortex/progress', methods=['GET'])
+@handle_route_error('get_cortex_progress')
+def get_cortex_progress():
+    """
+    Gibt den aktuellen Cortex-Fortschritt für die Progress-Bar zurück.
+
+    Query-Parameter:
+        session_id (int): Aktuelle Session-ID
+        persona_id (str): Optionale Persona-ID (Fallback via resolve_persona_id)
+
+    Returns:
+        {
+            "success": true,
+            "progress": {
+                "messages_since_reset": 12,
+                "threshold": 48,
+                "progress_percent": 25.0,
+                "cycle_number": 1
+            },
+            "frequency": "medium",
+            "enabled": true
+        }
+    """
+    session_id = request.args.get('session_id', type=int)
+    if not session_id:
+        return error_response('session_id erforderlich', 400)
+
+    persona_id = resolve_persona_id(session_id)
+
+    config = _load_cortex_config()
+    if not config['enabled']:
+        return success_response(progress=None, frequency=config.get('frequency', 'medium'), enabled=False)
+
+    frequency = config.get('frequency', 'medium')
+    context_limit = _get_context_limit()
+    threshold = _calculate_threshold(context_limit, frequency)
+
+    message_count = get_message_count(session_id=session_id, persona_id=persona_id)
+    progress = get_progress(persona_id, session_id, message_count, threshold)
+
+    return success_response(
+        progress=progress,
+        frequency=frequency,
+        enabled=True
+    )

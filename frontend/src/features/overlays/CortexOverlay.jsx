@@ -13,7 +13,7 @@ import OverlayFooter from '../../components/Overlay/OverlayFooter';
 import Toggle from '../../components/Toggle/Toggle';
 import Button from '../../components/Button/Button';
 import Spinner from '../../components/Spinner/Spinner';
-import { getCortexFiles, saveCortexFile, resetCortexFile, resetAllCortexFiles } from '../../services/cortexApi';
+import { getCortexFiles, saveCortexFile, resetCortexFile, resetAllCortexFiles, saveCortexSettings } from '../../services/cortexApi';
 import styles from './Overlays.module.css';
 
 // ── Tab keys (labels resolved via i18n) ──
@@ -165,10 +165,18 @@ export default function CortexOverlay({ open, onClose, panelOnly }) {
   // Save Settings (Footer "Speichern")
   // ══════════════════════════════════════════
   const handleSaveSettings = useCallback(() => {
+    // 1. Frontend-Settings (user_settings.json) — für UI-State & cortexEnabled-Check im Chat
     setMany({
       cortexEnabled,
       cortexFrequency: frequency,
     });
+
+    // 2. Backend Cortex-Settings (cortex_settings.json) — für Tier-Checker Trigger-Logik
+    saveCortexSettings({
+      enabled: cortexEnabled,
+      frequency,
+    }).catch((err) => console.warn('Failed to sync cortex settings to backend:', err));
+
     onClose();
   }, [cortexEnabled, frequency, setMany, onClose]);
 

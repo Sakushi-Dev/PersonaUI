@@ -1,28 +1,86 @@
 /* ── ContextBar ── */
-/* Subtle context-usage indicator, floats top-right below header without shifting content */
+/* Stacked progress bars (context + cortex), right-aligned under header */
 
 .contextBar {
   position: absolute;
   top: 0;
-  right: 20px;
+  right: 16px;
   display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 0;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  padding: 5px 0;
   pointer-events: auto;
   opacity: 1;
   transition: opacity 0.25s ease;
   z-index: 50;
 }
 
+/* ── Row (prefix + stats + track on one line) ── */
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* ── Prefix letter (C / X) ── */
+
+.prefix {
+  font-size: 9px;
+  font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: rgba(0, 0, 0, 0.35);
+  line-height: 1;
+  width: 8px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.cortexPrefix {
+  color: rgba(120, 90, 220, 0.5);
+}
+
+/* ── Stats label (fixed width so bars align) ── */
+
+.stats {
+  font-size: 10px;
+  font-weight: 500;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  white-space: nowrap;
+  user-select: none;
+  color: rgba(0, 0, 0, 0.5);
+  transition: color 0.4s;
+  line-height: 1;
+  width: 62px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.stats.high {
+  color: rgba(249, 115, 22, 0.85);
+}
+
+.stats.critical {
+  color: rgba(239, 68, 68, 0.9);
+}
+
+.stats.full {
+  color: rgba(59, 130, 246, 0.85);
+}
+
 /* ── Track (background rail) ── */
 
 .track {
-  width: 64px;
+  width: 56px;
   height: 3px;
   border-radius: 2px;
   background: rgba(0, 0, 0, 0.08);
   overflow: hidden;
+}
+
+.cortexTrack {
+  width: 56px;
 }
 
 /* ── Fill bar ── */
@@ -33,6 +91,7 @@
   transition: width 0.4s ease, background-color 0.4s ease;
 }
 
+/* Context levels */
 .fill.low {
   background-color: rgba(34, 197, 94, 0.6);        /* green */
 }
@@ -49,25 +108,24 @@
   background-color: rgba(239, 68, 68, 0.8);        /* red */
 }
 
-/* ── Percentage label ── */
-
-.label {
-  font-size: 10px;
-  font-weight: 500;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  white-space: nowrap;
-  user-select: none;
-  color: rgba(0, 0, 0, 0.5);
-  transition: color 0.4s;
-  line-height: 1;
+.fill.full {
+  background-color: rgba(59, 130, 246, 0.75);      /* blue */
 }
 
-.label.high {
-  color: rgba(249, 115, 22, 0.85);
+/* Cortex fill */
+.fill.cortex {
+  background-color: rgba(120, 90, 220, 0.6);       /* purple */
+  transition: width 0.5s ease, background-color 0.4s ease;
 }
 
-.label.critical {
-  color: rgba(239, 68, 68, 0.9);
+.fill.cortexReset {
+  transition: width 0.3s ease;
+}
+
+/* ── Labels ── */
+
+.cortexLabel {
+  color: rgba(120, 90, 220, 0.7);
 }
 
 .detail {
@@ -77,50 +135,82 @@
 
 /* ── Dark Mode ── */
 
-:root[data-theme="dark"] .track {
+:global(body.dark-mode) .track {
   background: rgba(255, 255, 255, 0.1);
 }
 
-:root[data-theme="dark"] .fill.low {
+:global(body.dark-mode) .fill.low {
   background-color: rgba(34, 197, 94, 0.5);
 }
 
-:root[data-theme="dark"] .fill.medium {
+:global(body.dark-mode) .fill.medium {
   background-color: rgba(234, 179, 8, 0.55);
 }
 
-:root[data-theme="dark"] .fill.high {
+:global(body.dark-mode) .fill.high {
   background-color: rgba(249, 115, 22, 0.6);
 }
 
-:root[data-theme="dark"] .fill.critical {
+:global(body.dark-mode) .fill.critical {
   background-color: rgba(239, 68, 68, 0.65);
 }
 
-:root[data-theme="dark"] .label {
+:global(body.dark-mode) .fill.full {
+  background-color: rgba(96, 165, 250, 0.6);
+}
+
+:global(body.dark-mode) .fill.cortex {
+  background-color: rgba(160, 140, 255, 0.55);
+}
+
+:global(body.dark-mode) .prefix {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+:global(body.dark-mode) .cortexPrefix {
+  color: rgba(160, 140, 255, 0.45);
+}
+
+:global(body.dark-mode) .stats {
   color: rgba(255, 255, 255, 0.45);
 }
 
-:root[data-theme="dark"] .label.high {
+:global(body.dark-mode) .stats.high {
   color: rgba(249, 115, 22, 0.8);
 }
 
-:root[data-theme="dark"] .label.critical {
+:global(body.dark-mode) .stats.critical {
   color: rgba(239, 68, 68, 0.85);
+}
+
+:global(body.dark-mode) .stats.full {
+  color: rgba(96, 165, 250, 0.75);
+}
+
+:global(body.dark-mode) .cortexLabel {
+  color: rgba(160, 140, 255, 0.6);
 }
 
 /* ── Responsive ── */
 
 @media (max-width: 768px) {
   .contextBar {
-    padding: 3px 12px;
+    right: 12px;
+    gap: 2px;
+    padding: 3px 0;
   }
 
-  .track {
-    width: 48px;
+  .track,
+  .cortexTrack {
+    width: 42px;
   }
 
-  .label {
+  .stats {
     font-size: 9px;
+    width: 54px;
+  }
+
+  .prefix {
+    font-size: 8px;
   }
 }

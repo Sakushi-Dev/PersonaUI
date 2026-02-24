@@ -78,11 +78,11 @@ export function useMessages() {
           stats: data.stats,
         });
 
-        // Cortex-Update Benachrichtigung (aus SSE done-Event)
-        if (data.cortex?.triggered) {
-          window.dispatchEvent(new CustomEvent('cortex-update', {
+        // Cortex-Progress Benachrichtigung (aus SSE done-Event)
+        if (data.cortex) {
+          window.dispatchEvent(new CustomEvent('cortex-progress', {
             detail: {
-              triggered: true,
+              triggered: data.cortex.triggered,
               progress: data.cortex.progress,
               frequency: data.cortex.frequency
             }

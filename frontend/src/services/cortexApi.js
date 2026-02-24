@@ -93,6 +93,20 @@ export function getCortexSettings() {
 
 
 /**
+ * Lädt den aktuellen Cortex-Fortschritt (Progress-Bar Daten).
+ *
+ * @param {number} sessionId - Aktuelle Session-ID
+ * @param {string} [personaId] - Optionale Persona-ID
+ * @returns {Promise<{success: boolean, progress: object|null, frequency: string, enabled: boolean}>}
+ */
+export function getCortexProgress(sessionId, personaId) {
+  let url = `/api/cortex/progress?session_id=${sessionId}`;
+  if (personaId) url += `&persona_id=${personaId}`;
+  return apiGet(url);
+}
+
+
+/**
  * Aktualisiert die Cortex-Einstellungen (Partial Update).
  *
  * @param {object} settings - Teilweise oder vollständige Settings

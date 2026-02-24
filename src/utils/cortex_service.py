@@ -553,9 +553,11 @@ class CortexService:
         user_name = character_data.get('user_name', 'User')
 
         # 1. System-Prompt bauen
+        language = character_data.get('language', 'Deutsch')
         system_prompt = CORTEX_UPDATE_SYSTEM_PROMPT.format(
             char_name=char_name,
-            user_name=user_name
+            user_name=user_name,
+            language=language
         )
 
         # 2. Messages: Gesprächsverlauf als Kontext

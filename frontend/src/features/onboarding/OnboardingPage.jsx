@@ -19,6 +19,7 @@ import StepIndicator from './components/StepIndicator';
 import { updateUserProfile } from '../../services/userProfileApi';
 import { updateSettings } from '../../services/settingsApi';
 import { saveApiKey } from '../../services/serverApi';
+import { saveCortexSettings } from '../../services/cortexApi';
 import { completeOnboarding } from '../../services/onboardingApi';
 import * as storage from '../../utils/storage';
 import styles from './OnboardingPage.module.css';
@@ -104,6 +105,12 @@ export default function OnboardingPage() {
         cortexEnabled: cortexData.cortexEnabled,
         cortexFrequency: cortexData.cortexFrequency,
       });
+
+      // Cortex-Settings auch in cortex_settings.json syncen (für Tier-Checker)
+      await saveCortexSettings({
+        enabled: cortexData.cortexEnabled,
+        frequency: cortexData.cortexFrequency,
+      }).catch((err) => console.warn('Failed to sync cortex settings:', err));
 
       if (apiData.apiKey) {
         await saveApiKey(apiData.apiKey);
