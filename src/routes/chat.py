@@ -120,9 +120,8 @@ def chat_stream():
                             persona_id=persona_id,
                             session_id=session_id
                         )
-                        log.info("Cortex check result: %s", cortex_info)
                     except Exception as cortex_err:
-                        log.warning("Cortex check failed (non-fatal): %s", cortex_err, exc_info=True)
+                        log.warning("Cortex check failed (non-fatal): %s", cortex_err)
 
                     # done-Payload zusammenbauen
                     done_payload = {

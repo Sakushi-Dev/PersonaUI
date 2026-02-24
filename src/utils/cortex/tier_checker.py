@@ -84,7 +84,7 @@ def _get_context_limit() -> int:
             raw = '100'
 
     try:
-        return max(2, int(raw))  # Minimum 2 für Tests (Normal: 10)
+        return max(10, int(raw))  # Minimum 10 Nachrichten
     except (TypeError, ValueError):
         return 100
 
