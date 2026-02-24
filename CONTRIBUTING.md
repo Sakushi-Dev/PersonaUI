@@ -173,3 +173,16 @@ Commit message rules:
 ## License
 
 By contributing to PersonaUI you agree that your contributions will be licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**, the same license that covers this project. See [LICENSE](LICENSE) for details.
+
+---
+
+## A Note from the Maintainer
+
+> _"I sincerely apologize for the commit history you may have witnessed during the initial setup of this repository._
+> _What you saw was a grown adult repeatedly merging `dev` into `main`, force-pushing, aborting merges, and in one memorable moment, accidentally doing all three at once._
+> _I am the person asking **you** to follow Conventional Commits and keep a clean branch structure._
+> _The irony is not lost on me._
+> _Apparently, writing guidelines about professional Git workflows and actually following them are two completely separate skills — and I am still working on acquiring the latter._
+> _We move forward. Cleanly. From now on."_
+>
+> — The Maintainer, February 2026
