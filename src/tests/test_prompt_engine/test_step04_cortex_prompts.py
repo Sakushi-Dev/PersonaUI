@@ -566,7 +566,7 @@ class TestRegistryAndManifestIntegrity:
 
     @pytest.fixture
     def base_path(self):
-        src_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        src_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
         return os.path.join(src_dir, 'src', 'instructions', 'prompts')
 
     def test_cortex_placeholders_in_registry(self, base_path):
@@ -624,7 +624,7 @@ class TestRegistryAndManifestIntegrity:
 
     def test_cortex_enabled_in_defaults(self):
         """cortexEnabled existiert in defaults.json."""
-        src_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        src_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
         defaults_path = os.path.join(src_dir, 'src', 'settings', 'defaults.json')
         with open(defaults_path, 'r', encoding='utf-8') as f:
             defaults = json.load(f)

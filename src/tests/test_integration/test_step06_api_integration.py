@@ -17,8 +17,8 @@ from unittest.mock import patch, MagicMock
 
 # ─── Konstanten ──────────────────────────────────────────────────────────────
 
-# tests/test_integration/ → tests/ → workspace root → src/
-_WORKSPACE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# src/tests/test_integration/ → src/tests/ → src/ → workspace root
+_WORKSPACE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 SRC_DIR = os.path.join(_WORKSPACE, 'src')
 
 

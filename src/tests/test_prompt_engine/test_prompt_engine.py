@@ -1069,9 +1069,9 @@ class TestArchitecture:
 
     def _get_engine_dir(self):
         """Gibt den Pfad zum prompt_engine/ Verzeichnis zurück."""
-        # tests/test_prompt_engine/test_prompt_engine.py → workspace root → src/utils/prompt_engine
+        # src/tests/test_prompt_engine/test_prompt_engine.py → workspace root → src/utils/prompt_engine
         tests_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        workspace_root = os.path.dirname(tests_dir)
+        workspace_root = os.path.dirname(os.path.dirname(tests_dir))
         return os.path.join(workspace_root, 'src', 'utils', 'prompt_engine')
 
     def test_no_flask_imports(self):

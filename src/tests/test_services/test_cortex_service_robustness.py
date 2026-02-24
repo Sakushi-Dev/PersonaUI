@@ -278,7 +278,7 @@ class TestPromptInjectionHardening:
     def test_externalized_template_has_hardening(self):
         """cortex_update_system.json enthält Anti-Injection-Regeln."""
         template_path = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
             'src', 'instructions', 'prompts', 'cortex_update_system.json'
         )
         with open(template_path, 'r', encoding='utf-8') as f:
@@ -293,7 +293,7 @@ class TestPromptInjectionHardening:
     def test_defaults_template_matches(self):
         """_defaults/cortex_update_system.json hat dieselben Regeln."""
         template_path = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
             'src', 'instructions', 'prompts', '_defaults', 'cortex_update_system.json'
         )
         with open(template_path, 'r', encoding='utf-8') as f:
@@ -324,7 +324,7 @@ class TestSSEDoneEventMatching:
     def test_backend_sends_cortex_field(self):
         """chat.py sendet done_payload['cortex']."""
         chat_path = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
             'src', 'routes', 'chat.py'
         )
         with open(chat_path, 'r', encoding='utf-8') as f:
@@ -335,7 +335,7 @@ class TestSSEDoneEventMatching:
     def test_frontend_reads_cortex_field(self):
         """useMessages.js prüft data.cortex (nicht data.cortex_update)."""
         hook_path = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
             'frontend', 'src', 'features', 'chat', 'hooks', 'useMessages.js'
         )
         with open(hook_path, 'r', encoding='utf-8') as f:

@@ -8,8 +8,8 @@ import pytest
 from unittest.mock import MagicMock, patch, PropertyMock
 from dataclasses import dataclass
 
-# Projektpfad einrichten
-SRC_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'src')
+# Projektpfad einrichten (src/tests/conftest.py → src/)
+SRC_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, SRC_DIR)
 
 # Working directory auf src/ setzen (Templates erwarten relative Pfade)
