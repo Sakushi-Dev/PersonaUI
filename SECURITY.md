@@ -20,8 +20,8 @@ If you discover a security vulnerability in PersonaUI, **please do not open a pu
 
 Instead, report it privately via one of these channels:
 
-- **GitHub Private Vulnerability Reporting** ÔÇö Use the [Security tab](https://github.com/Sakushi-Dev/PersonaUI/security/advisories/new) of this repository to submit a private advisory.
-- **Direct contact** ÔÇö Alternatively, reach out to the maintainer directly via GitHub ([@Sakushi-Dev](https://github.com/Sakushi-Dev)).
+- **GitHub Private Vulnerability Reporting** — Use the [Security tab](https://github.com/Sakushi-Dev/PersonaUI/security/advisories/new) of this repository to submit a private advisory.
+- **Direct contact** — Alternatively, reach out to the maintainer directly via GitHub ([@Sakushi-Dev](https://github.com/Sakushi-Dev)).
 
 ### What to include
 
@@ -37,7 +37,7 @@ Please provide as much of the following as possible:
 | Timeline | Action |
 |----------|--------|
 | **Within 48 hours** | Acknowledgement of your report |
-| **Within 7 days** | Initial assessment ÔÇö confirmed, needs more info, or declined |
+| **Within 7 days** | Initial assessment — confirmed, needs more info, or declined |
 | **Within 30 days** | Patch release (for confirmed issues), or final decision |
 
 If the vulnerability is **confirmed**, you will be credited in the release notes (unless you prefer to remain anonymous).
@@ -50,10 +50,10 @@ If the vulnerability is **declined** (e.g. out of scope or not reproducible), yo
 
 The following are considered **in scope**:
 
-- The Flask backend (`src/`) ÔÇö routes, services, database access
-- The React frontend (`frontend/src/`) ÔÇö XSS, data exposure, insecure API calls
-- Local file handling ÔÇö path traversal, unintended file access
-- API key exposure ÔÇö any way the Anthropic API key could be leaked
+- The Flask backend (`src/`) — routes, services, database access
+- The React frontend (`frontend/src/`) — XSS, data exposure, insecure API calls
+- Local file handling — path traversal, unintended file access
+- API key exposure — any way the Anthropic API key could be leaked
 
 The following are **out of scope**:
 
