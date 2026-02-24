@@ -87,11 +87,11 @@ exit /b 1
 :python_ok
 
 REM ══════════════════════════════════════════════════════════════════════
-REM  Launch Options laden (launch_options.txt im Root)
+REM  Launch Options laden (config/launch_options.txt)
 REM ══════════════════════════════════════════════════════════════════════
 
 set "LAUNCH_OPTS="
-set "LAUNCH_FILE=%ROOT%\launch_options.txt"
+set "LAUNCH_FILE=%ROOT%\config\launch_options.txt"
 
 if exist "%LAUNCH_FILE%" (
     for /f "usebackq eol=# tokens=*" %%a in ("%LAUNCH_FILE%") do (

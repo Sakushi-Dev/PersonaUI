@@ -62,9 +62,9 @@ REM  3. Compare versions (uses PowerShell for reliable JSON parsing)
 REM ----------------------------------------------
 echo [3/6] Checking for updates...
 
-REM Parse local version via PowerShell
+REM Parse local version via PowerShell (config/ primary, root fallback)
 set "LOCAL_VERSION="
-for /f "usebackq delims=" %%v in (`powershell -NoProfile -Command "(Get-Content '%CD%\version.json' -Raw | ConvertFrom-Json).version"`) do (
+for /f "usebackq delims=" %%v in (`powershell -NoProfile -Command "$p='%CD%\config\version.json'; if(-not(Test-Path $p)){$p='%CD%\version.json'}; (Get-Content $p -Raw | ConvertFrom-Json).version"`) do (
     set "LOCAL_VERSION=%%v"
 )
 if not defined LOCAL_VERSION (
@@ -73,9 +73,9 @@ if not defined LOCAL_VERSION (
 )
 echo   [INFO] Current version: !LOCAL_VERSION!
 
-REM Parse remote version via PowerShell (reads git show output)
+REM Parse remote version via PowerShell (config/ primary, root fallback)
 set "REMOTE_VERSION="
-for /f "usebackq delims=" %%v in (`powershell -NoProfile -Command "(git show origin/main:version.json | ConvertFrom-Json).version"`) do (
+for /f "usebackq delims=" %%v in (`powershell -NoProfile -Command "$r=git show origin/main:config/version.json 2>$null; if(-not $r){$r=git show origin/main:version.json 2>$null}; ($r | ConvertFrom-Json).version"`) do (
     set "REMOTE_VERSION=%%v"
 )
 if not defined REMOTE_VERSION (

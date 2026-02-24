@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="media/personaui_loadingscreen.webp" alt="PersonaUI" width="100%">
+  <img src=".github/docs/media/personaui_loadingscreen.webp" alt="PersonaUI" width="100%">
 </p>
 
 <h1 align="center">PersonaUI</h1>
@@ -104,7 +104,7 @@ The init script takes care of everything from here: downloading Node.js if neede
 
 ### Launch Options
 
-You can customize startup behavior by editing `launch_options.txt` in the project root:
+You can customize startup behavior by editing `config/launch_options.txt`:
 
 | Option | Effect |
 |--------|--------|
@@ -276,30 +276,30 @@ All data lives exclusively on your machine — nothing is stored in the cloud. D
 
 ## Documentation
 
-The [`docs/`](docs/) directory contains detailed guides for every part of the system:
+The [`.github/docs/`](.github/docs/) directory contains detailed guides for every part of the system:
 
 <details>
 <summary>Complete Documentation Index</summary>
 
 | # | Document | Focus Area |
 |---|----------|------------|
-| 00 | [Project Summary](docs/00_Project_Summary.md) | Architecture, tech stack, design decisions |
-| 01 | [App Core & Startup](docs/01_App_Core_and_Startup.md) | Bootstrap chain, `init.py`, `app.py`, PyWebView |
-| 02 | [Configuration & Settings](docs/02_Configuration_and_Settings.md) | JSON settings, defaults, `.env`, config loading |
-| 03 | [Utils & Helpers](docs/03_Utils_and_Helpers.md) | Logger, provider, access control, SQL loader, helpers |
-| 04 | [Routes & API](docs/04_Routes_and_API.md) | 15 blueprints, ~84 REST endpoints |
-| 05 | [Chat System](docs/05_Chat_System.md) | SSE streaming, afterthought, message assembly |
-| 06 | [Prompt Engine](docs/06_Prompt_Engine.md) | JSON templates, manifests, placeholder resolution |
-| 07 | [Prompt Builder](docs/07_Prompt_Builder.md) | Legacy builder, engine delegation |
-| 08 | [Database Layer](docs/08_Database_Layer.md) | Per-persona SQLite, schema, migrations, SQL loader |
-| 09 | [Persona & Instructions](docs/09_Persona_and_Instructions.md) | Persona spec, config, CRUD, AI autofill |
-| 10 | [Cortex Memory System](docs/10_Cortex_Memory_System.md) | Long-term memory, tool_use, tier system |
-| 11 | [Services Layer](docs/11_Services_Layer.md) | ApiClient, ChatService, CortexService, Provider |
-| 12 | [Frontend — React SPA](docs/12_Frontend_React_SPA.md) | React architecture, components, services, hooks |
-| 13 | [Prompt Editor](docs/13_Prompt_Editor.md) | Standalone editor app, CRUD, preview |
-| 14 | [Onboarding, Splash & Reset](docs/14_Onboarding_Splash_and_Reset.md) | First-run wizard, splash screen, factory reset |
-| 15 | [Tests & Quality](docs/15_Tests_and_Quality.md) | Test architecture, fixtures, coverage |
-| 16 | [Slash Commands](docs/16_Slash_Commands.md) | Command system, registry, built-in commands |
+| 00 | [Project Summary](.github/docs/00_Project_Summary.md) | Architecture, tech stack, design decisions |
+| 01 | [App Core & Startup](.github/docs/01_App_Core_and_Startup.md) | Bootstrap chain, `init.py`, `app.py`, PyWebView |
+| 02 | [Configuration & Settings](.github/docs/02_Configuration_and_Settings.md) | JSON settings, defaults, `.env`, config loading |
+| 03 | [Utils & Helpers](.github/docs/03_Utils_and_Helpers.md) | Logger, provider, access control, SQL loader, helpers |
+| 04 | [Routes & API](.github/docs/04_Routes_and_API.md) | 15 blueprints, ~84 REST endpoints |
+| 05 | [Chat System](.github/docs/05_Chat_System.md) | SSE streaming, afterthought, message assembly |
+| 06 | [Prompt Engine](.github/docs/06_Prompt_Engine.md) | JSON templates, manifests, placeholder resolution |
+| 07 | [Prompt Builder](.github/docs/07_Prompt_Builder.md) | Legacy builder, engine delegation |
+| 08 | [Database Layer](.github/docs/08_Database_Layer.md) | Per-persona SQLite, schema, migrations, SQL loader |
+| 09 | [Persona & Instructions](.github/docs/09_Persona_and_Instructions.md) | Persona spec, config, CRUD, AI autofill |
+| 10 | [Cortex Memory System](.github/docs/10_Cortex_Memory_System.md) | Long-term memory, tool_use, tier system |
+| 11 | [Services Layer](.github/docs/11_Services_Layer.md) | ApiClient, ChatService, CortexService, Provider |
+| 12 | [Frontend — React SPA](.github/docs/12_Frontend_React_SPA.md) | React architecture, components, services, hooks |
+| 13 | [Prompt Editor](.github/docs/13_Prompt_Editor.md) | Standalone editor app, CRUD, preview |
+| 14 | [Onboarding, Splash & Reset](.github/docs/14_Onboarding_Splash_and_Reset.md) | First-run wizard, splash screen, factory reset |
+| 15 | [Tests & Quality](.github/docs/15_Tests_and_Quality.md) | Test architecture, fixtures, coverage |
+| 16 | [Slash Commands](.github/docs/16_Slash_Commands.md) | Command system, registry, built-in commands |
 
 </details>
 
@@ -333,7 +333,7 @@ The [`docs/`](docs/) directory contains detailed guides for every part of the sy
   npm install
   npm run build
   ```
-- Try launching with `--no-gui` in `launch_options.txt` to open the app in your browser instead. This helps isolate whether the issue is PyWebView or the app itself.
+- Try launching with `--no-gui` in `config/launch_options.txt` to open the app in your browser instead. This helps isolate whether the issue is PyWebView or the app itself.
 
 </details>
 

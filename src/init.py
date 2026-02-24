@@ -42,13 +42,13 @@ _get_requirements_path = _install_mod._get_requirements_path
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-#  Launch Options laden (launch_options.txt im Root)
+#  Launch Options laden (config/launch_options.txt)
 # ═══════════════════════════════════════════════════════════════════════════
 
 def _load_launch_options():
-    """Liest launch_options.txt aus dem Root und gibt die Optionen als Liste zurück."""
+    """Liest launch_options.txt aus config/ und gibt die Optionen als Liste zurück."""
     root_dir = os.path.dirname(SCRIPT_DIR)
-    launch_file = os.path.join(root_dir, 'launch_options.txt')
+    launch_file = os.path.join(root_dir, 'config', 'launch_options.txt')
     options = []
     if os.path.exists(launch_file):
         with open(launch_file, 'r', encoding='utf-8') as f:

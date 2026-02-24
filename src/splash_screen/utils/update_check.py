@@ -9,8 +9,10 @@ from packaging.version import Version, InvalidVersion
 _PROJECT_ROOT = os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )  # PersonaUI/
-_VERSION_FILE = os.path.join(_PROJECT_ROOT, 'version.json')
-_CHANGELOG_FILE = os.path.join(_PROJECT_ROOT, 'changelog.json')
+_VERSION_FILE = os.path.join(_PROJECT_ROOT, 'config', 'version.json')
+_VERSION_FILE_FALLBACK = os.path.join(_PROJECT_ROOT, 'version.json')  # Legacy fallback
+_CHANGELOG_FILE = os.path.join(_PROJECT_ROOT, 'config', 'changelog.json')
+_CHANGELOG_FILE_FALLBACK = os.path.join(_PROJECT_ROOT, 'changelog.json')  # Legacy fallback
 _UPDATE_STATE_FILE = os.path.join(_PROJECT_ROOT, 'src', 'settings', 'update_state.json')
 
 
@@ -37,13 +39,16 @@ def _run_git(*args: str) -> str | None:
 
 def get_local_version() -> str | None:
     """Read the current version from the local version.json."""
-    try:
-        if os.path.exists(_VERSION_FILE):
-            with open(_VERSION_FILE, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            return data.get('version') or None
-    except (json.JSONDecodeError, OSError):
-        pass
+    for path in (_VERSION_FILE, _VERSION_FILE_FALLBACK):
+        try:
+            if os.path.exists(path):
+                with open(path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                ver = data.get('version') or None
+                if ver:
+                    return ver
+        except (json.JSONDecodeError, OSError):
+            continue
     return None
 
 
@@ -60,8 +65,10 @@ def get_remote_version() -> tuple[str | None, str | None]:
     if fetch_result is None:
         return None, 'no_network'
 
-    # Read version.json from origin/main without checkout
-    raw = _run_git('show', 'origin/main:version.json')
+    # Read version.json from origin/main (try config/ first, fallback to root)
+    raw = _run_git('show', 'origin/main:config/version.json')
+    if not raw:
+        raw = _run_git('show', 'origin/main:version.json')  # Legacy fallback
     if not raw:
         return None, 'no_version_file'
 
@@ -76,8 +83,10 @@ def get_remote_version() -> tuple[str | None, str | None]:
 
 
 def get_remote_changelog() -> list[dict] | None:
-    """Read changelog.json from origin/main without checkout."""
-    raw = _run_git('show', 'origin/main:changelog.json')
+    """Read changelog.json from origin/main (config/ primary, root fallback)."""
+    raw = _run_git('show', 'origin/main:config/changelog.json')
+    if not raw:
+        raw = _run_git('show', 'origin/main:changelog.json')  # Legacy fallback
     if raw:
         try:
             data = json.loads(raw)
