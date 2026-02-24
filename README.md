@@ -115,27 +115,82 @@ You can customize startup behavior by editing `launch_options.txt` in the projec
 
 ## What Makes PersonaUI Different
 
-### The Cortex — Persistent, Evolving Memory
+<div align="center">
+<table border="1" cellpadding="16" cellspacing="0" style="border-collapse: collapse; border: 1px solid #30363d;">
+<tr>
+<td width="250" style="border: 1px solid #30363d;">
+<img src="https://iili.io/qKrHYFI.png" alt="Cortex system" width="250">
+</td>
+<td style="border: 1px solid #30363d;">
 
-Most AI chatbots forget everything once the conversation ends. PersonaUI takes a fundamentally different approach with its **Cortex system**. Each persona maintains three files that represent its inner world:
+**The Cortex — Persistent, Evolving Memory**
 
-- **Memory** — Concrete recollections of past conversations, events, and shared moments
-- **Soul** — The persona's evolving self-understanding, values, and personal growth
+Most AI chatbots forget everything once the conversation ends. PersonaUI gives each persona three files that represent its inner world:
+
+- **Memory** — Recollections of past conversations and shared moments
+- **Soul** — Evolving self-understanding, values, and personal growth
 - **Relationship** — How the persona perceives and relates to you over time
 
-These files are written in Markdown, from the persona's own perspective. The AI updates them autonomously using Anthropic's tool-use feature whenever the conversation reaches configurable context thresholds (for example at 50 %, 75 %, or 95 % of the context limit). You can view and edit all three files at any time through the in-app Cortex Overlay.
+Written from the persona's own perspective and updated autonomously via tool use at configurable context thresholds (50 %, 75 %, 95 %). Viewable and editable through the in-app Cortex Overlay.
 
-### Emotional Continuity
+</td>
+</tr>
+<tr>
+<td style="border: 1px solid #30363d;">
 
-Personas don't just respond neutrally. Their mood shifts naturally during a conversation — they can become excited, concerned, playful, or frustrated — and these emotional states carry over across messages, just as they would in a real interaction.
+**Afterthoughts and Emotional Continuity**
 
-### Afterthoughts
+After sending a response, the AI may decide it has something to add — a follow-up message sent on its own, without any input from you.
 
-Sometimes, after sending a response, the AI decides it has something to add. After a short pause it sends a follow-up message on its own, without any input from you. This small detail makes conversations feel noticeably more natural.
+- Independent follow-up messages with a 10-second timer, cancelable at any time
+- Mood shifts naturally during conversation — excitement, concern, playfulness, frustration
+- Emotional states carry over across messages, just as in a real interaction
+- Makes conversations feel noticeably more human
 
-### Complete Privacy
+</td>
+<td width="250" style="border: 1px solid #30363d;">
+<img src="https://iili.io/qKrHEwG.png" alt="Afterthought system" width="250">
+</td>
+</tr>
+<tr>
+<td width="250" style="border: 1px solid #30363d;">
+<img src="https://iili.io/qKrHGtf.png" alt="Creating a persona" width="250">
+</td>
+<td style="border: 1px solid #30363d;">
 
-All data — conversations, memories, settings, avatars — lives exclusively on your machine. Each persona has its own isolated SQLite database. Nothing is stored in the cloud, and no data leaves your computer except for the API requests to Anthropic.
+**Creating a Persona**
+
+Each persona is defined by a set of properties you choose during creation:
+
+- **Species** — Human, Transcendent Being, Elf, Robot, Alien, or Demon
+- **Personality** — Friendly, protective, curious, wise, mysterious, or custom combinations
+- **Expression style** — Normal speech, expressive actions, or casual texting
+- **Knowledge areas** — Cooking, gaming, art, science, philosophy, or anything you define
+- **Scenario** — The setting in which conversations take place
+
+Every persona operates in its own isolated environment with dedicated Cortex files, chat history, and emotional state.
+
+</td>
+</tr>
+<tr>
+<td style="border: 1px solid #30363d;">
+
+**Network Sharing and Privacy**
+
+All data lives exclusively on your machine — nothing is stored in the cloud. Despite full local privacy, you can still share access over your local network:
+
+- IP-based access control with whitelist and blacklist
+- QR code for quick mobile device connection
+- Per-persona SQLite databases, easy to back up or delete
+- No data leaves your computer except the API requests to Anthropic
+
+</td>
+<td width="250" style="border: 1px solid #30363d;">
+<img src="https://iili.io/qKrHc8X.png" alt="Network sharing" width="250">
+</td>
+</tr>
+</table>
+</div>
 
 ---
 
@@ -153,20 +208,6 @@ All data — conversations, memories, settings, avatars — lives exclusively on
 | **Custom Specifications** | Five specification categories to fine-tune persona behavior beyond the defaults |
 | **Network Sharing** | Share access over your local network with IP-based access control and QR code for mobile devices |
 | **Internationalization** | Full i18n support — currently available in English and German |
-
----
-
-## Creating a Persona
-
-Each persona is defined by a set of properties you choose during creation:
-
-- **Species** — Human, Transcendent Being, Elf, Robot, Alien, or Demon
-- **Personality** — Friendly, protective, curious, spontaneous, wise, mysterious, or custom combinations
-- **Expression style** — Normal speech, expressive *actions*, or casual modern texting
-- **Knowledge areas** — Cooking, gaming, art, science, philosophy, or anything you define
-- **Scenario** — The setting in which your conversations take place
-
-Every persona operates in its own isolated environment with dedicated Cortex files, chat history, and emotional state — completely independent from your other personas.
 
 ---
 
