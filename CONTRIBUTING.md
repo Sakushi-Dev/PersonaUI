@@ -18,11 +18,11 @@ Thank you for your interest in contributing to **PersonaUI**! This document expl
 
 ## Ways to Contribute
 
-- **Bug reports** ÔÇö Open a [GitHub Issue](https://github.com/Sakushi-Dev/PersonaUI/issues) and label it `bug`. Include steps to reproduce, expected behavior, and actual behavior.
-- **Feature requests** ÔÇö Open an issue labeled `enhancement`. Describe the use case and why it fits the project.
-- **Pull Requests** ÔÇö For fixes or new features. Always target the `dev` branch, never `main`. See the workflow below.
-- **Documentation** ÔÇö Improvements to `README.md`, `docs/`, or inline code comments are always welcome.
-- **Translations** ÔÇö Locale files live in `frontend/src/locales/`. Currently English (`en`) and German (`de`) are supported.
+- **Bug reports** — Open a [GitHub Issue](https://github.com/Sakushi-Dev/PersonaUI/issues) and label it `bug`. Include steps to reproduce, expected behavior, and actual behavior.
+- **Feature requests** — Open an issue labeled `enhancement`. Describe the use case and why it fits the project.
+- **Pull Requests** — For fixes or new features. Always target the `dev` branch, never `main`. See the workflow below.
+- **Documentation** — Improvements to `README.md`, `docs/`, or inline code comments are always welcome.
+- **Translations** — Locale files live in `frontend/src/locales/`. Currently English (`en`) and German (`de`) are supported.
 
 ---
 
@@ -30,13 +30,13 @@ Thank you for your interest in contributing to **PersonaUI**! This document expl
 
 ### Prerequisites
 
-| Tool | Minimum Version | Notes |
-|------|----------------|-------|
-| Python | 3.12 | Use `pyenv` or `py` launcher on Windows |
-| Node.js | 22 | Required for the React frontend |
-| Git | any | ÔÇö |
+| Tool    | Min. Version | Notes                                    |
+|---------|--------------|------------------------------------------|
+| Python  | 3.12         | Use `pyenv` or `py` launcher on Windows  |
+| Node.js | 22           | Required for the React frontend          |
+| Git     | any          | -                                        |
 
-### 1 ÔÇö Clone & branch
+### 1 — Clone & branch
 
 ```bash
 git clone https://github.com/Sakushi-Dev/PersonaUI.git
@@ -45,7 +45,7 @@ git checkout dev
 git checkout -b feat/your-feature-name
 ```
 
-### 2 ÔÇö Python backend
+### 2 — Python backend
 
 ```bash
 python -m venv .venv
@@ -59,7 +59,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 3 ÔÇö React frontend
+### 3 — React frontend
 
 ```bash
 cd frontend
@@ -67,7 +67,7 @@ npm install
 npm run dev   # starts Vite dev server on :5173
 ```
 
-### 4 ÔÇö Run the full application
+### 4 — Run the full application
 
 ```bash
 # From the project root (with .venv active)
@@ -84,8 +84,8 @@ The Flask backend runs on `http://localhost:5000`. In `--no-gui` mode, open `htt
 
 | Branch | Purpose |
 |--------|---------|
-| `main` | Stable release branch ÔÇö **never commit directly** |
-| `dev` | Integration branch ÔÇö all PRs target here |
+| `main` | Stable release branch — **never commit directly** |
+| `dev` | Integration branch — all PRs target here |
 | `feat/*` | New features |
 | `fix/*` | Bug fixes |
 | `docs/*` | Documentation-only changes |
@@ -109,13 +109,13 @@ The Flask backend runs on `http://localhost:5000`. In `--no-gui` mode, open `htt
 - Maximum line length: **100 characters**.
 - Use type hints where practical.
 - Docstrings for all public functions and classes (Google style preferred).
-- No unused imports ÔÇö clean them up before committing.
+- No unused imports — clean them up before committing.
 
 ### JavaScript / JSX (React)
 
 - Follow the existing ESLint config (`frontend/eslint.config.js`).
 - Run `npm run lint` before opening a PR and fix all reported issues.
-- Use CSS Modules for component styling ÔÇö no inline style objects.
+- Use CSS Modules for component styling — no inline style objects.
 - Prefer functional components with hooks; avoid class components.
 
 ---
@@ -137,7 +137,7 @@ pytest -s
 
 - Add tests for any new backend logic you introduce.
 - Test files follow the pattern `test_*.py`.
-- Mock external API calls (Anthropic SDK) using `pytest-mock` ÔÇö do not make real API requests in tests.
+- Mock external API calls (Anthropic SDK) using `pytest-mock` — do not make real API requests in tests.
 
 ---
 
