@@ -79,6 +79,9 @@ src/settings/onboarding.json
 # pytest_cache
 .pytest_cache/
 
+# ruff_cache
+.ruff_cache/
+
 # Lokale Node.js-Installation (automatisch heruntergeladen)
 bin/node/
 bin/node-*/
@@ -93,3 +96,5 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 package-lock.json*
+
+src/instructions/prompts/*.json
