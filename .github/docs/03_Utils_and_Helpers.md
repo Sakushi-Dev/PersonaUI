@@ -24,7 +24,6 @@ src/utils/
 ├── api_request/           ApiClient package (see doc 11)
 ├── services/              ChatService package (see doc 11)
 ├── prompt_engine/         Prompt engine package (see doc 06)
-├── prompt_builder/        Legacy prompt builder (see doc 07)
 ├── database/              Database package (see doc 08)
 └── cortex/                Cortex subsystem (see doc 10)
 ```

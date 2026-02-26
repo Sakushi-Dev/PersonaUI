@@ -290,8 +290,7 @@ The [`.github/docs/`](.github/docs/) directory contains detailed guides for ever
 | 04 | [Routes & API](.github/docs/04_Routes_and_API.md) | 15 blueprints, ~84 REST endpoints |
 | 05 | [Chat System](.github/docs/05_Chat_System.md) | SSE streaming, afterthought, message assembly |
 | 06 | [Prompt Engine](.github/docs/06_Prompt_Engine.md) | JSON templates, manifests, placeholder resolution |
-| 07 | [Prompt Builder](.github/docs/07_Prompt_Builder.md) | Legacy builder, engine delegation |
-| 08 | [Database Layer](.github/docs/08_Database_Layer.md) | Per-persona SQLite, schema, migrations, SQL loader |
+| 07 | [Database Layer](.github/docs/08_Database_Layer.md) | Per-persona SQLite, schema, migrations, SQL loader |
 | 09 | [Persona & Instructions](.github/docs/09_Persona_and_Instructions.md) | Persona spec, config, CRUD, AI autofill |
 | 10 | [Cortex Memory System](.github/docs/10_Cortex_Memory_System.md) | Long-term memory, tool_use, tier system |
 | 11 | [Services Layer](.github/docs/11_Services_Layer.md) | ApiClient, ChatService, CortexService, Provider |

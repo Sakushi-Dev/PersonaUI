@@ -953,115 +953,6 @@ class TestPromptEngine:
         assert engine._resolver._static_cache == {}
 
 
-# ===== Migrator Tests =====
-
-class TestMigrator:
-    """Tests für den Migrator."""
-
-    def test_convert_known_placeholders(self):
-        """Bekannte Placeholder werden konvertiert."""
-        from src.utils.prompt_engine.migrator import PromptMigrator
-
-        migrator = PromptMigrator()
-
-        input_text = "Hallo {char_name}, du sprichst {language}."
-        result = migrator.convert_placeholders(input_text)
-
-        assert result == "Hallo {{char_name}}, du sprichst {{language}}."
-
-    def test_unknown_placeholders_untouched(self):
-        """Unbekannte {key} bleiben als einfache {key} stehen."""
-        from src.utils.prompt_engine.migrator import PromptMigrator
-
-        migrator = PromptMigrator()
-
-        # Unbekannter Key sollte unverändert bleiben
-        input_text = "Text mit {random_unknown_key}."
-        result = migrator.convert_placeholders(input_text)
-
-        assert result == "Text mit {random_unknown_key}."
-
-    def test_json_syntax_untouched(self):
-        """JSON-Syntax bleibt unverändert (Nicht-\\w-Zeichen)."""
-        from src.utils.prompt_engine.migrator import PromptMigrator
-
-        migrator = PromptMigrator()
-
-        input_text = '{"key": "value"}'
-        result = migrator.convert_placeholders(input_text)
-
-        # JSON: { gefolgt von " ist kein \\w, daher nicht gematcht
-        assert result == '{"key": "value"}'
-
-    def test_mixed_placeholders(self):
-        """Mix aus bekannten und unbekannten Placeholder."""
-        from src.utils.prompt_engine.migrator import PromptMigrator
-
-        migrator = PromptMigrator()
-
-        input_text = "Name: {char_name}, Unbekannt: {something_else}"
-        result = migrator.convert_placeholders(input_text)
-
-        assert '{{char_name}}' in result
-        assert '{something_else}' in result  # Einfache Klammern bleiben
-
-    def test_parity_check_identical(self):
-        """Parity-Vergleich erkennt identische Texte nach Whitespace-Normalisierung."""
-        from src.utils.prompt_engine.migrator import PromptMigrator
-
-        migrator = PromptMigrator()
-
-        old = "  Hallo   Welt  \n\n  Test  "
-        new = "Hallo Welt Test"
-
-        assert migrator.verify_parity('test', 'default', old, new)
-
-    def test_parity_check_different(self):
-        """Parity-Vergleich erkennt unterschiedliche Texte."""
-        from src.utils.prompt_engine.migrator import PromptMigrator
-
-        migrator = PromptMigrator()
-
-        assert not migrator.verify_parity('test', 'default', "Hallo", "Tschüss")
-
-    def test_dry_run(self, tmp_path):
-        """Dry-Run schreibt keine Dateien."""
-        from src.utils.prompt_engine.migrator import PromptMigrator
-
-        instructions_dir = tmp_path / 'instructions'
-        instructions_dir.mkdir()
-        system_dir = instructions_dir / 'system' / 'main'
-        system_dir.mkdir(parents=True)
-
-        # Erstelle eine Test-Datei
-        (system_dir / 'impersonation.txt').write_text("Test {char_name}", encoding='utf-8')
-
-        migrator = PromptMigrator(str(instructions_dir))
-        result = migrator.migrate(dry_run=True)
-
-        assert len(result['migrated_files']) >= 1
-        # prompts/ Verzeichnis sollte NICHT erstellt worden sein
-        assert not os.path.exists(str(instructions_dir / 'prompts'))
-
-    def test_skips_existing_migration(self, tmp_path):
-        """Migration wird übersprungen wenn JSON-Dateien bereits existieren."""
-        from src.utils.prompt_engine.migrator import PromptMigrator
-
-        instructions_dir = tmp_path / 'instructions'
-        instructions_dir.mkdir()
-        prompts_dir = instructions_dir / 'prompts'
-        prompts_dir.mkdir()
-        meta_dir = prompts_dir / '_meta'
-        meta_dir.mkdir()
-        (meta_dir / 'prompt_manifest.json').write_text('{}', encoding='utf-8')
-
-        migrator = PromptMigrator(str(instructions_dir))
-        result = migrator.migrate()
-
-        assert len(result['warnings']) >= 1
-        assert 'bereits' in result['warnings'][0].lower() or 'existieren' in result['warnings'][0].lower()
-
-
 # ===== Architektur-Tests =====
 
 class TestArchitecture:
@@ -1126,7 +1017,7 @@ class TestArchitecture:
         """Alle erwarteten Module existieren."""
         engine_dir = self._get_engine_dir()
         expected = ['__init__.py', 'engine.py', 'loader.py',
-                    'placeholder_resolver.py', 'validator.py', 'migrator.py']
+                    'placeholder_resolver.py', 'validator.py']
         for name in expected:
             assert os.path.exists(os.path.join(engine_dir, name)), \
                 f"Modul fehlt: {name}"

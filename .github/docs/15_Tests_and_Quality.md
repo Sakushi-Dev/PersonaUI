@@ -17,8 +17,6 @@ src/tests/
 │   ├── test_afterthought_flow.py            E2E afterthought (2 tests)
 │   ├── test_chat_flow.py                    E2E chat flow (12 tests)
 │   └── test_step06_api_integration.py       Startup, migration, wiring (32 tests)
-├── test_prompt_builder/
-│   └── test_engine_integration.py           Engine parity & architecture (15 tests)
 ├── test_prompt_engine/
 │   ├── test_prompt_engine.py                Core engine (59 tests)
 │   ├── test_phase5.py                       Export/Import/Reset (19 tests)

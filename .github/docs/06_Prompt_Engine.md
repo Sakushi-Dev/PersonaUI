@@ -268,6 +268,5 @@ When the prompt system is updated (new prompts, schema changes), the migrator ha
 ## Related Documentation
 
 - [05 — Chat System](05_Chat_System.md) — How prompts are used in chat
-- [07 — Prompt Builder](07_Prompt_Builder.md) — Legacy builder with engine delegation
 - [09 — Persona & Instructions](09_Persona_and_Instructions.md) — Persona data that fills placeholders
 - [13 — Prompt Editor](13_Prompt_Editor.md) — UI for editing prompts
