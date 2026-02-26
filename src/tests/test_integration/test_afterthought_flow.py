@@ -2,8 +2,7 @@
 Integration Test: Afterthought E2E Flow (Mock-API).
 Tests decision → followup workflow.
 """
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 
 def _make_chat_service(mock_api_client, mock_engine):

@@ -14,7 +14,6 @@ import os
 import re
 import json
 import shutil
-import tempfile
 import threading
 import zipfile
 from datetime import datetime

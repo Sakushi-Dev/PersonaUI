@@ -11,10 +11,7 @@ Tests:
 
 import os
 import json
-import shutil
-import tempfile
 import pytest
-from unittest.mock import patch, MagicMock
 
 # Test base directory: creates a temporary instructions/ setup
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), '_prompt_engine_fixtures')

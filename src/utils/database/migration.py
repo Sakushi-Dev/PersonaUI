@@ -13,7 +13,7 @@ Verwendung:
 """
 
 import sqlite3
-from typing import List, Dict, Callable, Optional
+from typing import List, Dict
 
 from ..logger import log
 from ..sql_loader import sql

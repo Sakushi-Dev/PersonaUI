@@ -13,7 +13,7 @@ import os
 import shutil
 import tempfile
 import threading
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, List
 
 from .api_request import ApiClient
 from .logger import log

@@ -6,10 +6,9 @@ from flask import Blueprint, request
 from utils.database import (
     get_all_sessions, create_session, get_session,
     delete_session, get_chat_history, get_message_count,
-    get_persona_session_summary, get_session_persona_id
+    get_persona_session_summary
 )
 from utils.config import load_character, get_active_persona_id, activate_persona, load_char_config
-from utils.logger import log
 from utils.cortex.tier_tracker import reset_session as reset_session_cycle_state
 from routes.helpers import success_response, error_response, handle_route_error, resolve_persona_id
 
@@ -50,7 +49,6 @@ def new_session():
     
     # Lade Charakterdaten
     character = load_character()
-    character_name = character.get('char_name', 'Assistant')
     
     # Prüfe ob Auto-First-Message aktiviert ist
     auto_first_message = character.get('start_msg_enabled', False)

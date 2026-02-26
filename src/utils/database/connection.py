@@ -10,7 +10,6 @@ Handles:
 import sqlite3
 import os
 from typing import List
-from ..logger import log
 from ..sql_loader import sql, load_schema
 
 # Data directory setup

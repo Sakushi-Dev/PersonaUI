@@ -5,11 +5,10 @@ from flask import Blueprint, request
 
 from utils.logger import log
 from utils.config import (
-    load_character,
     load_char_profile, load_char_config, save_char_config, get_available_char_options,
     list_created_personas, save_created_persona, delete_created_persona, update_created_persona,
-    load_persona_by_id, activate_persona, restore_default_persona,
-    get_active_persona_id, set_active_persona_id
+    activate_persona, restore_default_persona,
+    get_active_persona_id
 )
 from utils.settings_defaults import get_autofill_model
 from utils.provider import get_api_client

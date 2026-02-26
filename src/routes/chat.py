@@ -52,7 +52,6 @@ def chat_stream():
     api_model = data.get('api_model')
     api_temperature = data.get('api_temperature')
     experimental_mode = data.get('experimental_mode', False)
-    pending_afterthought = data.get('pending_afterthought')  # inner dialogue from [i_can_wait]
     
     # Persona-ID bestimmen (einheitlich über resolve_persona_id)
     persona_id = resolve_persona_id(session_id=session_id)

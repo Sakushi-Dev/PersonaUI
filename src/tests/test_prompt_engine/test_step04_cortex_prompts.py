@@ -14,8 +14,7 @@ Testet:
 import pytest
 import os
 import json
-import tempfile
-from unittest.mock import patch, MagicMock, PropertyMock
+from unittest.mock import patch, MagicMock
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

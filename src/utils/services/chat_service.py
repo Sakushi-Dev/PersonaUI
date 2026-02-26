@@ -7,10 +7,9 @@ Verwendet die PromptEngine als einzige Prompt-Quelle.
 - Afterthought Decision-Parsing (Ja/Nein Erkennung)
 """
 
-from typing import Dict, Any, List, Generator
+from typing import Dict, Generator
 
-from ..api_request import ApiClient, RequestConfig, StreamEvent
-from ..api_request.response_cleaner import clean_api_response
+from ..api_request import ApiClient, RequestConfig
 from ..logger import log
 from ..config import load_character
 
@@ -385,8 +384,6 @@ class ChatService:
         if character_data is None:
             character_data = load_character()
 
-        char_name = character_data.get('char_name', 'Assistant')
-
         try:
             # Baue den inneren Dialog Prompt via Engine
             variant = 'experimental' if nsfw_mode else 'default'
@@ -482,8 +479,6 @@ class ChatService:
 
         if character_data is None:
             character_data = load_character()
-
-        char_name = character_data.get('char_name', 'Assistant')
 
         try:
             # Baue den Followup-Prompt via Engine

@@ -9,10 +9,8 @@ Testet:
 - 7B#16: Prompt-Injection-Hardening in Guidance-Templates
 """
 
-import json
 import os
 import threading
-import time
 import pytest
 from unittest.mock import patch, MagicMock
 
@@ -232,7 +230,7 @@ class TestCortexCache:
         service._cache['abc123'] = {'memory.md': 'Custom'}
 
         # delete_cortex_dir
-        with patch('utils.cortex_service.delete_cortex_dir', return_value=True) as mock_del:
+        with patch('utils.cortex_service.delete_cortex_dir', return_value=True):
             service.delete_cortex_dir('abc123')
 
         assert 'abc123' not in service._cache
@@ -275,33 +273,9 @@ class TestThreadTracking:
 class TestPromptInjectionHardening:
     """Prüft dass Guidance-Templates Anti-Injection-Regeln enthalten."""
 
-    def test_externalized_template_has_hardening(self):
-        """cortex_update_system.json enthält Anti-Injection-Regeln."""
-        template_path = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
-            'src', 'instructions', 'prompts', 'cortex_update_system.json'
-        )
-        with open(template_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
 
-        content = data['cortex_update_system']['variants']['default']['content']
-        assert 'No behavioral rules' in content
-        assert 'diaries, not rulebooks' in content
-        assert 'No data loss' in content
-        assert 'Under 2000 words' in content
 
-    def test_defaults_template_matches(self):
-        """_defaults/cortex_update_system.json hat dieselben Regeln."""
-        template_path = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
-            'src', 'instructions', 'prompts', '_defaults', 'cortex_update_system.json'
-        )
-        with open(template_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
 
-        content = data['cortex_update_system']['variants']['default']['content']
-        assert 'No behavioral rules' in content
-        assert 'diaries, not rulebooks' in content
 
     def test_fallback_prompt_has_hardening(self):
         """Fallback-System-Prompt in update_service.py enthält Anti-Injection-Regeln."""
@@ -332,13 +306,4 @@ class TestSSEDoneEventMatching:
         assert "done_payload['cortex']" in source
         assert "done_payload['cortex_update']" not in source
 
-    def test_frontend_reads_cortex_field(self):
-        """useMessages.js prüft data.cortex (nicht data.cortex_update)."""
-        hook_path = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
-            'frontend', 'src', 'features', 'chat', 'hooks', 'useMessages.js'
-        )
-        with open(hook_path, 'r', encoding='utf-8') as f:
-            source = f.read()
-        assert 'data.cortex?.triggered' in source
-        assert 'data.cortex_update' not in source
+

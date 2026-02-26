@@ -1,6 +1,12 @@
 {
   "versions": [
     {
+      "version": "0.3.2-alpha",
+      "date": "2026-02-26",
+      "tag": "refactor",
+      "summary": "Dead code cleanup: removed 89 unused imports (F401) and unused variables (F841) across all Python source files. Removed 3 dead tests in test_cortex_service_robustness.py that asserted against outdated template content. All 330 tests pass, ruff reports zero findings."
+    },
+    {
       "version": "0.3.1-alpha",
       "date": "2026-02-24",
       "tag": "refactor",

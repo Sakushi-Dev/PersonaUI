@@ -13,7 +13,7 @@ deaktiviert nur diese Domain, nicht das ganze System.
 import os
 import json
 import tempfile
-from typing import Dict, Any, Optional, Tuple, List
+from typing import Dict, Any, Tuple, List
 from ..logger import log
 
 

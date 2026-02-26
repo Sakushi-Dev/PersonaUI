@@ -9,12 +9,10 @@ Testet:
 - _extract_text_from_content() Helper
 """
 
-import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
-from dataclasses import dataclass
+from unittest.mock import MagicMock, patch
 
-from utils.api_request.client import ApiClient, ToolExecutor, MAX_TOOL_ROUNDS
-from utils.api_request.types import RequestConfig, ApiResponse
+from utils.api_request.client import ApiClient, MAX_TOOL_ROUNDS
+from utils.api_request.types import RequestConfig
 
 
 # ─── Helpers ─────────────────────────────────────────────────────────
@@ -452,7 +450,7 @@ class TestToolRequestMessageBuilding:
             config = _base_config()
             executor = MagicMock(return_value=(True, "Soul content"))
 
-            result = client.tool_request(config, executor)
+            client.tool_request(config, executor)
 
             # Verify the second API call had the right messages
             second_call_kwargs = mock_api.call_args_list[1]

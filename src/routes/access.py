@@ -15,7 +15,6 @@ from utils.access_control import (
     remove_from_blacklist, is_local_ip, set_access_control_enabled
 )
 from routes.helpers import success_response, error_response, handle_route_error
-from utils.logger import log
 from routes.react_frontend import serve_react_app
 
 

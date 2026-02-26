@@ -11,7 +11,6 @@ Validiert:
 import re
 from typing import Dict, Any, List
 
-from ..logger import log
 
 
 # Gültige Werte für Manifest-Felder

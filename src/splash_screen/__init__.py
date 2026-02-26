@@ -11,9 +11,9 @@ import os
 
 # Re-exports from utils
 from .utils import (
-    hide_console_window,
-    show_console_window,
-    startup_sequence,
+    hide_console_window as hide_console_window,
+    show_console_window as show_console_window,
+    startup_sequence as startup_sequence,
 )
 
 _PACKAGE_DIR = os.path.dirname(os.path.abspath(__file__))
