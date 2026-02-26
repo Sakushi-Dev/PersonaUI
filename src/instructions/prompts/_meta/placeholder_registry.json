@@ -272,33 +272,6 @@
       "category": "context",
       "resolve_phase": "runtime"
     },
-    "experimental_01": {
-      "name": "Experimental Extension 1",
-      "description": "Optional experimental extension for prompts (summary/spec)",
-      "source": "runtime",
-      "type": "string",
-      "default": "",
-      "category": "system",
-      "resolve_phase": "runtime"
-    },
-    "experimental_02": {
-      "name": "Experimental Extension 2",
-      "description": "Optional experimental extension for summary character",
-      "source": "runtime",
-      "type": "string",
-      "default": "",
-      "category": "system",
-      "resolve_phase": "runtime"
-    },
-    "experimental_03": {
-      "name": "Experimental Extension 3",
-      "description": "Optional experimental extension for summary remember",
-      "source": "runtime",
-      "type": "string",
-      "default": "",
-      "category": "system",
-      "resolve_phase": "runtime"
-    },
     "cortex_memory": {
       "name": "Cortex Memory",
       "description": "Inhalt der memory.md — Faktenwissen, Vorlieben, wichtige Details über den User",
@@ -343,6 +316,15 @@
       "type": "string",
       "default": "",
       "category": "cortex",
+      "resolve_phase": "runtime"
+    },
+    "last_encounter": {
+      "name": "Last Encounter",
+      "description": "Describes when the persona last interacted with the user. Shows first encounter, last conversation (new session), or last user message time (current session).",
+      "source": "runtime",
+      "type": "string",
+      "default": "",
+      "category": "context",
       "resolve_phase": "runtime"
     }
   }

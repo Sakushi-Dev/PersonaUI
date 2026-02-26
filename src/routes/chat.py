@@ -103,7 +103,8 @@ def chat_stream():
                 api_temperature=api_temperature,
                 ip_address=user_ip,
                 experimental_mode=experimental_mode,
-                persona_id=persona_id
+                persona_id=persona_id,
+                session_id=session_id
             ):
                 if event_type == 'chunk':
                     # Benutzernachricht erst beim ersten erfolgreichen Chunk speichern
@@ -291,7 +292,8 @@ def api_regenerate():
                 api_temperature=api_temperature,
                 ip_address=user_ip,
                 experimental_mode=experimental_mode,
-                persona_id=persona_id
+                persona_id=persona_id,
+                session_id=session_id
             ):
                 if event_type == 'chunk':
                     yield f"data: {json.dumps({'type': 'chunk', 'text': event_data})}\n\n"
@@ -518,7 +520,8 @@ def auto_first_message():
                 api_temperature=api_temperature,
                 ip_address=user_ip,
                 experimental_mode=experimental_mode,
-                persona_id=persona_id
+                persona_id=persona_id,
+                session_id=session_id
             ):
                 if event_type == 'chunk':
                     yield f"data: {json.dumps({'type': 'chunk', 'text': event_data})}\n\n"

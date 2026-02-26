@@ -279,7 +279,8 @@ class ChatService:
                     user_name: str = 'User', api_model: str = None,
                     api_temperature: float = None,
                     ip_address: str = None, experimental_mode: bool = False,
-                    persona_id: str = None, pending_afterthought: str = None) -> Generator:
+                    persona_id: str = None, pending_afterthought: str = None,
+                    session_id: int = None) -> Generator:
         """
         Haupt-Chat-Stream.
 
@@ -300,6 +301,14 @@ class ChatService:
             runtime_vars = {}
             if ip_address:
                 runtime_vars['ip_address'] = ip_address
+            # Last Encounter berechnen
+            try:
+                from ..last_encounter import compute_last_encounter
+                runtime_vars['last_encounter'] = compute_last_encounter(
+                    session_id=session_id, persona_id=persona_id
+                )
+            except Exception as e:
+                log.warning("last_encounter computation failed: %s", e)
             # Cortex-Daten laden und als runtime_vars hinzufügen
             cortex_data = self._load_cortex_context(persona_id)
             runtime_vars.update(cortex_data)
