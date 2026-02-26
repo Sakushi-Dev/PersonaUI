@@ -1,8 +1,6 @@
 """
 Tests für ChatService — Message-Assembly, Stream, Decision.
 """
-import pytest
-from unittest.mock import MagicMock, patch
 
 
 class TestChatServiceInit:

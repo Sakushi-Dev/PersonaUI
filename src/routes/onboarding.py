@@ -1,7 +1,7 @@
 """
 Onboarding Routes – First-Run Setup Sequenz
 """
-from flask import Blueprint, redirect, url_for
+from flask import Blueprint
 import os
 import json
 from routes.helpers import success_response, handle_route_error

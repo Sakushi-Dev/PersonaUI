@@ -37,7 +37,7 @@ def test_api_key():
         client = anthropic.Anthropic(api_key=api_key)
         
         # Einfacher Test-Request
-        message = client.messages.create(
+        client.messages.create(
             model=api_model,
             max_tokens=10,
             messages=[
@@ -141,7 +141,6 @@ def save_api_key():
 @handle_route_error('get_server_settings')
 def get_server_settings():
     """Gibt die aktuellen Server-Einstellungen zurück"""
-    import socket
     
     settings_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'settings', 'server_settings.json')
     server_mode = 'local'  # default
@@ -328,9 +327,7 @@ def generate_qr_code():
 @handle_route_error('save_and_restart_server')
 def save_and_restart_server():
     """Speichert Server-Einstellungen und startet den Server neu"""
-    import sys
     import subprocess
-    import signal
     
     data = request.get_json()
     server_mode = data.get('server_mode', 'local')

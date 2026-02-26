@@ -93,3 +93,25 @@ UPDATE chat_messages SET message = ? WHERE id = (
 -- name: upsert_db_info
 -- Setzt einen Wert in der DB-Info Tabelle
 INSERT OR REPLACE INTO db_info (key, value) VALUES (?, ?);
+
+-- name: get_last_user_message_timestamp
+-- Gets the timestamp of the last user message in a session
+SELECT timestamp FROM chat_messages
+WHERE session_id = ? AND is_user = 1
+ORDER BY id DESC LIMIT 1;
+
+-- name: get_session_count
+-- Counts all sessions for this persona DB
+SELECT COUNT(*) FROM chat_sessions;
+
+-- name: get_last_user_message_other_sessions
+-- Gets the most recent user message timestamp from any session other than the given one
+SELECT cm.timestamp FROM chat_messages cm
+JOIN chat_sessions cs ON cm.session_id = cs.id
+WHERE cm.session_id != ? AND cm.is_user = 1
+ORDER BY cm.id DESC LIMIT 1;
+
+-- name: get_user_message_count_in_session
+-- Counts user messages in a specific session
+SELECT COUNT(*) FROM chat_messages
+WHERE session_id = ? AND is_user = 1;

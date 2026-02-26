@@ -110,7 +110,6 @@ init.py (bootstrap)
             │     ├── config.py (persona loading)
             │     ├── database/ (SQLite per-persona)
             │     ├── prompt_engine/ (JSON templates)
-            │     ├── prompt_builder/ (legacy bridge)
             │     ├── cortex_service.py + cortex/ (memory)
             │     ├── logger.py (rotating files)
             │     ├── access_control.py (IP whitelist)
@@ -156,7 +155,6 @@ init.py (bootstrap)
 | **04** | [Routes & API](04_Routes_and_API.md) | All 15 blueprints, endpoint reference |
 | **05** | [Chat System](05_Chat_System.md) | SSE streaming, afterthought, message assembly |
 | **06** | [Prompt Engine](06_Prompt_Engine.md) | JSON templates, manifests, placeholder resolution |
-| **07** | [Prompt Builder](07_Prompt_Builder.md) | Legacy builder, engine delegation |
 | **08** | [Database Layer](08_Database_Layer.md) | Per-persona SQLite, schema, migrations, SQL loader |
 | **09** | [Persona & Instructions](09_Persona_and_Instructions.md) | Persona spec, config, CRUD, AI autofill |
 | **10** | [Cortex Memory System](10_Cortex_Memory_System.md) | Long-term memory, tool_use, tier system |

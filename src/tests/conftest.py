@@ -5,8 +5,7 @@ Mock-API, Test-Personas, Sample-Data.
 import sys
 import os
 import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
-from dataclasses import dataclass
+from unittest.mock import MagicMock, patch
 
 # Projektpfad einrichten (src/tests/conftest.py → src/)
 SRC_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -148,7 +147,7 @@ def api_client_stream(mock_anthropic_stream):
 @pytest.fixture
 def mock_api_client():
     """Komplett gemockter ApiClient (ohne anthropic)"""
-    from utils.api_request.types import ApiResponse, StreamEvent
+    from utils.api_request.types import ApiResponse
     client = MagicMock()
     client.is_ready = True
     client.request.return_value = ApiResponse(

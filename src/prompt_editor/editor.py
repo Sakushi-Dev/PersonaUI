@@ -28,7 +28,7 @@ def start_editor():
     api = EditorApi()
     html = load_editor_html()
 
-    window = webview.create_window(
+    webview.create_window(
         title='PersonaUI \u2013 Prompt Editor',
         html=html,
         js_api=api,

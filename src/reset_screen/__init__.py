@@ -9,8 +9,8 @@ Provides:
 
 import os
 
-from .utils import reset_sequence
-from .utils.reset import collect_personas, PRESETS, PRESET_ORDER
+from .utils import reset_sequence as reset_sequence
+from .utils.reset import collect_personas as collect_personas, PRESETS as PRESETS, PRESET_ORDER as PRESET_ORDER
 
 _PACKAGE_DIR = os.path.dirname(os.path.abspath(__file__))
 

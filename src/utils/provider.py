@@ -10,7 +10,6 @@ Usage in routes:
     from utils.provider import get_api_client, get_chat_service
 """
 
-from typing import Optional
 
 
 _api_client = None

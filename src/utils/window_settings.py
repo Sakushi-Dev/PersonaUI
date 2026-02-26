@@ -138,5 +138,5 @@ def save_window_settings(width: int, height: int, x: Optional[int] = None, y: Op
         os.makedirs(os.path.dirname(SETTINGS_FILE), exist_ok=True)
         with open(SETTINGS_FILE, 'w', encoding='utf-8') as f:
             json.dump(settings, f, indent=4, ensure_ascii=False)
-    except Exception as e:
+    except Exception:
         pass  # Fehler beim Speichern ignorieren

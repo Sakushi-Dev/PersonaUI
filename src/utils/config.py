@@ -5,8 +5,7 @@ Hilfsfunktionen zum Laden von Konfigurationsdateien
 import json
 import os
 import uuid
-import shutil
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 from utils.database import create_persona_db, delete_persona_db
 from utils.cortex_service import create_cortex_dir, delete_cortex_dir
 from utils.cortex.tier_tracker import reset_persona as reset_persona_cycle_state

@@ -4,7 +4,7 @@ Typen und Konfiguration für API-Requests.
 Zentrale Dataclasses für einheitliche Request-Konfiguration und Response-Struktur.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional, List, Dict, Any
 
 

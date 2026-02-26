@@ -17,7 +17,7 @@ import threading
 import json
 import os
 from datetime import datetime
-from typing import Dict, Any, Tuple, Optional
+from typing import Dict, Any, Tuple
 
 from utils.logger import log
 from utils.api_request import RequestConfig

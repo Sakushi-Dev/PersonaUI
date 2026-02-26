@@ -52,7 +52,6 @@ def chat_stream():
     api_model = data.get('api_model')
     api_temperature = data.get('api_temperature')
     experimental_mode = data.get('experimental_mode', False)
-    pending_afterthought = data.get('pending_afterthought')  # inner dialogue from [i_can_wait]
     
     # Persona-ID bestimmen (einheitlich über resolve_persona_id)
     persona_id = resolve_persona_id(session_id=session_id)
@@ -103,7 +102,8 @@ def chat_stream():
                 api_temperature=api_temperature,
                 ip_address=user_ip,
                 experimental_mode=experimental_mode,
-                persona_id=persona_id
+                persona_id=persona_id,
+                session_id=session_id
             ):
                 if event_type == 'chunk':
                     # Benutzernachricht erst beim ersten erfolgreichen Chunk speichern
@@ -291,7 +291,8 @@ def api_regenerate():
                 api_temperature=api_temperature,
                 ip_address=user_ip,
                 experimental_mode=experimental_mode,
-                persona_id=persona_id
+                persona_id=persona_id,
+                session_id=session_id
             ):
                 if event_type == 'chunk':
                     yield f"data: {json.dumps({'type': 'chunk', 'text': event_data})}\n\n"
@@ -518,7 +519,8 @@ def auto_first_message():
                 api_temperature=api_temperature,
                 ip_address=user_ip,
                 experimental_mode=experimental_mode,
-                persona_id=persona_id
+                persona_id=persona_id,
+                session_id=session_id
             ):
                 if event_type == 'chunk':
                     yield f"data: {json.dumps({'type': 'chunk', 'text': event_data})}\n\n"

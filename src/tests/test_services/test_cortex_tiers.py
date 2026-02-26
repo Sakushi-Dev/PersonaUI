@@ -9,9 +9,7 @@ Testet:
 import pytest
 import os
 import json
-import tempfile
-import threading
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 # tier_tracker hat Modul-Level State → für saubere Tests müssen wir resetten
 import utils.cortex.tier_tracker as tracker_module
@@ -20,8 +18,7 @@ from utils.cortex.tier_tracker import (
     rebuild_cycle_base, get_progress
 )
 from utils.cortex.tier_checker import (
-    _calculate_threshold, _load_cortex_config, FREQUENCIES,
-    DEFAULT_FREQUENCY, check_and_trigger_cortex_update
+    _calculate_threshold, check_and_trigger_cortex_update
 )
 
 

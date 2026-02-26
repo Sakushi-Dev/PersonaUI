@@ -2,7 +2,7 @@
 Tests für provider.py — Zentrales Instance-Management.
 """
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 
 class TestInitServices:

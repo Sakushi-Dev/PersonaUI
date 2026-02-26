@@ -10,9 +10,7 @@ Testet:
 """
 
 import pytest
-import time
-import threading
-from unittest.mock import patch, MagicMock, PropertyMock
+from unittest.mock import patch, MagicMock
 
 from utils.cortex.update_service import (
     CortexUpdateService, CORTEX_TOOLS,

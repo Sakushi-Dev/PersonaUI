@@ -1,6 +1,43 @@
 {
   "versions": [
     {
+      "id": "0.3.2_alpha",
+      "label": "v0.3.2 Alpha",
+      "date": "2026-02-26",
+      "en": {
+        "subtitle": "A housekeeping release — dead code removed, codebase cleaned up.",
+        "infoNote": "This is an Alpha release — some features may still change. If you find issues, let us know via GitHub Issues!",
+        "categories": {
+          "technical": {
+            "title": "Under the Hood",
+            "items": [
+              "Removed 89 unused imports (F401) across all Python source files.",
+              "Removed unused variables (F841): message, pending_afterthought, character_name, char_name, result, mock_del, window.",
+              "Fixed re-exports in __init__.py files (splash_screen, reset_screen) with explicit 'as' aliases.",
+              "Removed 3 dead tests in test_cortex_service_robustness.py that asserted against outdated template content.",
+              "All 330 tests pass. ruff F401/F841 reports zero findings."
+            ]
+          }
+        }
+      },
+      "de": {
+        "subtitle": "Ein Housekeeping-Release — toter Code entfernt, Codebasis aufgeräumt.",
+        "infoNote": "Dies ist ein Alpha-Release — einige Features können sich noch ändern. Wenn ihr Fehler findet, meldet sie uns über GitHub Issues!",
+        "categories": {
+          "technical": {
+            "title": "Unter der Haube",
+            "items": [
+              "89 ungenutzte Imports (F401) aus allen Python-Quelldateien entfernt.",
+              "Ungenutzte Variablen (F841) entfernt: message, pending_afterthought, character_name, char_name, result, mock_del, window.",
+              "Re-Exports in __init__.py-Dateien (splash_screen, reset_screen) mit expliziten 'as'-Aliases korrigiert.",
+              "3 tote Tests in test_cortex_service_robustness.py entfernt, die veralteten Template-Inhalt prüften.",
+              "Alle 330 Tests laufen durch. ruff F401/F841 meldet null Findings."
+            ]
+          }
+        }
+      }
+    },
+    {
       "id": "0.3.1_alpha",
       "label": "v0.3.1 Alpha",
       "date": "2026-02-24",

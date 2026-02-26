@@ -200,7 +200,7 @@ def install_dependencies():
         venv_python = sys.executable
 
     try:
-        result = subprocess.run(
+        subprocess.run(
             [venv_python, '-m', 'pip', 'install', '-r', req_path],
             check=True,
             capture_output=True,

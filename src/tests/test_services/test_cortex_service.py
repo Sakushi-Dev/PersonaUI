@@ -3,16 +3,13 @@ Tests für CortexService.
 Unit-Tests für Dateiverwaltung, Pfadauflösung, Prompt-Integration und tool_use Handling.
 """
 import os
-import shutil
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import utils.cortex_service as cortex_module
 from utils.cortex_service import (
     CortexService,
     CORTEX_FILES,
-    TEMPLATES,
-    CORTEX_BASE_DIR,
     CORTEX_DEFAULT_DIR,
     CORTEX_CUSTOM_DIR,
     MEMORY_TEMPLATE,
