@@ -13,7 +13,3 @@ export function createCustomSpec(category, data) {
 export function deleteCustomSpec(category, id) {
   return apiDelete(`/api/custom-specs/${category}/${id}`);
 }
-
-export function autofillCustomSpec(data) {
-  return apiPost('/api/custom-specs/autofill', data);
-}

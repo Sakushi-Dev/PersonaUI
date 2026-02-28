@@ -1,6 +1,5 @@
 // ── CustomSpecsOverlay ──
 // 5 category tabs with expandable forms for custom persona specs
-// Per-field autofill: each field gets its own ✨ button + optional hint textarea
 // Pattern: ifaceSection / ifaceCard (like InterfaceSettingsOverlay)
 
 import { useState, useEffect, useMemo } from 'react';
@@ -10,7 +9,7 @@ import { GearIcon } from '../../components/Icons/Icons';
 import OverlayBody from '../../components/Overlay/OverlayBody';
 import Button from '../../components/Button/Button';
 import Spinner from '../../components/Spinner/Spinner';
-import { createCustomSpec, autofillCustomSpec } from '../../services/customSpecsApi';
+import { createCustomSpec } from '../../services/customSpecsApi';
 import { useLanguage } from '../../hooks/useLanguage';
 import styles from './Overlays.module.css';
 
@@ -66,18 +65,13 @@ export default function CustomSpecsOverlay({ open, onClose, onOpenList }) {
   const [forms, setForms] = useState(() =>
     Object.fromEntries(CATEGORY_KEYS.map((c) => [c.key, makeInitialForm(c.key)]))
   );
-  // Per-field filling state: { description: false, example: false, items: false }
-  const [fillingField, setFillingField] = useState({});
 
   useEffect(() => {
     if (open) {
       setActiveTab('persona-type');
       setForms(Object.fromEntries(CATEGORY_KEYS.map((c) => [c.key, makeInitialForm(c.key)])));
-      setFillingField({});
     }
   }, [open]);
-
-  const isFilling = Object.values(fillingField).some(Boolean);
 
   // ── Form Helpers ──
   const form = forms[activeTab] || {};
@@ -118,48 +112,6 @@ export default function CustomSpecsOverlay({ open, onClose, onOpenList }) {
     setForms((prev) => ({ ...prev, [activeTab]: makeInitialForm(activeTab) }));
   };
 
-  // ── Per-Field Auto-Fill ──
-  // field: 'description' | 'example' | 'items'
-  // The current text in the field is sent as a hint to the AI
-  const handleFieldAutofill = async (field) => {
-    if (!form.name) return;
-
-    // Determine hint: current field value that user may have typed
-    let hint = '';
-    if (field === 'description') hint = form.description || '';
-    else if (field === 'example') hint = form.example || '';
-    else if (field === 'items') hint = (form.items || []).filter(Boolean).join(', ');
-
-    setFillingField((prev) => ({ ...prev, [field]: true }));
-    try {
-      const resp = await autofillCustomSpec({
-        type: toSpecType(activeTab),
-        field,
-        input: form.name,
-        hint: hint.trim(),
-        item_count: (form.items || []).length || 3,
-      });
-
-      if (field === 'items' && resp?.items) {
-        // Fill items array
-        const newItems = [...(form.items || [])];
-        const items = resp.items;
-        for (let i = 0; i < newItems.length && i < items.length; i++) {
-          newItems[i] = items[i];
-        }
-        updateField('items', newItems);
-      } else if (resp?.text) {
-        updateField(field, resp.text);
-      } else {
-        console.warn('[AutoFill] Unexpected response:', resp);
-      }
-    } catch (err) {
-      console.error('[AutoFill] Error:', err);
-    } finally {
-      setFillingField((prev) => ({ ...prev, [field]: false }));
-    }
-  };
-
   // ── Create ──
   const handleCreate = async () => {
     const key = toKey(form.name);
@@ -195,7 +147,6 @@ export default function CustomSpecsOverlay({ open, onClose, onOpenList }) {
   // ── Tab Change ──
   const handleTabChange = (key) => {
     setActiveTab(key);
-    setFillingField({});
   };
 
   const hasItems = HAS_ITEMS[activeTab];
@@ -203,19 +154,6 @@ export default function CustomSpecsOverlay({ open, onClose, onOpenList }) {
   const itemLabel = itemLabelKeys ? s[itemLabelKeys.singularKey] : s.entry;
   const itemLabelPlural = itemLabelKeys ? s[itemLabelKeys.pluralKey] : s.entry;
   const derivedKey = toKey(form.name);
-
-  // ── Autofill Button helper ──
-  const AutofillBtn = ({ field }) => (
-    <Button
-      variant="secondary"
-      size="sm"
-      onClick={() => handleFieldAutofill(field)}
-      disabled={isFilling || !form.name}
-      title={s.autofillTitle}
-    >
-      {fillingField[field] ? s.generating : s.autofill}
-    </Button>
-  );
 
   return (
     <Overlay open={open} onClose={onClose} width="600px">
@@ -255,7 +193,6 @@ export default function CustomSpecsOverlay({ open, onClose, onOpenList }) {
                 onChange={(e) => updateField('name', e.target.value)}
                 maxLength={40}
                 placeholder={s.namePlaceholder}
-                disabled={isFilling}
               />
               {derivedKey && (
                 <span className={styles.csKeyPreview}>
@@ -266,12 +203,9 @@ export default function CustomSpecsOverlay({ open, onClose, onOpenList }) {
 
             <div className={styles.ifaceDivider} />
 
-            {/* Description with per-field autofill */}
+            {/* Description */}
             <div className={styles.ifaceFieldGroup}>
-              <div className={styles.csFieldHeader}>
-                <span className={styles.ifaceFieldLabel}>{s.description}</span>
-                <AutofillBtn field="description" />
-              </div>
+              <span className={styles.ifaceFieldLabel}>{s.description}</span>
               <span className={styles.ifaceFieldHint}>
                 {s.descHint}
               </span>
@@ -282,26 +216,16 @@ export default function CustomSpecsOverlay({ open, onClose, onOpenList }) {
                   onChange={(e) => updateField('description', e.target.value)}
                   rows={3}
                   placeholder={s.descPlaceholder}
-                  disabled={fillingField.description}
                 />
-                {fillingField.description && (
-                  <div className={styles.autofillOverlay}>
-                    <Spinner />
-                    <span className={styles.autofillOverlayText}>{s.generatingDesc}</span>
-                  </div>
-                )}
               </div>
             </div>
 
-            {/* Example (expression-style only) with per-field autofill */}
+            {/* Example (expression-style only) */}
             {activeTab === 'expression-style' && (
               <>
                 <div className={styles.ifaceDivider} />
                 <div className={styles.ifaceFieldGroup}>
-                  <div className={styles.csFieldHeader}>
-                    <span className={styles.ifaceFieldLabel}>{s.example}</span>
-                    <AutofillBtn field="example" />
-                  </div>
+                  <span className={styles.ifaceFieldLabel}>{s.example}</span>
                   <span className={styles.ifaceFieldHint}>{s.exampleHint}</span>
                   <div className={styles.backgroundTextareaWrapper}>
                     <textarea
@@ -310,34 +234,24 @@ export default function CustomSpecsOverlay({ open, onClose, onOpenList }) {
                       onChange={(e) => updateField('example', e.target.value)}
                       rows={2}
                       placeholder={s.examplePlaceholder}
-                      disabled={fillingField.example}
                     />
-                    {fillingField.example && (
-                      <div className={styles.autofillOverlay}>
-                        <Spinner />
-                        <span className={styles.autofillOverlayText}>{s.generatingExample}</span>
-                      </div>
-                    )}
                   </div>
                 </div>
               </>
             )}
 
-            {/* Expandable Items (core-trait / scenario / expression-style) with per-field autofill */}
+            {/* Expandable Items (core-trait / scenario / expression-style) */}
             {hasItems && (
               <>
                 <div className={styles.ifaceDivider} />
                 <div className={styles.ifaceFieldGroup}>
-                  <div className={styles.csFieldHeader}>
-                    <div className={styles.csItemsHeader}>
-                      <span className={styles.ifaceFieldLabel}>
-                        {itemLabelPlural}
-                      </span>
-                      <span className={styles.ifaceFieldHint} style={{ margin: 0 }}>
-                        {(form.items || []).length} / {ITEM_MAX}
-                      </span>
-                    </div>
-                    <AutofillBtn field="items" />
+                  <div className={styles.csItemsHeader}>
+                    <span className={styles.ifaceFieldLabel}>
+                      {itemLabelPlural}
+                    </span>
+                    <span className={styles.ifaceFieldHint} style={{ margin: 0 }}>
+                      {(form.items || []).length} / {ITEM_MAX}
+                    </span>
                   </div>
                   <span className={styles.ifaceFieldHint}>
                     {s.itemsHint}
@@ -352,7 +266,6 @@ export default function CustomSpecsOverlay({ open, onClose, onOpenList }) {
                           onChange={(e) => updateItem(idx, e.target.value)}
                           rows={2}
                           placeholder={`${itemLabel} ${idx + 1}`}
-                          disabled={fillingField.items}
                         />
                         {(form.items || []).length > 1 && (
                           <button
@@ -360,7 +273,6 @@ export default function CustomSpecsOverlay({ open, onClose, onOpenList }) {
                             className={styles.csRemoveItemBtn}
                             onClick={() => removeItem(idx)}
                           title={s.entry}
-                            disabled={isFilling}
                           >
                             &minus;
                           </button>
@@ -369,18 +281,11 @@ export default function CustomSpecsOverlay({ open, onClose, onOpenList }) {
                     ))}
                   </div>
 
-                  {fillingField.items && (
-                    <div className={styles.csItemsGenerating}>
-                      <Spinner size={14} /> {s.generating}
-                    </div>
-                  )}
-
                   {(form.items || []).length < ITEM_MAX && (
                     <button
                       type="button"
                       className={styles.csAddItemBtn}
                       onClick={addItem}
-                      disabled={isFilling}
                     >
                       {s.addItem} {itemLabel}
                     </button>
@@ -397,7 +302,7 @@ export default function CustomSpecsOverlay({ open, onClose, onOpenList }) {
                 variant="primary"
                 size="sm"
                 onClick={handleCreate}
-                disabled={isFilling || !form.name}
+                disabled={!form.name}
               >
                 {s.createBtn}
               </Button>

@@ -2501,6 +2501,89 @@
   font-weight: 600;
 }
 
+/* ═══ Mobile Responsive Fixes for Cortex Tabs ═══ */
+
+@media (max-width: 768px) {
+  .cortexTabBar {
+    /* Enable horizontal scrolling on mobile */
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    scroll-behavior: smooth;
+    /* Remove flex gap to prevent overflow */
+    gap: 0;
+    /* Add padding for scroll area */
+    padding-bottom: 4px;
+  }
+  
+  .cortexTabBar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .cortexTab {
+    /* Prevent tabs from shrinking */
+    flex-shrink: 0;
+    /* Increase minimum width for better touch targets */
+    min-width: 120px;
+    /* Better touch target size */
+    padding: 10px 16px;
+    /* Add margin instead of gap */
+    margin-right: 4px;
+    /* Improve text wrapping */
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    /* Larger font for mobile readability */
+    font-size: 14px;
+  }
+  
+  .cortexTab:last-child {
+    margin-right: 0;
+  }
+}
+
+/* ═══ Extra Small Mobile Devices ═══ */
+@media (max-width: 480px) {
+  .cortexTabBar {
+    /* Tighter spacing on very small screens */
+    gap: 0;
+    margin: 0 -8px; /* Extend to edges */
+    padding: 0 8px 4px 8px;
+  }
+  
+  .cortexTab {
+    /* Smaller minimum width for very small screens */
+    min-width: 100px;
+    /* Adjust padding for smaller screens */
+    padding: 8px 12px;
+    /* Smaller font on tiny screens */
+    font-size: 13px;
+    margin-right: 2px;
+  }
+  
+  /* Show scroll hint with subtle gradient */
+  .cortexTabBar::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 4px;
+    width: 20px;
+    background: linear-gradient(
+      to left,
+      var(--overlay-input-bg, rgba(0, 0, 0, 0.03)),
+      transparent
+    );
+    pointer-events: none;
+    border-radius: 0 12px 12px 0;
+  }
+  
+  .ifaceCard .cortexTabBar {
+    /* Ensure the gradient is relative to the card */
+    position: relative;
+  }
+}
+
 /* ═══ Cortex Overlay – Persona Badge ═══ */
 
 .cortexPersonaBadge {
@@ -2627,6 +2710,26 @@
   background: var(--overlay-accent, #6366f1);
   color: #fff;
   margin-left: 6px;
+}
+
+@media (max-width: 768px) {
+  .cslBadge {
+    /* Slightly smaller badges on mobile */
+    min-width: 16px;
+    height: 16px;
+    font-size: 10px;
+    margin-left: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  .cslBadge {
+    /* Even smaller badges on very small screens */
+    min-width: 14px;
+    height: 14px;
+    font-size: 9px;
+    margin-left: 3px;
+  }
 }
 
 /* Entry list container */
