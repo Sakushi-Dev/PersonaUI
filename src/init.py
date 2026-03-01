@@ -441,6 +441,42 @@ class _Spinner:
         # clear spinner line
         print(f"\r{' ' * (len(self._text) + 10)}\r", end='', flush=True)
 
+def _ensure_prompts():
+    """Copies missing prompt files from _defaults/ to the prompts folder.
+
+    Only restores files that don't exist yet — never overwrites user-modified prompts.
+    Mirrors the reset logic but is non-destructive.
+    Handles subdirectories (e.g. _meta/) recursively.
+    """
+    prompts_dir = os.path.join(SCRIPT_DIR, 'instructions', 'prompts')
+    defaults_dir = os.path.join(prompts_dir, '_defaults')
+    if not os.path.isdir(defaults_dir):
+        return
+
+    restored = 0
+
+    for root, _dirs, files in os.walk(defaults_dir):
+        # Compute the relative path from _defaults/ to get the target dir in prompts/
+        rel = os.path.relpath(root, defaults_dir)
+        target_dir = os.path.join(prompts_dir, rel) if rel != '.' else prompts_dir
+
+        for filename in files:
+            if not filename.endswith('.json'):
+                continue
+            src = os.path.join(root, filename)
+            dst = os.path.join(target_dir, filename)
+            if not os.path.exists(dst):
+                try:
+                    os.makedirs(target_dir, exist_ok=True)
+                    shutil.copy2(src, dst)
+                    restored += 1
+                except Exception:
+                    pass
+
+    if restored:
+        _print_ok(f"{restored} missing prompt file(s) restored from defaults")
+
+
 def _fatal(msg):
     """Display error and exit."""
     _print_error(msg)
@@ -469,6 +505,9 @@ def main():
                 npm_path = _ensure_npm()
                 if npm_path:
                     _ensure_frontend(npm_path)
+
+            # Ensure prompt files exist (non-destructive restore from _defaults)
+            _ensure_prompts()
 
             # All ready — launch app.py directly (same process via exec)
             sys.argv[0] = app_path
@@ -517,6 +556,8 @@ def main():
     all_installed = (result.returncode == 0)
 
     if all_installed and not first_setup:
+        # Ensure prompt files exist (non-destructive restore from _defaults)
+        _ensure_prompts()
         # Everything present — launch directly in venv
         result = subprocess.run([venv_python, app_path] + sys.argv[1:])
         sys.exit(result.returncode)
@@ -560,6 +601,9 @@ def main():
     step += 1
     _print_step(step, total_steps, "Launching PersonaUI...")
     print(f"\n  {_DIM}{'─' * 42}{_RESET}\n")
+
+    # Ensure prompt files exist (non-destructive restore from _defaults)
+    _ensure_prompts()
 
     result = subprocess.run([venv_python, app_path] + sys.argv[1:])
     sys.exit(result.returncode)
