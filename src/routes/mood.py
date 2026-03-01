@@ -8,10 +8,10 @@ All endpoints support mood enable/disable via moodEnabled setting.
 from flask import Blueprint, jsonify, request
 from functools import wraps
 
-from ..utils.logger import log
-from ..utils.provider import get_mood_service
-from ..utils.settings import _read_setting
-from ..utils.config import get_active_persona_id
+from utils.logger import log
+from utils.provider import get_mood_service
+from utils.settings import _read_setting
+from utils.config import get_active_persona_id
 
 mood_bp = Blueprint('mood', __name__)
 
@@ -149,7 +149,7 @@ def update_mood_settings():
         }), 400
     
     # Return current settings
-    from ..utils.settings import _read_setting
+    from utils.settings import _read_setting
     current_settings = {
         'sensitivity': _read_setting('moodSensitivity', 0.5),
         'decay_rate': _read_setting('moodDecayRate', 0.1),

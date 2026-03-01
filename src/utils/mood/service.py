@@ -9,10 +9,10 @@ from datetime import datetime
 from typing import Dict, List, Optional
 import sqlite3
 
-from ..logger import log
-from ..sql_loader import sql
-from ..database.connection import get_db_connection
-from .engine import MoodEngine
+from utils.logger import log
+from utils.sql_loader import sql
+from utils.database.connection import get_db_connection
+from utils.mood.engine import MoodEngine
 
 
 class MoodService:
@@ -76,7 +76,7 @@ class MoodService:
                 
                 # Apply decay if time has passed
                 if seconds_elapsed > 0:
-                    from ..settings import _read_setting
+                    from utils.settings import _read_setting
                     decay_rate = _read_setting('moodDecayRate', 0.1)
                     current_state = self.engine.apply_decay(current_state, decay_rate, seconds_elapsed)
                     
@@ -226,7 +226,7 @@ class MoodService:
             decay_rate: New decay rate value
         """
         try:
-            from ..settings import _write_setting
+            from utils.settings import _write_setting
             
             if sensitivity is not None:
                 if 0.0 <= sensitivity <= 1.0:
