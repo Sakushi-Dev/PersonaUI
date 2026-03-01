@@ -137,6 +137,10 @@ def chat_stream():
                     if cortex_info:
                         done_payload['cortex'] = cortex_info
 
+                    # Mood-Info aus event_data durchreichen
+                    if event_data.get('mood'):
+                        done_payload['mood'] = event_data['mood']
+
                     yield f"data: {json.dumps(done_payload)}\n\n"
                 elif event_type == 'error':
                     error_payload = {'type': 'error', 'error': event_data}
@@ -318,6 +322,10 @@ def api_regenerate():
                     }
                     if cortex_info:
                         done_payload['cortex'] = cortex_info
+
+                    # Mood-Info aus event_data durchreichen
+                    if event_data.get('mood'):
+                        done_payload['mood'] = event_data['mood']
 
                     yield f"data: {json.dumps(done_payload)}\n\n"
                 elif event_type == 'error':

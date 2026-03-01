@@ -2985,3 +2985,166 @@
     grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
   }
 }
+
+
+/* ── Mood-specific styles ── */
+
+.radarContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+}
+
+.radar {
+  width: 200px;
+  height: 200px;
+}
+
+.radarGrid {
+  fill: none;
+  stroke: var(--border-color, rgba(255, 255, 255, 0.2));
+  stroke-dasharray: 4 2;
+  stroke-width: 1;
+}
+
+.radarAxis {
+  stroke: var(--border-color, rgba(255, 255, 255, 0.3));
+  stroke-width: 1;
+}
+
+.radarData {
+  fill: var(--color-accent, rgba(100, 150, 255, 0.3));
+  stroke: var(--color-accent, #6496ff);
+  stroke-width: 2;
+  transition: all 0.5s ease;
+}
+
+.radarLabel {
+  fill: var(--text-color, #ffffff);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.moodSummary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.moodEmoji {
+  font-size: 2rem;
+}
+
+.moodDominant {
+  font-size: 14px;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.7));
+}
+
+.dimensionsList {
+  width: 100%;
+  max-width: 300px;
+}
+
+.dimensionGrid {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.dimension {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--bg-secondary, rgba(255, 255, 255, 0.05));
+  border-radius: 6px;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+
+.dimension.dominant {
+  border-color: var(--color-accent, #6496ff);
+  background: var(--color-accent, rgba(100, 150, 255, 0.1));
+}
+
+.historyTab {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.historyList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.historyEntry {
+  padding: 12px;
+  background: var(--bg-secondary, rgba(255, 255, 255, 0.05));
+  border-radius: 8px;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+}
+
+.historyTimestamp {
+  font-size: 12px;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.7));
+  margin-bottom: 4px;
+}
+
+.historyValues {
+  font-family: monospace;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.historyTrigger {
+  font-size: 12px;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+  font-style: italic;
+}
+
+.settingsTab {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.setting {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.setting label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 500;
+}
+
+.slider {
+  width: 100%;
+  margin: 8px 0;
+}
+
+.currentTab {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px;
+}
+
+.disabledMessage {
+  padding: 20px;
+  text-align: center;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.7));
+}

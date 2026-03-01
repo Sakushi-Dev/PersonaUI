@@ -16,6 +16,7 @@ _api_client = None
 _chat_service = None
 _cortex_service = None
 _prompt_engine = None
+_mood_service = None
 
 
 def init_services(api_key: str = None):
@@ -25,14 +26,16 @@ def init_services(api_key: str = None):
     Args:
         api_key: Optionaler API-Key (sonst aus ENV)
     """
-    global _api_client, _chat_service, _cortex_service
+    global _api_client, _chat_service, _cortex_service, _mood_service
     from .api_request import ApiClient
     from .services import ChatService
     from .cortex_service import CortexService
+    from .mood.service import MoodService
 
     _api_client = ApiClient(api_key=api_key)
     _cortex_service = CortexService(_api_client)
     _chat_service = ChatService(_api_client)
+    _mood_service = MoodService()
 
     # Default-Cortex beim Start sicherstellen
     _cortex_service.ensure_cortex_files('default')
@@ -77,3 +80,10 @@ def reset_prompt_engine():
     """Setzt die Engine zurück (für Tests oder Reload)."""
     global _prompt_engine
     _prompt_engine = None
+
+
+def get_mood_service():
+    """Gibt den MoodService zurück"""
+    if _mood_service is None:
+        raise RuntimeError("MoodService nicht initialisiert – init_services() in app.py aufrufen")
+    return _mood_service

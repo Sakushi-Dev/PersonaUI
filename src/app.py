@@ -53,6 +53,10 @@ app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # CSRF-Schutz
 # Initialisiere Services (API-Client, Chat-Service)
 init_services()
 
+# Run pending database migrations
+from utils.database.migration import run_pending_migrations
+run_pending_migrations()
+
 # Registriere alle Route-Blueprints
 register_routes(app)
 

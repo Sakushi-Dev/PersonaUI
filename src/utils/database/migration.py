@@ -43,6 +43,12 @@ MIGRATIONS: List[Dict] = [
         'check': 'migrations.check_memory_message_ranges',
         'apply': ['migrations.add_start_message_id', 'migrations.add_end_message_id'],
     },
+    {
+        'id': 'add_mood_tables',
+        'description': 'Mood-State und History Tabellen hinzufügen',
+        'check': 'migrations.check_mood_state',
+        'apply': ['migrations.create_mood_state', 'migrations.create_mood_history'],
+    },
 ]
 
 

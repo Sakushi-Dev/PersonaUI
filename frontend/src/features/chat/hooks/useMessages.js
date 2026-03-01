@@ -76,6 +76,7 @@ export function useMessages() {
           character_name: data.character_name,
           timestamp: new Date().toISOString(),
           stats: data.stats,
+          mood: data.mood || null,
         });
 
         // Cortex-Progress Benachrichtigung (aus SSE done-Event)
@@ -86,6 +87,13 @@ export function useMessages() {
               progress: data.cortex.progress,
               frequency: data.cortex.frequency
             }
+          }));
+        }
+
+        // Mood-Update Event (for MoodOverlay live-update)
+        if (data.mood) {
+          window.dispatchEvent(new CustomEvent('mood-update', {
+            detail: data.mood
           }));
         }
 
@@ -195,7 +203,15 @@ export function useMessages() {
           character_name: data.character_name,
           timestamp: new Date().toISOString(),
           stats: data.stats,
+          mood: data.mood || null,
         });
+
+        // Mood-Update Event (for MoodOverlay live-update)
+        if (data.mood) {
+          window.dispatchEvent(new CustomEvent('mood-update', {
+            detail: data.mood
+          }));
+        }
 
         if (get('notificationSound', false)) {
           playNotificationSound(get('notificationVolume', 0.5));
@@ -275,7 +291,15 @@ export function useMessages() {
           character_name: data.character_name,
           timestamp: new Date().toISOString(),
           stats: data.stats,
+          mood: data.mood || null,
         });
+
+        // Mood-Update Event (for MoodOverlay live-update)
+        if (data.mood) {
+          window.dispatchEvent(new CustomEvent('mood-update', {
+            detail: data.mood
+          }));
+        }
 
         if (get('notificationSound', false)) {
           playNotificationSound(get('notificationVolume', 0.5));

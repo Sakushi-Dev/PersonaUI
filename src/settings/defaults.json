@@ -20,5 +20,8 @@
     "nonverbalColor": "#e4ba00",
     "notificationSound": true,
     "cortexEnabled": true,
-    "cortexFrequency": "medium"
+    "cortexFrequency": "medium",
+    "moodEnabled": true,
+    "moodSensitivity": 0.5,
+    "moodDecayRate": 0.1
 }

@@ -9,6 +9,7 @@ export { default as CreditExhaustedOverlay } from './CreditExhaustedOverlay';
 export { default as ServerSettingsOverlay } from './ServerSettingsOverlay';
 export { default as AvatarEditorOverlay } from './AvatarEditorOverlay';
 export { default as CortexOverlay } from './CortexOverlay';
+export { default as MoodOverlay } from './MoodOverlay';
 export { default as CustomSpecsOverlay } from './CustomSpecsOverlay';
 export { default as CustomSpecsListOverlay } from './CustomSpecsListOverlay';
 export { default as UserProfileOverlay } from './UserProfileOverlay';

@@ -34,6 +34,7 @@ import {
   ServerSettingsOverlay,
   AvatarEditorOverlay,
   CortexOverlay,
+  MoodOverlay,
   CustomSpecsOverlay,
   CustomSpecsListOverlay,
   UserProfileOverlay,
@@ -163,6 +164,7 @@ function ChatPageContent({ disclaimerAccepted = true }) {
   const serverSettings = useOverlay();
   const avatarEditor = useOverlay();
   const cortex = useOverlay();
+  const mood = useOverlay();
   const customSpecs = useOverlay();
   const customSpecsList = useOverlay();
   const userProfile = useOverlay();
@@ -183,6 +185,7 @@ function ChatPageContent({ disclaimerAccepted = true }) {
     serverSettings.close();
     avatarEditor.close();
     cortex.close();
+    mood.close();
     customSpecs.close();
     customSpecsList.close();
     userProfile.close();
@@ -224,11 +227,11 @@ function ChatPageContent({ disclaimerAccepted = true }) {
   const anyOverlayOpen = useMemo(() => {
     return personaSettings.isOpen || interfaceSettings.isOpen || apiKey.isOpen ||
       apiSettings.isOpen || serverSettings.isOpen || avatarEditor.isOpen ||
-      cortex.isOpen || customSpecs.isOpen || customSpecsList.isOpen ||
+      cortex.isOpen || mood.isOpen || customSpecs.isOpen || customSpecsList.isOpen ||
       userProfile.isOpen || qrCode.isOpen || accessControl.isOpen ||
       debug.isOpen || creditExhausted.isOpen || apiWarning.isOpen ||
       support.isOpen || patchNotes.isOpen;
-  }, [personaSettings.isOpen, interfaceSettings.isOpen, apiKey.isOpen, apiSettings.isOpen, serverSettings.isOpen, avatarEditor.isOpen, cortex.isOpen, customSpecs.isOpen, customSpecsList.isOpen, userProfile.isOpen, qrCode.isOpen, accessControl.isOpen, debug.isOpen, creditExhausted.isOpen, apiWarning.isOpen, support.isOpen, patchNotes.isOpen]);
+  }, [personaSettings.isOpen, interfaceSettings.isOpen, apiKey.isOpen, apiSettings.isOpen, serverSettings.isOpen, avatarEditor.isOpen, cortex.isOpen, mood.isOpen, customSpecs.isOpen, customSpecsList.isOpen, userProfile.isOpen, qrCode.isOpen, accessControl.isOpen, debug.isOpen, creditExhausted.isOpen, apiWarning.isOpen, support.isOpen, patchNotes.isOpen]);
 
   // ── Sidebar swipe (disabled when overlays open) ──
   const anyOverlayOpenRef = useRef(false);
@@ -404,6 +407,13 @@ function ChatPageContent({ disclaimerAccepted = true }) {
       clearTimeout(cortexTimerRef.current);
     };
   }, []);
+
+  // ── Mood overlay event listener ──
+  useEffect(() => {
+    const handleOpenMood = () => openExclusive(mood);
+    window.addEventListener('open-mood-overlay', handleOpenMood);
+    return () => window.removeEventListener('open-mood-overlay', handleOpenMood);
+  }, [mood, openExclusive]);
 
   // ── Auto-open error overlays on chat errors ──
   useEffect(() => {
@@ -599,6 +609,10 @@ function ChatPageContent({ disclaimerAccepted = true }) {
           <CortexOverlay
             open={cortex.isOpen}
             onClose={cortex.close}
+          />
+          <MoodOverlay
+            open={mood.isOpen}
+            onClose={mood.close}
           />
           <UserProfileOverlay
             open={userProfile.isOpen}

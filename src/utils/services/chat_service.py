@@ -103,6 +103,46 @@ class ChatService:
             log.warning("Cortex-Kontext konnte nicht geladen werden: %s", e)
             return empty
 
+    def _load_mood_context(self, persona_id: str = None) -> Dict[str, str]:
+        """
+        Loads mood context as placeholder values for the PromptEngine.
+        
+        Checks moodEnabled setting first. Returns empty string on disabled
+        mood system or errors (requires_any check in engine will skip the block).
+        
+        Args:
+            persona_id: Optional persona ID (Default: active persona)
+            
+        Returns:
+            Dict with mood_state
+        """
+        empty = {'mood_state': ''}
+
+        if not _read_setting('moodEnabled', True):
+            return empty
+
+        try:
+            from ..provider import get_mood_service
+            mood_service = get_mood_service()
+
+            if persona_id is None:
+                from ..config import get_active_persona_id
+                persona_id = get_active_persona_id()
+
+            mood = mood_service.get_mood(persona_id)
+            # Format as readable string for prompt context
+            mood_text = (
+                f"Current emotional state: "
+                f"anger={mood['anger']}, sadness={mood['sadness']}, "
+                f"affection={mood['affection']}, arousal={mood['arousal']}, "
+                f"trust={mood['trust']} "
+                f"(dominant: {mood['dominant']}, emoji: {mood['emoji']})"
+            )
+            return {'mood_state': mood_text}
+        except Exception as e:
+            log.warning("Mood-Kontext konnte nicht geladen werden: %s", e)
+            return empty
+
     def _build_chat_messages(self, user_message: str, conversation_history: list,
                               char_name: str, user_name: str,
                               nsfw_mode: bool, pending_afterthought: str = None) -> tuple:
@@ -311,6 +351,9 @@ class ChatService:
             # Cortex-Daten laden und als runtime_vars hinzufügen
             cortex_data = self._load_cortex_context(persona_id)
             runtime_vars.update(cortex_data)
+            # Mood-Daten laden
+            mood_data = self._load_mood_context(persona_id)
+            runtime_vars.update(mood_data)
             system_prompt = self._engine.build_system_prompt(variant=variant, runtime_vars=runtime_vars) or ''
         else:
             log.error("ChatService: Kein System-Prompt — PromptEngine nicht verfügbar!")
@@ -350,7 +393,8 @@ class ChatService:
             elif event.event_type == 'done':
                 # Stats berechnen
                 total_est = system_prompt_est + msg_stats['history_est'] + msg_stats['user_msg_est'] + msg_stats['prefill_est']
-                yield ('done', {
+                
+                event_data = {
                     'response': event.data['response'],
                     'stats': {
                         'api_input_tokens': event.data.get('api_input_tokens', 0),
@@ -361,7 +405,20 @@ class ChatService:
                         'prefill_est': msg_stats['prefill_est'],
                         'total_est': total_est
                     }
-                })
+                }
+                
+                # Mood nach AI-Response updaten
+                if _read_setting('moodEnabled', True):
+                    try:
+                        from ..provider import get_mood_service
+                        mood_service = get_mood_service()
+                        sensitivity = _read_setting('moodSensitivity', 0.5)
+                        mood_update = mood_service.update_mood(persona_id, event.data['response'], sensitivity)
+                        event_data['mood'] = mood_update
+                    except Exception as e:
+                        log.warning("Mood update failed (non-fatal): %s", e)
+                
+                yield ('done', event_data)
             elif event.event_type == 'error':
                 yield ('error', event.data)
 
@@ -395,6 +452,9 @@ class ChatService:
             # Cortex-Daten laden und als runtime_vars hinzufügen
             cortex_data = self._load_cortex_context(persona_id)
             runtime_vars.update(cortex_data)
+            # Mood-Daten laden
+            mood_data = self._load_mood_context(persona_id)
+            runtime_vars.update(mood_data)
 
             if not self._engine:
                 return {'decision': False, 'inner_dialogue': '', 'error': 'PromptEngine nicht verfügbar'}
@@ -492,6 +552,9 @@ class ChatService:
             # Cortex-Daten laden und als runtime_vars hinzufügen
             cortex_data = self._load_cortex_context(persona_id)
             runtime_vars.update(cortex_data)
+            # Mood-Daten laden
+            mood_data = self._load_mood_context(persona_id)
+            runtime_vars.update(mood_data)
 
             if not self._engine:
                 yield ('error', 'PromptEngine nicht verfügbar')

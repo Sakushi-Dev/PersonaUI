@@ -131,3 +131,12 @@ register({
     }
   },
 });
+
+// /mood – Open mood statistics and settings overlay
+register({
+  name: 'mood',
+  description: 'Mood-Stats und Einstellungen öffnen',
+  execute() {
+    window.dispatchEvent(new CustomEvent('open-mood-overlay'));
+  },
+});

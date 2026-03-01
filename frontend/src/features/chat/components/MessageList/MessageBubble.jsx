@@ -5,6 +5,7 @@ import { UserContext } from '../../../../context/UserContext';
 import Avatar from '../../../../components/Avatar/Avatar';
 import ConfirmDialog from '../../../../components/ConfirmDialog/ConfirmDialog';
 import PromptInfoOverlay from './PromptInfoOverlay';
+import MoodIndicator from '../MoodIndicator';
 import { formatMessage } from '../../../../utils/formatMessage';
 import { formatTimestamp } from '../../../../utils/formatTime';
 import { useLanguage } from '../../../../hooks/useLanguage';
@@ -91,6 +92,7 @@ export default function MessageBubble({
           name={avatarName}
           size={50}
         />
+        {!isUser && <MoodIndicator mood={message.mood} />}
       </div>
       <div className={styles.messageContent}>
         <div className={styles.messageSenderRow}>

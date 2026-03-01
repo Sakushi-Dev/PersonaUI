@@ -17,6 +17,7 @@ from routes.commands import commands_bp
 from routes.react_frontend import react_bp
 from routes.cortex import cortex_bp
 from routes.emoji import emoji_bp
+from routes.mood import mood_bp
 
 
 def register_routes(app):
@@ -38,4 +39,5 @@ def register_routes(app):
     app.register_blueprint(commands_bp)
     app.register_blueprint(cortex_bp)
     app.register_blueprint(emoji_bp)
+    app.register_blueprint(mood_bp)
 
