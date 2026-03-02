@@ -120,6 +120,8 @@ API key management, server settings, QR codes, prompt reload.
 | POST | `/api/save_and_restart_server` | Save settings and restart server |
 | POST | `/api/prompts/reload` | Hot-reload prompt templates |
 
+**Code Quality:** Exception handling improved (Mar 2026) — replaced bare `except:` clauses with specific types (`ValueError`, `IndexError`) for better error isolation and debugging.
+
 ---
 
 ## 5. Commands — `commands_bp`

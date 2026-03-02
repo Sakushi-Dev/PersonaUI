@@ -12,10 +12,10 @@ import locale
 # Setze deutsches Locale für Wochentage
 try:
     locale.setlocale(locale.LC_TIME, 'de_DE.UTF-8')
-except:
+except locale.Error:
     try:
         locale.setlocale(locale.LC_TIME, 'German')
-    except:
+    except locale.Error:
         pass  # Fallback auf System-Standard
 
 

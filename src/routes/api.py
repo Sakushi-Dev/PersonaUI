@@ -182,7 +182,7 @@ def get_local_ips():
                 if line.startswith('SERVER_PORT='):
                     try:
                         port = int(line.split('=', 1)[1].strip())
-                    except:
+                    except ValueError:
                         port = 5000
     
     return success_response(ip_addresses=ip_addresses, port=port)
@@ -276,7 +276,7 @@ def get_local_ip_addresses():
                     second_octet = int(ip.split('.')[1])
                     if 16 <= second_octet <= 31:
                         return 2  # Privates Netzwerk
-                except:
+                except (IndexError, ValueError):
                     pass
             return 3  # Andere IPs haben niedrigere Priorität
         
