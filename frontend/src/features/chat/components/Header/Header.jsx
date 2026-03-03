@@ -8,6 +8,8 @@ import Avatar from '../../../../components/Avatar/Avatar';
 import { checkApiStatus } from '../../../../services/serverApi';
 import { playNotificationSound } from '../../../../utils/audioUtils';
 import { useLanguage } from '../../../../hooks/useLanguage';
+import { useToast } from '../../../../components/Toast/ToastContainer';
+import { downloadChatExport } from '../../../../services/exportApi';
 import styles from './Header.module.css';
 
 // ── SVG Icons ──
@@ -15,7 +17,7 @@ import {
   SoundOnIcon, SoundOffIcon, QRCodeIcon,
   UserIcon, KeyIcon, CortexIcon, PersonaIcon, GearIcon,
   MonitorIcon, ChatIcon, ServerIcon, ShieldIcon,
-  GitHubIcon, ExternalLinkIcon, HeartIcon, BugIcon, PatchNotesIcon,
+  GitHubIcon, ExternalLinkIcon, HeartIcon, BugIcon, PatchNotesIcon, ExportIcon,
 } from '../../../../components/Icons/Icons';
 
 export default function Header({
@@ -38,6 +40,31 @@ export default function Header({
   const { get, set } = useSettings();
   const { t } = useLanguage();
   const h = t('header');
+  const { showNotification } = useToast();
+
+  // ── Export functionality ──
+  const [exporting, setExporting] = useState(false);
+  const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
+  const exportRef = useRef(null);
+
+  const handleExport = useCallback(async (format) => {
+    if (!sessionId) {
+      showNotification("No active session to export", "error", 3000);
+      return;
+    }
+
+    try {
+      setExporting(true);
+      setExportDropdownOpen(false);
+      await downloadChatExport(sessionId, format);
+      showNotification(h.exportSuccess, "success", 3000);
+    } catch (error) {
+      console.error("Export failed:", error);
+      showNotification(h.exportError, "error", 3000);
+    } finally {
+      setExporting(false);
+    }
+  }, [sessionId, showNotification, h.exportSuccess, h.exportError]);
 
   const charName = character?.char_name || 'PersonaUI';
   const charAvatar = character?.avatar;
@@ -124,6 +151,7 @@ export default function Header({
     if (toolbarVisible) {
       hideTimerRef.current = setTimeout(() => {
         setToolbarVisible(false);
+        setExportDropdownOpen(false);
         setSettingsOpen(false);
       }, 2000);
     }
@@ -149,6 +177,7 @@ export default function Header({
         (!communityPortalRef.current || !communityPortalRef.current.contains(e.target))
       ) {
         setToolbarVisible(false);
+        setExportDropdownOpen(false);
         setSettingsOpen(false);
         setCommunityOpen(false);
       }
@@ -342,6 +371,35 @@ export default function Header({
             <QRCodeIcon />
           </button>
 
+
+          {/* Export Chat Button */}
+          <div className={styles.exportWrapper} ref={exportRef}>
+            <button
+              className={`${styles.exportBtn} ${exporting ? styles.exportBtnLoading : ""}`}
+              onClick={() => setExportDropdownOpen(!exportDropdownOpen)}
+              disabled={exporting || !sessionId}
+              title={h.exportBtn}
+            >
+              <ExportIcon size={20} />
+            </button>
+
+            {exportDropdownOpen && (
+              <div className={styles.exportDropdown}>
+                <button
+                  className={styles.exportOption}
+                  onClick={() => handleExport("txt")}
+                >
+                  {h.exportTxt}
+                </button>
+                <button
+                  className={styles.exportOption}
+                  onClick={() => handleExport("json")}
+                >
+                  {h.exportJson}
+                </button>
+              </div>
+            )}
+          </div>
           {/* API Status Indicator */}
           <div
             className={`${styles.apiStatus} ${apiConnected === true ? styles.apiConnected : apiConnected === false ? styles.apiDisconnected : ''}`}

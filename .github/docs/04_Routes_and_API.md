@@ -180,6 +180,25 @@ Chat session management.
 | DELETE | `/api/sessions/<id>` | Delete session |
 | GET | `/api/sessions/<id>/is_empty` | Check if session has no messages |
 | POST | `/api/sessions/<id>/load_more` | Paginate older messages |
+| GET | `/api/sessions/<id>/export` | Export session chat history as file download |
+
+### Session Export
+
+The export endpoint supports two formats via `?format` parameter:
+
+```bash
+# Text format (default)
+GET /api/sessions/123/export?format=txt
+# Returns: [YYYY-MM-DD HH:MM] Sender: Message
+
+# JSON format
+GET /api/sessions/123/export?format=json
+# Returns: [{"timestamp": "ISO", "role": "user|assistant", "content": "text"}]
+```
+
+**Response:** File download with `Content-Disposition: attachment`
+**Filename:** `chat_export_{session_id}_{date}.{ext}`
+**Error Codes:** 400 (invalid format), 404 (session not found)
 
 ---
 
@@ -325,7 +344,7 @@ Emoji reaction tracking.
 | `api_bp | api.py | 10 | /api/*` |
 | `commands_bp` | commands.py | 3 | `/api/commands/*` |
 | `character_bp` | character.py | 11 | `/api/personas/*`, legacy paths |
-| `sessions_bp` | sessions.py | 7 | `/api/sessions/*` |
+| `sessions_bp` | sessions.py | 8 | `/api/sessions/*` |
 | `avatar_bp` | avatar.py | 6 | `/api/*avatar*` |
 | `access_bp` | access.py | 10 | `/api/access/*` |
 | `settings_bp` | settings.py | 3 | `/api/user-settings*` |
@@ -334,7 +353,7 @@ Emoji reaction tracking.
 | `onboarding_bp` | onboarding.py | 3 | `/api/onboarding/*` |
 | `cortex_bp` | cortex.py | 7 | `/api/cortex/*` |
 | `emoji_bp` | emoji.py | 2 | `/api/emoji-usage` |
-| **Total** | **15 files** | **85** | |
+| **Total** | **15 files** | **86** | |
 
 ---
 

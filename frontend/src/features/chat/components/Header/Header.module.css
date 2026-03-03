@@ -597,3 +597,97 @@
     to   { opacity: 1; transform: translateY(0); }
   }
 }
+
+/* ── Export Button ── */
+.exportWrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.exportBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  color: var(--header-text);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0.7;
+}
+
+.exportBtn:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.1);
+  opacity: 1;
+}
+
+:global(body.dark-mode) .exportBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.exportBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.exportBtnLoading {
+  animation: exportSpin 1s linear infinite;
+}
+
+@keyframes exportSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.exportDropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  min-width: 160px;
+  overflow: hidden;
+  z-index: 1000;
+}
+
+:global(body.dark-mode) .exportDropdown {
+  background: rgba(17, 17, 22, 0.95);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+.exportOption {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  color: var(--header-text);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.exportOption:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+:global(body.dark-mode) .exportOption:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.exportOption:not(:last-child) {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+:global(body.dark-mode) .exportOption:not(:last-child) {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}

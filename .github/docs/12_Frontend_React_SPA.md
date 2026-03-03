@@ -263,6 +263,7 @@ Each module wraps `fetch()` calls to the Flask backend:
 | `customSpecsApi.js` | `/api/custom-specs/*` | Custom specs CRUD |
 | `serverApi.js` | `/api/*server*` | Server settings |
 | `emojiApi.js` | `/api/emoji-usage` | Emoji tracking |
+| `exportApi.js` | `/api/sessions/*` | Chat export and download |
 
 ### SSE Streaming
 

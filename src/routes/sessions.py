@@ -1,7 +1,7 @@
 """
 Session Routes - Session-Management für Chat-Verläufe
 """
-from flask import Blueprint, request
+from flask import Blueprint, request, Response
 
 from utils.database import (
     get_all_sessions, create_session, get_session,
@@ -11,6 +11,7 @@ from utils.database import (
 from utils.config import load_character, get_active_persona_id, activate_persona, load_char_config
 from utils.cortex.tier_tracker import reset_session as reset_session_cycle_state
 from routes.helpers import success_response, error_response, handle_route_error, resolve_persona_id
+from utils.export_helpers import format_messages_as_txt, format_messages_as_json, make_export_filename
 
 sessions_bp = Blueprint('sessions', __name__)
 
@@ -182,3 +183,42 @@ def load_more_messages(session_id):
         has_more=(offset + limit) < total_count
     )
 
+
+
+@sessions_bp.route('/api/sessions/<int:session_id>/export', methods=['GET'])
+@handle_route_error('export_session')
+def export_session(session_id):
+    """Exportiert den Chat-Verlauf einer Session"""
+    # Format-Parameter validieren
+    format_param = request.args.get('format', 'txt')
+    if format_param not in ('txt', 'json'):
+        return error_response('Ungültiges Format. Erlaubt: txt, json', 400)
+    
+    # Persona-ID auflösen
+    persona_id = resolve_persona_id(session_id=session_id)
+    
+    # Session-Existenz prüfen
+    session = get_session(session_id, persona_id=persona_id)
+    if not session:
+        return error_response('Session nicht gefunden', 404)
+    
+    # Alle Messages laden (kein Limit)
+    messages = get_chat_history(limit=999999, session_id=session_id, persona_id=persona_id)
+    
+    # Formatieren
+    if format_param == 'txt':
+        content = format_messages_as_txt(messages)
+        mimetype = 'text/plain; charset=utf-8'
+    else:  # json
+        content = format_messages_as_json(messages)
+        mimetype = 'application/json; charset=utf-8'
+    
+    # Filename generieren
+    filename = make_export_filename(session_id, format_param)
+    
+    # Response mit Download-Header
+    return Response(
+        content,
+        mimetype=mimetype,
+        headers={'Content-Disposition': f'attachment; filename="{filename}"'}
+    )
