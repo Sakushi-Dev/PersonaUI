@@ -119,8 +119,11 @@ API key management, server settings, QR codes, prompt reload.
 | POST | `/api/generate_qr_code` | Generate QR code (Base64 image) |
 | POST | `/api/save_and_restart_server` | Save settings and restart server |
 | POST | `/api/prompts/reload` | Hot-reload prompt templates |
+| GET | `/api/health` | Health check endpoint (no auth required) |
 
 **Code Quality:** Exception handling improved (Mar 2026) — replaced bare `except:` clauses with specific types (`ValueError`, `IndexError`) for better error isolation and debugging.
+
+**Health Endpoint (Mar 2026):** Returns `{"success": true, "status": "ok", "version": "0.3.2-alpha"}` for monitoring and version checking. Bypasses IP access control.
 
 ---
 
@@ -319,7 +322,7 @@ Emoji reaction tracking.
 | `main_bp` | main.py | 1 | `/` |
 | `react_bp` | react_frontend.py | 3 | `/avatar/*`, `/assets/*` |
 | `chat_bp` | chat.py | 8 | `/chat*`, `/afterthought` |
-| `api_bp` | api.py | 9 | `/api/*` |
+| `api_bp | api.py | 10 | /api/*` |
 | `commands_bp` | commands.py | 3 | `/api/commands/*` |
 | `character_bp` | character.py | 11 | `/api/personas/*`, legacy paths |
 | `sessions_bp` | sessions.py | 7 | `/api/sessions/*` |
@@ -331,7 +334,7 @@ Emoji reaction tracking.
 | `onboarding_bp` | onboarding.py | 3 | `/api/onboarding/*` |
 | `cortex_bp` | cortex.py | 7 | `/api/cortex/*` |
 | `emoji_bp` | emoji.py | 2 | `/api/emoji-usage` |
-| **Total** | **15 files** | **84** | |
+| **Total** | **15 files** | **85** | |
 
 ---
 

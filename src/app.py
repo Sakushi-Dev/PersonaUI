@@ -3,6 +3,18 @@ import sys
 import subprocess
 import threading
 
+
+import json
+
+def load_version():
+    """Load version from version.json file."""
+    version_path = os.path.join(os.path.dirname(__file__), "..", "version.json")
+    try:
+        with open(version_path, "r", encoding="utf-8") as f:
+            return json.load(f).get("version", "unknown")
+    except Exception:
+        return "unknown"
+
 # IMPORTANT: Change to src directory for correct paths
 script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
@@ -45,6 +57,10 @@ app.json.sort_keys = False  # Reihenfolge der Keys beibehalten (Default -> Custo
 CORS(app, resources={r"/*": {"origins": ["http://localhost:5173", "http://127.0.0.1:5173"]}}, supports_credentials=True)
 
 # Session-Konfiguration
+
+# Load version from version.json
+app.config["APP_VERSION"] = load_version()
+
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # Session remains valid for 7 days
 app.config['SESSION_COOKIE_SECURE'] = False  # Set to True for HTTPS
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # Schutz vor XSS
@@ -79,6 +95,10 @@ def check_ip_access():
         return None
     
     # API endpoints for access control always allowed
+    # Health check endpoint always allowed
+    if request.path == '/api/health':
+        return None
+    
     if request.path.startswith('/api/access/'):
         return None
     

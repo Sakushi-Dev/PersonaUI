@@ -186,7 +186,7 @@ cursor.executescript(schema_sql)
 
 ## Helpers — `helpers.py`
 
-**File:** `src/utils/helpers.py` (~108 lines)
+**File:** `src/utils/helpers.py` (~172 lines)
 
 Small utility functions used across the backend:
 
@@ -216,6 +216,25 @@ def format_message(text):
 > **Note:** This function generates HTML that the React frontend may render via `dangerouslySetInnerHTML`. The frontend also has its own `formatMessage.js` utility.
 
 ### `extract_code_blocks(text)`
+
+Extracts fenced code blocks from markdown text, returning a list of `(language, code)` tuples.
+
+### `get_version_info()`
+
+Returns application version information from `version.json` with caching:
+
+```python
+def get_version_info():
+    """Returns version info as dict with caching."""
+    # Returns: {"version": "0.3.2-alpha", "major": 0, "minor": 3, "patch": "2"}
+    # Fallback: {"version": "unknown", "major": 0, "minor": 0, "patch": "0"}
+```
+
+**Features:**
+- **Cached**: Module-level caching for performance
+- **Error Handling**: Graceful fallback if `version.json` is missing or invalid
+- **Version Parsing**: Handles various formats (`1.2.3`, `1.2.3-alpha`, etc.)
+- **Type Safety**: Returns consistent types (major/minor as int, patch as string)
 
 Extracts fenced code blocks from markdown text, returning a list of `(language, code)` tuples.
 

@@ -2,6 +2,7 @@
 Helper-Funktionen für die Chat-Anwendung
 """
 import os
+import json
 import secrets
 import re
 import html
@@ -105,3 +106,66 @@ def _insert_code_blocks_html(text: str, code_blocks: list) -> str:
         code_html = f'<div class="code-block"><pre><code class="language-python">{escaped_code}</code></pre></div>'
         text = text.replace(placeholder, code_html)
     return text
+
+
+# ===== Version Info Utility =====
+
+_version_cache = None
+
+
+def get_version_info():
+    """
+    Returns version information from version.json as dict.
+    
+    Returns:
+        dict: {"version": str, "major": int, "minor": int, "patch": str}
+              Fallback: {"version": "unknown", "major": 0, "minor": 0, "patch": "0"}
+    """
+    global _version_cache
+    
+    if _version_cache is not None:
+        return _version_cache
+    
+    # Path to version.json (relative to helpers.py location)
+    version_file = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+        'version.json'
+    )
+    
+    try:
+        with open(version_file, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        
+        version_str = str(data.get('version', 'unknown'))
+        
+        # Parse version string (handle suffixes like "1.2.3-alpha")
+        if version_str == 'unknown':
+            major, minor, patch = 0, 0, "0"
+        else:
+            # Split off suffix if present
+            version_base = version_str.split('-')[0]
+            parts = version_base.split('.')
+            
+            major = int(parts[0]) if len(parts) > 0 and parts[0].isdigit() else 0
+            minor = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 0
+            patch = parts[2] if len(parts) > 2 else "0"
+        
+        _version_cache = {
+            "version": version_str,
+            "major": major,
+            "minor": minor,
+            "patch": patch
+        }
+        
+        log.info(f"Version info loaded: {_version_cache}")
+        
+    except (FileNotFoundError, json.JSONDecodeError, ValueError, KeyError) as e:
+        log.warning(f"Could not load version info: {e}")
+        _version_cache = {
+            "version": "unknown",
+            "major": 0,
+            "minor": 0,
+            "patch": "0"
+        }
+    
+    return _version_cache

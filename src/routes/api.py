@@ -410,3 +410,14 @@ def reload_prompts():
         )
     return success_response(message='Prompts erfolgreich neu geladen')
 
+
+
+@api_bp.route('/api/health', methods=['GET'])
+@handle_route_error('health_check')
+def health_check():
+    """Health check endpoint - returns status and version without auth."""
+    from flask import current_app
+    return success_response(
+        status='ok',
+        version=current_app.config.get('APP_VERSION', 'unknown')
+    )
