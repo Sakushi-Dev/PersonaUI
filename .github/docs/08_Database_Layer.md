@@ -180,6 +180,23 @@ def get_db_connection(persona_id='default') -> sqlite3.Connection:
 
 Connections are **not pooled** — each function opens and closes its own connection. This is safe for SQLite's use case (single desktop user, low concurrency).
 
+### Resource Management
+
+All database functions use proper try/finally patterns to guarantee connection cleanup:
+
+```python
+def example_function(persona_id='default'):
+    conn = get_db_connection(persona_id)
+    try:
+        cursor = conn.cursor()
+        # ... database operations ...
+        return result
+    finally:
+        conn.close()  # Guaranteed execution
+```
+
+Critical for functions like `compute_last_encounter()` that have multiple early returns or exception paths.
+
 ---
 
 ## Persona Database Lifecycle

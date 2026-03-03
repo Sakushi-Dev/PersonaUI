@@ -25,15 +25,17 @@ def create_session(title: str = "Neue Konversation", persona_id: str = "default"
         ID of new session
     """
     conn = get_db_connection(persona_id)
-    cursor = conn.cursor()
-    
-    cursor.execute(sql('sessions.create_session'), (title, persona_id))
-    
-    session_id = cursor.lastrowid
-    conn.commit()
-    conn.close()
-    
-    return session_id
+    try:
+        cursor = conn.cursor()
+        
+        cursor.execute(sql('sessions.create_session'), (title, persona_id))
+        
+        session_id = cursor.lastrowid
+        conn.commit()
+        
+        return session_id
+    finally:
+        conn.close()
 
 
 def get_all_sessions(persona_id: str = None) -> List[Dict[str, Any]]:
@@ -64,8 +66,8 @@ def get_all_sessions(persona_id: str = None) -> List[Dict[str, Any]]:
 
 def _get_sessions_from_db(persona_id: str) -> List[Dict[str, Any]]:
     """Gets all sessions from a specific persona DB."""
+    conn = get_db_connection(persona_id)
     try:
-        conn = get_db_connection(persona_id)
         cursor = conn.cursor()
         
         cursor.execute(sql('sessions.get_all_sessions'))
@@ -80,11 +82,12 @@ def _get_sessions_from_db(persona_id: str) -> List[Dict[str, Any]]:
                 'persona_id': row[4] if row[4] else persona_id
             })
         
-        conn.close()
         return sessions
     except Exception as e:
         log.error("Error loading sessions for persona %s: %s", persona_id, e)
         return []
+    finally:
+        conn.close()
 
 
 def get_persona_session_summary() -> List[Dict[str, Any]]:
@@ -100,19 +103,21 @@ def get_persona_session_summary() -> List[Dict[str, Any]]:
     for pid in get_all_persona_ids():
         try:
             conn = get_db_connection(pid)
-            cursor = conn.cursor()
-            
-            cursor.execute(sql('sessions.get_session_count_summary'))
-            
-            row = cursor.fetchone()
-            conn.close()
-            
-            if row and row[0] > 0:
-                summary.append({
-                    'persona_id': pid,
-                    'session_count': row[0],
-                    'last_updated': row[1]
-                })
+            try:
+                cursor = conn.cursor()
+                
+                cursor.execute(sql('sessions.get_session_count_summary'))
+                
+                row = cursor.fetchone()
+                
+                if row and row[0] > 0:
+                    summary.append({
+                        'persona_id': pid,
+                        'session_count': row[0],
+                        'last_updated': row[1]
+                    })
+            finally:
+                conn.close()
         except Exception:
             continue
     
@@ -133,13 +138,15 @@ def get_session_persona_id(session_id: int, persona_id: str = 'default') -> str:
         persona_id as string or 'default'
     """
     conn = get_db_connection(persona_id)
-    cursor = conn.cursor()
-    
-    cursor.execute(sql('sessions.get_session_persona_id'), (session_id,))
-    row = cursor.fetchone()
-    conn.close()
-    
-    return row[0] if row and row[0] else persona_id
+    try:
+        cursor = conn.cursor()
+        
+        cursor.execute(sql('sessions.get_session_persona_id'), (session_id,))
+        row = cursor.fetchone()
+        
+        return row[0] if row and row[0] else persona_id
+    finally:
+        conn.close()
 
 
 def get_session(session_id: int, persona_id: str = 'default') -> Optional[Dict[str, Any]]:
@@ -154,22 +161,24 @@ def get_session(session_id: int, persona_id: str = 'default') -> Optional[Dict[s
         Session dictionary or None
     """
     conn = get_db_connection(persona_id)
-    cursor = conn.cursor()
-    
-    cursor.execute(sql('sessions.get_session_by_id'), (session_id,))
-    
-    row = cursor.fetchone()
-    conn.close()
-    
-    if row:
-        return {
-            'id': row[0],
-            'title': row[1],
-            'created_at': row[2],
-            'updated_at': row[3],
-            'persona_id': row[4] if row[4] else persona_id
-        }
-    return None
+    try:
+        cursor = conn.cursor()
+        
+        cursor.execute(sql('sessions.get_session_by_id'), (session_id,))
+        
+        row = cursor.fetchone()
+        
+        if row:
+            return {
+                'id': row[0],
+                'title': row[1],
+                'created_at': row[2],
+                'updated_at': row[3],
+                'persona_id': row[4] if row[4] else persona_id
+            }
+        return None
+    finally:
+        conn.close()
 
 
 def update_session_title(session_id: int, title: str, persona_id: str = 'default') -> bool:
@@ -184,18 +193,19 @@ def update_session_title(session_id: int, title: str, persona_id: str = 'default
     Returns:
         True on success, False on error
     """
+    conn = get_db_connection(persona_id)
     try:
-        conn = get_db_connection(persona_id)
         cursor = conn.cursor()
         
         cursor.execute(sql('sessions.update_session_title'), (title, session_id))
         
         conn.commit()
-        conn.close()
         return True
     except Exception as e:
         log.error("Error updating session title: %s", e)
         return False
+    finally:
+        conn.close()
 
 
 def delete_session(session_id: int, persona_id: str = 'default') -> bool:
@@ -209,19 +219,20 @@ def delete_session(session_id: int, persona_id: str = 'default') -> bool:
     Returns:
         True on success, False on error
     """
+    conn = get_db_connection(persona_id)
     try:
-        conn = get_db_connection(persona_id)
         cursor = conn.cursor()
         
         # Messages are automatically deleted (CASCADE)
         cursor.execute(sql('sessions.delete_session'), (session_id,))
         
         conn.commit()
-        conn.close()
         return True
     except Exception as e:
         log.error("Error deleting session: %s", e)
         return False
+    finally:
+        conn.close()
 
 
 def get_current_session_id(persona_id: str = 'default') -> Optional[int]:
@@ -235,10 +246,12 @@ def get_current_session_id(persona_id: str = 'default') -> Optional[int]:
         Session ID or None if no session exists
     """
     conn = get_db_connection(persona_id)
-    cursor = conn.cursor()
-    
-    cursor.execute(sql('sessions.get_current_session_id'))
-    result = cursor.fetchone()
-    conn.close()
-    
-    return result[0] if result else None
+    try:
+        cursor = conn.cursor()
+        
+        cursor.execute(sql('sessions.get_current_session_id'))
+        result = cursor.fetchone()
+        
+        return result[0] if result else None
+    finally:
+        conn.close()
