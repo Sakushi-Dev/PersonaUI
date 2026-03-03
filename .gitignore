@@ -71,6 +71,7 @@ frontend/public/avatar/index.json
 # Temporäre Dateien
 *.tmp
 *.temp
+*.backup
 src/restart_server.bat
 
 # Lokale Status-Dateien (pro Installation)
