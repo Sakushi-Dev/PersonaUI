@@ -46,10 +46,22 @@
 
 /* Mobile fullscreen */
 @media (max-width: 480px) {
+  /* .page becomes the scroll container because body { overflow: hidden } globally */
+  .page {
+    height: 100dvh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
   .container {
     display: block;
-    padding: 44px 0 0;
-    min-height: 100svh;
+    /* top: progress bar height + safe-area top */
+    padding-top: calc(44px + env(safe-area-inset-top, 0px));
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    min-height: unset;
   }
 
   .stepWrapper {

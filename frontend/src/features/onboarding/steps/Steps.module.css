@@ -1441,7 +1441,7 @@
   .cardBody {
     max-height: none;
     overflow: visible;
-    padding: 14px 16px;
+    padding: 14px calc(16px + env(safe-area-inset-right, 0px)) 14px calc(16px + env(safe-area-inset-left, 0px));
   }
 
   .cardFooter {
@@ -1451,11 +1451,11 @@
     background: var(--ob-card-bg);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    padding: 12px 16px 28px;
+    padding: 12px calc(16px + env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px));
   }
 
   .welcomeCard {
-    padding: 28px 16px 32px;
+    padding: 28px calc(16px + env(safe-area-inset-right, 0px)) 32px calc(16px + env(safe-area-inset-left, 0px));
   }
 
   .welcomeTitle {
@@ -1473,19 +1473,11 @@
   }
 
   .cardHeader {
-    padding: 18px 16px 0;
+    padding: 18px calc(16px + env(safe-area-inset-right, 0px)) 0 calc(16px + env(safe-area-inset-left, 0px));
   }
 
   .cardHeader h2 {
     font-size: 20px;
-  }
-
-  .cardBody {
-    padding: 14px 16px;
-  }
-
-  .cardFooter {
-    padding: 12px 16px 16px;
   }
 
   .typeGrid {
