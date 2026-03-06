@@ -1,27 +1,21 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!/usr/bin/env sh
 # ══════════════════════════════════════════════════════════════════════
 #  PersonaUI – Start (Termux / Android)
 # ══════════════════════════════════════════════════════════════════════
 #  Startet PersonaUI im Browser-Modus (--no-gui) auf Termux.
-#  Nutzung: bash start_termux.sh
+#  Nutzung: sh start_termux.sh  ODER  bash start_termux.sh
 # ══════════════════════════════════════════════════════════════════════
 set -e
 
-# Pfad bestimmen: BASH_SOURCE > $0 > aktuelles Verzeichnis
-if [[ -n "${BASH_SOURCE[0]}" ]]; then
-    SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-elif [[ -n "$0" && "$0" != "bash" && "$0" != "-bash" ]]; then
-    SELF_DIR="$(cd "$(dirname "$0")" && pwd)"
-else
-    SELF_DIR="$(pwd)"
-fi
+# Pfad bestimmen (sh-kompatibel, kein BASH_SOURCE nötig)
+SELF_DIR="$(cd "$(dirname "$0")" 2>/dev/null && pwd)" || SELF_DIR="$(pwd)"
 
 # Projektverzeichnis bestimmen
-if [[ -f "$SELF_DIR/src/app.py" ]]; then
+if [ -f "$SELF_DIR/src/app.py" ]; then
     ROOT="$SELF_DIR"
-elif [[ -f "$SELF_DIR/../src/app.py" ]]; then
+elif [ -f "$SELF_DIR/../src/app.py" ]; then
     ROOT="$(cd "$SELF_DIR/.." && pwd)"
-elif [[ -f "$(pwd)/src/app.py" ]]; then
+elif [ -f "$(pwd)/src/app.py" ]; then
     ROOT="$(pwd)"
 else
     echo "[FEHLER] src/app.py nicht gefunden!"
@@ -40,19 +34,19 @@ INSTALL_SCRIPT="$ROOT/bin/install_termux.sh"
 # Prüfe ob Installation nötig ist (kein Python, kein venv, oder kein Node)
 needs_install=false
 
-if ! command -v python3 &>/dev/null && [[ ! -x "$VENV_PY" ]]; then
+if ! command -v python3 >/dev/null 2>&1 && [ ! -x "$VENV_PY" ]; then
     needs_install=true
-elif [[ ! -x "$VENV_PY" ]]; then
+elif [ ! -x "$VENV_PY" ]; then
     needs_install=true
 elif ! "$VENV_PY" -c "import flask" 2>/dev/null; then
     needs_install=true
-elif ! command -v node &>/dev/null; then
+elif ! command -v node >/dev/null 2>&1; then
     needs_install=true
 fi
 
-if [[ "$needs_install" == true ]]; then
-    if [[ -f "$INSTALL_SCRIPT" ]]; then
-        echo "Erstinstallation erforderlich — starte install_termux.sh ..."
+if [ "$needs_install" = true ]; then
+    if [ -f "$INSTALL_SCRIPT" ]; then
+        echo "Erstinstallation erforderlich - starte install_termux.sh ..."
         echo ""
         bash "$INSTALL_SCRIPT"
         echo ""
@@ -63,11 +57,11 @@ if [[ "$needs_install" == true ]]; then
 fi
 
 # Python bestimmen
-if [[ -x "$VENV_PY" ]]; then
+if [ -x "$VENV_PY" ]; then
     PYTHON_CMD="$VENV_PY"
-elif command -v python3 &>/dev/null; then
+elif command -v python3 >/dev/null 2>&1; then
     PYTHON_CMD="python3"
-elif command -v python &>/dev/null; then
+elif command -v python >/dev/null 2>&1; then
     PYTHON_CMD="python"
 else
     echo "[FEHLER] Python nicht gefunden!"
@@ -75,7 +69,7 @@ else
 fi
 
 # Wake-Lock aktivieren (verhindert dass Android Termux beendet)
-if command -v termux-wake-lock &>/dev/null; then
+if command -v termux-wake-lock >/dev/null 2>&1; then
     termux-wake-lock 2>/dev/null || true
 fi
 
