@@ -2,37 +2,41 @@
 Database Package - Public API
 
 This module maintains backwards compatibility by re-exporting all functions
-that were previously in the monolithic database.py file.
-
 The database has been refactored into logical modules:
-- connection: DB paths, connections, schema
-- persona: Persona DB management & migration  
-- chat: Messages, history, context
-- sessions: Session management
+- connection: Legacy DB paths, connections (nur für Migration)
+- persona: Persona DB management & legacy migration  
+- jsonl_chat: Messages, history, context (JSONL-basiert)
+- jsonl_sessions: Session management (JSONL-basiert)
 
+SQLite wurde komplett durch JSONL ersetzt. Legacy SQLite-Module (chat.py, 
+sessions.py, migration.py) wurden entfernt. Legacy-Funktionen sind nur
+noch für Datenmigration verfügbar.
+
+SQLite wurde komplett durch JSONL ersetzt. Legacy-Funktionen sind nur
+noch für Datenmigration verfügbar.
 """
 
 # Core connection & schema functions
 from .connection import (
     get_db_path,
     get_db_connection, 
-    init_db_schema,
-    init_persona_db,
     get_all_persona_ids,
     DATA_DIR
 )
 
-# Persona management functions
-from .persona import (
+from .schema import (
+    init_persona_db,
     create_persona_db,
     delete_persona_db,
     init_all_dbs,
     find_session_persona,
-    migrate_from_legacy_db
 )
 
-# Chat functions
-from .chat import (
+# Legacy migration
+from .persona import migrate_from_legacy_db
+
+# Chat functions (JSONL)
+from .jsonl_chat import (
     get_chat_history,
     get_message_count,
     get_conversation_context,
@@ -45,8 +49,8 @@ from .chat import (
     update_last_message_text,
 )
 
-# Session functions  
-from .sessions import (
+# Session functions (JSONL)
+from .jsonl_sessions import (
     create_session,
     get_all_sessions,
     get_persona_session_summary,
@@ -64,7 +68,6 @@ __all__ = [
     # Connection & Schema
     'get_db_path',
     'get_db_connection',
-    'init_db_schema', 
     'init_persona_db',
     'get_all_persona_ids',
     'DATA_DIR',

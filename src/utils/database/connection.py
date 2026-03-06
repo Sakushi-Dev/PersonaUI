@@ -10,7 +10,6 @@ Handles:
 import sqlite3
 import os
 from typing import List
-from ..sql_loader import sql, load_schema
 
 # Data directory setup
 DATA_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'data'))
@@ -20,6 +19,7 @@ os.makedirs(DATA_DIR, exist_ok=True)
 def get_db_path(persona_id: str = 'default') -> str:
     """
     Returns the database file path for a specific persona.
+    # Legacy — nur für SQLite→JSONL Migration
     
     Args:
         persona_id: Persona ID ('default' or a UUID)
@@ -35,6 +35,7 @@ def get_db_path(persona_id: str = 'default') -> str:
 def get_db_connection(persona_id: str = 'default') -> sqlite3.Connection:
     """
     Creates a database connection with foreign keys enabled.
+    # Legacy — nur für SQLite→JSONL Migration
     
     Args:
         persona_id: Persona ID
@@ -48,55 +49,47 @@ def get_db_connection(persona_id: str = 'default') -> sqlite3.Connection:
     return conn
 
 
-def init_db_schema(conn: sqlite3.Connection, persona_id: str = 'default'):
-    """
-    Initializes the database schema in a connection.
-    Creates all necessary tables and indexes.
-    """
-    cursor = conn.cursor()
-    cursor.execute('PRAGMA foreign_keys = ON')
-    
-    # Load and execute schema from SQL file
-    cursor.executescript(load_schema())
-    
-    # Set persona_id in db_info
-    cursor.execute(sql('chat.upsert_db_info'), ('persona_id', persona_id))
-    
-    conn.commit()
-    
-    conn.commit()
+def get_persona_dir(persona_id: str = "default") -> str:
+    """Gibt Pfad zum Persona-Verzeichnis zurück. Erstellt es NICHT."""
+    return os.path.join(DATA_DIR, persona_id)
 
-
-def init_persona_db(persona_id: str = 'default'):
-    """Initializes the database for a specific persona."""
-    db_path = get_db_path(persona_id)
-    conn = sqlite3.connect(db_path)
-    init_db_schema(conn, persona_id)
-    conn.close()
 
 
 def get_all_persona_ids() -> List[str]:
     """
-    Returns all persona IDs for which databases exist.
+    Returns all persona IDs for which directories with JSONL files exist.
     
     Returns:
         List of persona IDs (including 'default')
     """
-    import glob
-    
     ids = []
     
-    # main.db → default
-    if os.path.exists(os.path.join(DATA_DIR, 'main.db')):
-        ids.append('default')
-    
-    # persona_*.db → custom personas
-    pattern = os.path.join(DATA_DIR, 'persona_*.db')
-    for db_file in glob.glob(pattern):
-        filename = os.path.basename(db_file)
-        # persona_abc123.db → abc123
-        persona_id = filename.replace('persona_', '').replace('.db', '')
-        if persona_id:
-            ids.append(persona_id)
+    try:
+        for entry in os.listdir(DATA_DIR):
+            entry_path = os.path.join(DATA_DIR, entry)
+            if not os.path.isdir(entry_path):
+                continue
+                
+            # Check if directory contains sessions/sessions.jsonl or messages/messages_*.jsonl
+            has_valid_files = False
+            
+            # Check for sessions/sessions.jsonl
+            if os.path.exists(os.path.join(entry_path, 'sessions', 'sessions.jsonl')):
+                has_valid_files = True
+            else:
+                # Check for messages/messages_*.jsonl files
+                messages_dir = os.path.join(entry_path, 'messages')
+                if os.path.isdir(messages_dir):
+                    for file in os.listdir(messages_dir):
+                        if file.startswith('messages_') and file.endswith('.jsonl'):
+                            has_valid_files = True
+                            break
+            
+            if has_valid_files:
+                ids.append(entry)
+                
+    except OSError:
+        # If DATA_DIR doesn't exist or can't be read, return empty list
+        pass
     
     return ids

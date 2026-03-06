@@ -91,7 +91,7 @@ def cortex_update():
     Startet Background-Update und gibt Progress-Daten zurück.
     """
     from utils.database import get_message_count
-    from utils.database.sessions import get_all_sessions
+    from utils.database import get_all_sessions
     from utils.cortex.tier_tracker import set_cycle_base, get_progress
     from utils.cortex.tier_checker import (
         _load_cortex_config,

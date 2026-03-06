@@ -1,5 +1,6 @@
 """
 SQL Query Loader - Lädt und cached benannte SQL-Abfragen aus .sql Dateien.
+# Legacy — nur für SQLite→JSONL Migration
 
 Konvention: Queries werden in .sql Dateien durch '-- name: query_name' Kommentare getrennt.
 Mehrzeilige Queries werden bis zum nächsten '-- name:' Block zusammengefasst.

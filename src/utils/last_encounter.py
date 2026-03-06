@@ -10,11 +10,13 @@ Logic:
    → "The user last wrote [time ago]"
 """
 
+import os
 from datetime import datetime, timezone
 from typing import Optional
 from .logger import log
-from .sql_loader import sql
-from .database.connection import get_db_connection
+from .database.jsonl_sessions import get_all_sessions, get_current_session_id
+from .database import jsonl_store
+from .database.connection import DATA_DIR
 
 
 def humanize_time_delta(seconds: float) -> str:
@@ -102,62 +104,71 @@ def compute_last_encounter(session_id: Optional[int], persona_id: str = 'default
         - "The user last wrote 5 minutes ago"
     """
     try:
-        conn = get_db_connection(persona_id)
-        try:
-            cursor = conn.cursor()
-
-            # If no session_id, get the latest
+        # If no session_id, get the latest
+        if session_id is None:
+            session_id = get_current_session_id(persona_id)
             if session_id is None:
-                cursor.execute(sql('chat.get_latest_session_id'))
-                result = cursor.fetchone()
-                if result:
-                    session_id = result[0]
-                else:
-                    return "This is your first encounter with the user"
-
-            # 1. How many sessions exist?
-            cursor.execute(sql('chat.get_session_count'))
-            session_count = cursor.fetchone()[0]
-
-            # 2. How many user messages in the current session?
-            cursor.execute(sql('chat.get_user_message_count_in_session'), (session_id,))
-            user_msg_count = cursor.fetchone()[0]
-
-            now = datetime.now(timezone.utc)
-
-            if user_msg_count > 0:
-                # Case 3: Active session – show when user last wrote
-                cursor.execute(sql('chat.get_last_user_message_timestamp'), (session_id,))
-                row = cursor.fetchone()
-
-                if row and row[0]:
-                    last_ts = _parse_timestamp(row[0])
-                    if last_ts:
-                        delta_seconds = (now - last_ts).total_seconds()
-                        return f"The user last wrote {humanize_time_delta(delta_seconds)}"
-
-                return "The user last wrote a few seconds ago"
-
-            # No user messages in current session yet
-            if session_count <= 1:
-                # Case 1: Only one session (this one), no user messages → first encounter
                 return "This is your first encounter with the user"
 
-            # Case 2: Other sessions exist → find last interaction from previous sessions
-            cursor.execute(sql('chat.get_last_user_message_other_sessions'), (session_id,))
-            row = cursor.fetchone()
+        # 1. How many sessions exist?
+        all_sessions = get_all_sessions(persona_id)
+        session_count = len(all_sessions)
 
-            if row and row[0]:
-                last_ts = _parse_timestamp(row[0])
+        # 2. How many user messages in the current session?
+        # Construct path to messages file
+        msg_path = os.path.join(DATA_DIR, persona_id, 'messages', f'messages_{session_id}.jsonl')
+        user_messages = jsonl_store.read_filtered(msg_path, lambda m: m.get('is_user', False))
+        user_msg_count = len(user_messages)
+
+        now = datetime.now(timezone.utc)
+
+        if user_msg_count > 0:
+            # Case 3: Active session – show when user last wrote
+            last_ts_str = user_messages[-1].get('timestamp')
+            
+            if last_ts_str:
+                last_ts = _parse_timestamp(last_ts_str)
                 if last_ts:
                     delta_seconds = (now - last_ts).total_seconds()
-                    return f"Your last conversation with the user was {humanize_time_delta(delta_seconds)}"
+                    return f"The user last wrote {humanize_time_delta(delta_seconds)}"
 
-            # Other sessions exist but no user messages found in them → still first encounter
+            return "The user last wrote a few seconds ago"
+
+        # No user messages in current session yet
+        if session_count <= 1:
+            # Case 1: Only one session (this one), no user messages → first encounter
             return "This is your first encounter with the user"
 
-        finally:
-            conn.close()
+        # Case 2: Other sessions exist → find last interaction from previous sessions
+        latest_timestamp = None
+        
+        for session in all_sessions:
+            session_session_id = session.get('id')
+            if session_session_id == session_id:
+                continue  # Skip current session
+            
+            # Read user messages from this session
+            other_msg_path = os.path.join(DATA_DIR, persona_id, 'messages', f'messages_{session_session_id}.jsonl')
+            other_user_messages = jsonl_store.read_filtered(
+                other_msg_path, 
+                lambda m: m.get('is_user', False)
+            )
+            
+            # Find the latest timestamp in this session
+            for msg in other_user_messages:
+                msg_ts_str = msg.get('timestamp')
+                if msg_ts_str:
+                    msg_ts = _parse_timestamp(msg_ts_str)
+                    if msg_ts:
+                        if latest_timestamp is None or msg_ts > latest_timestamp:
+                            latest_timestamp = msg_ts
+
+        if latest_timestamp:
+            delta_seconds = (now - latest_timestamp).total_seconds()
+            return f"Your last conversation with the user was {humanize_time_delta(delta_seconds)}"
+
+        # Other sessions exist but no user messages found in them → still first encounter
+        return "This is your first encounter with the user"
 
     except Exception as e:
         log.warning("compute_last_encounter failed: %s", e)

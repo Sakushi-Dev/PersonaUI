@@ -1,4 +1,0 @@
--- =============================================
--- PersonaUI Database Migrations
--- Spalten-Erweiterungen für bestehende Tabellen
--- =============================================

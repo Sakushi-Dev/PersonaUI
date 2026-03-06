@@ -31,6 +31,12 @@ src/logs/
 *.sqlite
 *.sqlite3
 
+# Data-Verzeichnis (Sessions, Messages, Persona-Daten)
+src/data/
+
+# Backup-Dateien
+*.backup
+
 # Benutzer-Einstellungen (nur defaults.json ist versioniert)
 src/settings/user_settings.json
 src/settings/server_settings.json
