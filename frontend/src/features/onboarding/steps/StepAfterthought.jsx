@@ -77,7 +77,7 @@ export default function StepAfterthought({ data, onChange, onNext, onBack }) {
             <span>{s.costWarning}</span>
           </div>
 
-          <div className={styles.typeGrid} style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+          <div className={styles.typeGrid4}>
             {MODES.map((opt) => (
               <button
                 key={opt.value}

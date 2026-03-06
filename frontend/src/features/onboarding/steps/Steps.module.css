@@ -676,6 +676,18 @@
   gap: 8px;
 }
 
+.typeGrid3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.typeGrid4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
 .typeChip {
   padding: 10px 14px;
   border-radius: 10px;
@@ -1402,12 +1414,187 @@
     grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
   }
 
+  .typeGrid4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   .finishCard {
     padding: 40px 24px;
   }
 
   .apiInputRow {
     flex-direction: column;
+  }
+}
+
+/* ── Small phones (≤480px) ── */
+@media (max-width: 480px) {
+  .welcomeCard {
+    padding: 28px 16px 32px;
+  }
+
+  .welcomeTitle {
+    font-size: 22px;
+  }
+
+  .welcomeSubtitle {
+    font-size: 13px;
+    margin-bottom: 22px;
+  }
+
+  .welcomeFeatures {
+    gap: 10px;
+    margin-bottom: 22px;
+  }
+
+  /* On small touch screens: always show feature descriptions (no hover) */
+  .featureTyped {
+    max-height: 80px;
+    opacity: 1;
+    animation: none;
+  }
+
+  .cardHeader {
+    padding: 18px 16px 0;
+  }
+
+  .cardHeader h2 {
+    font-size: 20px;
+  }
+
+  .cardBody {
+    padding: 14px 16px;
+    max-height: 53vh;
+  }
+
+  .cardFooter {
+    padding: 12px 16px 16px;
+  }
+
+  .typeGrid {
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  }
+
+  .typeGrid3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .typeGrid4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .genderGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .finishCard {
+    padding: 30px 16px;
+  }
+
+  .finishTitle {
+    font-size: 24px;
+  }
+
+  .finishIconBounce {
+    font-size: 44px;
+    margin-bottom: 14px;
+  }
+
+  .finishText {
+    font-size: 14px;
+  }
+
+  .finishHint {
+    margin-bottom: 24px;
+  }
+
+  .warningCard {
+    padding: 24px 18px 20px;
+    border-radius: 16px;
+  }
+
+  .btnLarge {
+    padding: 14px 28px;
+    font-size: 15px;
+  }
+
+  .langToggle {
+    top: 10px;
+    right: 10px;
+  }
+
+  .langBtn {
+    padding: 4px 8px;
+    font-size: 0.72rem;
+  }
+
+  .logo {
+    width: 70px;
+    height: 70px;
+    margin-bottom: 14px;
+  }
+
+  .apiInputRow {
+    flex-direction: column;
+  }
+
+  .galleryCard {
+    border-radius: 12px;
+  }
+
+  .galleryBody {
+    padding: 14px 16px;
+  }
+
+  .featureIntro p {
+    font-size: 13px;
+  }
+
+  .sliderLabels {
+    font-size: 11px;
+  }
+}
+
+/* ── Landscape mobile (short viewport) ── */
+@media (max-height: 600px) and (max-width: 900px) {
+  .cardBody {
+    max-height: 40vh;
+  }
+
+  .welcomeCard {
+    padding: 20px 24px 24px;
+  }
+
+  .logo {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 10px;
+  }
+
+  .welcomeTitle {
+    font-size: 22px;
+  }
+
+  .welcomeSubtitle {
+    margin-bottom: 16px;
+  }
+
+  .welcomeFeatures {
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .finishCard {
+    padding: 24px 24px;
+  }
+
+  .finishIconBounce {
+    font-size: 40px;
+    margin-bottom: 10px;
+  }
+
+  .finishTitle {
+    font-size: 24px;
   }
 }
 

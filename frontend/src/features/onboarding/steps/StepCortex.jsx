@@ -94,7 +94,7 @@ export default function StepCortex({ data, onChange, onNext, onBack }) {
             <span className={styles.hint} style={{ marginBottom: 10 }}>
               {s.frequencyHint}
             </span>
-            <div className={styles.typeGrid} style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+            <div className={styles.typeGrid3}>
               {FREQUENCY_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}

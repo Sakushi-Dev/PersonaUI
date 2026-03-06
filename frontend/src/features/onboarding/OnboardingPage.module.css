@@ -43,3 +43,17 @@
     padding: 50px 12px 30px;
   }
 }
+
+@media (max-width: 480px) {
+  .container {
+    padding: 46px 8px 24px;
+  }
+}
+
+/* Landscape mobile */
+@media (max-height: 600px) and (max-width: 900px) {
+  .container {
+    padding: 44px 16px 16px;
+    align-items: flex-start;
+  }
+}

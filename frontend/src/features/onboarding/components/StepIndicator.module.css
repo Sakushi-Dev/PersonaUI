@@ -48,3 +48,15 @@
 :root[data-theme="dark"] .completed {
   background: rgba(79, 172, 254, 0.4);
 }
+
+/* ── Small phones ── */
+@media (max-width: 380px) {
+  .dots {
+    gap: 7px;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+  }
+}
