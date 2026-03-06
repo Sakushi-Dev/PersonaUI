@@ -7,15 +7,29 @@
 # ══════════════════════════════════════════════════════════════════════
 set -e
 
-SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Pfad bestimmen: BASH_SOURCE > $0 > aktuelles Verzeichnis
+if [[ -n "${BASH_SOURCE[0]}" ]]; then
+    SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+elif [[ -n "$0" && "$0" != "bash" && "$0" != "-bash" ]]; then
+    SELF_DIR="$(cd "$(dirname "$0")" && pwd)"
+else
+    SELF_DIR="$(pwd)"
+fi
 
 # Projektverzeichnis bestimmen
 if [[ -f "$SELF_DIR/src/app.py" ]]; then
     ROOT="$SELF_DIR"
 elif [[ -f "$SELF_DIR/../src/app.py" ]]; then
     ROOT="$(cd "$SELF_DIR/.." && pwd)"
+elif [[ -f "$(pwd)/src/app.py" ]]; then
+    ROOT="$(pwd)"
 else
     echo "[FEHLER] src/app.py nicht gefunden!"
+    echo "  Gesucht in: $SELF_DIR"
+    echo "  und in:     $(pwd)"
+    echo ""
+    echo "  Bitte starte das Script aus dem PersonaUI-Ordner:"
+    echo "    cd /pfad/zu/personaui && bash start_termux.sh"
     exit 1
 fi
 
