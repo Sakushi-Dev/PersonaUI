@@ -1436,9 +1436,15 @@
     border-bottom: none;
     box-shadow: none;
     overflow: visible;
+    /* stretch to full viewport height so it always fills the frame */
+    min-height: calc(100vh - 44px);
+    min-height: calc(100dvh - 44px);
+    display: flex;
+    flex-direction: column;
   }
 
   .cardBody {
+    flex: 1;
     max-height: none;
     overflow: visible;
     padding: 14px calc(16px + env(safe-area-inset-right, 0px)) 14px calc(16px + env(safe-area-inset-left, 0px));

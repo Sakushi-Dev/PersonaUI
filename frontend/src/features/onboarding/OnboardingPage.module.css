@@ -72,18 +72,20 @@
   }
 
   .container {
-    /* block flow — frames always stretch to left/right edge */
+    /* block flow, top-anchored, no flex centering */
     display: block;
     min-height: unset;
-    /* 44px = ProgressBar/StepIndicator height */
-    padding: 44px 0 0;
+    padding: 0;
+    margin: 0;
   }
 
   .stepWrapper {
-    /* full-bleed: no max-width, no side margin */
+    /* full-bleed, starts exactly at top of container */
     width: 100%;
     max-width: 100%;
     margin: 0;
+    /* 44px = ProgressBar + StepIndicator height */
+    padding-top: 44px;
   }
 }
 
