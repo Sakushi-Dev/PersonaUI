@@ -325,7 +325,7 @@ def _build_frontend(npm_path):
     return result.returncode == 0
 
 
-def _ensure_frontend(npm_path):
+def _ensure_frontend(npm_path, force_build=False):
     """Ensures node_modules are installed and dist/ is built.
     
     Returns True if everything succeeded.
@@ -338,9 +338,12 @@ def _ensure_frontend(npm_path):
             return False
         _print_ok("Frontend dependencies installed")
 
-    # 2. npm run build (if dist/ missing)
-    if not _frontend_built_ok():
-        print(f"  {_DIM}Building frontend (npm run build)...{_RESET}")
+    # 2. npm run build (if dist/ missing or force_build requested)
+    if force_build or not _frontend_built_ok():
+        if force_build:
+            print(f"  {_DIM}Rebuilding frontend (npm run build)...{_RESET}")
+        else:
+            print(f"  {_DIM}Building frontend (npm run build)...{_RESET}")
         if not _build_frontend(npm_path):
             _print_error("Frontend build failed!")
             return False
@@ -494,6 +497,9 @@ def main():
     venv_python = _get_venv_python()
     app_path = os.path.join(SCRIPT_DIR, 'app.py')
     first_setup = False
+    force_build = '--force-build' in sys.argv
+    if force_build:
+        sys.argv.remove('--force-build')
 
     # ─── Step 1: Already running inside .venv with everything installed? ───
     if _running_in_venv():
@@ -501,10 +507,10 @@ def main():
         all_ok, installed, missing = check_dependencies()
         if all_ok:
             # Check frontend deps & build
-            if not _node_modules_ok() or not _frontend_built_ok():
+            if not _node_modules_ok() or not _frontend_built_ok() or force_build:
                 npm_path = _ensure_npm()
                 if npm_path:
-                    _ensure_frontend(npm_path)
+                    _ensure_frontend(npm_path, force_build=force_build)
 
             # Ensure prompt files exist (non-destructive restore from _defaults)
             _ensure_prompts()
@@ -592,7 +598,7 @@ def main():
     npm_path = _ensure_npm()
     if npm_path:
         print()
-        if not _ensure_frontend(npm_path):
+        if not _ensure_frontend(npm_path, force_build=force_build):
             _print_warn("Frontend setup failed — legacy frontend will be used.")
     else:
         _print_warn("Frontend will not be available without Node.js.")

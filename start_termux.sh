@@ -93,5 +93,5 @@ echo ""
     done
 ) &
 
-# --no-gui erzwingen + Launch Options laden
-"$PYTHON_CMD" "$INIT" --no-gui "$@"
+# --no-gui erzwingen + --force-build + Launch Options laden
+"$PYTHON_CMD" "$INIT" --no-gui --force-build "$@"
