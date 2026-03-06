@@ -47,14 +47,14 @@
 /* Mobile fullscreen */
 @media (max-width: 480px) {
   .container {
+    display: block;
     padding: 44px 0 0;
-    align-items: flex-start;
-    min-height: 100vh;
+    min-height: 100svh;
   }
 
   .stepWrapper {
     max-width: 100%;
-    min-height: calc(100vh - 44px);
+    width: 100%;
   }
 }
 
