@@ -33,6 +33,14 @@ export default function OnboardingPage() {
   const { language } = useLanguage();
   const { set } = useSettings();
 
+  // Detect mobile for background suppression
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 480);
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth <= 480);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+
   // Ensure dynamic background is visible during onboarding
   useEffect(() => {
     setDynamicBackground(true);
@@ -130,8 +138,8 @@ export default function OnboardingPage() {
 
   return (
     <div className={styles.page}>
-      {/* Use existing DynamicBackground component */}
-      <DynamicBackground />
+      {/* Hide background on mobile — card is the only frame */}
+      {!isMobile && <DynamicBackground />}
 
       {/* Fixed Progress Bar */}
       <ProgressBar progress={progress} />

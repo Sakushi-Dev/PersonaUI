@@ -46,28 +46,36 @@
 
 /* ── Mobile fullscreen (≤480px) ──
    body has overflow:hidden globally, so .page becomes the scroll container.
-   100dvh = dynamic viewport = accounts for browser nav bar appearing/hiding.
+   position:fixed covers browser nav bar (like Android Chrome bottom bar).
    Frames go edge-to-edge aligned to safe-area, never centered by content.
 */
 @media (max-width: 480px) {
   .page {
-    /* scroll container: exactly the visible viewport, including notch/home-indicator via dvh */
-    height: 100dvh;
+    /* Fixed to viewport = renders over browser navigation bar */
+    position: fixed;
+    inset: 0;
+    /* Solid bg instead of transparent — no DynamicBackground on mobile */
+    background-color: var(--background-color, #f8f9fa);
+    /* Page itself is the scroll container */
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
-    /* inset the page itself from all device edges */
+    /* Respect device safe-areas (notch, home indicator) */
     padding-top: env(safe-area-inset-top, 0px);
     padding-left: env(safe-area-inset-left, 0px);
     padding-right: env(safe-area-inset-right, 0px);
-    /* bottom handled per-card-footer so sticky footer clears home indicator */
+    min-height: unset;
+  }
+
+  :root[data-theme="dark"] .page {
+    background-color: #1a1a24;
   }
 
   .container {
-    /* block flow — frames always stretch to left/right edge, never float-centered */
+    /* block flow — frames always stretch to left/right edge */
     display: block;
     min-height: unset;
-    /* 44px = ProgressBar/StepIndicator height (already inside safe-area-inset-top via .page) */
+    /* 44px = ProgressBar/StepIndicator height */
     padding: 44px 0 0;
   }
 
