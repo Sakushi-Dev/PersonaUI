@@ -1435,7 +1435,7 @@
     border-right: none;
     border-bottom: none;
     box-shadow: none;
-    min-height: calc(100vh - 44px);
+    overflow: visible;
     display: flex;
     flex-direction: column;
   }
@@ -1443,7 +1443,7 @@
   .cardBody {
     flex: 1;
     max-height: none;
-    overflow-y: visible;
+    overflow: visible;
   }
 
   .welcomeCard {
