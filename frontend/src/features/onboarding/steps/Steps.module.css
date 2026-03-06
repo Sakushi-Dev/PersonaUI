@@ -1429,6 +1429,23 @@
 
 /* ── Small phones (≤480px) ── */
 @media (max-width: 480px) {
+  .card {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    box-shadow: none;
+    min-height: calc(100vh - 44px);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .cardBody {
+    flex: 1;
+    max-height: none;
+    overflow-y: visible;
+  }
+
   .welcomeCard {
     padding: 28px 16px 32px;
   }
@@ -1447,13 +1464,6 @@
     margin-bottom: 22px;
   }
 
-  /* On small touch screens: always show feature descriptions (no hover) */
-  .featureTyped {
-    max-height: 80px;
-    opacity: 1;
-    animation: none;
-  }
-
   .cardHeader {
     padding: 18px 16px 0;
   }
@@ -1464,7 +1474,6 @@
 
   .cardBody {
     padding: 14px 16px;
-    max-height: 53vh;
   }
 
   .cardFooter {

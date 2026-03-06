@@ -44,9 +44,17 @@
   }
 }
 
+/* Mobile fullscreen */
 @media (max-width: 480px) {
   .container {
-    padding: 46px 8px 24px;
+    padding: 44px 0 0;
+    align-items: flex-start;
+    min-height: 100vh;
+  }
+
+  .stepWrapper {
+    max-width: 100%;
+    min-height: calc(100vh - 44px);
   }
 }
 
