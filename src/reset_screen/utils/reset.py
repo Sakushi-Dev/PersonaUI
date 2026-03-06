@@ -186,15 +186,44 @@ def _get_farewell_messages(names, max_count=3):
 # ─────────────────────────────────────────────
 
 def _reset_databases(window, src, errors, persona_ids=None):
-    """Deletes databases. If persona_ids given, only those."""
+    """Deletes databases (JSONL data dirs + legacy .db files). If persona_ids given, only those."""
     data_dir = os.path.join(src, 'data')
 
     if persona_ids is None:
-        # All databases
+        # All data: JSONL persona directories + legacy .db files
+        count = 0
+
+        # JSONL persona data directories
+        if os.path.isdir(data_dir):
+            for entry in os.listdir(data_dir):
+                entry_path = os.path.join(data_dir, entry)
+                if os.path.isdir(entry_path) and entry not in ('.gitkeep', 'default', 'persona_notes'):
+                    try:
+                        shutil.rmtree(entry_path)
+                        count += 1
+                    except Exception:
+                        pass
+            # Default persona: delete contents but keep directory
+            default_dir = os.path.join(data_dir, 'default')
+            if os.path.isdir(default_dir):
+                for sub in os.listdir(default_dir):
+                    sub_path = os.path.join(default_dir, sub)
+                    try:
+                        if os.path.isdir(sub_path):
+                            shutil.rmtree(sub_path)
+                        else:
+                            os.remove(sub_path)
+                        count += 1
+                    except Exception:
+                        pass
+
+        # Legacy .db files (from before JSONL migration)
         db_count = _delete_files(os.path.join(data_dir, '*.db'))
         _delete_files(os.path.join(data_dir, '*.db.backup'))
-        if db_count > 0:
-            _type(window, f'        {db_count} database(s) deleted', 'info')
+        count += db_count
+
+        if count > 0:
+            _type(window, f'        {count} data store(s) deleted', 'info')
         else:
             _type(window, '        No databases found', 'default')
 
@@ -203,9 +232,35 @@ def _reset_databases(window, src, errors, persona_ids=None):
             _type(window, '        WARNING: Some DBs could not be deleted!', 'error')
             errors.append('Databases could not be deleted (app still running?)')
     else:
-        # Only specific persona DBs
+        # Only specific personas
         count = 0
         for pid in persona_ids:
+            # JSONL data directory
+            jsonl_dir = os.path.join(data_dir, pid if pid != 'default' else 'default')
+            if pid == 'default':
+                # Default: delete contents but keep directory
+                if os.path.isdir(jsonl_dir):
+                    for sub in os.listdir(jsonl_dir):
+                        sub_path = os.path.join(jsonl_dir, sub)
+                        try:
+                            if os.path.isdir(sub_path):
+                                shutil.rmtree(sub_path)
+                            else:
+                                os.remove(sub_path)
+                            count += 1
+                        except Exception:
+                            _type(window, f'        WARNING: Data for {pid} could not be deleted', 'error')
+                            errors.append(f'Data for persona {pid} not deleted')
+            else:
+                if os.path.isdir(jsonl_dir):
+                    try:
+                        shutil.rmtree(jsonl_dir)
+                        count += 1
+                    except Exception:
+                        _type(window, f'        WARNING: Data for {pid} could not be deleted', 'error')
+                        errors.append(f'Data for persona {pid} not deleted')
+
+            # Legacy .db files
             if pid == 'default':
                 db_path = os.path.join(data_dir, 'main.db')
             else:
@@ -216,8 +271,7 @@ def _reset_databases(window, src, errors, persona_ids=None):
                     os.remove(db_path)
                     count += 1
                 except Exception:
-                    _type(window, f'        WARNING: DB for {pid} could not be deleted', 'error')
-                    errors.append(f'DB for persona {pid} not deleted (locked?)')
+                    pass
 
             backup = db_path + '.backup'
             if os.path.exists(backup):
@@ -227,9 +281,9 @@ def _reset_databases(window, src, errors, persona_ids=None):
                     pass
 
         if count > 0:
-            _type(window, f'        {count} database(s) deleted', 'info')
+            _type(window, f'        {count} data store(s) deleted', 'info')
         else:
-            _type(window, '        No matching databases found', 'default')
+            _type(window, '        No matching data found', 'default')
 
 
 def _reset_env(window, src, errors):
@@ -325,7 +379,21 @@ def _reset_personas_selected(window, src, errors, persona_ids):
             # but NOT the default_persona.json (that's the template)
             _type(window, '        Deleting default persona data...', 'warn')
 
-            # DB
+            # JSONL data directory (delete contents, keep dir)
+            default_data_dir = os.path.join(data_dir, 'default')
+            if os.path.isdir(default_data_dir):
+                for sub in os.listdir(default_data_dir):
+                    sub_path = os.path.join(default_data_dir, sub)
+                    try:
+                        if os.path.isdir(sub_path):
+                            shutil.rmtree(sub_path)
+                        else:
+                            os.remove(sub_path)
+                    except Exception:
+                        pass
+                _type(window, '          Chat data deleted', 'info')
+
+            # Legacy DB
             db_path = os.path.join(data_dir, 'main.db')
             if os.path.exists(db_path):
                 try:
@@ -405,12 +473,22 @@ def _reset_personas_selected(window, src, errors, persona_ids):
                 _type(window, f'        ERROR: {name} could not be deleted', 'error')
                 errors.append(f'Persona {name} could not be deleted')
 
-        # DB
+        # JSONL data directory
+        jsonl_dir = os.path.join(data_dir, pid)
+        if os.path.isdir(jsonl_dir):
+            try:
+                shutil.rmtree(jsonl_dir)
+                _type(window, '          Chat data deleted', 'info')
+            except Exception:
+                _type(window, '          WARNING: Chat data could not be deleted', 'error')
+                errors.append(f'Chat data for {name} not deleted')
+
+        # Legacy DB
         db_path = os.path.join(data_dir, f'persona_{pid}.db')
         if os.path.exists(db_path):
             try:
                 os.remove(db_path)
-                _type(window, '          Database deleted', 'info')
+                _type(window, '          Legacy database deleted', 'info')
             except Exception:
                 _type(window, '          WARNING: Database locked', 'error')
                 errors.append(f'DB for {name} not deleted')
@@ -696,7 +774,7 @@ PRESET_ORDER = ['full', 'keep_api', 'chat_only', 'personas_select',
 
 
 STEP_LABELS = {
-    'databases':         'Delete databases',
+    'databases':         'Delete chat data',
     'env':               'Delete .env (API key)',
     'settings':          'Delete settings',
     'personas_all':      'Delete all personas',
