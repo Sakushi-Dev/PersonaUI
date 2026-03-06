@@ -30,21 +30,39 @@ def _get_virtual_screen_bounds() -> Tuple[int, int, int, int]:
         (left, top, right, bottom) - Grenzen des virtuellen Desktops.
         Fallback auf konservative Standardwerte wenn nicht ermittelbar.
     """
-    try:
-        import ctypes
-        # SM_XVIRTUALSCREEN (76) = linke Kante aller Monitore
-        # SM_YVIRTUALSCREEN (77) = obere Kante aller Monitore
-        # SM_CXVIRTUALSCREEN (78) = Gesamtbreite aller Monitore
-        # SM_CYVIRTUALSCREEN (79) = Gesamthöhe aller Monitore
-        user32 = ctypes.windll.user32
-        left = user32.GetSystemMetrics(76)
-        top = user32.GetSystemMetrics(77)
-        width = user32.GetSystemMetrics(78)
-        height = user32.GetSystemMetrics(79)
-        if width > 0 and height > 0:
-            return (left, top, left + width, top + height)
-    except Exception:
-        pass
+    import sys
+    
+    if sys.platform == 'win32':
+        try:
+            import ctypes
+            user32 = ctypes.windll.user32
+            left = user32.GetSystemMetrics(76)
+            top = user32.GetSystemMetrics(77)
+            width = user32.GetSystemMetrics(78)
+            height = user32.GetSystemMetrics(79)
+            if width > 0 and height > 0:
+                return (left, top, left + width, top + height)
+        except Exception:
+            pass
+    else:
+        # Linux/macOS: Try to get screen bounds via xrandr or fallback
+        try:
+            import subprocess
+            result = subprocess.run(
+                ['xrandr', '--query'],
+                capture_output=True, text=True, timeout=5
+            )
+            if result.returncode == 0:
+                import re
+                max_right, max_bottom = 0, 0
+                for match in re.finditer(r'(\d+)x(\d+)\+(\d+)\+(\d+)', result.stdout):
+                    w, h, x, y = int(match.group(1)), int(match.group(2)), int(match.group(3)), int(match.group(4))
+                    max_right = max(max_right, x + w)
+                    max_bottom = max(max_bottom, y + h)
+                if max_right > 0 and max_bottom > 0:
+                    return (0, 0, max_right, max_bottom)
+        except Exception:
+            pass
     
     # Fallback: konservative Standardwerte
     return (-200, -200, 8000, 4500)

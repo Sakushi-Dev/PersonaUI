@@ -3,6 +3,7 @@ API Routes - API-Key Verwaltung und Testing
 """
 from flask import Blueprint, request
 import os
+import sys
 import secrets
 import json
 from dotenv import load_dotenv
@@ -358,25 +359,38 @@ def save_and_restart_server():
     with open(settings_path, 'w', encoding='utf-8') as f:
         json.dump(settings, f, indent=4, ensure_ascii=False)
     
-    # Erstelle Restart-Batch-Skript das im SELBEN Fenster läuft
-    restart_script_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'restart_server.bat')
-    with open(restart_script_path, 'w', encoding='utf-8') as f:
-        f.write('@echo off\n')
-        f.write('echo Server wird neu gestartet...\n')
-        f.write('timeout /t 2 /nobreak >nul\n')  # Warte 2 Sekunden
-        f.write('cd /d "%~dp0src"\n')  # Wechsel ins src Verzeichnis
-        # Aktiviere venv und starte app.py direkt (wie start.bat)
-        f.write('call ..\\.venv\\Scripts\\activate.bat\n')
-        f.write('python app.py\n')
-        f.write('if errorlevel 1 pause\n')  # Pause nur bei Fehler
-        f.write('cd ..\n')  # Zurück ins Hauptverzeichnis
-        f.write('del "%~f0"\n')  # Lösche das Skript selbst
-    
-    # Starte das Batch-Skript und beende dann diesen Python-Prozess
-    # Das Skript läuft im Hintergrund weiter und startet Python im aktuellen Fenster neu
-    subprocess.Popen(['start', '/B', 'cmd', '/c', restart_script_path], 
-                    shell=True,
-                    cwd=os.path.dirname(os.path.dirname(__file__)))
+    # Erstelle plattformabhängiges Restart-Skript
+    if sys.platform == 'win32':
+        restart_script_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'restart_server.bat')
+        with open(restart_script_path, 'w', encoding='utf-8') as f:
+            f.write('@echo off\n')
+            f.write('echo Server wird neu gestartet...\n')
+            f.write('timeout /t 2 /nobreak >nul\n')
+            f.write('cd /d "%~dp0src"\n')
+            f.write('call ..\\.venv\\Scripts\\activate.bat\n')
+            f.write('python app.py\n')
+            f.write('if errorlevel 1 pause\n')
+            f.write('cd ..\n')
+            f.write('del "%~f0"\n')
+        
+        subprocess.Popen(['start', '/B', 'cmd', '/c', restart_script_path], 
+                        shell=True,
+                        cwd=os.path.dirname(os.path.dirname(__file__)))
+    else:
+        restart_script_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'restart_server.sh')
+        with open(restart_script_path, 'w', encoding='utf-8') as f:
+            f.write('#!/usr/bin/env bash\n')
+            f.write('echo "Server wird neu gestartet..."\n')
+            f.write('sleep 2\n')
+            f.write('cd "$(dirname "$0")/src"\n')
+            f.write('source ../.venv/bin/activate\n')
+            f.write('python app.py\n')
+            f.write('cd ..\n')
+            f.write('rm -f "$0"\n')
+        os.chmod(restart_script_path, 0o755)
+        
+        subprocess.Popen(['bash', restart_script_path],
+                        cwd=os.path.dirname(os.path.dirname(__file__)))
     
     # Beende den aktuellen Python-Prozess nach kurzer Verzögerung
     def shutdown():

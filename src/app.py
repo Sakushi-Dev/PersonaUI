@@ -168,32 +168,45 @@ def _find_npm():
 
 
 def _kill_port(port):
-    """Beendet alle Prozesse, die den angegebenen Port belegen (Windows)."""
-    if sys.platform != 'win32':
-        return
+    """Beendet alle Prozesse, die den angegebenen Port belegen."""
     try:
-        result = subprocess.run(
-            ['netstat', '-ano'],
-            capture_output=True, text=True
-        )
-        pids = set()
-        for line in result.stdout.splitlines():
-            if f':{port}' in line and 'LISTENING' in line:
-                parts = line.split()
-                if parts:
+        if sys.platform == 'win32':
+            result = subprocess.run(
+                ['netstat', '-ano'],
+                capture_output=True, text=True
+            )
+            pids = set()
+            for line in result.stdout.splitlines():
+                if f':{port}' in line and 'LISTENING' in line:
+                    parts = line.split()
+                    if parts:
+                        try:
+                            pids.add(int(parts[-1]))
+                        except ValueError:
+                            pass
+            for pid in pids:
+                try:
+                    subprocess.run(
+                        ['taskkill', '/F', '/PID', str(pid)],
+                        capture_output=True
+                    )
+                    log.info("Port %s: Prozess %s beendet.", port, pid)
+                except Exception:
+                    pass
+        else:
+            # Linux/macOS: Use fuser or lsof
+            result = subprocess.run(
+                ['fuser', f'{port}/tcp'],
+                capture_output=True, text=True
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                for pid_str in result.stdout.strip().split():
                     try:
-                        pids.add(int(parts[-1]))
-                    except ValueError:
+                        pid = int(pid_str)
+                        os.kill(pid, 9)
+                        log.info("Port %s: Prozess %s beendet.", port, pid)
+                    except (ValueError, OSError):
                         pass
-        for pid in pids:
-            try:
-                subprocess.run(
-                    ['taskkill', '/F', '/PID', str(pid)],
-                    capture_output=True
-                )
-                log.info("Port %s: Prozess %s beendet.", port, pid)
-            except Exception:
-                pass
     except Exception:
         pass
 
@@ -274,11 +287,12 @@ if __name__ == '__main__':
 
             # AppUserModelID setzen, damit Windows die App als eigenständig erkennt
             # und das eigene Icon in der Taskleiste anzeigt (statt python.exe-Icon)
-            try:
-                from ctypes import windll
-                windll.shell32.SetCurrentProcessExplicitAppUserModelID('PersonaUI.App')
-            except Exception:
-                pass
+            if sys.platform == 'win32':
+                try:
+                    from ctypes import windll
+                    windll.shell32.SetCurrentProcessExplicitAppUserModelID('PersonaUI.App')
+                except Exception:
+                    pass
 
             def _patch_winforms_icon(ico_path):
                 """Patcht die WinForms BrowserForm-Klasse, damit das eigene Icon verwendet wird."""

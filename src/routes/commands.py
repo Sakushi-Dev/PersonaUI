@@ -5,6 +5,7 @@ Jedes Kommando, das serverseitige Logik benötigt, bekommt hier einen Endpoint.
 Route-Prefix: /api/commands/
 """
 import os
+import sys
 import subprocess
 
 from flask import Blueprint, request
@@ -18,34 +19,66 @@ _ROOT_DIR = os.path.normpath(
     os.path.join(os.path.dirname(__file__), '..')    # src/routes/.. → src/
 )
 _PROJECT_ROOT = os.path.normpath(os.path.join(_ROOT_DIR, '..'))  # → Projekt-Root
-_BUILD_SCRIPT = os.path.join(_PROJECT_ROOT, 'src', 'dev', 'frontend', 'build_frontend.bat')
+
+def _get_build_script():
+    """Returns the path to the build script for the current platform."""
+    if sys.platform == 'win32':
+        return os.path.join(_PROJECT_ROOT, 'src', 'dev', 'frontend', 'build_frontend.bat')
+    return os.path.join(_PROJECT_ROOT, 'src', 'dev', 'frontend', 'build_frontend.sh')
 
 
 @commands_bp.route('/api/commands/rebuild-frontend', methods=['POST'])
 @handle_route_error('rebuild_frontend')
 def rebuild_frontend():
     """
-    Startet build_frontend.bat als unabhängigen Prozess in einem eigenen Konsolenfenster.
+    Startet das Build-Script als unabhängigen Prozess.
     Der Flask-Server wird dadurch nicht blockiert.
     """
-    if not os.path.isfile(_BUILD_SCRIPT):
-        return error_response('build_frontend.bat nicht gefunden', 404)
+    build_script = _get_build_script()
+    
+    # Fallback: npm run build direkt ausführen wenn kein Script existiert
+    if not os.path.isfile(build_script):
+        frontend_dir = os.path.join(_PROJECT_ROOT, 'frontend')
+        if not os.path.isdir(frontend_dir):
+            return error_response('Frontend-Verzeichnis nicht gefunden', 404)
+        
+        log.info('[rebuild] Kein Build-Script gefunden, starte npm run build direkt...')
+        try:
+            npm_cmd = 'npm.cmd' if sys.platform == 'win32' else 'npm'
+            subprocess.Popen(
+                [npm_cmd, 'run', 'build'],
+                cwd=frontend_dir,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        except Exception as exc:
+            log.error('[rebuild] Fehler beim Starten von npm run build: %s', exc)
+            return error_response(f'Build konnte nicht gestartet werden: {exc}', 500)
+        
+        return success_response(message='Frontend-Build gestartet (npm run build)')
 
-    log.info('[rebuild] Starte Build-Script: %s', _BUILD_SCRIPT)
+    log.info('[rebuild] Starte Build-Script: %s', build_script)
 
     try:
-        # Eigenes Konsolenfenster, komplett vom Server-Prozess entkoppelt
-        subprocess.Popen(
-            ['cmd', '/c', 'start', 'PersonaUI - Frontend Build', 'cmd', '/c', _BUILD_SCRIPT],
-            cwd=_PROJECT_ROOT,
-            creationflags=subprocess.CREATE_NEW_CONSOLE if os.name == 'nt' else 0,
-        )
+        if sys.platform == 'win32':
+            subprocess.Popen(
+                ['cmd', '/c', 'start', 'PersonaUI - Frontend Build', 'cmd', '/c', build_script],
+                cwd=_PROJECT_ROOT,
+                creationflags=subprocess.CREATE_NEW_CONSOLE,
+            )
+        else:
+            subprocess.Popen(
+                ['bash', build_script],
+                cwd=_PROJECT_ROOT,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
     except Exception as exc:
         log.error('[rebuild] Fehler beim Starten des Build-Scripts: %s', exc)
         return error_response(f'Build-Script konnte nicht gestartet werden: {exc}', 500)
 
-    log.info('[rebuild] Build-Script gestartet (eigenes Fenster).')
-    return success_response(message='Build-Script gestartet – siehe Konsolenfenster')
+    log.info('[rebuild] Build-Script gestartet.')
+    return success_response(message='Build-Script gestartet')
 
 
 # ═══════════════════════════════════════════════════════════════

@@ -145,7 +145,7 @@ def startup_sequence(window, server_mode, server_port, start_flask_fn, host, dev
             remote_ver = update_info.get('remote_version', '?')
             splash_type(window, '', 'default')
             splash_type(window, f'  *** New version available: v{remote_ver} (current: v{local_ver}) ***', 'warn')
-            splash_type(window, '  Run bin/update.bat to update.', 'warn')
+            splash_type(window, '  Run bin/update.sh (Linux) or bin\\update.bat (Windows) to update.', 'warn')
             splash_type(window, '', 'default')
         else:
             splash_type(window, f'  PersonaUI is up to date (v{local_ver}).', 'info')

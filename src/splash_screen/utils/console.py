@@ -1,8 +1,12 @@
-"""Helper functions to hide/show the Windows console window."""
+"""Helper functions to hide/show the console window (cross-platform)."""
+
+import sys
 
 
 def hide_console_window():
-    """Versteckt das Konsolenfenster unter Windows."""
+    """Versteckt das Konsolenfenster (nur unter Windows relevant)."""
+    if sys.platform != 'win32':
+        return
     try:
         import ctypes
         hwnd = ctypes.windll.kernel32.GetConsoleWindow()
@@ -13,7 +17,9 @@ def hide_console_window():
 
 
 def show_console_window():
-    """Zeigt das Konsolenfenster wieder an."""
+    """Zeigt das Konsolenfenster wieder an (nur unter Windows relevant)."""
+    if sys.platform != 'win32':
+        return
     try:
         import ctypes
         hwnd = ctypes.windll.kernel32.GetConsoleWindow()

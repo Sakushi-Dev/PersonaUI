@@ -98,20 +98,20 @@ def run_reset(window):
                 pass
             # Launch PersonaUI
             root_dir = os.path.dirname(script_dir)
-            exe_path = os.path.join(root_dir, 'PersonaUI.exe')
-            if os.path.exists(exe_path):
-                subprocess.Popen(
-                    [exe_path],
-                    cwd=root_dir,
-                )
-            else:
-                # Fallback: start.bat in bin/
-                start_bat = os.path.join(root_dir, 'bin', 'start.bat')
-                if os.path.exists(start_bat):
+            if sys.platform == 'win32':
+                start_script = os.path.join(root_dir, 'bin', 'start.bat')
+                if os.path.exists(start_script):
                     subprocess.Popen(
-                        ['cmd', '/c', start_bat],
+                        ['cmd', '/c', start_script],
                         cwd=root_dir,
                         creationflags=subprocess.CREATE_NEW_CONSOLE
+                    )
+            else:
+                start_script = os.path.join(root_dir, 'bin', 'start.sh')
+                if os.path.exists(start_script):
+                    subprocess.Popen(
+                        ['bash', start_script],
+                        cwd=root_dir,
                     )
             return
 
@@ -302,6 +302,9 @@ if __name__ == '__main__':
 
         print()
         print("Reset complete!")
-        print("Start PersonaUI with start.bat")
+        if sys.platform == 'win32':
+            print("Start PersonaUI with bin\\start.bat or bin\\start.ps1")
+        else:
+            print("Start PersonaUI with bin/start.sh")
         print()
         input("Press Enter to exit...")

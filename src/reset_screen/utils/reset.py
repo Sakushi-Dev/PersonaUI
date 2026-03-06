@@ -664,6 +664,14 @@ def _reset_cache(window, src, errors):
         except Exception:
             pass
 
+    restart_sh = os.path.join(src, 'restart_server.sh')
+    if os.path.exists(restart_sh):
+        try:
+            os.remove(restart_sh)
+            _type(window, '        restart_server.sh deleted', 'info')
+        except Exception:
+            pass
+
 
 def _reset_prompts(window, src, errors):
     """Resets prompts to factory defaults."""
