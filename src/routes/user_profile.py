@@ -169,8 +169,8 @@ def upload_user_avatar():
         
         # Profil aktualisieren
         profile = _load_profile()
-        profile['user_avatar'] = unique_filename
-        profile['user_avatar_type'] = 'custom'
+        profile['userAvatar'] = unique_filename
+        profile['userAvatarType'] = 'custom'
         _save_profile(profile)
         
         return success_response(filename=unique_filename, avatar_type='custom')

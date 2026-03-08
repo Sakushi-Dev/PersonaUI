@@ -275,7 +275,7 @@ export default function StepProfile({ data, onChange, onNext, onBack }) {
       </div>
       <div className={styles.cardFooter}>
         <button className={styles.btnGhost} onClick={onBack}>{c.back}</button>
-        <button className={styles.btnPrimary} onClick={onNext} disabled={!data.user_name?.trim()}>{c.next}</button>
+        <button className={styles.btnPrimary} onClick={onNext} disabled={!data.userName?.trim()}>{c.next}</button>
       </div>
     </div>
   );

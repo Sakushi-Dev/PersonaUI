@@ -34,9 +34,9 @@ export default function MessageBubble({
   const [confirmAction, setConfirmAction] = useState(null);
   const editRef = useRef(null);
 
-  const avatarSrc = isUser ? profile?.user_avatar : characterAvatar;
-  const avatarType = isUser ? profile?.user_avatar_type : characterAvatarType;
-  const avatarName = isUser ? (profile?.user_name || s.you) : characterName;
+  const avatarSrc = isUser ? profile?.userAvatar : characterAvatar;
+  const avatarType = isUser ? profile?.userAvatarType : characterAvatarType;
+  const avatarName = isUser ? (profile?.userName || s.you) : characterName;
 
   // Streaming text is already formatted by the hook — skip double-formatting
   const formattedMessage = isStreaming ? message : formatMessage(message);
@@ -95,7 +95,7 @@ export default function MessageBubble({
       <div className={styles.messageContent}>
         <div className={styles.messageSenderRow}>
           <div className={styles.messageSender}>
-            {isUser ? (profile?.user_name || s.you) : characterName}
+            {isUser ? (profile?.userName || s.you) : characterName}
           </div>
           {!isUser && !isStreaming && stats && (
             <button
