@@ -7,48 +7,22 @@ import uuid
 import json
 
 from utils.logger import log
+from utils.settings_manager import load_section, save_section, get_section_defaults
 from routes.helpers import success_response, error_response, handle_route_error
 
 user_profile_bp = Blueprint('user_profile', __name__)
 
-PROFILE_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'settings', 'user_profile.json')
-
-DEFAULT_PROFILE = {
-    "user_name": "User",
-    "user_avatar": None,
-    "user_avatar_type": None,
-    "user_gender": None,
-    "user_interested_in": [],
-    "user_info": "",
-    "persona_language": "english"
-}
+DEFAULT_PROFILE = get_section_defaults('profile')
 
 
 def _load_profile():
-    """Lädt das User-Profil aus JSON-Datei"""
-    try:
-        if os.path.exists(PROFILE_FILE):
-            with open(PROFILE_FILE, 'r', encoding='utf-8') as f:
-                saved = json.load(f)
-            # Merge mit Defaults
-            merged = {**DEFAULT_PROFILE, **saved}
-            return merged
-        return dict(DEFAULT_PROFILE)
-    except Exception as e:
-        log.error("Fehler beim Laden des User-Profils: %s", e)
-        return dict(DEFAULT_PROFILE)
+    """Lädt das User-Profil aus settings.json (profile-Sektion)"""
+    return load_section('profile')
 
 
 def _save_profile(profile):
-    """Speichert das User-Profil in JSON-Datei"""
-    try:
-        os.makedirs(os.path.dirname(PROFILE_FILE), exist_ok=True)
-        with open(PROFILE_FILE, 'w', encoding='utf-8') as f:
-            json.dump(profile, f, indent=4, ensure_ascii=False)
-        return True
-    except Exception as e:
-        log.error("Fehler beim Speichern des User-Profils: %s", e)
-        return False
+    """Speichert das User-Profil in settings.json (profile-Sektion)"""
+    return save_section('profile', profile)
 
 
 def get_user_profile_data():

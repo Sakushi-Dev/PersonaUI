@@ -206,20 +206,10 @@ class PlaceholderResolver:
             return None
 
     def _get_from_user_profile(self, source_path: str) -> Any:
-        """Liest einen Wert aus user_profile.json."""
+        """Liest einen Wert aus settings.json (profile-Sektion)."""
         try:
-            src_dir = os.path.dirname(os.path.dirname(self._instructions_dir))
-            profile_path = os.path.join(src_dir, 'settings', 'user_profile.json')
-            if not os.path.exists(profile_path):
-                # Fallback: Look relative to instructions_dir's parent
-                profile_path = os.path.join(os.path.dirname(self._instructions_dir), 'settings', 'user_profile.json')
-            if not os.path.exists(profile_path):
-                return None
-
-            with open(profile_path, 'r', encoding='utf-8') as f:
-                profile = json.load(f)
-
-            return profile.get(source_path)
+            from utils.settings_manager import get_value
+            return get_value('profile', source_path)
         except Exception as e:
             log.debug("User-Profile Wert '%s' nicht lesbar: %s", source_path, e)
             return None

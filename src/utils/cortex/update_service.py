@@ -685,27 +685,9 @@ Now read your Cortex files and update them based on this conversation. Use the `
     # ─── Hilfsmethoden ──────────────────────────────────────────────
 
     def _get_context_limit(self) -> int:
-        """Liest den User-contextLimit (ungeclampt) aus user_settings.json."""
-        settings_path = os.path.join(_BASE_DIR, 'settings', 'user_settings.json')
-        defaults_path = os.path.join(_BASE_DIR, 'settings', 'defaults.json')
-
-        raw = None
-        try:
-            if os.path.exists(settings_path):
-                with open(settings_path, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-                raw = data.get('contextLimit')
-        except Exception:
-            pass
-
-        if raw is None:
-            try:
-                if os.path.exists(defaults_path):
-                    with open(defaults_path, 'r', encoding='utf-8') as f:
-                        data = json.load(f)
-                    raw = data.get('contextLimit', '65')
-            except Exception:
-                raw = '65'
+        """Liest den User-contextLimit (ungeclampt) aus settings.json (user-Sektion)."""
+        from utils.settings_manager import get_value
+        raw = get_value('user', 'contextLimit', '65')
 
         try:
             return max(10, int(raw))

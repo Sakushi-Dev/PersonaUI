@@ -5,65 +5,34 @@ from flask import Blueprint, request
 import os
 import json
 from utils.settings_defaults import load_defaults, load_model_options
+from utils.settings_manager import load_section, save_section, get_section_defaults
 from utils.logger import log
 from routes.helpers import success_response, error_response, handle_route_error
 
 settings_bp = Blueprint('settings', __name__)
 
-SETTINGS_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'settings', 'user_settings.json')
-AFTERTHOUGHT_SETTINGS_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'settings', 'afterthought_settings.json')
-
-# Default-Werte (aus settings/defaults.json)
+# Default-Werte (user-Sektion aus defaults.json)
 DEFAULT_SETTINGS = load_defaults()
 
 # Modell-Optionen aus eigener Datei
 MODEL_OPTIONS = load_model_options()
 
-# Keys die nur aus defaults kommen und nicht in user_settings gespeichert werden
+# Keys die nur aus defaults kommen und nicht in user-Sektion gespeichert werden
 _DEFAULTS_ONLY_KEYS = {'apiAutofillModel'}
 
 # Nachgedanke/Afterthought Defaults
-_AFTERTHOUGHT_DEFAULTS = {
-    "phases": [
-        [20000, 45000],
-        [45000, 60000],
-        [60000, 120000]
-    ],
-    "frequency": {
-        "selten": 3,
-        "mittel": 2,
-        "hoch": 1
-    }
-}
+_AFTERTHOUGHT_DEFAULTS = get_section_defaults('afterthought')
 
 
 def _load_settings():
-    """Lädt User-Settings aus JSON-Datei"""
-    try:
-        if os.path.exists(SETTINGS_FILE):
-            with open(SETTINGS_FILE, 'r', encoding='utf-8') as f:
-                saved = json.load(f)
-            # Merge mit Defaults (neue Keys werden automatisch ergänzt)
-            merged = {**DEFAULT_SETTINGS, **saved}
-            return merged
-        return dict(DEFAULT_SETTINGS)
-    except Exception as e:
-        log.error("Fehler beim Laden der User-Settings: %s", e)
-        return dict(DEFAULT_SETTINGS)
+    """Lädt User-Settings aus settings.json (user-Sektion)"""
+    return load_section('user')
 
 
 def _save_settings(settings):
-    """Speichert User-Settings in JSON-Datei (ohne defaults-only Keys)"""
-    try:
-        # Entferne Keys die nur in defaults existieren sollen
-        filtered = {k: v for k, v in settings.items() if k not in _DEFAULTS_ONLY_KEYS}
-        os.makedirs(os.path.dirname(SETTINGS_FILE), exist_ok=True)
-        with open(SETTINGS_FILE, 'w', encoding='utf-8') as f:
-            json.dump(filtered, f, indent=4, ensure_ascii=False)
-        return True
-    except Exception as e:
-        log.error("Fehler beim Speichern der User-Settings: %s", e)
-        return False
+    """Speichert User-Settings in settings.json (ohne defaults-only Keys)"""
+    filtered = {k: v for k, v in settings.items() if k not in _DEFAULTS_ONLY_KEYS}
+    return save_section('user', filtered)
 
 
 @settings_bp.route('/api/user-settings', methods=['GET'])
@@ -103,29 +72,13 @@ def reset_user_settings():
 # ── Nachgedanke / Afterthought Settings ──
 
 def load_afterthought_settings():
-    """Lädt Nachgedanke-Settings aus JSON-Datei (mit Defaults-Merge)"""
-    try:
-        if os.path.exists(AFTERTHOUGHT_SETTINGS_FILE):
-            with open(AFTERTHOUGHT_SETTINGS_FILE, 'r', encoding='utf-8') as f:
-                saved = json.load(f)
-            merged = {**_AFTERTHOUGHT_DEFAULTS, **saved}
-            return merged
-        return dict(_AFTERTHOUGHT_DEFAULTS)
-    except Exception as e:
-        log.error("Fehler beim Laden der Nachgedanke-Settings: %s", e)
-        return dict(_AFTERTHOUGHT_DEFAULTS)
+    """Lädt Nachgedanke-Settings aus settings.json (afterthought-Sektion)"""
+    return load_section('afterthought')
 
 
 def _save_afterthought_settings(settings):
-    """Speichert Nachgedanke-Settings in JSON-Datei"""
-    try:
-        os.makedirs(os.path.dirname(AFTERTHOUGHT_SETTINGS_FILE), exist_ok=True)
-        with open(AFTERTHOUGHT_SETTINGS_FILE, 'w', encoding='utf-8') as f:
-            json.dump(settings, f, indent=4, ensure_ascii=False)
-        return True
-    except Exception as e:
-        log.error("Fehler beim Speichern der Nachgedanke-Settings: %s", e)
-        return False
+    """Speichert Nachgedanke-Settings in settings.json (afterthought-Sektion)"""
+    return save_section('afterthought', settings)
 
 
 @settings_bp.route('/api/afterthought-settings', methods=['GET'])

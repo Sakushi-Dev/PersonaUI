@@ -15,33 +15,12 @@ from ..config import load_character
 
 
 def _read_setting(key: str, default=None):
-    """Liest ein Setting aus user_settings.json mit defaults.json Fallback."""
-    import os
-    import json
-    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-    # user_settings.json
-    path = os.path.join(base_dir, 'settings', 'user_settings.json')
+    """Liest ein Setting aus settings.json (user-Sektion) mit Defaults-Fallback."""
     try:
-        if os.path.exists(path):
-            with open(path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            if key in data:
-                return data[key]
+        from utils.settings_manager import get_value
+        return get_value('user', key, default)
     except Exception:
-        pass
-
-    # defaults.json Fallback
-    path = os.path.join(base_dir, 'settings', 'defaults.json')
-    try:
-        if os.path.exists(path):
-            with open(path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            return data.get(key, default)
-    except Exception:
-        pass
-
-    return default
+        return default
 
 
 class ChatService:

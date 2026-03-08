@@ -141,45 +141,43 @@ class TestSettingsMigration:
     """Testet die Settings-Migration (memoriesEnabled → cortexEnabled)."""
 
     def test_migrate_memories_true(self, tmp_path):
-        """memoriesEnabled: true → cortexEnabled: true."""
-        settings_file = tmp_path / "user_settings.json"
+        """memoriesEnabled: true → cortexEnabled: true in user-Sektion."""
+        settings_file = tmp_path / "settings.json"
         settings_file.write_text(json.dumps({
-            "memoriesEnabled": True,
-            "darkMode": False
+            "user": {"memoriesEnabled": True, "darkMode": False}
         }), encoding='utf-8')
 
-        with patch('utils.settings_migration._USER_SETTINGS_FILE', str(settings_file)), \
-             patch('utils.settings_migration._CORTEX_SETTINGS_FILE', str(tmp_path / "cortex_settings.json")):
+        with patch('utils.settings_migration._SETTINGS_FILE', str(settings_file)):
             from utils.settings_migration import _migrate_memories_to_cortex
             _migrate_memories_to_cortex()
 
         result = json.loads(settings_file.read_text(encoding='utf-8'))
-        assert result['cortexEnabled'] is True
-        assert 'memoriesEnabled' not in result
-        assert result['darkMode'] is False
+        assert result['user']['cortexEnabled'] is True
+        assert 'memoriesEnabled' not in result['user']
+        assert result['user']['darkMode'] is False
 
     def test_migrate_memories_false(self, tmp_path):
         """memoriesEnabled: false → cortexEnabled: false."""
-        settings_file = tmp_path / "user_settings.json"
+        settings_file = tmp_path / "settings.json"
         settings_file.write_text(json.dumps({
-            "memoriesEnabled": False,
+            "user": {"memoriesEnabled": False}
         }), encoding='utf-8')
 
-        with patch('utils.settings_migration._USER_SETTINGS_FILE', str(settings_file)):
+        with patch('utils.settings_migration._SETTINGS_FILE', str(settings_file)):
             from utils.settings_migration import _migrate_memories_to_cortex
             _migrate_memories_to_cortex()
 
         result = json.loads(settings_file.read_text(encoding='utf-8'))
-        assert result['cortexEnabled'] is False
-        assert 'memoriesEnabled' not in result
+        assert result['user']['cortexEnabled'] is False
+        assert 'memoriesEnabled' not in result['user']
 
     def test_already_migrated(self, tmp_path):
         """Bereits migriert — kein Crash, keine Änderung."""
-        settings_file = tmp_path / "user_settings.json"
-        original = {"cortexEnabled": True, "darkMode": True}
+        settings_file = tmp_path / "settings.json"
+        original = {"user": {"cortexEnabled": True, "darkMode": True}}
         settings_file.write_text(json.dumps(original), encoding='utf-8')
 
-        with patch('utils.settings_migration._USER_SETTINGS_FILE', str(settings_file)):
+        with patch('utils.settings_migration._SETTINGS_FILE', str(settings_file)):
             from utils.settings_migration import _migrate_memories_to_cortex
             _migrate_memories_to_cortex()
 
@@ -187,117 +185,144 @@ class TestSettingsMigration:
         assert result == original
 
     def test_no_settings_file(self, tmp_path):
-        """Neuinstallation — keine user_settings.json → kein Crash."""
+        """Neuinstallation — keine settings.json → kein Crash."""
         non_existent = tmp_path / "not_here.json"
 
-        with patch('utils.settings_migration._USER_SETTINGS_FILE', str(non_existent)):
+        with patch('utils.settings_migration._SETTINGS_FILE', str(non_existent)):
             from utils.settings_migration import _migrate_memories_to_cortex
             _migrate_memories_to_cortex()  # Kein Fehler
 
     def test_idempotent_migration(self, tmp_path):
         """Mehrfacher Aufruf → identisches Ergebnis."""
-        settings_file = tmp_path / "user_settings.json"
+        settings_file = tmp_path / "settings.json"
         settings_file.write_text(json.dumps({
-            "memoriesEnabled": True,
+            "user": {"memoriesEnabled": True}
         }), encoding='utf-8')
 
-        with patch('utils.settings_migration._USER_SETTINGS_FILE', str(settings_file)):
+        with patch('utils.settings_migration._SETTINGS_FILE', str(settings_file)):
             from utils.settings_migration import _migrate_memories_to_cortex
             _migrate_memories_to_cortex()
             _migrate_memories_to_cortex()  # 2. Aufruf ändert nichts
 
         result = json.loads(settings_file.read_text(encoding='utf-8'))
-        assert result['cortexEnabled'] is True
-        assert 'memoriesEnabled' not in result
+        assert result['user']['cortexEnabled'] is True
+        assert 'memoriesEnabled' not in result['user']
 
     def test_corrupt_settings(self, tmp_path):
-        """Korrupte user_settings.json → Fehler geloggt, kein Crash."""
-        settings_file = tmp_path / "user_settings.json"
+        """Korrupte settings.json → Fehler geloggt, kein Crash."""
+        settings_file = tmp_path / "settings.json"
         settings_file.write_text("{invalid json", encoding='utf-8')
 
-        with patch('utils.settings_migration._USER_SETTINGS_FILE', str(settings_file)):
+        with patch('utils.settings_migration._SETTINGS_FILE', str(settings_file)):
             from utils.settings_migration import _migrate_memories_to_cortex
             _migrate_memories_to_cortex()  # Kein Fehler
 
 
 class TestEnsureCortexSettings:
-    """Testet cortex_settings.json Erstanlage und Key-Ergänzung."""
+    """Testet dass cortex-Sektion über settings_manager korrekt funktioniert."""
 
     def test_creates_new_file(self, tmp_path):
-        """Erstellt cortex_settings.json wenn nicht vorhanden."""
-        settings_file = tmp_path / "cortex_settings.json"
+        """settings_manager erstellt cortex-Sektion mit Defaults."""
+        settings_file = tmp_path / "settings.json"
+        defaults_file = tmp_path / "defaults.json"
+        defaults_file.write_text(json.dumps({
+            "cortex": {"enabled": True, "frequency": "medium"}
+        }), encoding='utf-8')
 
-        with patch('utils.settings_migration._CORTEX_SETTINGS_FILE', str(settings_file)):
-            from utils.settings_migration import _ensure_cortex_settings
-            _ensure_cortex_settings()
-
-        assert settings_file.exists()
-        result = json.loads(settings_file.read_text(encoding='utf-8'))
+        with patch('utils.settings_manager.SETTINGS_FILE', str(settings_file)), \
+             patch('utils.settings_manager.DEFAULTS_FILE', str(defaults_file)), \
+             patch('utils.settings_manager._cache', None), \
+             patch('utils.settings_manager._defaults_cache', None):
+            from utils.settings_manager import load_section
+            result = load_section('cortex')
         assert result['enabled'] is True
         assert result['frequency'] == 'medium'
 
     def test_preserves_existing_values(self, tmp_path):
         """Überschreibt keine bestehenden Werte."""
-        settings_file = tmp_path / "cortex_settings.json"
+        settings_file = tmp_path / "settings.json"
         settings_file.write_text(json.dumps({
-            "enabled": False,
-            "frequency": "rare"
+            "cortex": {"enabled": False, "frequency": "rare"}
+        }), encoding='utf-8')
+        defaults_file = tmp_path / "defaults.json"
+        defaults_file.write_text(json.dumps({
+            "cortex": {"enabled": True, "frequency": "medium"}
         }), encoding='utf-8')
 
-        with patch('utils.settings_migration._CORTEX_SETTINGS_FILE', str(settings_file)):
-            from utils.settings_migration import _ensure_cortex_settings
-            _ensure_cortex_settings()
-
-        result = json.loads(settings_file.read_text(encoding='utf-8'))
+        with patch('utils.settings_manager.SETTINGS_FILE', str(settings_file)), \
+             patch('utils.settings_manager.DEFAULTS_FILE', str(defaults_file)), \
+             patch('utils.settings_manager._cache', None), \
+             patch('utils.settings_manager._defaults_cache', None):
+            from utils.settings_manager import load_section
+            result = load_section('cortex')
         assert result['enabled'] is False
         assert result['frequency'] == 'rare'
 
     def test_adds_missing_keys(self, tmp_path):
-        """Ergänzt fehlende Keys."""
-        settings_file = tmp_path / "cortex_settings.json"
+        """Ergänzt fehlende Keys aus Defaults."""
+        settings_file = tmp_path / "settings.json"
         settings_file.write_text(json.dumps({
-            "enabled": False
+            "cortex": {"enabled": False}
+        }), encoding='utf-8')
+        defaults_file = tmp_path / "defaults.json"
+        defaults_file.write_text(json.dumps({
+            "cortex": {"enabled": True, "frequency": "medium"}
         }), encoding='utf-8')
 
-        with patch('utils.settings_migration._CORTEX_SETTINGS_FILE', str(settings_file)):
-            from utils.settings_migration import _ensure_cortex_settings
-            _ensure_cortex_settings()
-
-        result = json.loads(settings_file.read_text(encoding='utf-8'))
+        with patch('utils.settings_manager.SETTINGS_FILE', str(settings_file)), \
+             patch('utils.settings_manager.DEFAULTS_FILE', str(defaults_file)), \
+             patch('utils.settings_manager._cache', None), \
+             patch('utils.settings_manager._defaults_cache', None):
+            from utils.settings_manager import load_section
+            result = load_section('cortex')
         assert result['enabled'] is False  # Bestehender Wert bleibt
         assert result['frequency'] == 'medium'  # Neuer Key ergänzt
 
     def test_corrupt_existing_file(self, tmp_path):
-        """Korrupte cortex_settings.json → Fehler geloggt, kein Crash."""
-        settings_file = tmp_path / "cortex_settings.json"
+        """Korrupte settings.json → Defaults zurückgeben, kein Crash."""
+        settings_file = tmp_path / "settings.json"
         settings_file.write_text("not json!", encoding='utf-8')
+        defaults_file = tmp_path / "defaults.json"
+        defaults_file.write_text(json.dumps({
+            "cortex": {"enabled": True, "frequency": "medium"}
+        }), encoding='utf-8')
 
-        with patch('utils.settings_migration._CORTEX_SETTINGS_FILE', str(settings_file)):
-            from utils.settings_migration import _ensure_cortex_settings
-            _ensure_cortex_settings()  # Kein Crash
+        with patch('utils.settings_manager.SETTINGS_FILE', str(settings_file)), \
+             patch('utils.settings_manager.DEFAULTS_FILE', str(defaults_file)), \
+             patch('utils.settings_manager._cache', None), \
+             patch('utils.settings_manager._defaults_cache', None):
+            from utils.settings_manager import load_section
+            result = load_section('cortex')
+        assert result['enabled'] is True  # Defaults als Fallback
 
 
 class TestMigrateSettings:
     """Testet die kombinierte migrate_settings() Funktion."""
 
     def test_full_migration(self, tmp_path):
-        """Vollständige Migration: beide Schritte."""
-        user_settings = tmp_path / "user_settings.json"
-        user_settings.write_text(json.dumps({"memoriesEnabled": True}), encoding='utf-8')
-        cortex_settings = tmp_path / "cortex_settings.json"
+        """Vollständige Migration: alte Dateien werden migriert."""
+        # Alte Einzeldateien erstellen
+        settings_dir = tmp_path / "settings"
+        settings_dir.mkdir()
+        (settings_dir / "user_settings.json").write_text(
+            json.dumps({"memoriesEnabled": True}), encoding='utf-8')
+        (settings_dir / "cortex_settings.json").write_text(
+            json.dumps({"enabled": True, "frequency": "medium"}), encoding='utf-8')
 
-        with patch('utils.settings_migration._USER_SETTINGS_FILE', str(user_settings)), \
-             patch('utils.settings_migration._CORTEX_SETTINGS_FILE', str(cortex_settings)):
+        with patch('utils.settings_migration._SETTINGS_DIR', str(settings_dir)), \
+             patch('utils.settings_migration._SETTINGS_FILE', str(settings_dir / "settings.json")):
             from utils.settings_migration import migrate_settings
             migrate_settings()
 
-        user_result = json.loads(user_settings.read_text(encoding='utf-8'))
-        assert user_result['cortexEnabled'] is True
-        assert 'memoriesEnabled' not in user_result
+        unified = json.loads((settings_dir / "settings.json").read_text(encoding='utf-8'))
+        assert unified['user']['cortexEnabled'] is True
+        assert 'memoriesEnabled' not in unified['user']
+        assert unified['cortex']['enabled'] is True
+        assert unified['cortex']['frequency'] == 'medium'
 
-        cortex_result = json.loads(cortex_settings.read_text(encoding='utf-8'))
-        assert cortex_result['enabled'] is True
-        assert cortex_result['frequency'] == 'medium'
+        # Alte Dateien sollten gelöscht worden sein
+        assert not (settings_dir / "user_settings.json").exists()
+        assert not (settings_dir / "cortex_settings.json").exists()
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -309,31 +334,40 @@ class TestCortexUpdateEndpoint:
 
     def test_successful_cortex_update_config_check(self, tmp_path):
         """Prüft dass _load_cortex_config mit enabled=True funktioniert."""
-        settings_dir = tmp_path / "settings"
-        settings_dir.mkdir()
-        (settings_dir / "cortex_settings.json").write_text(
-            json.dumps({"enabled": True, "frequency": "often"}), encoding='utf-8'
-        )
+        settings_file = tmp_path / "settings.json"
+        settings_file.write_text(json.dumps({
+            "cortex": {"enabled": True, "frequency": "often"}
+        }), encoding='utf-8')
+        defaults_file = tmp_path / "defaults.json"
+        defaults_file.write_text(json.dumps({
+            "cortex": {"enabled": True, "frequency": "medium"}
+        }), encoding='utf-8')
 
         from utils.cortex.tier_checker import _load_cortex_config
-        with patch('utils.cortex.tier_checker._BASE_DIR', str(tmp_path)):
+        with patch('utils.settings_manager.SETTINGS_FILE', str(settings_file)), \
+             patch('utils.settings_manager.DEFAULTS_FILE', str(defaults_file)), \
+             patch('utils.settings_manager._cache', None), \
+             patch('utils.settings_manager._defaults_cache', None):
             config = _load_cortex_config()
             assert config['enabled'] is True
             assert config['frequency'] == 'often'
 
     def test_cortex_disabled_returns_error(self, tmp_path):
         """Cortex deaktiviert → _load_cortex_config gibt enabled=False."""
-        settings_file = tmp_path / "cortex_settings.json"
-        settings_file.write_text(json.dumps({"enabled": False, "frequency": "medium"}), encoding='utf-8')
+        settings_file = tmp_path / "settings.json"
+        settings_file.write_text(json.dumps({
+            "cortex": {"enabled": False, "frequency": "medium"}
+        }), encoding='utf-8')
+        defaults_file = tmp_path / "defaults.json"
+        defaults_file.write_text(json.dumps({
+            "cortex": {"enabled": True, "frequency": "medium"}
+        }), encoding='utf-8')
 
         from utils.cortex.tier_checker import _load_cortex_config
-        with patch('utils.cortex.tier_checker._BASE_DIR', str(tmp_path)):
-            # cortex_settings.json muss unter tmp_path/settings/ liegen
-            settings_dir = tmp_path / "settings"
-            settings_dir.mkdir()
-            (settings_dir / "cortex_settings.json").write_text(
-                json.dumps({"enabled": False, "frequency": "medium"}), encoding='utf-8'
-            )
+        with patch('utils.settings_manager.SETTINGS_FILE', str(settings_file)), \
+             patch('utils.settings_manager.DEFAULTS_FILE', str(defaults_file)), \
+             patch('utils.settings_manager._cache', None), \
+             patch('utils.settings_manager._defaults_cache', None):
             config = _load_cortex_config()
             assert config['enabled'] is False
 
@@ -422,20 +456,20 @@ class TestStartupIntegration:
         assert source.count('migrate_settings') >= 2
 
     def test_defaults_json_has_cortex_enabled(self):
-        """defaults.json enthält cortexEnabled statt memoriesEnabled."""
+        """defaults.json enthält cortexEnabled in der user-Sektion."""
         defaults_path = os.path.join(SRC_DIR, 'settings', 'defaults.json')
         with open(defaults_path, 'r', encoding='utf-8') as f:
             defaults = json.load(f)
-        assert 'cortexEnabled' in defaults
-        assert 'memoriesEnabled' not in defaults
+        assert 'cortexEnabled' in defaults['user']
+        assert 'memoriesEnabled' not in defaults['user']
 
     def test_defaults_json_has_cortex_frequency(self):
-        """defaults.json enthält cortexFrequency."""
+        """defaults.json enthält cortexFrequency in der user-Sektion."""
         defaults_path = os.path.join(SRC_DIR, 'settings', 'defaults.json')
         with open(defaults_path, 'r', encoding='utf-8') as f:
             defaults = json.load(f)
-        assert 'cortexFrequency' in defaults
-        assert defaults['cortexFrequency'] == 'medium'
+        assert 'cortexFrequency' in defaults['user']
+        assert defaults['user']['cortexFrequency'] == 'medium'
 
 
 # ═════════════════════════════════════════════════════════════════════════════

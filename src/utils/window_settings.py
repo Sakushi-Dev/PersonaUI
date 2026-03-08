@@ -4,19 +4,9 @@ import os
 import json
 from typing import Dict, Optional, Tuple
 
+from utils.settings_manager import load_section, save_section, get_section_defaults
 
-SETTINGS_FILE = os.path.join(
-    os.path.dirname(os.path.dirname(__file__)),
-    'settings',
-    'window_settings.json'
-)
-
-DEFAULT_SETTINGS = {
-    'width': 1280,
-    'height': 860,
-    'x': None,  # None = zentriert
-    'y': None,
-}
+DEFAULT_SETTINGS = get_section_defaults('window')
 
 # Minimale Fenstergröße
 MIN_WIDTH = 400
@@ -110,31 +100,27 @@ def _sanitize_size(width: int, height: int) -> Tuple[int, int]:
 
 def load_window_settings() -> Dict:
     """Lädt gespeicherte Fenstereinstellungen mit Positionsvalidierung."""
-    if not os.path.exists(SETTINGS_FILE):
+    settings = load_section('window')
+    if not settings:
         return DEFAULT_SETTINGS.copy()
-    
-    try:
-        with open(SETTINGS_FILE, 'r', encoding='utf-8') as f:
-            settings = json.load(f)
-            # Standardwerte für fehlende Keys
-            for key, value in DEFAULT_SETTINGS.items():
-                if key not in settings:
-                    settings[key] = value
-            
-            # Größe validieren
-            settings['width'], settings['height'] = _sanitize_size(
-                settings['width'], settings['height']
-            )
-            
-            # Position validieren - Off-Screen-Schutz
-            settings['x'], settings['y'] = _sanitize_position(
-                settings.get('x'), settings.get('y'),
-                settings['width'], settings['height']
-            )
-            
-            return settings
-    except Exception:
-        return DEFAULT_SETTINGS.copy()
+
+    # Standardwerte für fehlende Keys
+    for key, value in DEFAULT_SETTINGS.items():
+        if key not in settings:
+            settings[key] = value
+
+    # Größe validieren
+    settings['width'], settings['height'] = _sanitize_size(
+        settings['width'], settings['height']
+    )
+
+    # Position validieren - Off-Screen-Schutz
+    settings['x'], settings['y'] = _sanitize_position(
+        settings.get('x'), settings.get('y'),
+        settings['width'], settings['height']
+    )
+
+    return settings
 
 
 def save_window_settings(width: int, height: int, x: Optional[int] = None, y: Optional[int] = None):
@@ -152,9 +138,4 @@ def save_window_settings(width: int, height: int, x: Optional[int] = None, y: Op
         'y': y,
     }
     
-    try:
-        os.makedirs(os.path.dirname(SETTINGS_FILE), exist_ok=True)
-        with open(SETTINGS_FILE, 'w', encoding='utf-8') as f:
-            json.dump(settings, f, indent=4, ensure_ascii=False)
-    except Exception:
-        pass  # Fehler beim Speichern ignorieren
+    save_section('window', settings)

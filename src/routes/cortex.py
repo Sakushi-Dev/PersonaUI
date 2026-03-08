@@ -28,17 +28,10 @@ cortex_bp = Blueprint('cortex', __name__)
 
 # ─── Konstanten ──────────────────────────────────────────────────────────────
 
-# Pfad zur Cortex-Settings-Datei (neben user_settings.json)
-CORTEX_SETTINGS_FILE = os.path.join(
-    os.path.dirname(os.path.dirname(__file__)),
-    'settings', 'cortex_settings.json'
-)
+from utils.settings_manager import load_section as _sm_load, save_section as _sm_save, get_section_defaults as _sm_defaults
 
-# Default-Werte für Cortex-Settings (vereinfacht: enabled + frequency)
-CORTEX_SETTINGS_DEFAULTS = {
-    'enabled': True,
-    'frequency': 'medium',
-}
+# Default-Werte für Cortex-Settings
+CORTEX_SETTINGS_DEFAULTS = _sm_defaults('cortex')
 
 # Erlaubte Dateinamen (Whitelist) — redundant zur CortexService-Validierung,
 # aber als zusätzliche Sicherheit in der Route-Schicht
@@ -70,30 +63,13 @@ def _validate_filename(filename: str):
 # ─── Cortex Settings I/O ────────────────────────────────────────────────────
 
 def _load_cortex_settings() -> dict:
-    """Lädt Cortex-Settings aus JSON-Datei, merged mit Defaults."""
-    try:
-        if os.path.exists(CORTEX_SETTINGS_FILE):
-            with open(CORTEX_SETTINGS_FILE, 'r', encoding='utf-8') as f:
-                saved = json.load(f)
-            # Merge: Defaults als Basis, gespeicherte Werte überschreiben
-            merged = {**CORTEX_SETTINGS_DEFAULTS, **saved}
-            return merged
-        return dict(CORTEX_SETTINGS_DEFAULTS)
-    except Exception as e:
-        log.error("Fehler beim Laden der Cortex-Settings: %s", e)
-        return dict(CORTEX_SETTINGS_DEFAULTS)
+    """Lädt Cortex-Settings aus settings.json (cortex-Sektion)."""
+    return _sm_load('cortex')
 
 
 def _save_cortex_settings(settings: dict) -> bool:
-    """Speichert Cortex-Settings in JSON-Datei."""
-    try:
-        os.makedirs(os.path.dirname(CORTEX_SETTINGS_FILE), exist_ok=True)
-        with open(CORTEX_SETTINGS_FILE, 'w', encoding='utf-8') as f:
-            json.dump(settings, f, indent=4, ensure_ascii=False)
-        return True
-    except Exception as e:
-        log.error("Fehler beim Speichern der Cortex-Settings: %s", e)
-        return False
+    """Speichert Cortex-Settings in settings.json (cortex-Sektion)."""
+    return _sm_save('cortex', settings)
 
 
 # ═════════════════════════════════════════════════════════════════════════════
