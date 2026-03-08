@@ -52,13 +52,13 @@ export default function UserProfileOverlay({ open, onClose, onOpenAvatarEditor, 
     if (open) {
       getUserProfile().then((profileData) => {
         const p = profileData.profile || profileData;
-        setName(p.user_name || 'User');
-        setAvatar(p.user_avatar || null);
-        setAvatarType(p.user_avatar_type || null);
-        setGender(p.user_gender || '');
-        setInterestedIn(p.user_interested_in || []);
-        setUserInfo(p.user_info || '');
-        setPersonaLanguage(p.persona_language || 'english');
+        setName(p.userName || 'User');
+        setAvatar(p.userAvatar || null);
+        setAvatarType(p.userAvatarType || null);
+        setGender(p.userGender || '');
+        setInterestedIn(p.userInterestedIn || []);
+        setUserInfo(p.userInfo || '');
+        setPersonaLanguage(p.personaLanguage || 'english');
       }).catch(() => {});
     }
   }, [open]);
@@ -68,8 +68,8 @@ export default function UserProfileOverlay({ open, onClose, onOpenAvatarEditor, 
     if (open && avatarRefreshKey > 0) {
       getUserProfile().then((data) => {
         const p = data.profile || data;
-        setAvatar(p.user_avatar || null);
-        setAvatarType(p.user_avatar_type || null);
+        setAvatar(p.userAvatar || null);
+        setAvatarType(p.userAvatarType || null);
       }).catch(() => {});
     }
   }, [avatarRefreshKey, open]);
@@ -78,13 +78,13 @@ export default function UserProfileOverlay({ open, onClose, onOpenAvatarEditor, 
     setSaving(true);
     try {
       await updateUserProfile({
-        user_name: name,
-        user_avatar: avatar,
-        user_avatar_type: avatarType,
-        user_gender: gender,
-        user_interested_in: interestedIn,
-        user_info: userInfo,
-        persona_language: personaLanguage,
+        userName: name,
+        userAvatar: avatar,
+        userAvatarType: avatarType,
+        userGender: gender,
+        userInterestedIn: interestedIn,
+        userInfo: userInfo,
+        personaLanguage: personaLanguage,
       });
       onClose();
     } catch (err) {

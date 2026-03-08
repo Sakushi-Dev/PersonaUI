@@ -7,9 +7,9 @@ export const UserContext = createContext(null);
 
 export function UserProvider({ children }) {
   const [profile, setProfile] = useState({
-    user_name: '',
-    user_avatar: null,
-    user_avatar_type: 'none',
+    userName: '',
+    userAvatar: null,
+    userAvatarType: 'none',
   });
 
   useEffect(() => {
@@ -38,8 +38,8 @@ export function UserProvider({ children }) {
   const setAvatar = useCallback((avatarData, avatarType) => {
     setProfile((prev) => ({
       ...prev,
-      user_avatar: avatarData,
-      user_avatar_type: avatarType,
+      userAvatar: avatarData,
+      userAvatarType: avatarType,
     }));
   }, []);
 

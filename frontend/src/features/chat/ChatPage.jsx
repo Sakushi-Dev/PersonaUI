@@ -88,12 +88,12 @@ function ChatPageContent({ disclaimerAccepted = true }) {
     setIsDark(dm);
 
     updateColors({
-      backgroundColor_light: get('backgroundColor_light', '#a3baff'),
-      colorGradient1_light: get('colorGradient1_light', '#66cfff'),
-      color2_light: get('color2_light', '#fd91ee'),
-      backgroundColor_dark: get('backgroundColor_dark', '#1a2332'),
-      colorGradient1_dark: get('colorGradient1_dark', '#2a3f5f'),
-      color2_dark: get('color2_dark', '#3d4f66'),
+      backgroundColorLight: get('backgroundColorLight', '#a3baff'),
+      gradientColor1Light: get('gradientColor1Light', '#66cfff'),
+      secondaryColorLight: get('secondaryColorLight', '#fd91ee'),
+      backgroundColorDark: get('backgroundColorDark', '#1a2332'),
+      gradientColor1Dark: get('gradientColor1Dark', '#2a3f5f'),
+      secondaryColorDark: get('secondaryColorDark', '#3d4f66'),
       nonverbalColor: get('nonverbalColor', '#e4ba00'),
     });
 

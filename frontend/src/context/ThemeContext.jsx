@@ -9,12 +9,12 @@ export const ThemeContext = createContext(null);
 export function ThemeProvider({ children }) {
   const [isDark, setIsDark] = useState(() => storage.getItem('darkMode', false));
   const [colors, setColors] = useState(() => ({
-    backgroundColor_light: storage.getItem('backgroundColor_light', '#a3baff'),
-    colorGradient1_light: storage.getItem('colorGradient1_light', '#66cfff'),
-    color2_light: storage.getItem('color2_light', '#fd91ee'),
-    backgroundColor_dark: storage.getItem('backgroundColor_dark', '#1a2332'),
-    colorGradient1_dark: storage.getItem('colorGradient1_dark', '#2a3f5f'),
-    color2_dark: storage.getItem('color2_dark', '#3d4f66'),
+    backgroundColorLight: storage.getItem('backgroundColorLight', '#a3baff'),
+    gradientColor1Light: storage.getItem('gradientColor1Light', '#66cfff'),
+    secondaryColorLight: storage.getItem('secondaryColorLight', '#fd91ee'),
+    backgroundColorDark: storage.getItem('backgroundColorDark', '#1a2332'),
+    gradientColor1Dark: storage.getItem('gradientColor1Dark', '#2a3f5f'),
+    secondaryColorDark: storage.getItem('secondaryColorDark', '#3d4f66'),
     nonverbalColor: storage.getItem('nonverbalColor', '#e4ba00'),
   }));
   const [fontKey, setFontKey] = useState(() => storage.getItem('bubbleFontFamily', 'ubuntu'));
@@ -34,11 +34,11 @@ export function ThemeProvider({ children }) {
   // Apply CSS variables
   useEffect(() => {
     const root = document.documentElement;
-    const suffix = isDark ? '_dark' : '_light';
+    const suffix = isDark ? 'Dark' : 'Light';
     // --color-white = user's "Hintergrund" setting (dynamic bg container + blob1)
     root.style.setProperty('--color-white', colors[`backgroundColor${suffix}`]);
-    root.style.setProperty('--color-gradient1', colors[`colorGradient1${suffix}`]);
-    root.style.setProperty('--color-sky', colors[`color2${suffix}`]);
+    root.style.setProperty('--color-gradient1', colors[`gradientColor1${suffix}`]);
+    root.style.setProperty('--color-sky', colors[`secondaryColor${suffix}`]);
     root.style.setProperty('--nonverbal-color', colors.nonverbalColor);
     root.style.setProperty('--bubble-font-size', `${adjustedFontSize(fontSize, fontKey)}px`);
     root.style.setProperty('--bubble-font-family', fontFamily);

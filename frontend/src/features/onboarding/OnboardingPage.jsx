@@ -40,13 +40,13 @@ export default function OnboardingPage() {
 
   // Collected data across steps
   const [profileData, setProfileData] = useState({
-    user_name: '',
-    user_avatar: null,
-    user_avatar_type: null,
-    user_gender: null,
-    user_interested_in: [],
-    user_info: '',
-    persona_language: 'english',
+    userName: '',
+    userAvatar: null,
+    userAvatarType: null,
+    userGender: null,
+    userInterestedIn: [],
+    userInfo: '',
+    personaLanguage: 'english',
   });
 
   const [interfaceData, setInterfaceData] = useState({
@@ -60,7 +60,7 @@ export default function OnboardingPage() {
   });
 
   const [afterthoughtData, setAfterthoughtData] = useState({
-    nachgedankeMode: 'off',
+    afterthoughtMode: 'off',
   });
 
   const [contextData, setContextData] = useState({
@@ -84,14 +84,14 @@ export default function OnboardingPage() {
         if (p) {
           setProfileData((prev) => ({
             ...prev,
-            user_name: p.user_name || prev.user_name,
-            user_avatar: p.user_avatar ?? prev.user_avatar,
-            user_avatar_type: p.user_avatar_type ?? prev.user_avatar_type,
-            user_gender: p.user_gender ?? prev.user_gender,
-            user_interested_in: Array.isArray(p.user_interested_in) && p.user_interested_in.length
-              ? p.user_interested_in : prev.user_interested_in,
-            user_info: p.user_info || prev.user_info,
-            persona_language: p.persona_language || prev.persona_language,
+            userName: p.userName || prev.userName,
+            userAvatar: p.userAvatar ?? prev.userAvatar,
+            userAvatarType: p.userAvatarType ?? prev.userAvatarType,
+            userGender: p.userGender ?? prev.userGender,
+            userInterestedIn: Array.isArray(p.userInterestedIn) && p.userInterestedIn.length
+              ? p.userInterestedIn : prev.userInterestedIn,
+            userInfo: p.userInfo || prev.userInfo,
+            personaLanguage: p.personaLanguage || prev.personaLanguage,
           }));
         }
       }
@@ -112,7 +112,7 @@ export default function OnboardingPage() {
             contextLimit: s.contextLimit != null ? String(s.contextLimit) : prev.contextLimit,
           }));
           setAfterthoughtData((prev) => ({
-            nachgedankeMode: s.nachgedankeMode || prev.nachgedankeMode,
+            afterthoughtMode: s.afterthoughtMode || prev.afterthoughtMode,
           }));
         }
       }
@@ -130,7 +130,7 @@ export default function OnboardingPage() {
 
   // Save language immediately when changed (via SettingsContext)
   const handleLanguageChange = useCallback((lang) => {
-    set('language', lang);
+    set('uiLanguage', lang);
   }, [set]);
 
   const goTo = useCallback((s) => {
@@ -153,11 +153,11 @@ export default function OnboardingPage() {
       await updateUserProfile(profileData);
 
       await updateSettings({
-        language,
+        uiLanguage: language,
         darkMode: interfaceData.darkMode,
         nonverbalColor: interfaceData.nonverbalColor,
         contextLimit: contextData.contextLimit,
-        nachgedankeMode: afterthoughtData.nachgedankeMode,
+        afterthoughtMode: afterthoughtData.afterthoughtMode,
       });
 
       await saveCortexSettings({

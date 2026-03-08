@@ -63,7 +63,7 @@ export default function InterfaceSettingsOverlay({ open, onClose, panelOnly }) {
   useEffect(() => {
     if (!open) return;
 
-    setLanguage(get('language', 'en'));
+    setLanguage(get('uiLanguage', 'en'));
     setDarkMode(get('darkMode', false));
     setDynamicBg(get('dynamicBackground', true));
     setNotificationSound(get('notificationSound', true));
@@ -84,17 +84,17 @@ export default function InterfaceSettingsOverlay({ open, onClose, panelOnly }) {
     const darkColors = hueToColors(colorHue, true);
 
     setMany({
-      language,
+      uiLanguage: language,
       darkMode,
       dynamicBackground: dynamicBg,
       notificationSound,
       colorHue: String(colorHue),
-      backgroundColor_light: lightColors.bg,
-      colorGradient1_light: lightColors.g1,
-      color2_light: lightColors.c2,
-      backgroundColor_dark: darkColors.bg,
-      colorGradient1_dark: darkColors.g1,
-      color2_dark: darkColors.c2,
+      backgroundColorLight: lightColors.bg,
+      gradientColor1Light: lightColors.g1,
+      secondaryColorLight: lightColors.c2,
+      backgroundColorDark: darkColors.bg,
+      gradientColor1Dark: darkColors.g1,
+      secondaryColorDark: darkColors.c2,
       nonverbalColor,
       bubbleFontSize: String(fontSize),
       bubbleFontFamily: fontFamily,
@@ -102,12 +102,12 @@ export default function InterfaceSettingsOverlay({ open, onClose, panelOnly }) {
 
     setIsDark(darkMode);
     updateColors({
-      backgroundColor_light: lightColors.bg,
-      colorGradient1_light: lightColors.g1,
-      color2_light: lightColors.c2,
-      backgroundColor_dark: darkColors.bg,
-      colorGradient1_dark: darkColors.g1,
-      color2_dark: darkColors.c2,
+      backgroundColorLight: lightColors.bg,
+      gradientColor1Light: lightColors.g1,
+      secondaryColorLight: lightColors.c2,
+      backgroundColorDark: darkColors.bg,
+      gradientColor1Dark: darkColors.g1,
+      secondaryColorDark: darkColors.c2,
       nonverbalColor,
     });
     setThemeFontSize(fontSize);
@@ -133,17 +133,17 @@ export default function InterfaceSettingsOverlay({ open, onClose, panelOnly }) {
     const darkColors = hueToColors(DEFAULT_HUE, true);
 
     setMany({
-      language: 'en',
+      uiLanguage: 'en',
       darkMode: false,
       dynamicBackground: true,
       notificationSound: true,
       colorHue: String(DEFAULT_HUE),
-      backgroundColor_light: lightColors.bg,
-      colorGradient1_light: lightColors.g1,
-      color2_light: lightColors.c2,
-      backgroundColor_dark: darkColors.bg,
-      colorGradient1_dark: darkColors.g1,
-      color2_dark: darkColors.c2,
+      backgroundColorLight: lightColors.bg,
+      gradientColor1Light: lightColors.g1,
+      secondaryColorLight: lightColors.c2,
+      backgroundColorDark: darkColors.bg,
+      gradientColor1Dark: darkColors.g1,
+      secondaryColorDark: darkColors.c2,
       nonverbalColor: '#e4ba00',
       bubbleFontSize: '18',
       bubbleFontFamily: 'ubuntu',
@@ -151,12 +151,12 @@ export default function InterfaceSettingsOverlay({ open, onClose, panelOnly }) {
 
     setIsDark(false);
     updateColors({
-      backgroundColor_light: lightColors.bg,
-      colorGradient1_light: lightColors.g1,
-      color2_light: lightColors.c2,
-      backgroundColor_dark: darkColors.bg,
-      colorGradient1_dark: darkColors.g1,
-      color2_dark: darkColors.c2,
+      backgroundColorLight: lightColors.bg,
+      gradientColor1Light: lightColors.g1,
+      secondaryColorLight: lightColors.c2,
+      backgroundColorDark: darkColors.bg,
+      gradientColor1Dark: darkColors.g1,
+      secondaryColorDark: darkColors.c2,
       nonverbalColor: '#e4ba00',
     });
     setThemeFontSize(18);
