@@ -108,7 +108,7 @@ FRONTEND_DIR="$ROOT/frontend"
 VENV_DIR="$ROOT/.venv"
 VENV_PY="$VENV_DIR/bin/python"
 REQ_FILE="$ROOT/requirements.txt"
-LAUNCH_FILE="$ROOT/config/launch_options.txt"
+LAUNCH_FILE="$ROOT/config/launch_options.ini"
 
 print_header
 print_info "Projektverzeichnis: $ROOT"
@@ -339,22 +339,43 @@ fi
 print_step 7 $TOTAL_STEPS "Konfiguration fuer Android anpassen"
 
 # --no-gui aktivieren (PyWebView nicht verfuegbar auf Android)
+DEFAULT_LAUNCH="$ROOT/config/default/launch_options.ini"
 if [[ -f "$LAUNCH_FILE" ]]; then
-    if grep -q "^--no-gui" "$LAUNCH_FILE"; then
-        print_ok "--no-gui bereits aktiviert"
-    elif grep -q "^#.*--no-gui" "$LAUNCH_FILE"; then
-        # Auskommentiertes --no-gui aktivieren
-        sed -i 's/^#\s*--no-gui/--no-gui/' "$LAUNCH_FILE"
-        print_ok "--no-gui aktiviert (war auskommentiert)"
+    if grep -q "^no_gui\s*=\s*true" "$LAUNCH_FILE"; then
+        print_ok "no_gui bereits aktiviert"
     else
-        echo "--no-gui" >> "$LAUNCH_FILE"
-        print_ok "--no-gui hinzugefuegt"
+        # no_gui auf true setzen
+        sed -i 's/^no_gui\s*=.*/no_gui = true/' "$LAUNCH_FILE"
+        print_ok "no_gui aktiviert in launch_options.ini"
     fi
 else
-    # launch_options.txt erstellen
+    # Aus Default kopieren und no_gui aktivieren
     mkdir -p "$ROOT/config"
-    echo "--no-gui" > "$LAUNCH_FILE"
-    print_ok "launch_options.txt erstellt mit --no-gui"
+    if [[ -f "$DEFAULT_LAUNCH" ]]; then
+        cp "$DEFAULT_LAUNCH" "$LAUNCH_FILE"
+        sed -i 's/^no_gui\s*=.*/no_gui = true/' "$LAUNCH_FILE"
+    else
+        cat > "$LAUNCH_FILE" << 'EOF'
+[app]
+no_gui = true
+dev_mode = false
+force_build = false
+
+[server]
+port = 5000
+host = 127.0.0.1
+
+[startup]
+check_updates = true
+show_splash = true
+show_console = false
+
+[dev]
+vite_port = 5173
+log_level = info
+EOF
+    fi
+    print_ok "launch_options.ini erstellt mit no_gui = true"
 fi
 
 # .env Datei prüfen

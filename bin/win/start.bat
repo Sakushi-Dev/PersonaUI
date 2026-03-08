@@ -87,29 +87,10 @@ exit /b 1
 :python_ok
 
 REM ══════════════════════════════════════════════════════════════════════
-REM  Launch Options laden (config/launch_options.txt)
+REM  App starten (personaui.py liest config/launch_options.ini selbst)
 REM ══════════════════════════════════════════════════════════════════════
 
-set "LAUNCH_OPTS="
-set "LAUNCH_FILE=%ROOT%\config\launch_options.txt"
-
-if exist "%LAUNCH_FILE%" (
-    for /f "usebackq eol=# tokens=*" %%a in ("%LAUNCH_FILE%") do (
-        if not "%%a"=="" (
-            if defined LAUNCH_OPTS (
-                set "LAUNCH_OPTS=!LAUNCH_OPTS! %%a"
-            ) else (
-                set "LAUNCH_OPTS=%%a"
-            )
-        )
-    )
-)
-
-REM ══════════════════════════════════════════════════════════════════════
-REM  App starten (personaui.py → installiert bei Bedarf → startet app.py)
-REM ══════════════════════════════════════════════════════════════════════
-
-"%PYTHON_CMD%" "%INIT%" %* !LAUNCH_OPTS!
+"%PYTHON_CMD%" "%INIT%" %*
 
 if errorlevel 1 (
     echo.

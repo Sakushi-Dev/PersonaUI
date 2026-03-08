@@ -56,28 +56,10 @@ else
 fi
 
 # ══════════════════════════════════════════════════════════════════════
-#  Launch Options laden (config/launch_options.txt)
+#  App starten (personaui.py liest config/launch_options.ini selbst)
 # ══════════════════════════════════════════════════════════════════════
 
-LAUNCH_OPTS=""
-LAUNCH_FILE="$ROOT/config/launch_options.txt"
-
-if [[ -f "$LAUNCH_FILE" ]]; then
-    while IFS= read -r line || [[ -n "$line" ]]; do
-        # Kommentare und leere Zeilen überspringen
-        line="${line%%#*}"
-        line="$(echo "$line" | xargs)"  # trim
-        if [[ -n "$line" ]]; then
-            LAUNCH_OPTS="$LAUNCH_OPTS $line"
-        fi
-    done < "$LAUNCH_FILE"
-fi
-
-# ══════════════════════════════════════════════════════════════════════
-#  App starten (personaui.py → installiert bei Bedarf → startet app.py)
-# ══════════════════════════════════════════════════════════════════════
-
-"$PYTHON_CMD" "$INIT" "$@" $LAUNCH_OPTS
+"$PYTHON_CMD" "$INIT" "$@"
 EXIT_CODE=$?
 
 if [[ $EXIT_CODE -ne 0 ]]; then

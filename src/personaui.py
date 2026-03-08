@@ -42,29 +42,53 @@ _get_requirements_path = _install_mod._get_requirements_path
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-#  Launch Options laden (config/launch_options.txt)
+#  Launch Options laden (config/launch_options.ini)
 # ═══════════════════════════════════════════════════════════════════════════
 
-def _load_launch_options():
-    """Liest launch_options.txt aus config/ und gibt die Optionen als Liste zurück."""
+import configparser as _cp
+
+# Global launch config – accessible after _load_launch_config() is called
+launch_config = {}
+
+
+def _load_launch_config():
+    """Liest launch_options.ini aus config/ und befüllt launch_config dict."""
+    global launch_config
     root_dir = os.path.dirname(SCRIPT_DIR)
-    launch_file = os.path.join(root_dir, 'config', 'launch_options.txt')
-    options = []
-    if os.path.exists(launch_file):
-        with open(launch_file, 'r', encoding='utf-8') as f:
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith('#'):
-                    options.extend(line.split())
-    return options
+    ini_path = os.path.join(root_dir, 'config', 'launch_options.ini')
+    default_path = os.path.join(root_dir, 'config', 'default', 'launch_options.ini')
 
+    # Copy default if user INI doesn't exist yet
+    if not os.path.exists(ini_path) and os.path.exists(default_path):
+        shutil.copy2(default_path, ini_path)
 
-def _merge_launch_options():
-    """Fügt launch_options.txt-Optionen in sys.argv ein (ohne Duplikate)."""
-    options = _load_launch_options()
-    for opt in options:
-        if opt not in sys.argv:
-            sys.argv.append(opt)
+    cp = _cp.ConfigParser()
+    cp.read(ini_path, encoding='utf-8')
+
+    launch_config = {
+        # [app]
+        'no_gui': cp.getboolean('app', 'no_gui', fallback=False),
+        'dev_mode': cp.getboolean('app', 'dev_mode', fallback=False),
+        'force_build': cp.getboolean('app', 'force_build', fallback=False),
+        # [server]
+        'port': cp.getint('server', 'port', fallback=5000),
+        'host': cp.get('server', 'host', fallback='127.0.0.1').strip(),
+        # [startup]
+        'check_updates': cp.getboolean('startup', 'check_updates', fallback=True),
+        'show_splash': cp.getboolean('startup', 'show_splash', fallback=True),
+        'show_console': cp.getboolean('startup', 'show_console', fallback=False),
+        # [dev]
+        'vite_port': cp.getint('dev', 'vite_port', fallback=5173),
+        'log_level': cp.get('dev', 'log_level', fallback='info').strip().upper(),
+    }
+
+    # CLI flags override INI values
+    if '--no-gui' in sys.argv:
+        launch_config['no_gui'] = True
+    if '--dev' in sys.argv:
+        launch_config['dev_mode'] = True
+    if '--force-build' in sys.argv:
+        launch_config['force_build'] = True
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -493,13 +517,11 @@ def _fatal(msg):
 # ═══════════════════════════════════════════════════════════════════════════
 
 def main():
-    _merge_launch_options()
+    _load_launch_config()
     venv_python = _get_venv_python()
     app_path = os.path.join(SCRIPT_DIR, 'app.py')
     first_setup = False
-    force_build = '--force-build' in sys.argv
-    if force_build:
-        sys.argv.remove('--force-build')
+    force_build = launch_config.get('force_build', False)
 
     # ─── Step 1: Already running inside .venv with everything installed? ───
     if _running_in_venv():
