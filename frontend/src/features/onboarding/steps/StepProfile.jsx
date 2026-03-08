@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import AvatarCropper from '../../../components/AvatarCropper/AvatarCropper';
+import ChipSelector from '../../../components/ChipSelector/ChipSelector';
 import { getAvailableAvatars, uploadAvatar } from '../../../services/avatarApi';
 import { useLanguage } from '../../../hooks/useLanguage';
 import styles from './Steps.module.css';
@@ -85,20 +86,12 @@ export default function StepProfile({ data, onChange, onNext, onBack }) {
     }
   }, []);
 
-  // ── Gender chip handlers ──
-  const toggleGender = (gender) => {
-    update('user_gender', data.user_gender === gender ? null : gender);
-  };
-
-  const toggleInterest = (interest) => {
-    const current = data.user_interested_in || [];
-    const idx = current.indexOf(interest);
-    if (idx >= 0) {
-      update('user_interested_in', current.filter((_, i) => i !== idx));
-    } else {
-      update('user_interested_in', [...current, interest]);
-    }
-  };
+  // ── Gender options (same values as UserProfileOverlay) ──
+  const GENDER_OPTIONS = [
+    { value: 'Male', label: s.genderMale },
+    { value: 'Female', label: s.genderFemale },
+    { value: 'Other', label: s.genderOther },
+  ];
 
 
 
@@ -232,33 +225,22 @@ export default function StepProfile({ data, onChange, onNext, onBack }) {
         {/* Geschlecht */}
         <div className={styles.fieldGroup}>
           <label className={styles.label}>{s.genderLabel} <span className={styles.labelOptional}>{c.optional}</span></label>
-          <div className={styles.genderGrid}>
-            {[{ value: 'Male', label: s.genderMale }, { value: 'Female', label: s.genderFemale }, { value: 'Other', label: s.genderOther }].map((g) => (
-              <div
-                key={g.value}
-                className={`${styles.typeChip} ${data.user_gender === g.value ? styles.chipActive : ''}`}
-                onClick={() => toggleGender(g.value)}
-              >
-                {g.label}
-              </div>
-            ))}
-          </div>
+          <ChipSelector
+            options={GENDER_OPTIONS}
+            value={data.user_gender}
+            onChange={(val) => update('user_gender', val)}
+          />
         </div>
 
         {/* Interessiere mich für */}
         <div className={styles.fieldGroup}>
           <label className={styles.label}>{s.interestedLabel} <span className={styles.labelOptional}>{s.interestedHint}</span></label>
-          <div className={styles.genderGrid}>
-            {[{ value: 'Male', label: s.genderMale }, { value: 'Female', label: s.genderFemale }, { value: 'Other', label: s.genderOther }].map((g) => (
-              <div
-                key={g.value}
-                className={`${styles.typeChip} ${(data.user_interested_in || []).includes(g.value) ? styles.chipActive : ''}`}
-                onClick={() => toggleInterest(g.value)}
-              >
-                {g.label}
-              </div>
-            ))}
-          </div>
+          <ChipSelector
+            options={GENDER_OPTIONS}
+            value={data.user_interested_in}
+            onChange={(val) => update('user_interested_in', val)}
+            multiple
+          />
         </div>
 
         {/* Persona Language */}

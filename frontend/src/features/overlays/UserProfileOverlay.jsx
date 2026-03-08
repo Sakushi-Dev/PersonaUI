@@ -33,9 +33,9 @@ export default function UserProfileOverlay({ open, onClose, onOpenAvatarEditor, 
   const sc = t('common');
 
   const GENDER_OPTIONS = [
-    { value: 'Männlich', label: s.male },
-    { value: 'Weiblich', label: s.female },
-    { value: 'Divers', label: s.diverse },
+    { value: 'Male', label: s.male },
+    { value: 'Female', label: s.female },
+    { value: 'Other', label: s.diverse },
   ];
 
   const [name, setName] = useState('User');

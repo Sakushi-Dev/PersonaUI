@@ -55,7 +55,7 @@ def update_user_profile():
             current[key] = data[key]
     
     # Validierung: user_gender
-    valid_genders = {'Männlich', 'Weiblich', 'Divers'}
+    valid_genders = {'Male', 'Female', 'Other'}
     if current.get('user_gender') and current['user_gender'] not in valid_genders:
         current['user_gender'] = None
     
