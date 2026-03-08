@@ -153,10 +153,10 @@ def startup_sequence(window, server_mode, server_port, start_flask_fn, host, dev
         splash_type(window, '  Update check skipped.', 'default')
     splash_type(window, '', 'default')
 
-    # Initialize databases
-    splash_type(window, '> Initializing databases...', 'default')
+    # Initialize data directories
+    splash_type(window, '> Initializing data directories...', 'default')
     init_all_dbs()
-    splash_type(window, '  Databases ready.', 'info')
+    splash_type(window, '  Data directories ready.', 'info')
     splash_type(window, '', 'default')
 
     # Ensure Cortex directories

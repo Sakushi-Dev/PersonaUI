@@ -1,52 +1,18 @@
 """
-Database Connection & Schema Management
+Database Connection & Path Management
 
 Handles:
-- Database paths and connections
-- Schema initialization
-- Migration logic
+- Data directory setup
+- Persona directory paths
+- Persona ID discovery
 """
 
-import sqlite3
 import os
 from typing import List
 
 # Data directory setup
 DATA_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'data'))
 os.makedirs(DATA_DIR, exist_ok=True)
-
-
-def get_db_path(persona_id: str = 'default') -> str:
-    """
-    Returns the database file path for a specific persona.
-    # Legacy — nur für SQLite→JSONL Migration
-    
-    Args:
-        persona_id: Persona ID ('default' or a UUID)
-        
-    Returns:
-        Path to SQLite file
-    """
-    if persona_id == 'default' or not persona_id:
-        return os.path.join(DATA_DIR, 'main.db')
-    return os.path.join(DATA_DIR, f'persona_{persona_id}.db')
-
-
-def get_db_connection(persona_id: str = 'default') -> sqlite3.Connection:
-    """
-    Creates a database connection with foreign keys enabled.
-    # Legacy — nur für SQLite→JSONL Migration
-    
-    Args:
-        persona_id: Persona ID
-        
-    Returns:
-        sqlite3.Connection object
-    """
-    db_path = get_db_path(persona_id)
-    conn = sqlite3.connect(db_path)
-    conn.execute('PRAGMA foreign_keys = ON')
-    return conn
 
 
 def get_persona_dir(persona_id: str = "default") -> str:

@@ -1,25 +1,17 @@
 """
 Database Package - Public API
 
-This module maintains backwards compatibility by re-exporting all functions
-The database has been refactored into logical modules:
-- connection: Legacy DB paths, connections (nur für Migration)
-- persona: Persona DB management & legacy migration  
-- jsonl_chat: Messages, history, context (JSONL-basiert)
-- jsonl_sessions: Session management (JSONL-basiert)
-
-SQLite wurde komplett durch JSONL ersetzt. Legacy SQLite-Module (chat.py, 
-sessions.py, migration.py) wurden entfernt. Legacy-Funktionen sind nur
-noch für Datenmigration verfügbar.
-
-SQLite wurde komplett durch JSONL ersetzt. Legacy-Funktionen sind nur
-noch für Datenmigration verfügbar.
+JSONL-basiertes Datensystem:
+- connection: Data directory, persona paths
+- schema: Persona-Verzeichnis Lifecycle
+- jsonl_store: Low-level JSONL read/write engine
+- jsonl_chat: Messages, history, context
+- jsonl_sessions: Session management
 """
 
 # Core connection & schema functions
 from .connection import (
-    get_db_path,
-    get_db_connection, 
+    get_persona_dir,
     get_all_persona_ids,
     DATA_DIR
 )
@@ -31,9 +23,6 @@ from .schema import (
     init_all_dbs,
     find_session_persona,
 )
-
-# Legacy migration
-from .persona import migrate_from_legacy_db
 
 # Chat functions (JSONL)
 from .jsonl_chat import (
@@ -66,18 +55,14 @@ get_session_message_count = get_message_count
 
 __all__ = [
     # Connection & Schema
-    'get_db_path',
-    'get_db_connection',
-    'init_persona_db',
+    'get_persona_dir',
     'get_all_persona_ids',
     'DATA_DIR',
-    
-    # Persona Management
+    'init_persona_db',
     'create_persona_db',
-    'delete_persona_db', 
+    'delete_persona_db',
     'init_all_dbs',
     'find_session_persona',
-    'migrate_from_legacy_db',
     
     # Chat Operations
     'get_chat_history',

@@ -72,10 +72,6 @@ def init_all_dbs():
     Initialisiert alle vorhandenen Persona-Verzeichnisse.
     Wird beim Server-Start aufgerufen.
     """
-    # SQLite→JSONL Migration (läuft nur wenn .db Dateien existieren)
-    from .migrate_to_jsonl import migrate_sqlite_to_jsonl
-    migrate_sqlite_to_jsonl()
-    
     log.info("Initialisiere Per-Persona Verzeichnisse...")
     
     # Initialisiere default Verzeichnis
