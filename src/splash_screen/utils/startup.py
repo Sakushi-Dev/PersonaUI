@@ -174,13 +174,6 @@ def startup_sequence(window, server_mode, server_port, start_flask_fn, host, lau
     splash_type(window, '  Cortex ready.', 'info')
     splash_type(window, '', 'default')
 
-    # Settings migration (memoriesEnabled → cortexEnabled)
-    splash_type(window, '> Checking settings migration...', 'default')
-    from utils.settings_migration import migrate_settings
-    migrate_settings()
-    splash_type(window, '  Settings ready.', 'info')
-    splash_type(window, '', 'default')
-
     # Fun persona loading messages
     fun_msgs = get_fun_messages()
     for msg, dur in fun_msgs:

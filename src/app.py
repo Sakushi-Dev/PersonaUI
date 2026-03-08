@@ -381,8 +381,6 @@ if __name__ == '__main__':
             init_all_dbs()
             from utils.cortex_service import ensure_cortex_dirs
             ensure_cortex_dirs()
-            from utils.settings_migration import migrate_settings
-            migrate_settings()
             log.info("Server running at: http://%s:%s", host, server_port)
             log.info("Web UI & Backend developed by Sakushi-Dev")
             app.run(host=host, port=server_port, debug=False)
@@ -391,8 +389,6 @@ if __name__ == '__main__':
         init_all_dbs()
         from utils.cortex_service import ensure_cortex_dirs
         ensure_cortex_dirs()
-        from utils.settings_migration import migrate_settings
-        migrate_settings()
         if dev_mode:
             log.info("Dev-Modus: Vite Dev-Server läuft auf http://localhost:%s", launch_cfg['vite_port'])
             log.info("Flask-Backend auf http://%s:%s", host, server_port)
