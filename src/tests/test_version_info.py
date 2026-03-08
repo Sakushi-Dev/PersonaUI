@@ -2,10 +2,10 @@
 Tests for version info utility in helpers.py
 """
 import pytest
-import json
 import os
-from unittest.mock import patch, mock_open
+from unittest.mock import patch, MagicMock
 import sys
+import configparser
 
 # Import the function to test
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
@@ -19,12 +19,13 @@ class TestVersionInfo:
         """Reset cache before each test"""
         helpers._version_cache = None
     
-    def test_valid_version_json(self):
-        """Test reading valid version.json file"""
-        # Mock version.json content
-        version_data = {"version": "1.2.3"}
+    def test_valid_version_ini(self):
+        """Test reading valid version.ini file"""
+        cp = configparser.ConfigParser()
+        cp.read_string("[version]\nversion = 1.2.3\n")
+        cp.read = MagicMock()
         
-        with patch("builtins.open", mock_open(read_data=json.dumps(version_data))):
+        with patch.object(helpers.configparser, 'ConfigParser', return_value=cp):
             result = helpers.get_version_info()
         
         assert result["version"] == "1.2.3"
@@ -33,18 +34,11 @@ class TestVersionInfo:
         assert result["patch"] == "3"
     
     def test_missing_file(self):
-        """Test behavior when version.json is missing"""
-        with patch("builtins.open", side_effect=FileNotFoundError("File not found")):
-            result = helpers.get_version_info()
+        """Test behavior when version.ini is missing/empty"""
+        cp = configparser.ConfigParser()
+        cp.read = MagicMock()
         
-        assert result["version"] == "unknown"
-        assert result["major"] == 0
-        assert result["minor"] == 0
-        assert result["patch"] == "0"
-    
-    def test_invalid_json(self):
-        """Test behavior with invalid JSON content"""
-        with patch("builtins.open", mock_open(read_data="invalid json content")):
+        with patch.object(helpers.configparser, 'ConfigParser', return_value=cp):
             result = helpers.get_version_info()
         
         assert result["version"] == "unknown"
@@ -54,9 +48,11 @@ class TestVersionInfo:
     
     def test_caching(self):
         """Test that result is cached (same object returned)"""
-        version_data = {"version": "2.0.1"}
+        cp = configparser.ConfigParser()
+        cp.read_string("[version]\nversion = 2.0.1\n")
+        cp.read = MagicMock()
         
-        with patch("builtins.open", mock_open(read_data=json.dumps(version_data))):
+        with patch.object(helpers.configparser, 'ConfigParser', return_value=cp):
             result1 = helpers.get_version_info()
             result2 = helpers.get_version_info()
         
@@ -77,9 +73,12 @@ class TestVersionInfo:
         
         for version_str, exp_major, exp_minor, exp_patch in test_cases:
             helpers._version_cache = None  # Reset cache
-            version_data = {"version": version_str}
             
-            with patch("builtins.open", mock_open(read_data=json.dumps(version_data))):
+            cp = configparser.ConfigParser()
+            cp.read_string(f"[version]\nversion = {version_str}\n")
+            cp.read = MagicMock()
+            
+            with patch.object(helpers.configparser, 'ConfigParser', return_value=cp):
                 result = helpers.get_version_info()
             
             assert result["version"] == version_str, f"Failed for {version_str}"
@@ -88,10 +87,12 @@ class TestVersionInfo:
             assert result["patch"] == exp_patch, f"Patch failed for {version_str}"
     
     def test_missing_version_key(self):
-        """Test behavior when version key is missing from JSON"""
-        version_data = {"other_field": "value"}
+        """Test behavior when version key is missing from ini"""
+        cp = configparser.ConfigParser()
+        cp.read_string("[other]\nfield = value\n")
+        cp.read = MagicMock()
         
-        with patch("builtins.open", mock_open(read_data=json.dumps(version_data))):
+        with patch.object(helpers.configparser, 'ConfigParser', return_value=cp):
             result = helpers.get_version_info()
         
         assert result["version"] == "unknown"

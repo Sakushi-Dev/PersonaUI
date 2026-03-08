@@ -1,6 +1,6 @@
 """Update check: Compares local version against origin/main to detect new releases."""
 
-import json
+import configparser
 import os
 import subprocess
 from packaging.version import Version, InvalidVersion
@@ -9,11 +9,7 @@ from packaging.version import Version, InvalidVersion
 _PROJECT_ROOT = os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )  # PersonaUI/
-_VERSION_FILE = os.path.join(_PROJECT_ROOT, 'config', 'version.json')
-_VERSION_FILE_FALLBACK = os.path.join(_PROJECT_ROOT, 'version.json')  # Legacy fallback
-_CHANGELOG_FILE = os.path.join(_PROJECT_ROOT, 'config', 'changelog.json')
-_CHANGELOG_FILE_FALLBACK = os.path.join(_PROJECT_ROOT, 'changelog.json')  # Legacy fallback
-_UPDATE_STATE_FILE = os.path.join(_PROJECT_ROOT, 'src', 'settings', 'update_state.json')
+_VERSION_FILE = os.path.join(_PROJECT_ROOT, 'config', 'version.ini')
 
 
 # ── Git helper ─────────────────────────────────────────────────────────────
@@ -38,24 +34,23 @@ def _run_git(*args: str) -> str | None:
 # ── Local version ──────────────────────────────────────────────────────────
 
 def get_local_version() -> str | None:
-    """Read the current version from the local version.json."""
-    for path in (_VERSION_FILE, _VERSION_FILE_FALLBACK):
-        try:
-            if os.path.exists(path):
-                with open(path, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-                ver = data.get('version') or None
-                if ver:
-                    return ver
-        except (json.JSONDecodeError, OSError):
-            continue
+    """Read the current version from config/version.ini."""
+    try:
+        if os.path.exists(_VERSION_FILE):
+            cp = configparser.ConfigParser()
+            cp.read(_VERSION_FILE, encoding='utf-8')
+            ver = cp.get('version', 'version', fallback=None)
+            if ver:
+                return ver.strip()
+    except (configparser.Error, OSError):
+        pass
     return None
 
 
 # ── Remote version ─────────────────────────────────────────────────────────
 
 def get_remote_version() -> tuple[str | None, str | None]:
-    """Fetch origin/main and read version.json from the remote branch.
+    """Fetch origin/main and read version.ini from the remote branch.
     
     Returns:
         (version, error) tuple. Error is None on success, or a descriptive string.
@@ -65,57 +60,40 @@ def get_remote_version() -> tuple[str | None, str | None]:
     if fetch_result is None:
         return None, 'no_network'
 
-    # Read version.json from origin/main (try config/ first, fallback to root)
-    raw = _run_git('show', 'origin/main:config/version.json')
-    if not raw:
-        raw = _run_git('show', 'origin/main:version.json')  # Legacy fallback
+    # Read version.ini from origin/main
+    raw = _run_git('show', 'origin/main:config/version.ini')
     if not raw:
         return None, 'no_version_file'
 
     try:
-        data = json.loads(raw)
-        ver = data.get('version')
+        cp = configparser.ConfigParser()
+        cp.read_string(raw)
+        ver = cp.get('version', 'version', fallback=None)
         if ver:
-            return ver, None
+            return ver.strip(), None
         return None, 'no_version_field'
-    except (json.JSONDecodeError, KeyError):
-        return None, 'invalid_json'
-
-
-def get_remote_changelog() -> list[dict] | None:
-    """Read changelog.json from origin/main (config/ primary, root fallback)."""
-    raw = _run_git('show', 'origin/main:config/changelog.json')
-    if not raw:
-        raw = _run_git('show', 'origin/main:changelog.json')  # Legacy fallback
-    if raw:
-        try:
-            data = json.loads(raw)
-            return data.get('versions', [])
-        except (json.JSONDecodeError, KeyError):
-            pass
-    return None
+    except configparser.Error:
+        return None, 'invalid_ini'
 
 
 # ── Update state ───────────────────────────────────────────────────────────
 
 def get_installed_version() -> str | None:
-    """Read the last successfully installed version from update_state.json."""
+    """Read the last successfully installed version from settings.json (update_state)."""
     try:
-        if os.path.exists(_UPDATE_STATE_FILE):
-            with open(_UPDATE_STATE_FILE, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            return data.get('version') or None
-    except (json.JSONDecodeError, OSError):
+        from utils.settings_manager import load_section
+        data = load_section('update_state')
+        return data.get('version') or None
+    except Exception:
         pass
     return None
 
 
 def save_installed_version(version: str):
-    """Save the current version to update_state.json after a successful update."""
+    """Save the current version to settings.json (update_state) after a successful update."""
     try:
-        os.makedirs(os.path.dirname(_UPDATE_STATE_FILE), exist_ok=True)
-        with open(_UPDATE_STATE_FILE, 'w', encoding='utf-8') as f:
-            json.dump({'version': version}, f, indent=2)
+        from utils.settings_manager import save_section
+        save_section('update_state', {'version': version})
     except Exception:
         pass
 
@@ -145,14 +123,12 @@ def check_for_update() -> dict:
             - available (bool): True if a new version is available
             - local_version (str|None): Currently installed version
             - remote_version (str|None): Latest version on origin/main
-            - remote_changelog (list|None): Version history from origin/main
             - error (str|None): Error message if something went wrong
     """
     result = {
         'available': False,
         'local_version': None,
         'remote_version': None,
-        'remote_changelog': None,
         'error': None,
     }
 
@@ -161,7 +137,7 @@ def check_for_update() -> dict:
     result['local_version'] = local_ver
 
     if not local_ver:
-        result['error'] = 'Local version.json not found or invalid'
+        result['error'] = 'Local version.ini not found or invalid'
         return result
 
     # 2. Fetch & read remote version
@@ -172,19 +148,17 @@ def check_for_update() -> dict:
         result['error'] = 'Could not fetch remote version (no network?)'
         return result
     elif fetch_error == 'no_version_file':
-        # Remote doesn't have version.json yet — nothing to compare against
-        result['error'] = None  # Not an error, just no version tracking on remote yet
+        result['error'] = None
         return result
     elif fetch_error:
-        result['error'] = f'Remote version.json issue: {fetch_error}'
+        result['error'] = f'Remote version.ini issue: {fetch_error}'
         return result
 
     # 3. Compare versions
     if is_newer(remote_ver, local_ver):
         result['available'] = True
-        result['remote_changelog'] = get_remote_changelog()
 
-    # 4. First-run: seed update_state.json if it doesn't exist yet
+    # 4. First-run: seed update_state if it doesn't exist yet
     if not get_installed_version():
         save_installed_version(local_ver)
 

@@ -1,26 +1,12 @@
 """
 Helper-Funktionen für die Chat-Anwendung
 """
+import configparser
 import os
 import json
-import secrets
 import re
 import html
 from .logger import log
-
-
-def ensure_env_file():
-    """Stellt sicher, dass eine .env Datei existiert"""
-    env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
-    
-    if not os.path.exists(env_path):
-        # Create .env file with empty API key but valid SECRET_KEY
-        with open(env_path, 'w', encoding='utf-8') as f:
-            f.write('# Umgebungsvariablen - Automatisch generiert\n')
-            f.write('ANTHROPIC_API_KEY=\n')  # Leer - muss vom Benutzer gesetzt werden
-            f.write(f'SECRET_KEY={secrets.token_hex(32)}\n')
-
-        log.info(".env Datei wurde erstellt. Bitte API-Key in den Einstellungen konfigurieren.")
 
 
 def format_message(message):
@@ -115,7 +101,7 @@ _version_cache = None
 
 def get_version_info():
     """
-    Returns version information from version.json as dict.
+    Returns version information from config/version.ini as dict.
     
     Returns:
         dict: {"version": str, "major": int, "minor": int, "patch": str}
@@ -126,17 +112,17 @@ def get_version_info():
     if _version_cache is not None:
         return _version_cache
     
-    # Path to version.json (relative to helpers.py location)
+    # Path to version.ini (relative to helpers.py location)
     version_file = os.path.join(
         os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-        'version.json'
+        'config',
+        'version.ini'
     )
     
     try:
-        with open(version_file, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-        
-        version_str = str(data.get('version', 'unknown'))
+        cp = configparser.ConfigParser()
+        cp.read(version_file, encoding='utf-8')
+        version_str = cp.get('version', 'version', fallback='unknown').strip()
         
         # Parse version string (handle suffixes like "1.2.3-alpha")
         if version_str == 'unknown':
@@ -159,7 +145,7 @@ def get_version_info():
         
         log.info(f"Version info loaded: {_version_cache}")
         
-    except (FileNotFoundError, json.JSONDecodeError, ValueError, KeyError) as e:
+    except Exception as e:
         log.warning(f"Could not load version info: {e}")
         _version_cache = {
             "version": "unknown",
