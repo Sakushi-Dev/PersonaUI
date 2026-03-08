@@ -16,10 +16,10 @@ import StepApi from './steps/StepApi';
 import StepFinish from './steps/StepFinish';
 import ProgressBar from './components/ProgressBar';
 import StepIndicator from './components/StepIndicator';
-import { updateUserProfile } from '../../services/userProfileApi';
-import { updateSettings } from '../../services/settingsApi';
-import { saveApiKey } from '../../services/serverApi';
-import { saveCortexSettings } from '../../services/cortexApi';
+import { getUserProfile, updateUserProfile } from '../../services/userProfileApi';
+import { getSettings, updateSettings } from '../../services/settingsApi';
+import { saveApiKey, checkApiStatus } from '../../services/serverApi';
+import { getCortexSettings, saveCortexSettings } from '../../services/cortexApi';
 import { completeOnboarding } from '../../services/onboardingApi';
 import * as storage from '../../utils/storage';
 import styles from './OnboardingPage.module.css';
@@ -72,10 +72,65 @@ export default function OnboardingPage() {
     apiKeyValid: false,
   });
 
+  // Pre-fill with existing data when re-running onboarding
+  useEffect(() => {
+    Promise.allSettled([
+      getUserProfile(),
+      getSettings(),
+      getCortexSettings(),
+    ]).then(([profileRes, settingsRes, cortexRes]) => {
+      if (profileRes.status === 'fulfilled') {
+        const p = profileRes.value?.profile;
+        if (p) {
+          setProfileData((prev) => ({
+            ...prev,
+            user_name: p.user_name || prev.user_name,
+            user_avatar: p.user_avatar ?? prev.user_avatar,
+            user_avatar_type: p.user_avatar_type ?? prev.user_avatar_type,
+            user_gender: p.user_gender ?? prev.user_gender,
+            user_interested_in: Array.isArray(p.user_interested_in) && p.user_interested_in.length
+              ? p.user_interested_in : prev.user_interested_in,
+            user_info: p.user_info || prev.user_info,
+            persona_language: p.persona_language || prev.persona_language,
+          }));
+        }
+      }
+      if (settingsRes.status === 'fulfilled') {
+        const s = settingsRes.value?.settings;
+        if (s?.apiKey) {
+          setApiData({ apiKey: s.apiKey, apiKeyValid: false });
+          checkApiStatus().then((r) => {
+            if (r?.has_api_key) setApiData({ apiKey: s.apiKey, apiKeyValid: true });
+          }).catch(() => {});
+        }
+        if (s) {
+          setInterfaceData((prev) => ({
+            darkMode: s.darkMode ?? prev.darkMode,
+            nonverbalColor: s.nonverbalColor || prev.nonverbalColor,
+          }));
+          setContextData((prev) => ({
+            contextLimit: s.contextLimit != null ? String(s.contextLimit) : prev.contextLimit,
+          }));
+          setAfterthoughtData((prev) => ({
+            nachgedankeMode: s.nachgedankeMode || prev.nachgedankeMode,
+          }));
+        }
+      }
+      if (cortexRes.status === 'fulfilled') {
+        const c = cortexRes.value?.settings;
+        if (c) {
+          setCortexData((prev) => ({
+            cortexEnabled: c.enabled ?? prev.cortexEnabled,
+            cortexFrequency: c.frequency || prev.cortexFrequency,
+          }));
+        }
+      }
+    });
+  }, []);
+
   // Save language immediately when changed (via SettingsContext)
   const handleLanguageChange = useCallback((lang) => {
     set('language', lang);
-    updateSettings({ language: lang }).catch(() => {});
   }, [set]);
 
   const goTo = useCallback((s) => {
@@ -93,6 +148,7 @@ export default function OnboardingPage() {
 
   const handleFinish = useCallback(async () => {
     setSaving(true);
+    console.log('[Onboarding] handleFinish profileData:', JSON.stringify(profileData));
     try {
       await updateUserProfile(profileData);
 
@@ -102,11 +158,8 @@ export default function OnboardingPage() {
         nonverbalColor: interfaceData.nonverbalColor,
         contextLimit: contextData.contextLimit,
         nachgedankeMode: afterthoughtData.nachgedankeMode,
-        cortexEnabled: cortexData.cortexEnabled,
-        cortexFrequency: cortexData.cortexFrequency,
       });
 
-      // Cortex-Settings auch in cortex_settings.json syncen (für Tier-Checker)
       await saveCortexSettings({
         enabled: cortexData.cortexEnabled,
         frequency: cortexData.cortexFrequency,

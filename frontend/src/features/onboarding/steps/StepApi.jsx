@@ -1,6 +1,6 @@
 // ── Step: API-Key (6/6) ──
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { testApiKey } from '../../../services/serverApi';
 import { useLanguage } from '../../../hooks/useLanguage';
 import styles from './Steps.module.css';
@@ -19,6 +19,13 @@ export default function StepApi({ data, onChange, onNext, onBack }) {
   const update = (field, value) => {
     onChange((prev) => ({ ...prev, [field]: value }));
   };
+
+  // Show success indicator when key is already validated (pre-filled)
+  useEffect(() => {
+    if (data.apiKeyValid && data.apiKey && !testResult) {
+      setTestResult({ success: true, message: s.valid });
+    }
+  }, []);
 
   const handleTest = useCallback(async () => {
     if (!data.apiKey?.trim()) {
