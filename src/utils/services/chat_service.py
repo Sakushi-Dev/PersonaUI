@@ -18,6 +18,9 @@ def _read_setting(key: str, default=None):
     """Liest ein Setting aus settings.json (user-Sektion) mit Defaults-Fallback."""
     try:
         from utils.settings_manager import get_value
+        # cortexEnabled lives in the cortex section as 'enabled'
+        if key == 'cortexEnabled':
+            return get_value('cortex', 'enabled', default)
         return get_value('user', key, default)
     except Exception:
         return default

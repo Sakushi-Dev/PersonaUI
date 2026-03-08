@@ -20,18 +20,26 @@ MODEL_OPTIONS = load_model_options()
 # Keys die nur aus defaults kommen und nicht in user-Sektion gespeichert werden
 _DEFAULTS_ONLY_KEYS = {'apiAutofillModel'}
 
+# Keys die in der cortex-Sektion leben, aber dem Frontend via user-settings bereitgestellt werden
+_CORTEX_PROXY_KEYS = {'cortexEnabled', 'cortexFrequency'}
+
 # Nachgedanke/Afterthought Defaults
 _AFTERTHOUGHT_DEFAULTS = get_section_defaults('afterthought')
 
 
 def _load_settings():
-    """Lädt User-Settings aus settings.json (user-Sektion)"""
-    return load_section('user')
+    """Lädt User-Settings aus settings.json (user-Sektion).
+    Injiziert cortexEnabled/cortexFrequency aus der cortex-Sektion."""
+    settings = load_section('user')
+    cortex = load_section('cortex')
+    settings['cortexEnabled'] = cortex.get('enabled', True)
+    settings['cortexFrequency'] = cortex.get('frequency', 'medium')
+    return settings
 
 
 def _save_settings(settings):
-    """Speichert User-Settings in settings.json (ohne defaults-only Keys)"""
-    filtered = {k: v for k, v in settings.items() if k not in _DEFAULTS_ONLY_KEYS}
+    """Speichert User-Settings in settings.json (ohne defaults-only und cortex-proxy Keys)."""
+    filtered = {k: v for k, v in settings.items() if k not in _DEFAULTS_ONLY_KEYS and k not in _CORTEX_PROXY_KEYS}
     return save_section('user', filtered)
 
 

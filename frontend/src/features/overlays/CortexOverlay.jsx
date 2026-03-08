@@ -33,7 +33,7 @@ const DEFAULT_FREQUENCY = 'medium';
 
 export default function CortexOverlay({ open, onClose, panelOnly }) {
   const { personaId, character } = useSession();
-  const { get, setMany } = useSettings();
+  const { get, reload } = useSettings();
   const { t } = useLanguage();
   const s = t('cortex');
   const sc = t('common');
@@ -165,20 +165,16 @@ export default function CortexOverlay({ open, onClose, panelOnly }) {
   // Save Settings (Footer "Speichern")
   // ══════════════════════════════════════════
   const handleSaveSettings = useCallback(() => {
-    // 1. Frontend-Settings (user_settings.json) — für UI-State & cortexEnabled-Check im Chat
-    setMany({
-      cortexEnabled,
-      cortexFrequency: frequency,
-    });
-
-    // 2. Backend Cortex-Settings (cortex_settings.json) — für Tier-Checker Trigger-Logik
+    // Cortex-Settings nur über den dedizierten Endpunkt speichern (Single Source of Truth)
     saveCortexSettings({
       enabled: cortexEnabled,
       frequency,
-    }).catch((err) => console.warn('Failed to sync cortex settings to backend:', err));
+    })
+      .then(() => reload())
+      .catch((err) => console.warn('Failed to sync cortex settings to backend:', err));
 
     onClose();
-  }, [cortexEnabled, frequency, setMany, onClose]);
+  }, [cortexEnabled, frequency, reload, onClose]);
 
   // ══════════════════════════════════════════
   // Reset Settings (Footer "Zurücksetzen")

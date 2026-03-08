@@ -20,9 +20,7 @@
         "experimentalMode": false,
         "nachgedankeMode": "off",
         "nonverbalColor": "#e4ba00",
-        "notificationSound": true,
-        "cortexEnabled": true,
-        "cortexFrequency": "medium"
+        "notificationSound": true
     },
     "profile": {
         "user_name": "User",
