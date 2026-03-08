@@ -624,7 +624,7 @@ class TestRegistryAndManifestIntegrity:
     def test_cortex_enabled_in_defaults(self):
         """cortexEnabled existiert in defaults.json (user-Sektion)."""
         src_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-        defaults_path = os.path.join(src_dir, 'src', 'settings', 'defaults.json')
+        defaults_path = os.path.join(src_dir, 'src', 'settings', 'default', 'defaults.json')
         with open(defaults_path, 'r', encoding='utf-8') as f:
             defaults = json.load(f)
         assert 'cortexEnabled' in defaults['user']

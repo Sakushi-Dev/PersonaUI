@@ -34,10 +34,12 @@ src/data/
 # Backup-Dateien
 *.backup
 
-# Settings-Verzeichnis komplett ignorieren, nur defaults + model_options versioniert
+# Settings-Verzeichnis ignorieren, Defaults in settings/default/
 src/settings/*
-!src/settings/defaults.json
-!src/settings/model_options.json
+!src/settings/default/
+
+# Launch-Options (Nutzer-spezifisch, Defaults in config/default/)
+config/launch_options.ini
 
 # Benutzer-erstellte Personas
 src/instructions/created_personas/

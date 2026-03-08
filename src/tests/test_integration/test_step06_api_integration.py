@@ -457,7 +457,7 @@ class TestStartupIntegration:
 
     def test_defaults_json_has_cortex_enabled(self):
         """defaults.json enthält cortexEnabled in der user-Sektion."""
-        defaults_path = os.path.join(SRC_DIR, 'settings', 'defaults.json')
+        defaults_path = os.path.join(SRC_DIR, 'settings', 'default', 'defaults.json')
         with open(defaults_path, 'r', encoding='utf-8') as f:
             defaults = json.load(f)
         assert 'cortexEnabled' in defaults['user']
@@ -465,7 +465,7 @@ class TestStartupIntegration:
 
     def test_defaults_json_has_cortex_frequency(self):
         """defaults.json enthält cortexFrequency in der user-Sektion."""
-        defaults_path = os.path.join(SRC_DIR, 'settings', 'defaults.json')
+        defaults_path = os.path.join(SRC_DIR, 'settings', 'default', 'defaults.json')
         with open(defaults_path, 'r', encoding='utf-8') as f:
             defaults = json.load(f)
         assert 'cortexFrequency' in defaults['user']
