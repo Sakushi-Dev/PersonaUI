@@ -80,6 +80,10 @@ export function SessionProvider({ children }) {
           setChatHistory(sessionData.chat_history || []);
           setTotalMessageCount(sessionData.total_message_count || 0);
           updateUrl(latestId, sessionData.persona_id || activePid);
+          // Signal auto first message for empty sessions
+          if (sessionData.auto_first_message) {
+            setPendingAutoFirstMessage(true);
+          }
           return;
         }
       }

@@ -116,6 +116,9 @@ def get_session_data(session_id):
         'avatar': config.get('avatar'),
         'avatar_type': config.get('avatar_type')
     }
+
+    # Auto-First-Message Flag (nur relevant bei leerer Session)
+    auto_first_message = not chat_history and character.get('start_msg_enabled', False)
     
     return success_response(
         session=session,
@@ -123,7 +126,8 @@ def get_session_data(session_id):
         total_message_count=total_message_count,
         persona_switched=persona_switched,
         persona_id=session_persona_id,
-        character=character_data
+        character=character_data,
+        auto_first_message=auto_first_message
     )
 
 
