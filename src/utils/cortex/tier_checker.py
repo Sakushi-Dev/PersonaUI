@@ -52,7 +52,7 @@ def _get_context_limit() -> int:
     geclampten Server-Wert. Nur Minimum 10, kein Maximum-Clamp.
     """
     from utils.settings_manager import get_value
-    raw = get_value('user', 'contextLimit', '100')
+    raw = get_value('api', 'contextLimit', '100')
 
     try:
         return max(10, int(raw))  # Minimum 10 Nachrichten

@@ -32,7 +32,7 @@ def init_services(api_key: str = None):
 
     if not api_key:
         from . import settings_manager as _sm
-        api_key = _sm.get_value('user', 'apiKey') or None
+        api_key = _sm.get_value('api', 'key') or None
 
     _api_client = ApiClient(api_key=api_key)
     _cortex_service = CortexService(_api_client)

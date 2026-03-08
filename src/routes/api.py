@@ -62,7 +62,7 @@ def test_api_key():
 @handle_route_error('check_api_status')
 def check_api_status():
     """Prüft ob ein API-Key konfiguriert ist"""
-    api_key = _sm.get_value('user', 'apiKey') or ''
+    api_key = _sm.get_value('api', 'key') or ''
     has_api_key = bool(api_key and len(api_key) > 10 and api_key.startswith('sk-'))
     
     return success_response(
@@ -82,9 +82,9 @@ def save_api_key():
         return error_response('API-Key ist leer')
     
     # Speichere API-Key in settings.json
-    user = _sm.load_section('user')
-    user['apiKey'] = api_key
-    _sm.save_section('user', user)
+    api_section = _sm.load_section('api')
+    api_section['key'] = api_key
+    _sm.save_section('api', api_section)
     
     # Aktualisiere den Claude API Client mit dem neuen Key
     api_client = get_api_client()

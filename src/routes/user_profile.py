@@ -49,37 +49,37 @@ def update_user_profile():
     current = _load_profile()
     
     # Nur erlaubte Felder aktualisieren
-    allowed_keys = {'user_name', 'user_avatar', 'user_avatar_type', 'user_gender', 'user_interested_in', 'user_info', 'persona_language'}
+    allowed_keys = {'userName', 'userAvatar', 'userAvatarType', 'userGender', 'userInterestedIn', 'userInfo', 'personaLanguage'}
     for key in allowed_keys:
         if key in data:
             current[key] = data[key]
     
     # Validierung: user_gender
     valid_genders = {'Male', 'Female', 'Other'}
-    if current.get('user_gender') and current['user_gender'] not in valid_genders:
-        current['user_gender'] = None
+    if current.get('userGender') and current['userGender'] not in valid_genders:
+        current['userGender'] = None
     
-    # Validierung: user_interested_in (Liste von Geschlechtern)
-    if isinstance(current.get('user_interested_in'), list):
-        current['user_interested_in'] = [g for g in current['user_interested_in'] if g in valid_genders]
+    # Validierung: userInterestedIn (Liste von Geschlechtern)
+    if isinstance(current.get('userInterestedIn'), list):
+        current['userInterestedIn'] = [g for g in current['userInterestedIn'] if g in valid_genders]
     else:
-        current['user_interested_in'] = []
+        current['userInterestedIn'] = []
     
-    # Validierung: user_info max 500 Zeichen
-    if current.get('user_info') and len(current['user_info']) > 500:
-        current['user_info'] = current['user_info'][:500]
+    # Validierung: userInfo max 500 Zeichen
+    if current.get('userInfo') and len(current['userInfo']) > 500:
+        current['userInfo'] = current['userInfo'][:500]
     
-    # Validierung: user_name max 30 Zeichen, nicht leer
-    if current.get('user_name'):
-        current['user_name'] = current['user_name'].strip()[:30]
-    if not current.get('user_name'):
-        current['user_name'] = 'User'
+    # Validierung: userName max 30 Zeichen, nicht leer
+    if current.get('userName'):
+        current['userName'] = current['userName'].strip()[:30]
+    if not current.get('userName'):
+        current['userName'] = 'User'
     
-    # Validierung: persona_language – muss ein nicht-leerer String sein
-    if not current.get('persona_language') or not isinstance(current['persona_language'], str):
-        current['persona_language'] = 'english'
+    # Validierung: personaLanguage – muss ein nicht-leerer String sein
+    if not current.get('personaLanguage') or not isinstance(current['personaLanguage'], str):
+        current['personaLanguage'] = 'english'
     else:
-        current['persona_language'] = current['persona_language'].strip().lower()
+        current['personaLanguage'] = current['personaLanguage'].strip().lower()
     
     if _save_profile(current):
         # PromptEngine-Cache invalidieren (user_profile-Werte wie language sind gecached)

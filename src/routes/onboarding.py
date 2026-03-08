@@ -14,7 +14,7 @@ onboarding_bp = Blueprint('onboarding', __name__)
 
 def is_onboarding_complete():
     """Prüft ob das Onboarding bereits abgeschlossen wurde."""
-    data = load_section('onboarding')
+    data = load_section('initialization')
     return data.get('completed', False)
 
 
@@ -29,7 +29,7 @@ def onboarding():
 def complete_onboarding():
     """Markiert das Onboarding als abgeschlossen."""
     try:
-        save_section('onboarding', {'completed': True, 'disclaimer_accepted': False})
+        save_section('initialization', {'completed': True, 'disclaimerAccepted': False})
         log.info("Onboarding abgeschlossen.")
         return success_response()
     except Exception as e:
@@ -42,9 +42,9 @@ def complete_onboarding():
 def accept_disclaimer():
     """Markiert den Disclaimer als akzeptiert."""
     try:
-        data = load_section('onboarding')
-        data['disclaimer_accepted'] = True
-        save_section('onboarding', data)
+        data = load_section('initialization')
+        data['disclaimerAccepted'] = True
+        save_section('initialization', data)
         log.info("Disclaimer akzeptiert.")
         return success_response()
     except Exception as e:
@@ -74,6 +74,6 @@ def shutdown_server():
 @handle_route_error('onboarding_status')
 def onboarding_status():
     """Prüft ob das Onboarding bereits abgeschlossen wurde (für React SPA)."""
-    data = load_section('onboarding')
-    disclaimer_accepted = data.get('disclaimer_accepted', False)
+    data = load_section('initialization')
+    disclaimer_accepted = data.get('disclaimerAccepted', False)
     return success_response(completed=is_onboarding_complete(), disclaimer_accepted=disclaimer_accepted)

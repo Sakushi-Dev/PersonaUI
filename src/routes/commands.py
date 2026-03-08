@@ -94,7 +94,7 @@ def reset_onboarding():
     """
     try:
         from utils.settings_manager import save_section
-        save_section('onboarding', {'completed': False})
+        save_section('initialization', {'completed': False})
         log.info('[/onboarding] Onboarding zurückgesetzt – wird beim nächsten Laden angezeigt.')
         return success_response(message='Onboarding zurückgesetzt – Seite wird neu geladen.')
     except Exception as exc:

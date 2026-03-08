@@ -35,7 +35,7 @@ class ApiClient:
         self.api_key = api_key
         if not self.api_key:
             from ..settings_manager import get_value
-            self.api_key = get_value('user', 'apiKey') or None
+            self.api_key = get_value('api', 'key') or None
         self.client = None
         self._init_client()
 

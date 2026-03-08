@@ -16,6 +16,7 @@ from utils.cortex.tier_tracker import reset_persona as reset_persona_cycle_state
 from utils.cortex_service import TEMPLATES
 from routes.helpers import success_response, error_response, handle_route_error, resolve_persona_id, get_client_ip
 from routes.user_profile import get_user_profile_data
+from utils import settings_manager as _sm
 
 chat_bp = Blueprint('chat', __name__)
 
@@ -74,8 +75,8 @@ def chat_stream():
     
     # User-Name aus Profil
     user_profile = get_user_profile_data()
-    user_name = user_profile.get('user_name', 'User') or 'User'
-    persona_language = user_profile.get('persona_language', 'english') or 'english'
+    user_name = user_profile.get('userName', 'User') or 'User'
+    persona_language = user_profile.get('personaLanguage', 'english') or 'english'
     
     # Context Limit
     context_limit = data.get('context_limit', 25)
@@ -263,8 +264,8 @@ def api_regenerate():
     character = load_character()
     character_name = character.get('char_name', 'Assistant')
     user_profile = get_user_profile_data()
-    user_name = user_profile.get('user_name', 'User') or 'User'
-    persona_language = user_profile.get('persona_language', 'english') or 'english'
+    user_name = user_profile.get('userName', 'User') or 'User'
+    persona_language = user_profile.get('personaLanguage', 'english') or 'english'
 
     # Konversationskontext holen (endet jetzt mit der User-Nachricht)
     conversation_history = get_conversation_context(
@@ -349,10 +350,9 @@ def afterthought():
     Phase 2: Falls ja, streame die Ergänzung.
     """
     # Guard: Nachgedanke muss aktiviert sein
-    from routes.settings import _load_settings
-    user_settings = _load_settings()
-    nachgedanke_mode = user_settings.get('nachgedankeMode', 'off')
-    if nachgedanke_mode == 'off' or not nachgedanke_mode:
+    afterthought_settings = _sm.load_section('afterthought')
+    afterthought_mode = afterthought_settings.get('mode', 'off')
+    if afterthought_mode == 'off' or not afterthought_mode:
         return success_response(decision=False, inner_dialogue='', blocked=True)
 
     data = request.get_json()
@@ -381,8 +381,8 @@ def afterthought():
     
     # User-Name aus Profil
     afterthought_profile = get_user_profile_data()
-    afterthought_user_name = afterthought_profile.get('user_name', 'User') or 'User'
-    afterthought_persona_language = afterthought_profile.get('persona_language', 'english') or 'english'
+    afterthought_user_name = afterthought_profile.get('userName', 'User') or 'User'
+    afterthought_persona_language = afterthought_profile.get('personaLanguage', 'english') or 'english'
     
     # Konversationskontext holen (aus Persona-DB)
     conversation_history = get_conversation_context(limit=context_limit, session_id=session_id, persona_id=persona_id)
@@ -489,8 +489,8 @@ def auto_first_message():
 
     # User-Name und Sprache aus Profil
     user_profile = get_user_profile_data()
-    user_name = user_profile.get('user_name', 'User') or 'User'
-    persona_language = user_profile.get('persona_language', 'english') or 'english'
+    user_name = user_profile.get('userName', 'User') or 'User'
+    persona_language = user_profile.get('personaLanguage', 'english') or 'english'
 
     # IP-Adresse ermitteln
     user_ip = get_client_ip()

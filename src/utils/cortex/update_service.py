@@ -214,7 +214,7 @@ class CortexUpdateService:
             persona_name = character.get('char_name', 'Assistant')
 
             user_profile = self._load_user_profile()
-            user_name = user_profile.get('user_name', 'User') or 'User'
+            user_name = user_profile.get('userName', 'User') or 'User'
 
             # ── 3. Context-Limit aus User-Settings lesen ──────────
             context_limit = self._get_context_limit()
@@ -452,7 +452,7 @@ class CortexUpdateService:
         try:
             from routes.user_profile import get_user_profile_data
             profile = get_user_profile_data()
-            persona_language = profile.get('persona_language', 'english') or 'english'
+            persona_language = profile.get('personaLanguage', 'english') or 'english'
         except Exception:
             persona_language = 'english'
 

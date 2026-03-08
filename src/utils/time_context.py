@@ -39,7 +39,7 @@ def _get_persona_language() -> str:
     try:
         from routes.user_profile import get_user_profile_data
         profile = get_user_profile_data()
-        return (profile.get('persona_language') or 'english').lower()
+        return (profile.get('personaLanguage') or 'english').lower()
     except Exception:
         return 'english'
 

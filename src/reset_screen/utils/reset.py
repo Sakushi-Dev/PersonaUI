@@ -293,10 +293,10 @@ def _reset_env(window, src, errors):
         try:
             with open(settings_path, 'r', encoding='utf-8') as f:
                 settings = json.load(f)
-            user = settings.get('user', {})
-            if user.get('apiKey'):
-                user['apiKey'] = ''
-                settings['user'] = user
+            user = settings.get('api', {})
+            if user.get('key'):
+                user['key'] = ''
+                settings['api'] = user
                 with open(settings_path, 'w', encoding='utf-8') as f:
                     json.dump(settings, f, indent=4, ensure_ascii=False)
                 _type(window, '        API key removed from settings', 'info')
@@ -325,7 +325,7 @@ def _reset_settings(window, src, errors, keep_api_key=False):
         try:
             with open(settings_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-            saved_api_key = data.get('user', {}).get('apiKey', '')
+            saved_api_key = data.get('api', {}).get('key', '')
         except Exception:
             pass
 
@@ -356,7 +356,7 @@ def _reset_settings(window, src, errors, keep_api_key=False):
         try:
             os.makedirs(settings_dir, exist_ok=True)
             with open(settings_path, 'w', encoding='utf-8') as f:
-                json.dump({'user': {'apiKey': saved_api_key}}, f, indent=4, ensure_ascii=False)
+                json.dump({'api': {'key': saved_api_key}}, f, indent=4, ensure_ascii=False)
             _type(window, '        API key preserved', 'info')
         except Exception:
             _type(window, '        WARNING: Could not restore API key', 'error')

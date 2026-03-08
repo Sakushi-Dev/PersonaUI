@@ -77,8 +77,8 @@ def save_avatar():
         # User-Profil Avatar speichern
         from routes.user_profile import _load_profile, _save_profile
         profile = _load_profile()
-        profile['user_avatar'] = avatar_filename
-        profile['user_avatar_type'] = avatar_type
+        profile['userAvatar'] = avatar_filename
+        profile['userAvatarType'] = avatar_type
         success = _save_profile(profile)
     else:
         # Persona Avatar speichern
@@ -243,8 +243,8 @@ def save_user_avatar():
 
     from routes.user_profile import _load_profile, _save_profile
     profile = _load_profile()
-    profile['user_avatar'] = avatar_filename
-    profile['user_avatar_type'] = avatar_type
+    profile['userAvatar'] = avatar_filename
+    profile['userAvatarType'] = avatar_type
     success = _save_profile(profile)
 
     if success:
