@@ -99,7 +99,7 @@ def run_reset(window):
             # Launch PersonaUI
             root_dir = os.path.dirname(script_dir)
             if sys.platform == 'win32':
-                start_script = os.path.join(root_dir, 'bin', 'start.bat')
+                start_script = os.path.join(root_dir, 'bin', 'win', 'start.bat')
                 if os.path.exists(start_script):
                     subprocess.Popen(
                         ['cmd', '/c', start_script],
@@ -107,7 +107,7 @@ def run_reset(window):
                         creationflags=subprocess.CREATE_NEW_CONSOLE
                     )
             else:
-                start_script = os.path.join(root_dir, 'bin', 'start.sh')
+                start_script = os.path.join(root_dir, 'bin', 'linux', 'start.sh')
                 if os.path.exists(start_script):
                     subprocess.Popen(
                         ['bash', start_script],

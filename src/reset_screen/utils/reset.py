@@ -192,6 +192,7 @@ def _reset_databases(window, src, errors, persona_ids=None):
     if persona_ids is None:
         # All data: JSONL persona directories + legacy .db files
         count = 0
+        failed = []
 
         # JSONL persona data directories
         if os.path.isdir(data_dir):
@@ -202,7 +203,7 @@ def _reset_databases(window, src, errors, persona_ids=None):
                         shutil.rmtree(entry_path)
                         count += 1
                     except Exception:
-                        pass
+                        failed.append(entry)
             # Default persona: delete contents but keep directory
             default_dir = os.path.join(data_dir, 'default')
             if os.path.isdir(default_dir):
@@ -215,7 +216,7 @@ def _reset_databases(window, src, errors, persona_ids=None):
                             os.remove(sub_path)
                         count += 1
                     except Exception:
-                        pass
+                        failed.append(sub)
 
         # Legacy .db files (from before JSONL migration)
         db_count = _delete_files(os.path.join(data_dir, '*.db'))
@@ -226,6 +227,10 @@ def _reset_databases(window, src, errors, persona_ids=None):
             _type(window, f'        {count} data store(s) deleted', 'info')
         else:
             _type(window, '        No databases found', 'default')
+
+        if failed:
+            _type(window, f'        WARNING: Could not delete: {', '.join(failed)}', 'error')
+            errors.append(f'Data not deleted (files locked?): {', '.join(failed)}')
 
         remaining = glob.glob(os.path.join(data_dir, '*.db'))
         if remaining:
@@ -415,6 +420,7 @@ def _reset_personas_selected(window, src, errors, persona_ids):
 
             # JSONL data directory (delete contents, keep dir)
             default_data_dir = os.path.join(data_dir, 'default')
+            data_failed = []
             if os.path.isdir(default_data_dir):
                 for sub in os.listdir(default_data_dir):
                     sub_path = os.path.join(default_data_dir, sub)
@@ -424,8 +430,12 @@ def _reset_personas_selected(window, src, errors, persona_ids):
                         else:
                             os.remove(sub_path)
                     except Exception:
-                        pass
-                _type(window, '          Chat data deleted', 'info')
+                        data_failed.append(sub)
+                if data_failed:
+                    _type(window, f'          WARNING: Could not delete: {", ".join(data_failed)}', 'error')
+                    errors.append(f'Default data not fully deleted: {", ".join(data_failed)}')
+                else:
+                    _type(window, '          Chat data deleted', 'info')
 
             # Legacy DB
             db_path = os.path.join(data_dir, 'main.db')
