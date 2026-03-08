@@ -287,19 +287,18 @@ def _reset_databases(window, src, errors, persona_ids=None):
 
 
 def _reset_env(window, src, errors):
-    """Clears the API key from settings.json."""
+    """Clears the API key from the unified settings.json."""
     settings_path = os.path.join(src, 'settings', 'settings.json')
     if os.path.exists(settings_path):
         try:
-            import json as _json
             with open(settings_path, 'r', encoding='utf-8') as f:
-                settings = _json.load(f)
+                settings = json.load(f)
             user = settings.get('user', {})
             if user.get('apiKey'):
                 user['apiKey'] = ''
                 settings['user'] = user
                 with open(settings_path, 'w', encoding='utf-8') as f:
-                    _json.dump(settings, f, indent=4, ensure_ascii=False)
+                    json.dump(settings, f, indent=4, ensure_ascii=False)
                 _type(window, '        API key removed from settings', 'info')
             else:
                 _type(window, '        No API key configured', 'default')
@@ -310,22 +309,32 @@ def _reset_env(window, src, errors):
         _type(window, '        No settings file found', 'default')
 
 
-def _reset_settings(window, src, errors):
-    """Deletes settings files."""
+def _reset_settings(window, src, errors, keep_api_key=False):
+    """Deletes the unified settings.json. Optionally preserves the API key.
+
+    Architecture:
+        settings/settings.json   – single user settings file (all sections)
+        settings/default/        – factory defaults (NEVER touched by reset)
+    """
     settings_dir = os.path.join(src, 'settings')
+    settings_path = os.path.join(settings_dir, 'settings.json')
+
+    # Save API key before deletion if requested
+    saved_api_key = ''
+    if keep_api_key and os.path.exists(settings_path):
+        try:
+            with open(settings_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            saved_api_key = data.get('user', {}).get('apiKey', '')
+        except Exception:
+            pass
+
+    # Unified settings file + auxiliary runtime files
     targets = [
         'settings.json',
         'server_settings.json',
         'cycle_state.json',
         'emoji_usage.json',
-        # Legacy files (falls noch vorhanden)
-        'user_settings.json',
-        'user_profile.json',
-        'window_settings.json',
-        'onboarding.json',
-        'cortex_settings.json',
-        'afterthought_settings.json',
-        'update_state.json',
     ]
     count = 0
     for name in targets:
@@ -341,6 +350,17 @@ def _reset_settings(window, src, errors):
         _type(window, f'        {count} settings file(s) deleted', 'info')
     else:
         _type(window, '        No settings to delete', 'default')
+
+    # Restore API key if preserved
+    if keep_api_key and saved_api_key:
+        try:
+            os.makedirs(settings_dir, exist_ok=True)
+            with open(settings_path, 'w', encoding='utf-8') as f:
+                json.dump({'user': {'apiKey': saved_api_key}}, f, indent=4, ensure_ascii=False)
+            _type(window, '        API key preserved', 'info')
+        except Exception:
+            _type(window, '        WARNING: Could not restore API key', 'error')
+            errors.append('API key could not be restored')
 
 
 def _reset_personas_all(window, src, errors):
@@ -842,7 +862,7 @@ def reset_sequence(window, preset_id='full', selected_persona_ids=None):
         elif step == 'env':
             _reset_env(window, src, errors)
         elif step == 'settings':
-            _reset_settings(window, src, errors)
+            _reset_settings(window, src, errors, keep_api_key=(preset_id == 'keep_api'))
         elif step == 'personas_all':
             _reset_personas_all(window, src, errors)
         elif step == 'personas_selected':
