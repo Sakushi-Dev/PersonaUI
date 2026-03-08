@@ -1,63 +1,68 @@
 {
-    "user": {
-        "apiKey": "",
-        "language": "en",
-        "apiModel": "claude-sonnet-4-5-20250929",
-        "apiAutofillModel": "claude-sonnet-4-5-20250929",
-        "apiTemperature": "0.7",
-        "contextLimit": "100",
-        "backgroundColor_dark": "#1a2332",
-        "backgroundColor_light": "#a3baff",
-        "bubbleFontFamily": "ubuntu",
-        "bubbleFontSize": "18",
-        "color2_dark": "#3d4f66",
-        "color2_light": "#fd91ee",
-        "colorGradient1_dark": "#2a3f5f",
-        "colorGradient1_light": "#66cfff",
-        "colorHue": "220",
+    "api": {
+        "key": "",
+        "model": "claude-sonnet-4-5-20250929",
+        "autofillModel": "claude-sonnet-4-5-20250929",
+        "temperature": "0.7",
+        "contextLimit": "100"
+    },
+    "interface": {
+        "uiLanguage": "en",
         "darkMode": false,
         "dynamicBackground": true,
-        "experimentalMode": false,
-        "nachgedankeMode": "off",
-        "nonverbalColor": "#e4ba00",
-        "notificationSound": true
+        "notificationSound": true,
+        "bubble": {
+            "fontFamily": "ubuntu",
+            "fontSize": "18"
+        },
+        "theme": {
+            "backgroundColorDark": "#1a2332",
+            "backgroundColorLight": "#a3baff",
+            "secondaryColorDark": "#3d4f66",
+            "secondaryColorLight": "#fd91ee",
+            "gradientColor1Dark": "#2a3f5f",
+            "gradientColor1Light": "#66cfff",
+            "nonverbalColor": "#e4ba00",
+            "colorHue": "220"
+        }
     },
-    "profile": {
-        "user_name": "User",
-        "user_avatar": null,
-        "user_avatar_type": null,
-        "user_gender": null,
-        "user_interested_in": [],
-        "user_info": "",
-        "persona_language": "english"
+    "features": {
+        "experimentalMode": false
     },
     "afterthought": {
+        "mode": "off",
         "phases": [
             [20000, 45000],
             [45000, 60000],
             [60000, 120000]
         ],
         "frequency": {
-            "selten": 3,
-            "mittel": 2,
-            "hoch": 1
+            "rare": 3,
+            "medium": 2,
+            "high": 1
         }
     },
     "cortex": {
         "enabled": true,
         "frequency": "medium"
     },
-    "onboarding": {
+    "profile": {
+        "userName": "User",
+        "userAvatar": null,
+        "userAvatarType": null,
+        "userGender": null,
+        "userInterestedIn": [],
+        "userInfo": "",
+        "personaLanguage": "english"
+    },
+    "initialization": {
         "completed": false,
-        "disclaimer_accepted": false
+        "disclaimerAccepted": false
     },
     "window": {
         "width": 1280,
         "height": 860,
         "x": null,
         "y": null
-    },
-    "update_state": {
-        "version": null
     }
 }

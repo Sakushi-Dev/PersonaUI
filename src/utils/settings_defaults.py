@@ -16,20 +16,20 @@ _MODEL_OPTIONS_CACHE: Optional[List[Dict[str, Any]]] = None
 
 
 def load_defaults() -> Dict[str, Any]:
-    """Ladet Default-Settings (user-Sektion) aus defaults.json."""
+    """Ladet Default-Settings (api-Sektion) aus defaults.json."""
     from utils.settings_manager import get_section_defaults
-    return get_section_defaults('user')
+    return get_section_defaults('api')
 
 
 def get_default(key: str, fallback: Any = None) -> Any:
-    """Gibt einen Default-Wert zurück (user-Sektion)."""
+    """Gibt einen Default-Wert zurück (api-Sektion)."""
     defaults = load_defaults()
     return defaults.get(key, fallback)
 
 
 def get_api_model_default() -> Optional[str]:
     """Gibt das Default-Modell für die API zurück."""
-    return get_default('apiModel')
+    return get_default('model')
 
 
 def load_model_options() -> List[Dict[str, Any]]:
@@ -52,4 +52,4 @@ def get_api_model_options() -> List[Dict[str, Any]]:
 
 def get_autofill_model() -> Optional[str]:
     """Gibt das Default-Modell für Auto-Fill zurück."""
-    return get_default('apiAutofillModel') or get_default('apiModel')
+    return get_default('autofillModel') or get_default('model')

@@ -2,11 +2,13 @@
 Zentraler Settings Manager — Alle Settings in einer einzigen settings.json.
 
 Sektionen:
-    user         – UI/App-Einstellungen (Sprache, Modell, Theme, …)
-    profile      – Benutzerprofil (Name, Avatar, …)
-    afterthought – Nachgedanke-Phasen & Frequenzen
+    api          – API-Konfiguration (Key, Modell, Temperatur, …)
+    interface    – UI-Einstellungen (Sprache, Theme, Fonts, …)
+    features     – Feature-Flags (experimentalMode)
+    afterthought – Afterthought-System (Mode, Phasen, Frequenzen)
     cortex       – Cortex-System (enabled, frequency)
-    onboarding   – Onboarding-Status (completed, disclaimer)
+    profile      – Benutzerprofil (Name, Avatar, …)
+    initialization – First-Run Status (completed, disclaimer)
     window       – Fensterposition/-größe (PyWebView)
     update_state – Letzter erfolgreicher Update-Versionsstand
 """
@@ -27,7 +29,7 @@ SETTINGS_FILE = os.path.join(_SETTINGS_DIR, 'settings.json')
 DEFAULTS_FILE = os.path.join(_SETTINGS_DIR, 'default', 'defaults.json')
 
 # Alle gültigen Sektionen
-SECTIONS = ('user', 'profile', 'afterthought', 'cortex', 'onboarding', 'window', 'update_state')
+SECTIONS = ('api', 'interface', 'features', 'afterthought', 'cortex', 'profile', 'initialization', 'window', 'update_state')
 
 # ─── Interner State ───────────────────────────────────────────────────────────
 
