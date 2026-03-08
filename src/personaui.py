@@ -5,7 +5,7 @@ Entry point for PersonaUI. Ensures that:
   2. ALL dependencies are installed
   3. Then launches app.py as a new process
 
-Called by start.bat / start.exe.
+Called by bin/win/start.bat, bin/linux/start.sh, etc.
 app.py can then use all imports directly.
 """
 
