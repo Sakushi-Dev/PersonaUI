@@ -32,7 +32,10 @@ class ApiClient:
     """
 
     def __init__(self, api_key: str = None):
-        self.api_key = api_key or os.environ.get('ANTHROPIC_API_KEY')
+        self.api_key = api_key
+        if not self.api_key:
+            from ..settings_manager import get_value
+            self.api_key = get_value('user', 'apiKey') or None
         self.client = None
         self._init_client()
 

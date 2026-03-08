@@ -1,7 +1,7 @@
 """Installations-Prüfung und Setup für PersonaUI.
 
 Prüft Python-Version, virtuelle Umgebung und Abhängigkeiten.
-Wird von init.py als Bootstrap-Modul importiert.
+Wird von personaui.py als Bootstrap-Modul importiert.
 """
 
 import os
@@ -152,7 +152,6 @@ def _check_package_installed(pkg_name):
     """
     # Common mappings: Package name → Import name
     import_mappings = {
-        'python-dotenv': 'dotenv',
         'pillow': 'PIL',
         'pyyaml': 'yaml',
         'pywebview': 'webview',

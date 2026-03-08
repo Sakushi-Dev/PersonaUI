@@ -23,12 +23,16 @@ def init_services(api_key: str = None):
     Einmal in app.py aufrufen – initialisiert alles.
 
     Args:
-        api_key: Optionaler API-Key (sonst aus ENV)
+        api_key: Optionaler API-Key (sonst aus settings.json)
     """
     global _api_client, _chat_service, _cortex_service
     from .api_request import ApiClient
     from .services import ChatService
     from .cortex_service import CortexService
+
+    if not api_key:
+        from . import settings_manager as _sm
+        api_key = _sm.get_value('user', 'apiKey') or None
 
     _api_client = ApiClient(api_key=api_key)
     _cortex_service = CortexService(_api_client)

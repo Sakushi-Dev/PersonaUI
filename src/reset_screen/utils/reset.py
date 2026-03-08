@@ -287,31 +287,45 @@ def _reset_databases(window, src, errors, persona_ids=None):
 
 
 def _reset_env(window, src, errors):
-    """Deletes the .env file (API key + secret)."""
-    env_path = os.path.join(src, '.env')
-    if os.path.exists(env_path):
+    """Clears the API key from settings.json."""
+    settings_path = os.path.join(src, 'settings', 'settings.json')
+    if os.path.exists(settings_path):
         try:
-            os.remove(env_path)
-            _type(window, '        .env deleted (API key removed)', 'info')
+            import json as _json
+            with open(settings_path, 'r', encoding='utf-8') as f:
+                settings = _json.load(f)
+            user = settings.get('user', {})
+            if user.get('apiKey'):
+                user['apiKey'] = ''
+                settings['user'] = user
+                with open(settings_path, 'w', encoding='utf-8') as f:
+                    _json.dump(settings, f, indent=4, ensure_ascii=False)
+                _type(window, '        API key removed from settings', 'info')
+            else:
+                _type(window, '        No API key configured', 'default')
         except Exception:
-            _type(window, '        ERROR: .env could not be deleted', 'error')
-            errors.append('.env could not be deleted')
+            _type(window, '        ERROR: Could not clear API key', 'error')
+            errors.append('API key could not be cleared')
     else:
-        _type(window, '        No .env found', 'default')
+        _type(window, '        No settings file found', 'default')
 
 
 def _reset_settings(window, src, errors):
     """Deletes settings files."""
     settings_dir = os.path.join(src, 'settings')
     targets = [
+        'settings.json',
         'server_settings.json',
+        'cycle_state.json',
+        'emoji_usage.json',
+        # Legacy files (falls noch vorhanden)
         'user_settings.json',
         'user_profile.json',
         'window_settings.json',
         'onboarding.json',
-        'cycle_state.json',
-        'emoji_usage.json',
         'cortex_settings.json',
+        'afterthought_settings.json',
+        'update_state.json',
     ]
     count = 0
     for name in targets:
@@ -783,7 +797,7 @@ PRESET_ORDER = ['full', 'keep_api', 'chat_only', 'personas_select',
 
 STEP_LABELS = {
     'databases':         'Delete chat data',
-    'env':               'Delete .env (API key)',
+    'env':               'Clear API key',
     'settings':          'Delete settings',
     'personas_all':      'Delete all personas',
     'personas_selected': 'Delete selected personas',

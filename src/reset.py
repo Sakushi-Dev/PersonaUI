@@ -180,18 +180,13 @@ if __name__ == '__main__':
             except: pass
         print("[1/11] Databases deleted")
 
-        # .env
-        env_path = os.path.join(src, '.env')
-        if os.path.exists(env_path):
-            os.remove(env_path)
-        print("[2/11] .env deleted")
-
-        # Settings
-        for name in ['server_settings.json', 'user_settings.json', 'user_profile.json', 'window_settings.json', 'onboarding.json', 'cycle_state.json', 'emoji_usage.json', 'cortex_settings.json']:
+        # Settings (apiKey is stored in settings.json, no separate .env)
+        for name in ['settings.json', 'server_settings.json', 'cycle_state.json', 'emoji_usage.json',
+                     'user_settings.json', 'user_profile.json', 'window_settings.json', 'onboarding.json', 'cortex_settings.json', 'afterthought_settings.json', 'update_state.json']:
             fp = os.path.join(src, 'settings', name)
             if os.path.exists(fp):
                 os.remove(fp)
-        print("[3/11] Settings deleted")
+        print("[2/11] Settings deleted")
 
         # Personas + Custom Specs
         for f in glob.glob(os.path.join(src, 'instructions', 'created_personas', '*.json')):

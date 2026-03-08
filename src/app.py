@@ -4,14 +4,15 @@ import subprocess
 import threading
 
 
-import json
+import configparser
 
 def load_version():
-    """Load version from version.json file."""
-    version_path = os.path.join(os.path.dirname(__file__), "..", "version.json")
+    """Load version from config/version.ini."""
+    version_path = os.path.join(os.path.dirname(__file__), "..", "config", "version.ini")
     try:
-        with open(version_path, "r", encoding="utf-8") as f:
-            return json.load(f).get("version", "unknown")
+        cp = configparser.ConfigParser()
+        cp.read(version_path, encoding='utf-8')
+        return cp.get('version', 'version', fallback='unknown').strip()
     except Exception:
         return "unknown"
 
@@ -21,14 +22,13 @@ os.chdir(script_dir)
 
 from flask import Flask, jsonify, redirect, url_for, request
 from flask_cors import CORS
-from dotenv import load_dotenv
 from datetime import timedelta
+import secrets as _secrets
 
 # Importiere Utility-Funktionen
 from utils.logger import log
 from utils.database import init_all_dbs
 from utils.provider import init_services
-from utils.helpers import ensure_env_file
 from utils.access_control import check_access
 
 # Importiere Route-Registrierung
@@ -43,14 +43,8 @@ from splash_screen import (
 )
 
 
-# Stelle sicher, dass .env Datei existiert
-ensure_env_file()
-
-# Lade Umgebungsvariablen
-load_dotenv()
-
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'fallback-secret-key-for-development')
+app.secret_key = _secrets.token_hex(32)
 app.json.sort_keys = False  # Reihenfolge der Keys beibehalten (Default -> Custom)
 
 # CORS für React-Frontend (Vite Dev-Server auf Port 5173)
@@ -58,7 +52,7 @@ CORS(app, resources={r"/*": {"origins": ["http://localhost:5173", "http://127.0.
 
 # Session-Konfiguration
 
-# Load version from version.json
+# Load version from config/version.ini
 app.config["APP_VERSION"] = load_version()
 
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # Session remains valid for 7 days
