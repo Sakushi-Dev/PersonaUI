@@ -7,8 +7,8 @@ SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 if [[ -f "$SELF_DIR/src/app.py" ]]; then
     ROOT="$SELF_DIR"
-elif [[ -f "$SELF_DIR/../src/app.py" ]]; then
-    ROOT="$(cd "$SELF_DIR/.." && pwd)"
+elif [[ -f "$SELF_DIR/../../src/app.py" ]]; then
+    ROOT="$(cd "$SELF_DIR/../.." && pwd)"
 else
     echo "[FEHLER] src/app.py nicht gefunden!"
     echo "Bitte starte die Anwendung aus dem PersonaUI Ordner."

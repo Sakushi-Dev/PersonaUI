@@ -17,8 +17,8 @@ SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 if [[ -f "$SELF_DIR/src/app.py" ]]; then
     ROOT="$SELF_DIR"
-elif [[ -f "$SELF_DIR/../src/app.py" ]]; then
-    ROOT="$(cd "$SELF_DIR/.." && pwd)"
+elif [[ -f "$SELF_DIR/../../src/app.py" ]]; then
+    ROOT="$(cd "$SELF_DIR/../.." && pwd)"
 else
     echo "[FEHLER] Projektverzeichnis nicht gefunden!"
     exit 1
@@ -60,20 +60,18 @@ echo ""
 
 echo "[3/6] Checking for updates..."
 
-# Parse local version
+# Parse local version from config/version.ini
 LOCAL_VERSION="unknown"
-if [[ -f "config/version.json" ]]; then
-    LOCAL_VERSION=$(python3 -c "import json; print(json.load(open('config/version.json'))['version'])" 2>/dev/null || echo "unknown")
-elif [[ -f "version.json" ]]; then
-    LOCAL_VERSION=$(python3 -c "import json; print(json.load(open('version.json'))['version'])" 2>/dev/null || echo "unknown")
+if [[ -f "config/version.ini" ]]; then
+    LOCAL_VERSION=$(python3 -c "import configparser; c=configparser.ConfigParser(); c.read('config/version.ini'); print(c.get('version','version',fallback='unknown'))" 2>/dev/null || echo "unknown")
 fi
 echo "  [INFO] Current version: $LOCAL_VERSION"
 
-# Parse remote version
+# Parse remote version from origin/main:config/version.ini
 REMOTE_VERSION="unknown"
-REMOTE_JSON=$(git show origin/main:config/version.json 2>/dev/null || git show origin/main:version.json 2>/dev/null || echo "")
-if [[ -n "$REMOTE_JSON" ]]; then
-    REMOTE_VERSION=$(echo "$REMOTE_JSON" | python3 -c "import sys,json; print(json.load(sys.stdin)['version'])" 2>/dev/null || echo "unknown")
+REMOTE_INI=$(git show origin/main:config/version.ini 2>/dev/null || echo "")
+if [[ -n "$REMOTE_INI" ]]; then
+    REMOTE_VERSION=$(echo "$REMOTE_INI" | python3 -c "import sys,configparser; c=configparser.ConfigParser(); c.read_string(sys.stdin.read()); print(c.get('version','version',fallback='unknown'))" 2>/dev/null || echo "unknown")
 fi
 echo "  [INFO] Remote version:  $REMOTE_VERSION"
 

@@ -13,8 +13,8 @@ SELF_DIR="$(cd "$(dirname "$0")" 2>/dev/null && pwd)" || SELF_DIR="$(pwd)"
 # Projektverzeichnis bestimmen
 if [ -f "$SELF_DIR/src/app.py" ]; then
     ROOT="$SELF_DIR"
-elif [ -f "$SELF_DIR/../src/app.py" ]; then
-    ROOT="$(cd "$SELF_DIR/.." && pwd)"
+elif [ -f "$SELF_DIR/../../src/app.py" ]; then
+    ROOT="$(cd "$SELF_DIR/../.." && pwd)"
 elif [ -f "$(pwd)/src/app.py" ]; then
     ROOT="$(pwd)"
 else
@@ -28,7 +28,7 @@ else
 fi
 
 VENV_PY="$ROOT/.venv/bin/python"
-INIT="$ROOT/src/init.py"
+INIT="$ROOT/src/personaui.py"
 INSTALL_SCRIPT="$ROOT/bin/install_termux.sh"
 
 # Prüfe ob Installation nötig ist (kein Python, kein venv, oder kein Node)

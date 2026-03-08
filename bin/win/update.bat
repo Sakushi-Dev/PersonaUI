@@ -11,7 +11,7 @@ REM  Solution: copy to %TEMP% and re-launch from there, passing project dir.
 REM ----------------------------------------------
 if not defined _PERSONAUI_UPDATE_SAFE (
     set "_PERSONAUI_UPDATE_SAFE=1"
-    set "PROJECT_DIR=%~dp0.."
+    set "PROJECT_DIR=%~dp0..\.." 
     copy /y "%~f0" "%TEMP%\personaui_update.bat" >nul 2>&1
     call "%TEMP%\personaui_update.bat" "!PROJECT_DIR!"
     set "_EXIT_CODE=!errorlevel!"
@@ -62,20 +62,20 @@ REM  3. Compare versions (uses PowerShell for reliable JSON parsing)
 REM ----------------------------------------------
 echo [3/6] Checking for updates...
 
-REM Parse local version via PowerShell (config/ primary, root fallback)
+REM Parse local version from config/version.ini
 set "LOCAL_VERSION="
-for /f "usebackq delims=" %%v in (`powershell -NoProfile -Command "$p='%CD%\config\version.json'; if(-not(Test-Path $p)){$p='%CD%\version.json'}; (Get-Content $p -Raw | ConvertFrom-Json).version"`) do (
+for /f "usebackq delims=" %%v in (`powershell -NoProfile -Command "$ini = Get-Content '%CD%\config\version.ini' -Raw; if($ini -match 'version\s*=\s*(.+)'){$Matches[1].Trim()}else{'unknown'}"`) do (
     set "LOCAL_VERSION=%%v"
 )
 if not defined LOCAL_VERSION (
-    echo   [WARNING] Could not read local version.json
+    echo   [WARNING] Could not read config/version.ini
     set "LOCAL_VERSION=unknown"
 )
 echo   [INFO] Current version: !LOCAL_VERSION!
 
-REM Parse remote version via PowerShell (config/ primary, root fallback)
+REM Parse remote version from origin/main:config/version.ini
 set "REMOTE_VERSION="
-for /f "usebackq delims=" %%v in (`powershell -NoProfile -Command "$r=git show origin/main:config/version.json 2>$null; if(-not $r){$r=git show origin/main:version.json 2>$null}; ($r | ConvertFrom-Json).version"`) do (
+for /f "usebackq delims=" %%v in (`powershell -NoProfile -Command "$r=git show origin/main:config/version.ini 2>$null; if($r -match 'version\s*=\s*(.+)'){$Matches[1].Trim()}else{'unknown'}"`) do (
     set "REMOTE_VERSION=%%v"
 )
 if not defined REMOTE_VERSION (

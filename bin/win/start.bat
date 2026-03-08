@@ -1,10 +1,8 @@
 @echo off
-:: ============================================================
-:: Startet den PersonaUI Prompt Editor
-:: Eigenständiges PyWebView-Fenster zum Bearbeiten von Prompts
-:: ============================================================
+echo Initialisiere PersonaUI...
 setlocal enabledelayedexpansion
-title PersonaUI Prompt Editor
+title PersonaUI
+color 0B
 
 REM ══════════════════════════════════════════════════════════════════════
 REM  Pfade bestimmen - funktioniert als .bat (bin/) UND als .exe (Root)
@@ -12,11 +10,12 @@ REM ═════════════════════════�
 
 set "SELF_DIR=%~dp0"
 
-REM Prüfe ob wir im Root liegen (.exe) oder in bin/ (.bat)
+REM Prüfe ob wir im Root liegen (.exe) oder in bin/win/ (.bat)
+REM Wenn src/ als Unterordner existiert → wir sind im Root
 if exist "%SELF_DIR%src\app.py" (
     set "ROOT=%SELF_DIR%"
-) else if exist "%SELF_DIR%..\src\app.py" (
-    set "ROOT=%SELF_DIR%.."
+) else if exist "%SELF_DIR%..\..\src\app.py" (
+    set "ROOT=%SELF_DIR%..\.." 
 ) else (
     echo [FEHLER] src\app.py nicht gefunden!
     echo Bitte starte die Anwendung aus dem PersonaUI Ordner.
@@ -28,6 +27,8 @@ REM Trailing Backslash normalisieren
 if "%ROOT:~-1%"=="\" set "ROOT=%ROOT:~0,-1%"
 
 set "VENV_PY=%ROOT%\.venv\Scripts\python.exe"
+set "INIT=%ROOT%\src\personaui.py"
+set "BIN_DIR=%ROOT%\bin"
 
 REM ══════════════════════════════════════════════════════════════════════
 REM  Python prüfen
@@ -55,22 +56,65 @@ if %errorlevel%==0 (
     goto :python_ok
 )
 
-echo [FEHLER] Python wurde nicht gefunden!
-echo Bitte zuerst install_py12.bat ausfuehren.
+REM 4. Python nicht gefunden → Installer anbieten
+echo.
+echo   Python wurde nicht gefunden!
+echo   Python 3.10+ wird fuer PersonaUI benoetigt.
+echo.
+
+if exist "%BIN_DIR%\install_py12.bat" (
+    echo   Starte automatische Python-Installation...
+    echo.
+    call "%BIN_DIR%\install_py12.bat"
+    if !errorlevel! neq 0 (
+        echo   [FEHLER] Python-Installation fehlgeschlagen.
+        pause
+        exit /b 1
+    )
+    REM PATH neu laden
+    set "PATH=%LOCALAPPDATA%\Programs\Python\Python312\Scripts;%LOCALAPPDATA%\Programs\Python\Python312;%PATH%"
+    where python >nul 2>&1
+    if !errorlevel!==0 (
+        set "PYTHON_CMD=python"
+        goto :python_ok
+    )
+)
+
+echo   Bitte installiere Python manuell: https://www.python.org/downloads/
 pause
 exit /b 1
 
 :python_ok
 
 REM ══════════════════════════════════════════════════════════════════════
-REM  Prompt Editor starten
+REM  Launch Options laden (config/launch_options.txt)
 REM ══════════════════════════════════════════════════════════════════════
 
-cd /d "%ROOT%\src"
-"%PYTHON_CMD%" -m prompt_editor.editor
+set "LAUNCH_OPTS="
+set "LAUNCH_FILE=%ROOT%\config\launch_options.txt"
+
+if exist "%LAUNCH_FILE%" (
+    for /f "usebackq eol=# tokens=*" %%a in ("%LAUNCH_FILE%") do (
+        if not "%%a"=="" (
+            if defined LAUNCH_OPTS (
+                set "LAUNCH_OPTS=!LAUNCH_OPTS! %%a"
+            ) else (
+                set "LAUNCH_OPTS=%%a"
+            )
+        )
+    )
+)
+
+REM ══════════════════════════════════════════════════════════════════════
+REM  App starten (personaui.py → installiert bei Bedarf → startet app.py)
+REM ══════════════════════════════════════════════════════════════════════
+
+"%PYTHON_CMD%" "%INIT%" %* !LAUNCH_OPTS!
 
 if errorlevel 1 (
     echo.
     echo Ein Fehler ist aufgetreten!
     pause
+) else (
+    exit
 )

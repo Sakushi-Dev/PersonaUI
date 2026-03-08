@@ -12,11 +12,11 @@ echo "Initialisiere PersonaUI..."
 
 SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Prüfe ob wir in bin/ oder im Root sind
+# Prüfe ob wir in bin/linux/ oder im Root sind
 if [[ -f "$SELF_DIR/src/app.py" ]]; then
     ROOT="$SELF_DIR"
-elif [[ -f "$SELF_DIR/../src/app.py" ]]; then
-    ROOT="$(cd "$SELF_DIR/.." && pwd)"
+elif [[ -f "$SELF_DIR/../../src/app.py" ]]; then
+    ROOT="$(cd "$SELF_DIR/../.." && pwd)"
 else
     echo "[FEHLER] src/app.py nicht gefunden!"
     echo "Bitte starte die Anwendung aus dem PersonaUI Ordner."
@@ -24,7 +24,7 @@ else
 fi
 
 VENV_PY="$ROOT/.venv/bin/python"
-INIT="$ROOT/src/init.py"
+INIT="$ROOT/src/personaui.py"
 
 # ══════════════════════════════════════════════════════════════════════
 #  Python prüfen
@@ -74,7 +74,7 @@ if [[ -f "$LAUNCH_FILE" ]]; then
 fi
 
 # ══════════════════════════════════════════════════════════════════════
-#  App starten (init.py → installiert bei Bedarf → startet app.py)
+#  App starten (personaui.py → installiert bei Bedarf → startet app.py)
 # ══════════════════════════════════════════════════════════════════════
 
 "$PYTHON_CMD" "$INIT" "$@" $LAUNCH_OPTS

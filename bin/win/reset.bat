@@ -8,11 +8,11 @@ REM ═════════════════════════�
 
 set "SELF_DIR=%~dp0"
 
-REM Prüfe ob wir im Root liegen (.exe) oder in bin/ (.bat)
+REM Prüfe ob wir im Root liegen (.exe) oder in bin/win/ (.bat)
 if exist "%SELF_DIR%src\reset.py" (
     set "ROOT=%SELF_DIR%"
-) else if exist "%SELF_DIR%..\src\reset.py" (
-    set "ROOT=%SELF_DIR%.."
+) else if exist "%SELF_DIR%..\..\src\reset.py" (
+    set "ROOT=%SELF_DIR%..\.." 
 ) else (
     echo [FEHLER] src\reset.py nicht gefunden!
     echo Bitte starte die Anwendung aus dem PersonaUI Ordner.
