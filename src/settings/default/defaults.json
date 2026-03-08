@@ -1,0 +1,65 @@
+{
+    "user": {
+        "apiKey": "",
+        "language": "en",
+        "apiModel": "claude-sonnet-4-5-20250929",
+        "apiAutofillModel": "claude-sonnet-4-5-20250929",
+        "apiTemperature": "0.7",
+        "contextLimit": "100",
+        "backgroundColor_dark": "#1a2332",
+        "backgroundColor_light": "#a3baff",
+        "bubbleFontFamily": "ubuntu",
+        "bubbleFontSize": "18",
+        "color2_dark": "#3d4f66",
+        "color2_light": "#fd91ee",
+        "colorGradient1_dark": "#2a3f5f",
+        "colorGradient1_light": "#66cfff",
+        "colorHue": "220",
+        "darkMode": false,
+        "dynamicBackground": true,
+        "experimentalMode": false,
+        "nachgedankeMode": "off",
+        "nonverbalColor": "#e4ba00",
+        "notificationSound": true,
+        "cortexEnabled": true,
+        "cortexFrequency": "medium"
+    },
+    "profile": {
+        "user_name": "User",
+        "user_avatar": null,
+        "user_avatar_type": null,
+        "user_gender": null,
+        "user_interested_in": [],
+        "user_info": "",
+        "persona_language": "english"
+    },
+    "afterthought": {
+        "phases": [
+            [20000, 45000],
+            [45000, 60000],
+            [60000, 120000]
+        ],
+        "frequency": {
+            "selten": 3,
+            "mittel": 2,
+            "hoch": 1
+        }
+    },
+    "cortex": {
+        "enabled": true,
+        "frequency": "medium"
+    },
+    "onboarding": {
+        "completed": false,
+        "disclaimer_accepted": false
+    },
+    "window": {
+        "width": 1280,
+        "height": 860,
+        "x": null,
+        "y": null
+    },
+    "update_state": {
+        "version": null
+    }
+}

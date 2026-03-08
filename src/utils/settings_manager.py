@@ -24,7 +24,7 @@ from utils.logger import log
 _BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _SETTINGS_DIR = os.path.join(_BASE_DIR, 'settings')
 SETTINGS_FILE = os.path.join(_SETTINGS_DIR, 'settings.json')
-DEFAULTS_FILE = os.path.join(_SETTINGS_DIR, 'defaults.json')
+DEFAULTS_FILE = os.path.join(_SETTINGS_DIR, 'default', 'defaults.json')
 
 # Alle gültigen Sektionen
 SECTIONS = ('user', 'profile', 'afterthought', 'cortex', 'onboarding', 'window', 'update_state')

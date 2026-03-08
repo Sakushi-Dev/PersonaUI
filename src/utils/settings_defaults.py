@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional
 
 
 _BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_MODEL_OPTIONS_FILE = os.path.join(_BASE_DIR, 'settings', 'model_options.json')
+_MODEL_OPTIONS_FILE = os.path.join(_BASE_DIR, 'settings', 'default', 'model_options.json')
 _MODEL_OPTIONS_CACHE: Optional[List[Dict[str, Any]]] = None
 
 
