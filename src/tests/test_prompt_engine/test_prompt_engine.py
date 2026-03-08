@@ -141,7 +141,7 @@ def temp_instructions_dir(tmp_path):
             "user_name": {
                 "name": "Benutzername",
                 "source": "user_profile",
-                "source_path": "user_name",
+                "source_path": "userName",
                 "type": "string",
                 "default": "User",
                 "category": "user",
@@ -291,12 +291,11 @@ def temp_instructions_dir(tmp_path):
         json.dumps(persona_config, ensure_ascii=False, indent=2), encoding='utf-8'
     )
 
-    # user_profile.json (for user_name resolution)
-    # The resolver looks relative to instructions_dir parent
+    # user_profile (for user_name resolution via settings_manager)
     settings_dir = tmp_path / 'settings'
     settings_dir.mkdir(parents=True, exist_ok=True)
     user_profile = {
-        "user_name": "TestUser"
+        "userName": "TestUser"
     }
     (settings_dir / 'user_profile.json').write_text(
         json.dumps(user_profile, ensure_ascii=False, indent=2), encoding='utf-8'

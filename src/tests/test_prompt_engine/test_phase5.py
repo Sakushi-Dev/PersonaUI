@@ -101,11 +101,11 @@ def engine_dir(tmp_path):
         json.dumps(persona_config, ensure_ascii=False, indent=2), encoding='utf-8'
     )
 
-    # Settings (for user_name)
+    # Settings (for userName)
     settings_dir = tmp_path / 'settings'
     settings_dir.mkdir(parents=True, exist_ok=True)
     (settings_dir / 'user_profile.json').write_text(
-        json.dumps({"user_name": "TestUser"}, ensure_ascii=False, indent=2),
+        json.dumps({"userName": "TestUser"}, ensure_ascii=False, indent=2),
         encoding='utf-8'
     )
 

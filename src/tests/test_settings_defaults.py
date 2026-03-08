@@ -49,16 +49,16 @@ class TestLoadModelOptions:
 class TestGetAutofillModel:
     def test_returns_autofill_model(self):
         with patch.object(sd, 'get_default', side_effect=lambda k, **kw: {
-            'apiAutofillModel': 'autofill-model',
-            'apiModel': 'primary-model'
+            'autofillModel': 'autofill-model',
+            'model': 'primary-model'
         }.get(k)):
             result = sd.get_autofill_model()
         assert result == "autofill-model"
 
     def test_falls_back_to_primary(self):
         with patch.object(sd, 'get_default', side_effect=lambda k, **kw: {
-            'apiAutofillModel': None,
-            'apiModel': 'primary-model'
+            'autofillModel': None,
+            'model': 'primary-model'
         }.get(k)):
             result = sd.get_autofill_model()
         assert result == "primary-model"

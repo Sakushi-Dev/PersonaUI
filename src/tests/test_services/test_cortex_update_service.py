@@ -237,7 +237,7 @@ class TestExecuteUpdate:
                           mock_api, mock_cortex, service, mock_character, mock_conversation):
         """Erfolgreicher Update-Flow."""
         mock_char.return_value = mock_character
-        mock_profile.return_value = {'user_name': 'Alex'}
+        mock_profile.return_value = {'userName': 'Alex'}
         mock_conv.return_value = mock_conversation
 
         # Mock CortexService
@@ -288,7 +288,7 @@ class TestExecuteUpdate:
                               mock_api, mock_cortex, service, mock_character):
         """Zu wenig Nachrichten → Abbruch."""
         mock_char.return_value = mock_character
-        mock_profile.return_value = {'user_name': 'Alex'}
+        mock_profile.return_value = {'userName': 'Alex'}
         mock_conv.return_value = [
             {'role': 'user', 'content': 'Hi'},
             {'role': 'assistant', 'content': 'Hello'}
@@ -323,7 +323,7 @@ class TestExecuteUpdate:
                          mock_api, mock_cortex, service, mock_character, mock_conversation):
         """API-Fehler → Fehlerergebnis."""
         mock_char.return_value = mock_character
-        mock_profile.return_value = {'user_name': 'Alex'}
+        mock_profile.return_value = {'userName': 'Alex'}
         mock_conv.return_value = mock_conversation
 
         mock_cortex.return_value = MagicMock()
