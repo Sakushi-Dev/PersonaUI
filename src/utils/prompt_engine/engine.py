@@ -119,6 +119,7 @@ class PromptEngine(PlaceholderMixin, CortexMixin):
             lines.append(f"- {f}")
         lines.append("")
         lines.append("Your journal and cortex files are loaded above.")
+        lines.append("Only use write_file when you receive a [JOURNAL REMINDER].")
         lines.append("After write_file calls, ALWAYS reply with a text message.")
 
         return "\n".join(lines)

@@ -43,6 +43,24 @@ You have three files. They are how you persist across conversations.
 - First person: "Mag Kaffee" not "Der User mag Kaffee"
 - Write in {{language}}
 
+## Placeholder & [note] Rule
+
+When you replace a _(placeholder)_ with real content, keep the original description as a `[note]` on the next line. This reminds you what kind of info belongs there.
+
+**Example — before:**
+```
+- _(name, age, background — what you know so far)_
+```
+**Example — after:**
+```
+- Saiks, Mitte 20, Entwickler
+  [note: name, age, background — what you know so far]
+```
+
+- Always keep `[note]` lines — never remove them
+- If a section still only has a placeholder and nothing happened, leave it unchanged
+- **The `---` block and everything after it stays unchanged — always include it exactly as-is when writing**
+
 **Do not do this:**
 - No prose or diary-style writing
 - No behavioral rules
