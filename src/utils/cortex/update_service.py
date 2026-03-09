@@ -14,18 +14,14 @@ Enthält:
 
 import time
 import threading
-import json
-import os
 from datetime import datetime
 from typing import Dict, Any, Tuple
 
-from utils.logger import log
-from utils.api_request import RequestConfig
+from ..logger import log
+from ..api_request import RequestConfig
 
 
 # ─── Konstanten ──────────────────────────────────────────────────────────────
-
-_BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 CORTEX_UPDATE_MAX_TOKENS = 8192
 CORTEX_UPDATE_TEMPERATURE = 0.4

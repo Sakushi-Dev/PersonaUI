@@ -20,7 +20,7 @@ import tempfile
 import threading
 from typing import Dict
 
-from utils.logger import log
+from ..logger import log
 
 _lock = threading.Lock()
 
@@ -118,53 +118,6 @@ def reset_persona(persona_id: str) -> None:
                 del _cycle_state[k]
             _save_to_disk()
             log.debug("[tier_tracker] %d Einträge für Persona '%s' entfernt", len(keys_to_remove), persona_id)
-
-
-def reset_all() -> None:
-    """Setzt den gesamten State zurück (z.B. bei App-Reset). Löscht die Datei."""
-    global _loaded
-    with _lock:
-        _cycle_state.clear()
-        _loaded = True
-        try:
-            if os.path.exists(_STATE_FILE):
-                os.remove(_STATE_FILE)
-        except Exception as e:
-            log.warning("[tier_tracker] cycle_state.json konnte nicht gelöscht werden: %s", e)
-
-
-def rebuild_cycle_base(
-    persona_id: str,
-    session_id: int,
-    message_count: int,
-    threshold: int
-) -> int:
-    """
-    Fallback: Rekonstruiert die cycle_base wenn die Datei fehlt/korrupt ist.
-
-    Wird nur aufgerufen wenn get_cycle_base() == 0 und message_count > threshold,
-    d.h. die Session hat mehr Nachrichten als die Schwelle aber keinen gespeicherten State.
-
-    Args:
-        persona_id: Persona-ID
-        session_id: Session-ID
-        message_count: Aktuelle Gesamtanzahl Nachrichten
-        threshold: Aktuelle Schwelle in Nachrichten (z.B. 48)
-
-    Returns:
-        Rekonstruierte cycle_base
-    """
-    if threshold <= 0:
-        threshold = 1
-
-    # Wie viele volle Zyklen sind vergangen?
-    completed_cycles = message_count // threshold
-    cycle_base = completed_cycles * threshold
-
-    # Speichern (In-Memory + Disk)
-    set_cycle_base(persona_id, session_id, cycle_base)
-
-    return cycle_base
 
 
 def get_progress(

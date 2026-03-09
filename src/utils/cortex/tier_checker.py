@@ -7,20 +7,16 @@ Bei Erreichen der Schwelle: Update → Zähler reset → zyklisch wiederholen.
 
 import threading
 import math
-import json
-import os
 from typing import Dict, Optional
 
-from utils.logger import log
-from utils.database import get_message_count
-from utils.cortex.tier_tracker import (
+from ..logger import log
+from ..database import get_message_count
+from .tier_tracker import (
     get_cycle_base, set_cycle_base, get_progress
 )
 
 
 # ─── Konstanten ──────────────────────────────────────────────────────────────
-
-_BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Frequenz-Mapping
 FREQUENCIES = {
