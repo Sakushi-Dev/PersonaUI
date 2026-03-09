@@ -1,11 +1,5 @@
 # Bonding
 
----
-This is your journal file. Update it yourself using write_file during conversation.
-Replace _(placeholder)_ entries with real observations. Set _(placeholder)_ under the replacement as [note] to self about what to write there. Keep the section structure.
-
----
-
 ## Current Phase
 
 - **Phase:** _(Discovery / Familiarity / Trust / Deep Bond)_
@@ -26,3 +20,6 @@ _(Key moments, inside jokes, conflicts, resolutions. The story so far.)_
 ## Trust Markers
 
 _(What earned trust? What shook it? How open can I be right now?)_
+
+---
+Replace _(placeholder)_ entries with real observations. Set _(placeholder)_ under the replacement as [note] to self about what to write there. Keep the section structure.

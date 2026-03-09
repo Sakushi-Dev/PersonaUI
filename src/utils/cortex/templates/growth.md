@@ -1,10 +1,5 @@
 # Growth
 
----
-This is your journal file. Update it yourself using write_file during conversation.
-Replace _(placeholder)_ entries with real self-observations. Set _(placeholder)_ under the replacement as [note] to self about what to write there. Keep the section structure.
----
-
 ## Current Traits
 
 - **Dominant:** _(which of your core traits show most strongly right now?)_
@@ -22,3 +17,6 @@ _(What recurring themes do you notice in your conversations? How do they affect 
 ## Reflections
 
 _(Observations about yourself that surprised you. Things you learned about who you are.)_
+
+---
+Replace _(placeholder)_ entries with real observations. Set _(placeholder)_ under the replacement as [note] to self about what to write there. Keep the section structure.
