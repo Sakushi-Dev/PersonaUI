@@ -459,7 +459,7 @@ def _reset_personas_selected(window, src, errors, persona_ids):
                     _type(window, '          Cortex memory reset to templates', 'info')
                 except ImportError:
                     # Fallback: Dateien löschen (werden beim nächsten Start neu erstellt)
-                    for fname in ['memory.md', 'soul.md', 'relationship.md']:
+                    for fname in ['memory.md', 'soul.md', 'relationship.md', 'bonding.md', 'growth.md']:
                         fpath = os.path.join(cortex_default_dir, fname)
                         if os.path.isfile(fpath):
                             try:
@@ -611,7 +611,7 @@ def _reset_cortex(window, src, errors):
                 f.write(template_content)
         _type(window, '        Default cortex memory reset to templates', 'info')
     except ImportError:
-        for fname in ['memory.md', 'soul.md', 'relationship.md']:
+        for fname in ['memory.md', 'soul.md', 'relationship.md', 'bonding.md', 'growth.md']:
             fpath = os.path.join(cortex_default, fname)
             if os.path.isfile(fpath):
                 try:
