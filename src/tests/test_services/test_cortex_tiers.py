@@ -14,8 +14,8 @@ from unittest.mock import patch
 # tier_tracker hat Modul-Level State → für saubere Tests müssen wir resetten
 import utils.cortex.tier_tracker as tracker_module
 from utils.cortex.tier_tracker import (
-    get_cycle_base, set_cycle_base, reset_session, reset_all,
-    rebuild_cycle_base, get_progress
+    get_cycle_base, set_cycle_base, reset_session,
+    get_progress
 )
 from utils.cortex.tier_checker import (
     _calculate_threshold, check_and_trigger_cortex_update
@@ -121,41 +121,6 @@ class TestResetSession:
         reset_session('default', 1)
         assert get_cycle_base('default', 1) == 0
         assert get_cycle_base('default', 2) == 96
-
-
-class TestResetAll:
-    """reset_all."""
-
-    def test_clears_everything(self, reset_tracker_state):
-        """Reset löscht alle Sessions und die Datei."""
-        set_cycle_base('default', 1, 48)
-        set_cycle_base('persona_x', 2, 100)
-        reset_all()
-
-        assert get_cycle_base('default', 1) == 0
-        assert get_cycle_base('persona_x', 2) == 0
-        assert not os.path.exists(reset_tracker_state)
-
-
-class TestRebuildCycleBase:
-    """rebuild_cycle_base."""
-
-    def test_basic_rebuild(self):
-        """Rebuild berechnet korrekte cycle_base."""
-        # 100 Nachrichten, Schwelle 48 → 2 Zyklen → cycle_base = 96
-        result = rebuild_cycle_base('default', 1, message_count=100, threshold=48)
-        assert result == 96
-        assert get_cycle_base('default', 1) == 96
-
-    def test_exact_multiple(self):
-        """Rebuild bei exaktem Vielfachen."""
-        result = rebuild_cycle_base('default', 1, message_count=96, threshold=48)
-        assert result == 96
-
-    def test_threshold_zero_fallback(self):
-        """Threshold 0 wird auf 1 gesetzt."""
-        result = rebuild_cycle_base('default', 1, message_count=50, threshold=0)
-        assert result == 50  # 50 // 1 * 1 = 50
 
 
 class TestGetProgress:

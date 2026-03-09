@@ -14,7 +14,7 @@ import threading
 import pytest
 from unittest.mock import patch, MagicMock
 
-from utils.cortex_service import CortexService, MAX_CORTEX_FILE_SIZE
+from utils.cortex import CortexService, MAX_CORTEX_FILE_SIZE
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -26,7 +26,7 @@ class TestAtomicWrites:
 
     def test_write_creates_file(self, tmp_path):
         """Normaler Schreibvorgang erstellt die Datei korrekt."""
-        cortex_dir = tmp_path / "cortex" / "default"
+        cortex_dir = tmp_path / "data" / "default" / "cortex"
         cortex_dir.mkdir(parents=True)
         (cortex_dir / "memory.md").write_text("", encoding="utf-8")
         (cortex_dir / "soul.md").write_text("", encoding="utf-8")
@@ -43,7 +43,7 @@ class TestAtomicWrites:
 
     def test_write_no_tmp_files_left(self, tmp_path):
         """Nach erfolgreichem Schreiben bleiben keine .tmp Dateien übrig."""
-        cortex_dir = tmp_path / "cortex" / "default"
+        cortex_dir = tmp_path / "data" / "default" / "cortex"
         cortex_dir.mkdir(parents=True)
         for f in ['memory.md', 'soul.md', 'relationship.md']:
             (cortex_dir / f).write_text("", encoding="utf-8")
@@ -60,7 +60,7 @@ class TestAtomicWrites:
 
     def test_write_overwrites_completely(self, tmp_path):
         """Schreibvorgang überschreibt alten Inhalt vollständig."""
-        cortex_dir = tmp_path / "cortex" / "default"
+        cortex_dir = tmp_path / "data" / "default" / "cortex"
         cortex_dir.mkdir(parents=True)
         (cortex_dir / "memory.md").write_text("Old Content hier", encoding="utf-8")
         (cortex_dir / "soul.md").write_text("", encoding="utf-8")
@@ -93,7 +93,7 @@ class TestFileSizeLimit:
 
     def test_within_limit_unchanged(self, tmp_path):
         """Content innerhalb des Limits wird unverändert geschrieben."""
-        cortex_dir = tmp_path / "cortex" / "default"
+        cortex_dir = tmp_path / "data" / "default" / "cortex"
         cortex_dir.mkdir(parents=True)
         for f in ['memory.md', 'soul.md', 'relationship.md']:
             (cortex_dir / f).write_text("", encoding="utf-8")
@@ -111,7 +111,7 @@ class TestFileSizeLimit:
 
     def test_exceeds_limit_truncated(self, tmp_path):
         """Content über dem Limit wird gekürzt."""
-        cortex_dir = tmp_path / "cortex" / "default"
+        cortex_dir = tmp_path / "data" / "default" / "cortex"
         cortex_dir.mkdir(parents=True)
         for f in ['memory.md', 'soul.md', 'relationship.md']:
             (cortex_dir / f).write_text("", encoding="utf-8")
@@ -129,7 +129,7 @@ class TestFileSizeLimit:
 
     def test_exactly_at_limit(self, tmp_path):
         """Content genau am Limit wird nicht gekürzt."""
-        cortex_dir = tmp_path / "cortex" / "default"
+        cortex_dir = tmp_path / "data" / "default" / "cortex"
         cortex_dir.mkdir(parents=True)
         for f in ['memory.md', 'soul.md', 'relationship.md']:
             (cortex_dir / f).write_text("", encoding="utf-8")
@@ -159,7 +159,7 @@ class TestCortexCache:
 
     def _make_service_with_dir(self, tmp_path):
         """Erstellt einen CortexService mit temporären Dateien."""
-        cortex_dir = tmp_path / "cortex" / "default"
+        cortex_dir = tmp_path / "data" / "default" / "cortex"
         cortex_dir.mkdir(parents=True)
         (cortex_dir / "memory.md").write_text("Cached Memory", encoding="utf-8")
         (cortex_dir / "soul.md").write_text("Cached Soul", encoding="utf-8")
@@ -221,7 +221,7 @@ class TestCortexCache:
         service, cortex_dir = self._make_service_with_dir(tmp_path)
 
         # Custom Persona zum Testen
-        custom_dir = tmp_path / "cortex" / "custom" / "abc123"
+        custom_dir = tmp_path / "data" / "abc123" / "cortex"
         custom_dir.mkdir(parents=True)
         for f in ['memory.md', 'soul.md', 'relationship.md']:
             (custom_dir / f).write_text("Custom", encoding="utf-8")
@@ -230,7 +230,7 @@ class TestCortexCache:
         service._cache['abc123'] = {'memory.md': 'Custom'}
 
         # delete_cortex_dir
-        with patch('utils.cortex_service.delete_cortex_dir', return_value=True):
+        with patch('utils.cortex.directories.delete_cortex_dir', return_value=True):
             service.delete_cortex_dir('abc123')
 
         assert 'abc123' not in service._cache

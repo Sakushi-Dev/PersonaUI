@@ -127,7 +127,7 @@ class TestPromptReachesApi:
         assert len(config.system_prompt) > 0
 
     def test_tools_in_request_config(self, mock_api_client, test_character_data, mock_engine):
-        """RequestConfig must contain read_file tools"""
+        """RequestConfig must contain write_file tool"""
         from utils.api_request.types import StreamEvent, RequestConfig
 
         service = _make_chat_service(mock_api_client, mock_engine)
@@ -145,7 +145,7 @@ class TestPromptReachesApi:
         config = mock_api_client.stream_with_tools.call_args[0][0]
         assert config.tools is not None
         assert len(config.tools) >= 1
-        assert config.tools[0]['name'] == 'read_file'
+        assert config.tools[0]['name'] == 'write_file'
 
     def test_user_message_in_api_messages(self, mock_api_client, test_character_data, mock_engine):
         """User message must be contained in RequestConfig.messages"""

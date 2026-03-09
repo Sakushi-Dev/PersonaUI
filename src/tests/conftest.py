@@ -167,7 +167,7 @@ def mock_engine():
     engine.build_core_system_prompt.return_value = (
         'Du bist TestPersona. Eine Test-Persona für Unit-Tests.\n\n'
         'Antworte immer auf Deutsch. Bleibe stets in deiner Rolle als TestPersona.\n\n'
-        '## Available Files\nUse read_file to access these files.'
+        '**YOUR JOURNAL FILES** (writable with write_file):\n- bonding.md\n- growth.md'
     )
     engine.build_full_system_prompt.return_value = (
         'Du bist TestPersona. Eine Test-Persona für Unit-Tests.\n\n'
@@ -175,12 +175,15 @@ def mock_engine():
     )
     engine.get_chat_tools.return_value = [
         {
-            'name': 'read_file',
-            'description': 'Reads a prompt file',
+            'name': 'write_file',
+            'description': 'Update one of your journal files',
             'input_schema': {
                 'type': 'object',
-                'properties': {'filename': {'type': 'string'}},
-                'required': ['filename']
+                'properties': {
+                    'filename': {'type': 'string', 'enum': ['bonding.md', 'growth.md']},
+                    'content': {'type': 'string'}
+                },
+                'required': ['filename', 'content']
             }
         }
     ]

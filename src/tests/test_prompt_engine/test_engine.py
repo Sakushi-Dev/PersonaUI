@@ -4,13 +4,12 @@ Tests for the file-based PromptEngine.
 Tests:
 - File discovery (core/, files/, internal/)
 - Placeholder resolution ({{key}} → value)
-- build_core_system_prompt() — core files + file index
+- build_core_system_prompt() — core files + persona files inline + file index
 - build_full_system_prompt() — all files inline
-- get_chat_tools() — read_file + write_file tool definitions
+- get_chat_tools() — write_file tool definition
 - read_prompt_file() — file reading + placeholder resolution
 - write_prompt_file() — per-persona dynamic file writing
 - read_internal() — internal prompt reading
-- Cortex virtual files in file index
 - Variant handling (default vs experimental)
 - Cache invalidation
 - Backward-compat methods (resolve_prompt, get_domain_data, etc.)
@@ -30,8 +29,23 @@ import pytest
 def prompt_dirs(tmp_path):
     """Creates a temporary prompts directory structure with sample .md files."""
     prompts = tmp_path / 'prompts'
-    for subdir in ('core', 'soul', 'internal'):
+    for subdir in ('core', 'internal'):
         (prompts / subdir).mkdir(parents=True)
+
+    # Per-persona cortex dir with journal files
+    cortex = tmp_path / 'data' / 'default' / 'cortex'
+    cortex.mkdir(parents=True)
+    (cortex / 'bonding.md').write_text(
+        'Bonding phases for {{char_name}} and {{user_name}}.', encoding='utf-8')
+    (cortex / 'growth.md').write_text(
+        '{{char_name}} evolves through interaction with {{user_name}}.', encoding='utf-8')
+    # Cortex files (read-only, auto-updated)
+    (cortex / 'memory.md').write_text(
+        'Memories about {{user_name}} collected by {{char_name}}.', encoding='utf-8')
+    (cortex / 'soul.md').write_text(
+        'Soul profile of {{char_name}}.', encoding='utf-8')
+    (cortex / 'relationship.md').write_text(
+        'Relationship between {{char_name}} and {{user_name}}.', encoding='utf-8')
 
     # Core files (inline, variant-aware)
     (prompts / 'core' / 'identity.md').write_text(
@@ -42,14 +56,6 @@ def prompt_dirs(tmp_path):
         '{{char_name}} (experimental) is a {{persona_type}}.', encoding='utf-8')
     (prompts / 'core' / 'rules.md').write_text(
         'Always respond in {{language}}.', encoding='utf-8')
-
-    # Dynamic files (tool-accessible, personality development)
-    (prompts / 'soul' / 'bonding.md').write_text(
-        'Bonding phases for {{char_name}} and {{user_name}}.', encoding='utf-8')
-    (prompts / 'soul' / 'growth.md').write_text(
-        '{{char_name}} evolves through interaction with {{user_name}}.', encoding='utf-8')
-    (prompts / 'soul' / 'user_info.md').write_text(
-        'User: {{user_name}}, Gender: {{user_gender}}', encoding='utf-8')
 
     # Internal files
     (prompts / 'internal' / 'remember.md').write_text(
@@ -96,8 +102,9 @@ def engine(prompt_dirs):
         return values
 
     e._compute_placeholders = mock_compute
-    # No real persona dir — tests use template fallback only
-    e._get_persona_files_dir = lambda: None
+    # Point to test cortex dir with journal files
+    cortex_dir = str(prompt_dirs / 'data' / 'default' / 'cortex')
+    e._get_persona_files_dir = lambda: cortex_dir
     yield e
 
 
@@ -116,10 +123,10 @@ class TestProperties:
         empty = tmp_path / 'empty'
         empty.mkdir()
         (empty / 'prompts').mkdir()
-        # No core/files/internal dirs
+        # No core/internal dirs
         from utils.prompt_engine.engine import PromptEngine
         e = PromptEngine(instructions_dir=str(empty))
-        assert len(e.load_errors) == 3
+        assert len(e.load_errors) == 2
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -159,17 +166,22 @@ class TestCoreSystemPrompt:
         assert 'Luna is a Companion' in prompt
         assert 'Always respond in english.' in prompt
 
-    def test_soul_files_not_inline(self, engine):
-        """Soul files must NOT be inline — AI reads them via tool."""
+    def test_persona_files_inline(self, engine):
+        """All persona files (journal + cortex) must be inline in core prompt."""
         prompt = engine.build_core_system_prompt()
-        assert 'Bonding phases for Luna and Alex' not in prompt
-        assert 'Luna evolves through interaction' not in prompt
+        # Journal files
+        assert 'Bonding phases for Luna and Alex' in prompt
+        assert 'Luna evolves through interaction' in prompt
+        # Cortex files
+        assert 'Memories about Alex collected by Luna' in prompt
+        assert 'Soul profile of Luna' in prompt
+        assert 'Relationship between Luna and Alex' in prompt
 
     def test_includes_file_index(self, engine):
         prompt = engine.build_core_system_prompt()
-        assert 'YOUR SOUL FILES' in prompt
-        assert 'read_file' in prompt.lower()
-        assert 'write_file' in prompt.lower()
+        assert 'YOUR JOURNAL FILES' in prompt
+        assert 'bonding.md' in prompt
+        assert 'growth.md' in prompt
 
     def test_respects_runtime_vars(self, engine):
         prompt = engine.build_core_system_prompt(runtime_vars={'char_name': 'Aria'})
@@ -181,15 +193,18 @@ class TestCoreSystemPrompt:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class TestFullSystemPrompt:
-    def test_includes_core_and_files(self, engine):
+    def test_includes_core_and_all_persona_files(self, engine):
         prompt = engine.build_full_system_prompt()
         # Core content
         assert 'You are Luna' in prompt
         assert 'Luna is a Companion' in prompt
-        # Dynamic files/ content
+        # Journal files
         assert 'Bonding phases for Luna and Alex' in prompt
         assert 'Luna evolves through interaction' in prompt
-        assert 'User: Alex' in prompt
+        # Cortex files
+        assert 'Memories about Alex collected by Luna' in prompt
+        assert 'Soul profile of Luna' in prompt
+        assert 'Relationship between Luna and Alex' in prompt
 
     def test_default_variant_skips_experimental(self, engine):
         prompt = engine.build_full_system_prompt(variant='default')
@@ -205,33 +220,24 @@ class TestFullSystemPrompt:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class TestChatTools:
-    def test_returns_read_and_write_tools(self, engine):
+    def test_returns_only_write_tool(self, engine):
         tools = engine.get_chat_tools()
         names = [t['name'] for t in tools]
-        assert 'read_file' in names
         assert 'write_file' in names
+        assert 'read_file' not in names
+        assert len(tools) == 1
 
-    def test_read_tool_has_all_files(self, engine):
+    def test_write_tool_has_journal_files(self, engine):
         tools = engine.get_chat_tools()
-        read_tool = [t for t in tools if t['name'] == 'read_file'][0]
-        filenames = read_tool['input_schema']['properties']['filename']['enum']
-        assert 'bonding.md' in filenames
-        assert 'growth.md' in filenames
-        assert 'user_info.md' in filenames
-        assert 'persona.md' not in filenames
-
-    def test_write_tool_excludes_cortex(self, engine):
-        tools = engine.get_chat_tools()
-        write_tool = [t for t in tools if t['name'] == 'write_file'][0]
+        write_tool = tools[0]
         writable = write_tool['input_schema']['properties']['filename']['enum']
         assert 'bonding.md' in writable
         assert 'growth.md' in writable
-        for name in writable:
-            assert not name.startswith('cortex_')
+        assert len(writable) == 2
 
     def test_write_tool_requires_content(self, engine):
         tools = engine.get_chat_tools()
-        write_tool = [t for t in tools if t['name'] == 'write_file'][0]
+        write_tool = tools[0]
         assert 'content' in write_tool['input_schema']['required']
 
 
@@ -241,9 +247,9 @@ class TestChatTools:
 
 class TestReadPromptFile:
     def test_reads_and_resolves(self, engine):
-        content = engine.read_prompt_file('user_info.md')
+        content = engine.read_prompt_file('bonding.md')
+        assert 'Luna' in content
         assert 'Alex' in content
-        assert 'Male' in content
 
     def test_unknown_file_returns_error(self, engine):
         content = engine.read_prompt_file('nonexistent.md')
@@ -256,7 +262,7 @@ class TestReadPromptFile:
 
 class TestWritePromptFile:
     def test_write_creates_per_persona_file(self, engine, prompt_dirs):
-        persona_dir = prompt_dirs / 'data' / 'default' / 'soul'
+        persona_dir = prompt_dirs / 'data' / 'default' / 'cortex'
         engine._get_persona_files_dir = lambda: str(persona_dir)
 
         result = engine.write_prompt_file('bonding.md', '# Updated bonding content')
@@ -274,9 +280,10 @@ class TestWritePromptFile:
         assert 'Cannot write cortex' in result
 
     def test_write_rejects_oversized_content(self, engine, prompt_dirs):
-        persona_dir = prompt_dirs / 'data' / 'default' / 'soul'
+        from utils.cortex import MAX_CORTEX_FILE_SIZE
+        persona_dir = prompt_dirs / 'data' / 'default' / 'cortex'
         engine._get_persona_files_dir = lambda: str(persona_dir)
-        big = 'x' * (engine._MAX_DYNAMIC_FILE_SIZE + 1)
+        big = 'x' * (MAX_CORTEX_FILE_SIZE + 1)
         result = engine.write_prompt_file('bonding.md', big)
         assert 'too long' in result.lower()
 
@@ -287,7 +294,7 @@ class TestWritePromptFile:
 
     def test_read_prefers_per_persona_over_template(self, engine, prompt_dirs):
         """After writing, read should return per-persona content, not template."""
-        persona_dir = prompt_dirs / 'data' / 'default' / 'soul'
+        persona_dir = prompt_dirs / 'data' / 'default' / 'cortex'
         engine._get_persona_files_dir = lambda: str(persona_dir)
 
         engine.write_prompt_file('growth.md', '# My personal growth journal')
@@ -295,13 +302,13 @@ class TestWritePromptFile:
         content = engine.read_prompt_file('growth.md')
         assert '# My personal growth journal' in content
 
-    def test_read_falls_back_to_template(self, engine, prompt_dirs):
-        """Without per-persona file, read returns template with resolved placeholders."""
-        persona_dir = prompt_dirs / 'data' / 'default' / 'soul'
-        engine._get_persona_files_dir = lambda: str(persona_dir)
+    def test_read_returns_not_found_without_file(self, engine, prompt_dirs):
+        """Without per-persona file, read returns not-found message."""
+        empty_dir = prompt_dirs / 'data' / 'empty_persona' / 'cortex'
+        empty_dir.mkdir(parents=True)
+        engine._get_persona_files_dir = lambda: str(empty_dir)
         content = engine.read_prompt_file('bonding.md')
-        assert 'Luna' in content
-        assert 'Alex' in content
+        assert 'not found' in content.lower()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -356,10 +363,9 @@ class TestBackwardCompat:
         assert result is not None
         assert 'Luna' in result
 
-    def test_resolve_prompt_finds_files(self, engine):
+    def test_resolve_prompt_returns_none_for_unknown(self, engine):
         result = engine.resolve_prompt('user_info')
-        assert result is not None
-        assert 'Alex' in result
+        assert result is None
 
     def test_resolve_prompt_by_id_raises_on_missing(self, engine):
         with pytest.raises(KeyError):
