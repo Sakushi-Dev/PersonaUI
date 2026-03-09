@@ -241,9 +241,9 @@ export function SessionProvider({ children }) {
     window.history.replaceState({}, '', url);
   };
 
-  // Append a message to chat history
+  // Append a message to chat history (assign stable _id for React keys)
   const addMessage = useCallback((message) => {
-    setChatHistory((prev) => [...prev, message]);
+    setChatHistory((prev) => [...prev, { ...message, _id: `msg-${Date.now()}-${prev.length}` }]);
     setTotalMessageCount((prev) => prev + 1);
   }, []);
 

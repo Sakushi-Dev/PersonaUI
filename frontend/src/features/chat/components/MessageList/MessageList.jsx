@@ -58,21 +58,12 @@ export default function MessageList({
           {hasMore && <LoadMoreButton onClick={onLoadMore} />}
 
           {chatHistory.map((msg, index) => {
-            // Streaming placeholder with no text yet → show spinner
-            if (msg._streaming && !msg.message) {
-              return (
-                <div key={`${msg.timestamp}-${index}`} className={styles.thinking}>
-                  <Spinner />
-                </div>
-              );
-            }
-
             const isLast = index === chatHistory.length - 1;
             const showActions = isLast && !msg._streaming && !isStreaming && !afterthoughtStreaming;
 
             return (
               <MessageBubble
-                key={`${msg.timestamp}-${index}`}
+                key={msg._id || `${msg.timestamp}-${index}`}
                 message={msg.message}
                 isUser={msg.is_user}
                 characterName={msg.character_name}

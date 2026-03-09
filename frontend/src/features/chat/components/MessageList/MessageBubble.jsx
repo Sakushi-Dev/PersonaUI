@@ -8,6 +8,7 @@ import PromptInfoOverlay from './PromptInfoOverlay';
 import { formatMessage } from '../../../../utils/formatMessage';
 import { formatTimestamp } from '../../../../utils/formatTime';
 import { useLanguage } from '../../../../hooks/useLanguage';
+import ThinkingWave from './ThinkingWave';
 import styles from './MessageList.module.css';
 
 export default function MessageBubble({
@@ -28,11 +29,31 @@ export default function MessageBubble({
   const { profile } = useContext(UserContext);
   const { language, t } = useLanguage();
   const s = t('messageBubble');
+  const chatStrings = t('chat');
   const [showStats, setShowStats] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState('');
   const [confirmAction, setConfirmAction] = useState(null);
   const editRef = useRef(null);
+  const wasThinking = useRef(false);
+  const [delayedVisible, setDelayedVisible] = useState(false);
+  const isStreamingEntry = useRef(isStreaming && !message);
+
+  // Delay the streaming bubble appearance for a soft entrance
+  useEffect(() => {
+    if (!isStreamingEntry.current) {
+      setDelayedVisible(true);
+      return;
+    }
+    const timer = setTimeout(() => setDelayedVisible(true), 600);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Track thinking → text transition for smooth fade
+  const isThinking = isStreaming && !message;
+  if (isThinking) wasThinking.current = true;
+  const showFadeIn = !isThinking && wasThinking.current;
+  if (!isStreaming) wasThinking.current = false;
 
   const avatarSrc = isUser ? profile?.userAvatar : characterAvatar;
   const avatarType = isUser ? profile?.userAvatarType : characterAvatarType;
@@ -82,9 +103,13 @@ export default function MessageBubble({
     }
   };
 
+  if (!delayedVisible) return null;
+
   return (
-    <div className={`${styles.message} ${isUser ? styles.userMessage : styles.botMessage}`}>
-      <div className={styles.messageAvatar}>
+    <div
+      className={`${styles.message} ${isUser ? styles.userMessage : styles.botMessage} ${isStreamingEntry.current ? styles.bubbleEnter : ''}`}
+    >
+      <div className={`${styles.messageAvatar} ${isThinking ? styles.avatarThinking : ''}`}>
         <Avatar
           src={avatarSrc}
           type={avatarType}
@@ -133,8 +158,17 @@ export default function MessageBubble({
             </div>
           ) : (
             <>
-              <span dangerouslySetInnerHTML={{ __html: formattedMessage }} />
-              {isStreaming && <span className={styles.streamingCursor}>▌</span>}
+              {isThinking && (
+                <span className={styles.thinkingFade}>
+                  <ThinkingWave phrases={chatStrings.thinkingPhrases || []} />
+                </span>
+              )}
+              {!isThinking && (
+                <span className={showFadeIn ? styles.streamingTextEnter : undefined}>
+                  <span dangerouslySetInnerHTML={{ __html: formattedMessage }} />
+                  {isStreaming && <span className={styles.streamingCursor}>▌</span>}
+                </span>
+              )}
               {timestamp && !isStreaming && (
                 <div className={styles.messageTime}>
                   {formatTimestamp(timestamp, language)}
