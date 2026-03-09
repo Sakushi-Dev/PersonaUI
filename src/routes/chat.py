@@ -91,7 +91,10 @@ def chat_stream():
     
     def generate():
         chat_service = get_chat_service()
-        user_msg_saved = False
+
+        # User-Nachricht sofort speichern (nicht erst beim ersten Chunk)
+        save_message(user_message, True, character_name, session_id, persona_id=persona_id)
+
         try:
             for event_type, event_data in chat_service.chat_stream(
                 user_message=user_message,
@@ -107,10 +110,6 @@ def chat_stream():
                 session_id=session_id
             ):
                 if event_type == 'chunk':
-                    # Benutzernachricht erst beim ersten erfolgreichen Chunk speichern
-                    if not user_msg_saved:
-                        save_message(user_message, True, character_name, session_id, persona_id=persona_id)
-                        user_msg_saved = True
                     yield f"data: {json.dumps({'type': 'chunk', 'text': event_data})}\n\n"
                 elif event_type == 'done':
                     # Bot-Antwort in Persona-DB speichern
@@ -256,7 +255,8 @@ def api_regenerate():
     if last_msg['is_user']:
         return error_response('Letzte Nachricht ist keine Bot-Nachricht')
 
-    # Bot-Nachricht löschen
+    # Bot-Nachricht löschen (Backup für Rollback bei API-Fehler)
+    deleted_message_backup = last_msg.copy()
     delete_last_message(session_id, persona_id)
     log.info("Regenerate: Letzte Bot-Nachricht gelöscht (id=%s, session=%s)", last_msg['id'], session_id)
 
@@ -322,11 +322,32 @@ def api_regenerate():
 
                     yield f"data: {json.dumps(done_payload)}\n\n"
                 elif event_type == 'error':
+                    # Restore deleted bot message on API error
+                    try:
+                        save_message(
+                            deleted_message_backup['message'], False,
+                            deleted_message_backup.get('character_name', character_name),
+                            session_id, persona_id=persona_id
+                        )
+                        log.info("Regenerate: Bot-Nachricht nach API-Fehler wiederhergestellt (session=%s)", session_id)
+                    except Exception as restore_err:
+                        log.warning("Regenerate: Rollback fehlgeschlagen: %s", restore_err)
+
                     error_payload = {'type': 'error', 'error': event_data}
                     if event_data == 'credit_balance_exhausted':
                         error_payload['error_type'] = 'credit_balance_exhausted'
                     yield f"data: {json.dumps(error_payload)}\n\n"
         except Exception as e:
+            # Restore deleted bot message on unexpected error
+            try:
+                save_message(
+                    deleted_message_backup['message'], False,
+                    deleted_message_backup.get('character_name', character_name),
+                    session_id, persona_id=persona_id
+                )
+                log.info("Regenerate: Bot-Nachricht nach Exception wiederhergestellt (session=%s)", session_id)
+            except Exception as restore_err:
+                log.warning("Regenerate: Rollback fehlgeschlagen: %s", restore_err)
             log.error("Regenerate-Stream-Fehler: %s", e)
             yield f"data: {json.dumps({'type': 'error', 'error': str(e)})}\n\n"
 
