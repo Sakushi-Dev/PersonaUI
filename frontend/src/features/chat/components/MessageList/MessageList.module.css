@@ -382,6 +382,27 @@
   flex-shrink: 0;
 }
 
+/* ── Resend Wave ── */
+
+@keyframes resendWave {
+  0%   { opacity: 0.5; }
+  50%  { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+
+.resendBtn {
+  opacity: 1 !important;
+  color: var(--nonverbal-color) !important;
+}
+
+.resendBtn span {
+  animation: resendWave 1.8s ease-in-out infinite;
+}
+
+.resendBtn svg {
+  animation: resendWave 1.8s ease-in-out infinite;
+}
+
 /* ── Edit Mode ── */
 
 .editContainer {
