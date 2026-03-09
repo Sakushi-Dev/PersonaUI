@@ -44,9 +44,7 @@ config/launch_options.ini
 # Benutzer-erstellte Personas
 src/instructions/created_personas/
 
-# Cortex-Dateien (Persona-Erinnerungen, benutzergeneriert)
-src/instructions/personas/cortex/default/*.md
-src/instructions/personas/cortex/custom/
+# Cortex-Dateien (jetzt in src/data/{persona_id}/cortex/, bereits durch src/data/ abgedeckt)
 
 # Aktive Persona-Config (wird bei jeder Aktivierung überschrieben)
 src/instructions/personas/active/persona_config.json
