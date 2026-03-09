@@ -203,18 +203,12 @@ if __name__ == '__main__':
             os.remove(ac)
         print("[5/11] Active persona removed")
 
-        # Cortex custom memory files
-        cortex_custom = os.path.join(src, 'instructions', 'personas', 'cortex', 'custom')
-        if os.path.isdir(cortex_custom):
-            for entry in os.listdir(cortex_custom):
-                entry_path = os.path.join(cortex_custom, entry)
-                if entry == '.gitkeep':
-                    continue
-                if os.path.isdir(entry_path):
-                    try: shutil.rmtree(entry_path)
-                    except: pass
-                elif os.path.isfile(entry_path):
-                    try: os.remove(entry_path)
+        # Cortex memory files (stored in data/{persona_id}/cortex/)
+        if os.path.isdir(data_dir):
+            for entry in os.listdir(data_dir):
+                cortex_dir = os.path.join(data_dir, entry, 'cortex')
+                if os.path.isdir(cortex_dir):
+                    try: shutil.rmtree(cortex_dir)
                     except: pass
         print("[6/11] Cortex memory deleted")
 

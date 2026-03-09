@@ -7,7 +7,7 @@ import socket as sock
 import threading
 
 from utils.database import init_all_dbs
-from utils.cortex_service import ensure_cortex_dirs
+from utils.cortex import ensure_cortex_dirs
 from splash_screen.utils.update_check import check_for_update
 
 

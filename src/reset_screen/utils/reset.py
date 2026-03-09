@@ -405,7 +405,6 @@ def _reset_personas_selected(window, src, errors, persona_ids):
     """Deletes only selected personas (JSON + DB + Cortex + Notes)."""
     personas_dir = os.path.join(src, 'instructions', 'created_personas')
     data_dir = os.path.join(src, 'data')
-    cortex_custom = os.path.join(src, 'instructions', 'personas', 'cortex', 'custom')
     persona_notes_dir = os.path.join(src, 'data', 'persona_notes')
 
     deleted_names = []
@@ -448,10 +447,11 @@ def _reset_personas_selected(window, src, errors, persona_ids):
                     errors.append('main.db could not be deleted')
 
             # Cortex – Default-Dateien auf Templates zurücksetzen
-            cortex_default_dir = os.path.join(src, 'instructions', 'personas', 'cortex', 'default')
+            cortex_default_dir = os.path.join(data_dir, 'default', 'cortex')
+            os.makedirs(cortex_default_dir, exist_ok=True)
             if os.path.isdir(cortex_default_dir):
                 try:
-                    from utils.cortex_service import TEMPLATES
+                    from utils.cortex import TEMPLATES
                     for fname, template_content in TEMPLATES.items():
                         fpath = os.path.join(cortex_default_dir, fname)
                         with open(fpath, 'w', encoding='utf-8') as f:
@@ -543,8 +543,8 @@ def _reset_personas_selected(window, src, errors, persona_ids):
             except Exception:
                 pass
 
-        # Cortex custom dir
-        cortex_dir = os.path.join(cortex_custom, pid)
+        # Cortex dir (inside data/{pid}/cortex/)
+        cortex_dir = os.path.join(data_dir, pid, 'cortex')
         if os.path.isdir(cortex_dir):
             try:
                 shutil.rmtree(cortex_dir)
@@ -583,22 +583,17 @@ def _reset_personas_selected(window, src, errors, persona_ids):
 def _reset_cortex(window, src, errors):
     """Deletes all Cortex custom memory files and resets default cortex to templates."""
     # 1. Custom-Cortex-Verzeichnisse löschen
-    cortex_custom = os.path.join(src, 'instructions', 'personas', 'cortex', 'custom')
+    # 1. Custom-Persona Cortex-Verzeichnisse löschen (data/{pid}/cortex/)
+    data_dir = os.path.join(src, 'data')
     cortex_count = 0
-    if os.path.isdir(cortex_custom):
-        for entry in os.listdir(cortex_custom):
-            entry_path = os.path.join(cortex_custom, entry)
-            if entry == '.gitkeep':
+    if os.path.isdir(data_dir):
+        for entry in os.listdir(data_dir):
+            if entry in ('.gitkeep', 'default', 'persona_notes'):
                 continue
-            if os.path.isdir(entry_path):
+            cortex_dir = os.path.join(data_dir, entry, 'cortex')
+            if os.path.isdir(cortex_dir):
                 try:
-                    shutil.rmtree(entry_path)
-                    cortex_count += 1
-                except Exception:
-                    pass
-            elif os.path.isfile(entry_path):
-                try:
-                    os.remove(entry_path)
+                    shutil.rmtree(cortex_dir)
                     cortex_count += 1
                 except Exception:
                     pass
@@ -606,29 +601,27 @@ def _reset_cortex(window, src, errors):
         _type(window, f'        {cortex_count} cortex memory store(s) deleted', 'info')
 
     # 2. Default-Cortex-Dateien auf Templates zurücksetzen
-    cortex_default = os.path.join(src, 'instructions', 'personas', 'cortex', 'default')
-    if os.path.isdir(cortex_default):
-        try:
-            from utils.cortex_service import TEMPLATES
-            for fname, template_content in TEMPLATES.items():
-                fpath = os.path.join(cortex_default, fname)
-                with open(fpath, 'w', encoding='utf-8') as f:
-                    f.write(template_content)
-            _type(window, '        Default cortex memory reset to templates', 'info')
-        except ImportError:
-            for fname in ['memory.md', 'soul.md', 'relationship.md']:
-                fpath = os.path.join(cortex_default, fname)
-                if os.path.isfile(fpath):
-                    try:
-                        os.remove(fpath)
-                    except Exception:
-                        pass
-            _type(window, '        Default cortex files deleted (will be recreated)', 'info')
-        except Exception as e:
-            _type(window, f'        WARNING: Default cortex reset failed: {e}', 'error')
-            errors.append(f'Default cortex reset: {e}')
-    elif cortex_count == 0:
-        _type(window, '        No cortex data found', 'default')
+    cortex_default = os.path.join(data_dir, 'default', 'cortex')
+    os.makedirs(cortex_default, exist_ok=True)
+    try:
+        from utils.cortex import TEMPLATES
+        for fname, template_content in TEMPLATES.items():
+            fpath = os.path.join(cortex_default, fname)
+            with open(fpath, 'w', encoding='utf-8') as f:
+                f.write(template_content)
+        _type(window, '        Default cortex memory reset to templates', 'info')
+    except ImportError:
+        for fname in ['memory.md', 'soul.md', 'relationship.md']:
+            fpath = os.path.join(cortex_default, fname)
+            if os.path.isfile(fpath):
+                try:
+                    os.remove(fpath)
+                except Exception:
+                    pass
+        _type(window, '        Default cortex files deleted (will be recreated)', 'info')
+    except Exception as e:
+        _type(window, f'        WARNING: Default cortex reset failed: {e}', 'error')
+        errors.append(f'Default cortex reset: {e}')
 
 
 def _reset_persona_notes(window, src, errors):
@@ -717,66 +710,6 @@ def _reset_cache(window, src, errors):
             pass
 
 
-def _reset_prompts(window, src, errors):
-    """Resets prompts to factory defaults."""
-    try:
-        instructions_dir = os.path.join(src, 'instructions')
-        from utils.prompt_engine import PromptEngine
-        engine = PromptEngine(instructions_dir=instructions_dir)
-        result = engine.factory_reset(scope='full')
-        if result.get('errors'):
-            for err in result['errors']:
-                _type(window, f'        ERROR: {err}', 'error')
-                errors.append(f'Prompt reset: {err}')
-        else:
-            restored = result.get('restored', 0)
-            _type(window, f'        {restored} prompt file(s) restored', 'info')
-    except ImportError:
-        _type(window, '        PromptEngine not available – manual reset...', 'warn')
-        instructions_dir = os.path.join(src, 'instructions')
-        prompts_dir = os.path.join(instructions_dir, 'prompts')
-        defaults_dir = os.path.join(prompts_dir, '_defaults')
-        restored = 0
-        if os.path.isdir(defaults_dir):
-            for filename in os.listdir(defaults_dir):
-                if not filename.endswith('.json'):
-                    continue
-                s = os.path.join(defaults_dir, filename)
-                d = os.path.join(prompts_dir, filename)
-                try:
-                    shutil.copy2(s, d)
-                    restored += 1
-                except Exception:
-                    errors.append(f'Prompt reset: {filename} failed')
-            defaults_meta = os.path.join(defaults_dir, '_meta')
-            if os.path.isdir(defaults_meta):
-                meta_dir = os.path.join(prompts_dir, '_meta')
-                os.makedirs(meta_dir, exist_ok=True)
-                user_manifest = os.path.join(meta_dir, 'user_manifest.json')
-                if os.path.isfile(user_manifest):
-                    try:
-                        os.remove(user_manifest)
-                    except Exception:
-                        errors.append('Prompt reset: user_manifest.json deletion failed')
-                for filename in os.listdir(defaults_meta):
-                    if not filename.endswith('.json'):
-                        continue
-                    s = os.path.join(defaults_meta, filename)
-                    d = os.path.join(meta_dir, filename)
-                    try:
-                        shutil.copy2(s, d)
-                        restored += 1
-                    except Exception:
-                        errors.append(f'Prompt reset: _meta/{filename} failed')
-            _type(window, f'        {restored} prompt file(s) restored', 'info')
-        else:
-            _type(window, '        WARNING: _defaults/ directory not found', 'error')
-            errors.append('Prompt reset: _defaults/ directory missing')
-    except Exception as e:
-        _type(window, f'        WARNING: Prompt reset not possible: {e}', 'warn')
-        errors.append(f'Prompt reset: {e}')
-
-
 # ─────────────────────────────────────────────
 # Preset Definitions
 # ─────────────────────────────────────────────
@@ -786,13 +719,13 @@ PRESETS = {
         'name': 'Full Reset',
         'desc': 'Deletes all data and restores everything to factory defaults.',
         'steps': ['databases', 'env', 'settings', 'personas_all', 'cortex',
-                  'persona_notes', 'logs', 'avatars', 'cache', 'prompts'],
+                  'persona_notes', 'logs', 'avatars', 'cache'],
     },
     'keep_api': {
         'name': 'Reset (Keep API Key)',
         'desc': 'Like full reset, but your API key is preserved.',
         'steps': ['databases', 'settings', 'personas_all', 'cortex',
-                  'persona_notes', 'logs', 'avatars', 'cache', 'prompts'],
+                  'persona_notes', 'logs', 'avatars', 'cache'],
     },
     'chat_only': {
         'name': 'Chat Data Only',
@@ -809,11 +742,6 @@ PRESETS = {
         'desc': 'Resets settings, profile and onboarding.',
         'steps': ['settings'],
     },
-    'prompts_only': {
-        'name': 'Reset Prompts',
-        'desc': 'Restores all prompt files to factory defaults.',
-        'steps': ['prompts'],
-    },
     'troubleshoot': {
         'name': 'Troubleshoot',
         'desc': 'Clears cache, logs and temporary files. Fixes common startup issues.',
@@ -822,7 +750,7 @@ PRESETS = {
 }
 
 PRESET_ORDER = ['full', 'keep_api', 'chat_only', 'personas_select',
-                'settings_only', 'prompts_only', 'troubleshoot']
+                'settings_only', 'troubleshoot']
 
 
 STEP_LABELS = {
@@ -836,7 +764,6 @@ STEP_LABELS = {
     'logs':              'Delete logs',
     'avatars':           'Delete avatars',
     'cache':             'Clear cache & temp',
-    'prompts':           'Reset prompts',
 }
 
 
@@ -890,8 +817,6 @@ def reset_sequence(window, preset_id='full', selected_persona_ids=None):
             _reset_avatars(window, src, errors)
         elif step == 'cache':
             _reset_cache(window, src, errors)
-        elif step == 'prompts':
-            _reset_prompts(window, src, errors)
 
     # ── Result ──
     _type(window, '', 'default')
@@ -917,8 +842,6 @@ def reset_sequence(window, preset_id='full', selected_persona_ids=None):
         _type(window, '> Selected personas have been removed.', 'default')
     elif preset_id == 'settings_only':
         _type(window, '> Settings reset. Onboarding will be shown again on next start.', 'default')
-    elif preset_id == 'prompts_only':
-        _type(window, '> Prompts have been restored to factory defaults.', 'default')
     elif preset_id == 'troubleshoot':
         _type(window, '> Cache and logs have been cleared. App should start normally again.', 'default')
 
