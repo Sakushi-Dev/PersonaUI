@@ -1,10 +1,12 @@
 """
 PromptEngine — File-basiertes Prompt-System mit Tool-Support.
 
-Prompts als Markdown-Dateien in 3 Kategorien:
+Prompts als Markdown-Dateien in 2 Kategorien:
 - core/     → Immer inline im System-Prompt
-- soul/     → Dynamische, per-Persona Dateien (read + write via Tool)
 - internal/ → Nur intern (Afterthought, Cortex, Autofill)
+
+Alle Persona-Dateien (journal + cortex) aus data/{persona_id}/cortex/
+werden inline im System-Prompt geladen. write_file Tool für Journal-Updates.
 
 Placeholder-Logik in placeholders.py, Cortex in cortex.py.
 """
@@ -15,6 +17,7 @@ import threading
 from typing import Dict, Any, Optional, List
 
 from ..logger import log
+from ..cortex import MAX_CORTEX_FILE_SIZE
 from .placeholders import PlaceholderMixin
 from .cortex import CortexMixin
 
@@ -25,7 +28,10 @@ class PromptEngine(PlaceholderMixin, CortexMixin):
     Liest .md Dateien, löst Placeholder auf, stellt File-Tool bereit.
     """
 
-    _MAX_DYNAMIC_FILE_SIZE = 8000  # chars, same as cortex
+    # Known journal files that the AI can write in cortex/
+    _JOURNAL_FILES = ['bonding.md', 'growth.md']
+    # Cortex files (read-only, auto-updated)
+    _CORTEX_FILENAMES = ['memory.md', 'soul.md', 'relationship.md']
 
     def __init__(self, instructions_dir: str = None):
         if instructions_dir is None:
@@ -40,16 +46,15 @@ class PromptEngine(PlaceholderMixin, CortexMixin):
         self._load_errors: List[str] = []
 
         # Validate directories exist
-        for subdir in ('core', 'soul', 'internal'):
+        for subdir in ('core', 'internal'):
             path = os.path.join(self._prompts_dir, subdir)
             if not os.path.isdir(path):
                 self._load_errors.append(f"Directory missing: {subdir}/")
                 log.warning("Prompt directory missing: %s", path)
 
         if not self._load_errors:
-            log.info("PromptEngine geladen: core=%d, files=%d, internal=%d",
+            log.info("PromptEngine geladen: core=%d, internal=%d",
                      len(self._list_md_files('core')),
-                     len(self._list_md_files('soul')),
                      len(self._list_md_files('internal')))
 
     # ═══════════════════════════════════════════════════════════════
@@ -71,8 +76,8 @@ class PromptEngine(PlaceholderMixin, CortexMixin):
     def build_core_system_prompt(self, variant: str = 'default',
                                   runtime_vars: Optional[Dict[str, str]] = None) -> str:
         """
-        Baut den System-Prompt aus core/*.md + File-Index.
-        Soul files are NOT inline — AI must use read_file tool to access them.
+        Baut den System-Prompt aus core/*.md + Persona-Dateien inline + File-Index.
+        Alle Persona-Dateien (journal + cortex) werden direkt eingebettet.
         Wird bei JEDEM Chat-Request als system_prompt gesendet.
         """
         placeholders = self._compute_placeholders(runtime_vars)
@@ -85,6 +90,16 @@ class PromptEngine(PlaceholderMixin, CortexMixin):
             if content:
                 parts.append(content)
 
+        # All persona files inline (journal + cortex from data/{persona_id}/cortex/)
+        persona_dir = self._get_persona_files_dir()
+        if persona_dir:
+            for filename in self._JOURNAL_FILES + self._CORTEX_FILENAMES:
+                filepath = os.path.join(persona_dir, filename)
+                if os.path.exists(filepath):
+                    content = self._read_and_resolve(filepath, placeholders)
+                    if content:
+                        parts.append(content)
+
         file_index = self._build_file_index(variant)
         if file_index:
             parts.append(file_index)
@@ -92,34 +107,19 @@ class PromptEngine(PlaceholderMixin, CortexMixin):
         return self._clean_text("\n\n".join(parts))
 
     def _build_file_index(self, variant: str = 'default') -> str:
-        """Baut den File-Index für den System-Prompt."""
-        available = self.get_available_files(variant)
-        if not available:
+        """Baut den File-Index für den System-Prompt (nur write_file Hinweis)."""
+        writable = self._JOURNAL_FILES
+        if not writable:
             return ''
 
-        dynamic = [f for f in available if not f['filename'].startswith('cortex_')]
-        cortex = [f for f in available if f['filename'].startswith('cortex_')]
-
-        lines = []
-
-        if dynamic:
-            lines.append("**YOUR SOUL FILES**")
-            lines.append("These are your personal files. You MUST read them at the start of ")
-            lines.append("every conversation using the read_file tool. They contain your memory ")
-            lines.append("of who you are and your relationship history. Update them with ")
-            lines.append("write_file when something meaningful happens.")
-            lines.append("IMPORTANT: After all tool calls are done, you MUST always reply with ")
-            lines.append("a text message to the user. Never end your turn with only tool calls.")
-            lines.append("")
-            lines.append("Your files (read + write):")
-            for entry in dynamic:
-                lines.append(f"- {entry['filename']}")
-
-        if cortex:
-            lines.append("")
-            lines.append("Cortex files (read-only, updated by your subconscious):")
-            for entry in cortex:
-                lines.append(f"- {entry['filename']} — {entry['description']}")
+        lines = [
+            "**YOUR JOURNAL FILES** (writable with write_file):",
+        ]
+        for f in writable:
+            lines.append(f"- {f}")
+        lines.append("")
+        lines.append("Your journal and cortex files are loaded above.")
+        lines.append("After write_file calls, ALWAYS reply with a text message.")
 
         return "\n".join(lines)
 
@@ -130,7 +130,7 @@ class PromptEngine(PlaceholderMixin, CortexMixin):
     def build_full_system_prompt(self, variant: str = 'default',
                                   runtime_vars: Optional[Dict[str, str]] = None) -> str:
         """
-        Baut den vollständigen System-Prompt (core/ + files/) inline.
+        Baut den vollständigen System-Prompt (core/ + alle Persona-Dateien) inline.
         Für interne Nutzung: Afterthought, Cortex-Update-Context.
         """
         placeholders = self._compute_placeholders(runtime_vars)
@@ -143,12 +143,15 @@ class PromptEngine(PlaceholderMixin, CortexMixin):
             if content:
                 parts.append(content)
 
-        # Soul files (if any exist — per-persona first, then template)
-        for filename in self._list_variant_files('soul', variant):
-            filepath = self._resolve_dynamic_file(filename)
-            content = self._read_and_resolve(filepath, placeholders)
-            if content:
-                parts.append(content)
+        # All persona files (journal + cortex)
+        persona_dir = self._get_persona_files_dir()
+        if persona_dir:
+            for filename in self._JOURNAL_FILES + self._CORTEX_FILENAMES:
+                filepath = os.path.join(persona_dir, filename)
+                if os.path.exists(filepath):
+                    content = self._read_and_resolve(filepath, placeholders)
+                    if content:
+                        parts.append(content)
 
         return self._clean_text("\n\n".join(parts))
 
@@ -162,81 +165,48 @@ class PromptEngine(PlaceholderMixin, CortexMixin):
         return self.build_full_system_prompt(variant, runtime_vars)
 
     # ═══════════════════════════════════════════════════════════════
-    # File Tool (read_file + write_file for API)
+    # File Tool (write_file for API)
     # ═══════════════════════════════════════════════════════════════
 
     def get_chat_tools(self, variant: str = 'default') -> List[Dict[str, Any]]:
-        """Returns tool definitions (read_file + write_file) for the chat API."""
-        available = self.get_available_files(variant)
-        all_filenames = [f['filename'] for f in available]
-        writable = [f['filename'] for f in available
-                    if not f['filename'].startswith('cortex_')]
-
-        if not all_filenames:
+        """Returns tool definitions (write_file only) for the chat API."""
+        writable = self._JOURNAL_FILES
+        if not writable:
             return []
 
-        tools = [{
-            "name": "read_file",
+        return [{
+            "name": "write_file",
             "description": (
-                "Read one of your files. Use this to remember your state, "
-                "check your relationship notes, or review your growth."
+                "Update one of your journal files. Write the complete file content. "
+                "Use this to track your growth, update relationship notes, "
+                "or record observations. Write naturally — these are YOUR files."
             ),
             "input_schema": {
                 "type": "object",
                 "properties": {
                     "filename": {
                         "type": "string",
-                        "enum": all_filenames,
-                        "description": "Name of the file to read"
+                        "enum": list(writable),
+                        "description": "Name of the file to update"
+                    },
+                    "content": {
+                        "type": "string",
+                        "description": "The complete new content for the file"
                     }
                 },
-                "required": ["filename"]
+                "required": ["filename", "content"]
             }
         }]
 
-        if writable:
-            tools.append({
-                "name": "write_file",
-                "description": (
-                    "Update one of your personal files. Write the complete file content. "
-                    "Use this to track your growth, update relationship notes, "
-                    "or record observations. Write naturally — these are YOUR files."
-                ),
-                "input_schema": {
-                    "type": "object",
-                    "properties": {
-                        "filename": {
-                            "type": "string",
-                            "enum": writable,
-                            "description": "Name of the file to update"
-                        },
-                        "content": {
-                            "type": "string",
-                            "description": "The complete new content for the file"
-                        }
-                    },
-                    "required": ["filename", "content"]
-                }
-            })
-
-        return tools
-
     def get_available_files(self, variant: str = 'default') -> List[Dict[str, str]]:
-        """Returns list of files available via the read_file tool (dynamic files/ + cortex)."""
-        files = []
-
-        # Dynamic soul files
-        for filename in self._list_variant_files('soul', variant):
-            files.append({
-                'filename': filename,
-                'description': filename.replace('.md', '').replace('_', ' ').title()
-            })
-
-        # Cortex virtual files
-        cortex_files = self._get_cortex_virtual_files()
-        files.extend(cortex_files)
-
-        return files
+        """Returns list of writable journal files for the write_file tool."""
+        return [
+            {
+                'filename': f,
+                'description': f.replace('.md', '').replace('_', ' ').title()
+            }
+            for f in self._JOURNAL_FILES
+        ]
 
     def read_prompt_file(self, filename: str, variant: str = 'default',
                           runtime_vars: Optional[Dict[str, str]] = None) -> str:
@@ -250,24 +220,23 @@ class PromptEngine(PlaceholderMixin, CortexMixin):
             return self._read_cortex_file(filename, placeholders)
 
         filepath = self._resolve_dynamic_file(filename)
-        if not os.path.exists(filepath):
+        if filepath is None or not os.path.exists(filepath):
             return f"File not found: {filename}"
 
         return self._read_and_resolve(filepath, placeholders)
 
     def write_prompt_file(self, filename: str, content: str,
                            variant: str = 'default') -> str:
-        """Writes/updates a dynamic file for the current persona."""
+        """Writes/updates a journal file for the current persona."""
         if filename.startswith('cortex_'):
             return "Cannot write cortex files here."
 
-        template_path = os.path.join(self._prompts_dir, 'soul', filename)
-        if not os.path.exists(template_path):
+        if filename not in self._JOURNAL_FILES:
             return f"Unknown file: {filename}"
 
-        if len(content) > self._MAX_DYNAMIC_FILE_SIZE:
+        if len(content) > MAX_CORTEX_FILE_SIZE:
             return (f"Content too long ({len(content)} chars). "
-                    f"Maximum: {self._MAX_DYNAMIC_FILE_SIZE} chars.")
+                    f"Maximum: {MAX_CORTEX_FILE_SIZE} chars.")
 
         persona_dir = self._get_persona_files_dir()
         if not persona_dir:
@@ -340,15 +309,10 @@ class PromptEngine(PlaceholderMixin, CortexMixin):
 
     def resolve_prompt(self, prompt_id: str, variant: str = 'default',
                         runtime_vars: Optional[Dict[str, str]] = None) -> Optional[str]:
-        """Backward-compat: resolves a prompt by ID. Checks internal/ and files/."""
+        """Backward-compat: resolves a prompt by ID. Checks internal/."""
         result = self.read_internal(prompt_id, variant, runtime_vars)
         if result:
             return result
-        filename = f"{prompt_id}.md"
-        filepath = os.path.join(self._prompts_dir, 'soul', filename)
-        if os.path.exists(filepath):
-            placeholders = self._compute_placeholders(runtime_vars)
-            return self._read_and_resolve(filepath, placeholders)
         return None
 
     def resolve_prompt_by_id(self, prompt_id: str, variant: str = 'default',
@@ -442,23 +406,25 @@ class PromptEngine(PlaceholderMixin, CortexMixin):
     # ═══════════════════════════════════════════════════════════════
 
     def _get_persona_files_dir(self) -> Optional[str]:
-        """Returns per-persona soul dir: data/{persona_id}/soul/"""
+        """Returns per-persona files dir: data/{persona_id}/cortex/"""
         try:
             from ..database.connection import get_persona_dir
             from ..config import get_active_persona_id
             persona_id = get_active_persona_id()
             if not persona_id:
                 return None
-            return os.path.join(get_persona_dir(persona_id), 'soul')
+            return os.path.join(get_persona_dir(persona_id), 'cortex')
         except Exception:
             return None
 
-    def _resolve_dynamic_file(self, filename: str) -> str:
-        """Resolves dynamic file: per-persona override > template fallback."""
+    def _resolve_dynamic_file(self, filename: str) -> Optional[str]:
+        """Resolves a journal file from the persona's cortex directory."""
+        if filename not in self._JOURNAL_FILES:
+            return None
         persona_dir = self._get_persona_files_dir()
         if persona_dir:
             persona_path = os.path.join(persona_dir, filename)
             if os.path.exists(persona_path):
                 return persona_path
-        return os.path.join(self._prompts_dir, 'soul', filename)
+        return None
 
