@@ -2,7 +2,8 @@
 Chat Service – Orchestriert Chat-Requests.
 
 Verwendet die PromptEngine als einzige Prompt-Quelle.
-- Message-Assembly (Prefill + Dialog-Injections + History + User-Message + Remember)
+- Core-System-Prompt (schlank) + read_file Tool für On-Demand Kontext
+- Message-Assembly (History + User-Message + Remember)
 - Stats-Berechnung (Token-Schätzungen)
 - Afterthought Decision-Parsing (Ja/Nein Erkennung)
 """
@@ -48,13 +49,40 @@ class ChatService:
         except Exception as e:
             log.error("ChatService: PromptEngine konnte nicht geladen werden: %s", e)
 
+    def _create_file_tool_executor(self, variant: str = 'default',
+                                     runtime_vars: dict = None):
+        """Creates the executor callback for read_file and write_file tool calls."""
+        engine = self._engine
+
+        def executor(tool_name: str, tool_input: dict):
+            if tool_name == 'read_file':
+                filename = tool_input.get('filename', '')
+                if not filename:
+                    return False, "Missing filename parameter"
+                content = engine.read_prompt_file(filename, variant, runtime_vars)
+                log.info("File-Tool read: %s (%d chars)", filename, len(content))
+                return True, content
+            elif tool_name == 'write_file':
+                filename = tool_input.get('filename', '')
+                content = tool_input.get('content', '')
+                if not filename:
+                    return False, "Missing filename parameter"
+                if not content:
+                    return False, "Missing content parameter"
+                result = engine.write_prompt_file(filename, content, variant)
+                log.info("File-Tool write: %s → %s", filename, result)
+                return True, result
+            else:
+                return False, f"Unknown tool: {tool_name}"
+
+        return executor
+
     def _load_cortex_context(self, persona_id: str = None) -> Dict[str, str]:
         """
         Lädt Cortex-Dateien als Placeholder-Werte für die PromptEngine.
 
         Prüft zuerst das cortexEnabled-Setting. Gibt bei deaktiviertem Cortex
-        oder Fehler leere Strings zurück (der requires_any-Check in der Engine
-        überspringt dann den Cortex-Block).
+        oder Fehler leere Strings zurück.
 
         Args:
             persona_id: Optional Persona-ID (Default: aktive Persona)
@@ -91,10 +119,8 @@ class ChatService:
         """
         Baut die Messages-Liste für den Chat-Request auf.
 
-        Die Reihenfolge wird durch die PromptEngine-Sequenz bestimmt:
-        - first_assistant: Prefill-Impersonation
-        - history: Konversationsverlauf ({{history}})
-        - prefill: Remember als letzte Assistant-Message
+        Einfache Struktur: History → Afterthought-Kontext → User-Message.
+        Kein Prefill, keine Dialog-Injections — die API liest Kontext per File-Tool.
 
         Returns:
             Tuple (messages, stats_dict) mit der fertigen Messages-Liste und
@@ -102,130 +128,20 @@ class ChatService:
         """
         messages = []
         history_tokens_est = 0
-        variant = 'experimental' if nsfw_mode else 'default'
 
         effective_history = list(conversation_history) if conversation_history else []
 
-        # Prefill-Impersonation nur im experimental mode
-        prefill_imp_text = ''
-        if nsfw_mode and self._engine:
-            prefill_imp_text = self._engine.resolve_prompt('prefill_impersonation', variant='experimental') or ''
-
-        # Dialog-Injections via Engine
-        dialog_injections = []
-        if nsfw_mode and self._engine:
-            dialog_injections = self._engine.get_dialog_injections(variant=variant)
-
-        # Message-Sequenz von Engine holen (bestimmt Reihenfolge)
-        sequence = []
-        if self._engine:
-            try:
-                sequence = self._engine.get_chat_message_sequence(variant=variant)
-            except Exception:
-                sequence = []
-
-        # Fallback wenn keine Sequenz verfügbar
-        if not sequence:
-            sequence = [
-                {'position': 'first_assistant', 'order': 100},
-                {'position': 'history', 'order': 200},
-                {'position': 'prefill', 'order': 300},
-            ]
-
-        prefill_text = ''
-        history_processed = False
-
-        for template in sequence:
-            position = template['position']
-
-            if position == 'first_assistant':
-                # Prefill-Impersonation
-                first_parts = []
-                if prefill_imp_text:
-                    first_parts.append(prefill_imp_text)
-
-                if dialog_injections:
-                    if first_parts and dialog_injections[0].get('role') == 'assistant':
-                        combined = "\n\n".join(first_parts) + "\n\n" + dialog_injections[0].get('content', '')
-                        messages.append({'role': 'assistant', 'content': combined})
-                        history_tokens_est += len(combined)
-                        for msg in dialog_injections[1:]:
-                            messages.append(msg)
-                            history_tokens_est += len(msg.get('content', ''))
-                    elif first_parts:
-                        first_assistant = "\n\n".join(first_parts)
-                        messages.append({'role': 'assistant', 'content': first_assistant})
-                        history_tokens_est += len(first_assistant)
-                        for msg in dialog_injections:
-                            messages.append(msg)
-                            history_tokens_est += len(msg.get('content', ''))
-                    else:
-                        for msg in dialog_injections:
-                            messages.append(msg)
-                            history_tokens_est += len(msg.get('content', ''))
-                    dialog_injections = []  # consumed
-                elif first_parts:
-                    first_assistant = "\n\n".join(first_parts)
-                    messages.append({'role': 'assistant', 'content': first_assistant})
-                    history_tokens_est += len(first_assistant)
-
-            elif position == 'history':
-                # {{history}} expandieren: Konversationsverlauf einfügen
-                history_processed = True
-                if effective_history:
-                    # Wenn History mit assistant beginnt und letzte Message auch assistant ist
-                    # (z.B. Auto-First-Message), Bridge einfügen statt zu mergen.
-                    if messages and effective_history[0]['role'] == messages[-1]['role']:
-                        if effective_history[0]['role'] == 'assistant':
-                            # Bridge-Message damit erste Nachricht als eigene Nachricht bleibt
-                            messages.append({'role': 'user', 'content': '[Beginn der Konversation]'})
-                            log.debug("History-Bridge eingefügt (Auto-First-Message)")
-                        else:
-                            # Seltener Fall: beide user → zusammenführen
-                            messages[-1]['content'] += "\n\n" + effective_history[0]['content']
-                            history_tokens_est += len(effective_history[0].get('content', ''))
-                            effective_history = effective_history[1:]
-
-                    for msg in effective_history:
-                        messages.append(msg)
-                        history_tokens_est += len(msg.get('content', ''))
-
-                    log.info("API-Request: History %d msgs (roles: %s)",
-                             len(effective_history),
-                             ' → '.join(m['role'][0] for m in effective_history))
-
-            elif position == 'prefill':
-                # Prefill-Content aus Engine holen
-                if self._engine:
-                    pf = self._engine.build_prefill(variant=variant) or ''
-                    if pf:
-                        if history_processed:
-                            # Nach History → echter Prefill (nach user_message)
-                            prefill_text = pf
-                        else:
-                            # Vor History → reguläre Assistant-Message
-                            if messages and messages[-1]['role'] == 'assistant':
-                                messages[-1]['content'] += "\n\n" + pf
-                            else:
-                                messages.append({'role': 'assistant', 'content': pf})
-                            history_tokens_est += len(pf)
-
-        # Safety: Falls History nicht in der Sequenz war, trotzdem einfügen
-        if not history_processed and effective_history:
-            log.warning("History wurde nicht durch Sequenz verarbeitet – Fallback-Einfügung")
-            if messages and effective_history[0]['role'] == messages[-1]['role']:
-                if effective_history[0]['role'] == 'assistant':
-                    messages.append({'role': 'user', 'content': '[Beginn der Konversation]'})
-                else:
-                    messages[-1]['content'] += "\n\n" + effective_history[0]['content']
-                    history_tokens_est += len(effective_history[0].get('content', ''))
-                    effective_history = effective_history[1:]
+        # 1. History einfügen
+        if effective_history:
             for msg in effective_history:
                 messages.append(msg)
                 history_tokens_est += len(msg.get('content', ''))
 
-        # Pending Afterthought: inject the persona's last inner dialogue (from [i_can_wait])
-        # as context before the user message so the persona remembers what it was thinking.
+            log.info("API-Request: History %d msgs (roles: %s)",
+                     len(effective_history),
+                     ' → '.join(m['role'][0] for m in effective_history))
+
+        # 2. Pending Afterthought: inner dialogue as context before the user message
         if pending_afterthought:
             afterthought_note = f"[Dein letzter innerer Gedanke, {user_name} könnte auch aufgefallen sein das du in Gedanken warst — nutze ihn als Kontext:]\n{pending_afterthought}"
             if messages and messages[-1]['role'] == 'assistant':
@@ -235,24 +151,17 @@ class ChatService:
             history_tokens_est += len(afterthought_note)
             log.info("Pending afterthought injected (%d chars)", len(pending_afterthought))
 
-        # User-Nachricht hinzufügen
-        # Falls History mit user endet, zusammenführen um doppelte user-Rolle zu vermeiden
+        # 3. User-Nachricht hinzufügen
         if messages and messages[-1]['role'] == 'user':
             messages[-1]['content'] += "\n\n" + user_message
         else:
             messages.append({'role': 'user', 'content': user_message})
         user_msg_est = len(user_message)
 
-        # Prefill als letzte Assistant-Nachricht (wenn nach History)
-        prefill_est = 0
-        if prefill_text:
-            messages.append({'role': 'assistant', 'content': prefill_text})
-            prefill_est = len(prefill_text)
-
         return messages, {
             'history_est': history_tokens_est,
             'user_msg_est': user_msg_est,
-            'prefill_est': prefill_est
+            'prefill_est': 0
         }
 
     def chat_stream(self, user_message: str, conversation_history: list,
@@ -275,11 +184,12 @@ class ChatService:
 
         char_name = character_data.get('char_name', 'Assistant')
 
-        # 1. System-Prompt via PromptEngine bauen
+        # 1. System-Prompt via PromptEngine bauen (schlanker Core + File-Index)
         variant = 'experimental' if experimental_mode else 'default'
         system_prompt = ''
+        runtime_vars = {}
+        tools = []
         if self._engine:
-            runtime_vars = {}
             if ip_address:
                 runtime_vars['ip_address'] = ip_address
             # Last Encounter berechnen
@@ -290,10 +200,8 @@ class ChatService:
                 )
             except Exception as e:
                 log.warning("last_encounter computation failed: %s", e)
-            # Cortex-Daten laden und als runtime_vars hinzufügen
-            cortex_data = self._load_cortex_context(persona_id)
-            runtime_vars.update(cortex_data)
-            system_prompt = self._engine.build_system_prompt(variant=variant, runtime_vars=runtime_vars) or ''
+            system_prompt = self._engine.build_core_system_prompt(variant=variant, runtime_vars=runtime_vars) or ''
+            tools = self._engine.get_chat_tools(variant=variant)
         else:
             log.error("ChatService: Kein System-Prompt — PromptEngine nicht verfügbar!")
         system_prompt_est = len(system_prompt)
@@ -319,14 +227,21 @@ class ChatService:
             system_prompt=system_prompt,
             messages=messages,
             model=api_model,
-            max_tokens=500,
+            max_tokens=4096 if tools else 500,
             temperature=temperature,
             stream=True,
+            tools=tools if tools else None,
             request_type='chat'
         )
 
-        # 4. Stream über ApiClient
-        for event in self.api_client.stream(config):
+        # 4. Stream über ApiClient (mit File-Tool Support)
+        file_executor = self._create_file_tool_executor(variant, runtime_vars) if tools else None
+        stream_method = (
+            self.api_client.stream_with_tools(config, file_executor)
+            if tools and file_executor
+            else self.api_client.stream(config)
+        )
+        for event in stream_method:
             if event.event_type == 'chunk':
                 yield ('chunk', event.data)
             elif event.event_type == 'done':
@@ -381,10 +296,10 @@ class ChatService:
             if not self._engine:
                 return {'decision': False, 'inner_dialogue': '', 'error': 'PromptEngine nicht verfügbar'}
 
-            system_prompt = self._engine.build_system_prompt(variant=variant, runtime_vars=runtime_vars) or ''
+            system_prompt = self._engine.build_full_system_prompt(variant=variant, runtime_vars=runtime_vars) or ''
             append = self._engine.get_system_prompt_append(variant=variant, runtime_vars=runtime_vars) or ''
             if append:
-                system_prompt = system_prompt + append
+                system_prompt = system_prompt + "\n\n" + append
 
             inner_dialogue_instruction = self._engine.build_afterthought_inner_dialogue(
                 variant=variant, runtime_vars=runtime_vars
@@ -479,7 +394,7 @@ class ChatService:
                 yield ('error', 'PromptEngine nicht verfügbar')
                 return
 
-            system_prompt = self._engine.build_system_prompt(variant=variant, runtime_vars=runtime_vars) or ''
+            system_prompt = self._engine.build_full_system_prompt(variant=variant, runtime_vars=runtime_vars) or ''
             followup_instruction = self._engine.build_afterthought_followup(
                 variant=variant, runtime_vars=runtime_vars
             ) or ''
@@ -530,15 +445,4 @@ class ChatService:
             log.error("Nachgedanke-Followup Fehler: %s", e)
             yield ('error', str(e))
 
-    def generate_session_title(self, prompt: str, api_model: str = None) -> str:
-        """Generiert einen kurzen Session-Titel"""
-        config = RequestConfig(
-            system_prompt='',
-            messages=[{'role': 'user', 'content': prompt}],
-            model=api_model,
-            max_tokens=50,
-            request_type='session_title'
-        )
-        response = self.api_client.request(config)
-        return response.content if response.success else 'Neue Konversation'
 

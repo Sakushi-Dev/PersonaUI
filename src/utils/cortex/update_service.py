@@ -600,7 +600,7 @@ Now read your Cortex files and update them based on this conversation. Use the `
         """
         Lädt Tool-Beschreibungen aus der PromptEngine und baut CORTEX_TOOLS.
 
-        Versucht die Texte aus cortex_update_tools.json zu laden.
+        Versucht die Tools via Engine zu laden.
         Fällt bei Fehler auf _FALLBACK_CORTEX_TOOLS zurück.
         """
         engine = self._get_prompt_engine()
@@ -608,57 +608,8 @@ Now read your Cortex files and update them based on this conversation. Use the `
             return _FALLBACK_CORTEX_TOOLS
 
         try:
-            tool_data = engine.get_domain_data('cortex_update_tools')
-            descriptions = tool_data.get('tool_descriptions', {})
-
-            if not descriptions:
-                return _FALLBACK_CORTEX_TOOLS
-
-            read_desc = descriptions.get('read_file', {})
-            write_desc = descriptions.get('write_file', {})
-
-            return [
-                {
-                    "name": "read_file",
-                    "description": read_desc.get('tool_description',
-                        _FALLBACK_CORTEX_TOOLS[0]['description']),
-                    "input_schema": {
-                        "type": "object",
-                        "properties": {
-                            "filename": {
-                                "type": "string",
-                                "enum": ["memory.md", "soul.md", "relationship.md"],
-                                "description": read_desc.get('filename_description',
-                                    "Name of the Cortex file to read")
-                            }
-                        },
-                        "required": ["filename"]
-                    }
-                },
-                {
-                    "name": "write_file",
-                    "description": write_desc.get('tool_description',
-                        _FALLBACK_CORTEX_TOOLS[1]['description']),
-                    "input_schema": {
-                        "type": "object",
-                        "properties": {
-                            "filename": {
-                                "type": "string",
-                                "enum": ["memory.md", "soul.md", "relationship.md"],
-                                "description": write_desc.get('filename_description',
-                                    "Name of the Cortex file to write")
-                            },
-                            "content": {
-                                "type": "string",
-                                "description": write_desc.get('content_description',
-                                    "The new complete file content (Markdown format). "
-                                    "Write from your first-person perspective.")
-                            }
-                        },
-                        "required": ["filename", "content"]
-                    }
-                }
-            ]
+            tools = engine.get_cortex_tools()
+            return tools if tools else _FALLBACK_CORTEX_TOOLS
         except Exception as e:
             log.warning("Cortex Tools via Engine fehlgeschlagen, nutze Fallback: %s", e)
             return _FALLBACK_CORTEX_TOOLS
