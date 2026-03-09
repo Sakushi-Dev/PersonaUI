@@ -270,6 +270,7 @@ class CortexUpdateService:
                 system_prompt=system_prompt,
                 messages=messages,
                 tools=tools,
+                model=self._get_user_model(),
                 max_tokens=CORTEX_UPDATE_MAX_TOKENS,
                 temperature=CORTEX_UPDATE_TEMPERATURE,
                 request_type='cortex_update'
@@ -630,6 +631,11 @@ Now read your Cortex files and update them based on this conversation. Use the `
         return "\n\n".join(lines)
 
     # ─── Hilfsmethoden ──────────────────────────────────────────────
+
+    def _get_user_model(self) -> str:
+        """Reads the user's selected API model from settings."""
+        from utils.settings_manager import get_value
+        return get_value('api', 'model') or None
 
     def _get_context_limit(self) -> int:
         """Liest den User-contextLimit (ungeclampt) aus settings.json (user-Sektion)."""
