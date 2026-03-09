@@ -11,6 +11,7 @@ import { CortexIcon } from '../../components/Icons/Icons';
 import OverlayBody from '../../components/Overlay/OverlayBody';
 import OverlayFooter from '../../components/Overlay/OverlayFooter';
 import Toggle from '../../components/Toggle/Toggle';
+import Slider from '../../components/Slider/Slider';
 import Button from '../../components/Button/Button';
 import Spinner from '../../components/Spinner/Spinner';
 import { getCortexFiles, saveCortexFile, resetCortexFile, resetAllCortexFiles, saveCortexSettings } from '../../services/cortexApi';
@@ -30,6 +31,7 @@ const FREQ_KEYS = [
   { value: 'rare',     labelKey: 'rare',      percent: 95, hintKey: 'freqHintRare' },
 ];
 const DEFAULT_FREQUENCY = 'medium';
+const DEFAULT_REMINDER_RANGE = [6, 12];
 
 export default function CortexOverlay({ open, onClose, panelOnly }) {
   const { personaId, character } = useSession();
@@ -51,6 +53,8 @@ export default function CortexOverlay({ open, onClose, panelOnly }) {
   // ── Settings State ──
   const [cortexEnabled, setCortexEnabled] = useState(true);
   const [frequency, setFrequency] = useState(DEFAULT_FREQUENCY);
+  const [reminderMin, setReminderMin] = useState(DEFAULT_REMINDER_RANGE[0]);
+  const [reminderMax, setReminderMax] = useState(DEFAULT_REMINDER_RANGE[1]);
 
   // ── File State ──
   const [files, setFiles] = useState({ memory: '', soul: '', relationship: '' });
@@ -73,6 +77,9 @@ export default function CortexOverlay({ open, onClose, panelOnly }) {
     // Sync settings into local state
     setCortexEnabled(get('cortexEnabled', true));
     setFrequency(get('cortexFrequency', DEFAULT_FREQUENCY));
+    const range = get('journalReminderRange', DEFAULT_REMINDER_RANGE);
+    setReminderMin(Array.isArray(range) ? range[0] : DEFAULT_REMINDER_RANGE[0]);
+    setReminderMax(Array.isArray(range) ? range[1] : DEFAULT_REMINDER_RANGE[1]);
 
     // Reset UI state
     setActiveTab('memory');
@@ -169,12 +176,13 @@ export default function CortexOverlay({ open, onClose, panelOnly }) {
     saveCortexSettings({
       enabled: cortexEnabled,
       frequency,
+      journalReminderRange: [reminderMin, reminderMax],
     })
       .then(() => reload())
       .catch((err) => console.warn('Failed to sync cortex settings to backend:', err));
 
     onClose();
-  }, [cortexEnabled, frequency, reload, onClose]);
+  }, [cortexEnabled, frequency, reminderMin, reminderMax, reload, onClose]);
 
   // ══════════════════════════════════════════
   // Reset Settings (Footer "Zurücksetzen")
@@ -182,6 +190,8 @@ export default function CortexOverlay({ open, onClose, panelOnly }) {
   const handleResetSettings = useCallback(() => {
     setCortexEnabled(true);
     setFrequency(DEFAULT_FREQUENCY);
+    setReminderMin(DEFAULT_REMINDER_RANGE[0]);
+    setReminderMax(DEFAULT_REMINDER_RANGE[1]);
   }, []);
 
   // ══════════════════════════════════════════
@@ -258,6 +268,36 @@ export default function CortexOverlay({ open, onClose, panelOnly }) {
               <span className={styles.ifaceInfoNote}>
                 {FREQUENCY_OPTIONS.find((o) => o.value === frequency)?.hint}
               </span>
+            </div>
+          </div>
+        </div>
+
+        {/* ═══ Section: Journal Reminder ═══ */}
+        <div className={styles.ifaceSection}>
+          <h3 className={styles.ifaceSectionTitle}>{s.journalReminder}</h3>
+          <div className={styles.ifaceCard}>
+            <div className={styles.ifaceFieldGroup}>
+              <span className={styles.ifaceFieldHint}>
+                {s.journalReminderHint}
+              </span>
+              <Slider
+                label={s.journalReminderFirst}
+                value={reminderMin}
+                onChange={(v) => setReminderMin(Math.round(v))}
+                min={3}
+                max={20}
+                step={1}
+                displayValue={`${reminderMin} ${s.messages}`}
+              />
+              <Slider
+                label={s.journalReminderRepeat}
+                value={reminderMax}
+                onChange={(v) => setReminderMax(Math.round(v))}
+                min={4}
+                max={30}
+                step={1}
+                displayValue={`${reminderMax} ${s.messages}`}
+              />
             </div>
           </div>
         </div>
