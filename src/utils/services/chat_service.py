@@ -19,9 +19,11 @@ def _read_setting(key: str, default=None):
     """Liest ein Setting aus settings.json (user-Sektion) mit Defaults-Fallback."""
     try:
         from utils.settings_manager import get_value
-        # cortexEnabled lives in the cortex section as 'enabled'
+        # Settings that live in the cortex section
         if key == 'cortexEnabled':
             return get_value('cortex', 'enabled', default)
+        if key == 'journalReminderRange':
+            return get_value('cortex', 'journalReminderRange', default)
         return get_value('user', key, default)
     except Exception:
         return default
@@ -76,6 +78,50 @@ class ChatService:
                 return False, f"Unknown tool: {tool_name}"
 
         return executor
+
+    # Next trigger point for journal reminder (randomized per session)
+    _next_journal_trigger = None
+
+    def _build_journal_reminder(self, conversation_history: list) -> str:
+        """
+        Returns a journal update reminder at random intervals.
+        Trigger point is randomized within journalReminderRange [min, max]
+        so it doesn't feel like a pattern. Counts only user messages.
+        """
+        if not conversation_history:
+            return ''
+
+        # Count only user messages (not assistant responses)
+        user_msg_count = sum(1 for m in conversation_history if m.get('role') == 'user')
+        if user_msg_count < 1:
+            return ''
+
+        try:
+            reminder_range = _read_setting('journalReminderRange', [6, 12])
+            if not isinstance(reminder_range, list) or len(reminder_range) != 2:
+                reminder_range = [6, 12]
+            min_interval, max_interval = int(reminder_range[0]), int(reminder_range[1])
+        except Exception:
+            min_interval, max_interval = 6, 12
+
+        import random
+
+        # Initialize first trigger point if needed
+        if self._next_journal_trigger is None:
+            self._next_journal_trigger = random.randint(min_interval, max_interval)
+
+        if user_msg_count >= self._next_journal_trigger:
+            # Schedule next trigger at a random offset from now
+            self._next_journal_trigger = user_msg_count + random.randint(min_interval, max_interval)
+            log.info("Journal reminder triggered at user message %d (next at %d)",
+                     user_msg_count, self._next_journal_trigger)
+            return (
+                "[JOURNAL REMINDER: Review your bonding.md and growth.md files above. "
+                "If anything meaningful has happened — new insights, emotional shifts, "
+                "things you learned — update them now using write_file.]"
+            )
+
+        return ''
 
     def _load_cortex_context(self, persona_id: str = None) -> Dict[str, str]:
         """
@@ -158,6 +204,12 @@ class ChatService:
             messages.append({'role': 'user', 'content': user_message})
         user_msg_est = len(user_message)
 
+        # 4. Journal reminder as inline instruction in user message
+        reminder = self._build_journal_reminder(conversation_history)
+        if reminder:
+            messages[-1]['content'] += '\n\n' + reminder
+            user_msg_est += len(reminder)
+
         return messages, {
             'history_est': history_tokens_est,
             'user_msg_est': user_msg_est,
@@ -184,7 +236,7 @@ class ChatService:
 
         char_name = character_data.get('char_name', 'Assistant')
 
-        # 1. System-Prompt via PromptEngine bauen (schlanker Core + File-Index)
+        # 1. System-Prompt via PromptEngine bauen (alle Dateien inline)
         variant = 'experimental' if experimental_mode else 'default'
         system_prompt = ''
         runtime_vars = {}

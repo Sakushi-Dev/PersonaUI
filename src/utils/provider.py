@@ -28,7 +28,7 @@ def init_services(api_key: str = None):
     global _api_client, _chat_service, _cortex_service
     from .api_request import ApiClient
     from .services import ChatService
-    from .cortex_service import CortexService
+    from .cortex import CortexService
 
     if not api_key:
         from . import settings_manager as _sm

@@ -13,7 +13,7 @@ from utils.logger import log
 from utils.provider import get_chat_service, get_api_client, get_cortex_service
 from utils.cortex.tier_checker import check_and_trigger_cortex_update
 from utils.cortex.tier_tracker import reset_persona as reset_persona_cycle_state
-from utils.cortex_service import TEMPLATES
+from utils.cortex import TEMPLATES
 from routes.helpers import success_response, error_response, handle_route_error, resolve_persona_id, get_client_ip
 from routes.user_profile import get_user_profile_data
 from utils import settings_manager as _sm

@@ -21,7 +21,7 @@ MODEL_OPTIONS = load_model_options()
 _DEFAULTS_ONLY_KEYS = {'autofillModel'}
 
 # Keys die in der cortex-Sektion leben, aber dem Frontend via user-settings bereitgestellt werden
-_CORTEX_PROXY_KEYS = {'cortexEnabled', 'cortexFrequency'}
+_CORTEX_PROXY_KEYS = {'cortexEnabled', 'cortexFrequency', 'journalReminderRange'}
 
 
 def _flatten_defaults():
@@ -112,6 +112,7 @@ def _load_settings():
     # Cortex proxy
     flat['cortexEnabled'] = cortex.get('enabled', True)
     flat['cortexFrequency'] = cortex.get('frequency', 'medium')
+    flat['journalReminderRange'] = cortex.get('journalReminderRange', [6, 12])
 
     return flat
 

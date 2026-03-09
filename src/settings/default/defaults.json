@@ -44,7 +44,8 @@
     },
     "cortex": {
         "enabled": true,
-        "frequency": "medium"
+        "frequency": "medium",
+        "journalReminderRange": [6, 12]
     },
     "profile": {
         "userName": "",

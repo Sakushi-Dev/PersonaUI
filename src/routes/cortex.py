@@ -11,7 +11,7 @@ import json
 from flask import Blueprint, request
 
 from utils.provider import get_cortex_service
-from utils.cortex_service import CORTEX_FILES, TEMPLATES
+from utils.cortex import CORTEX_FILES, TEMPLATES
 from utils.cortex.tier_checker import _load_cortex_config, _get_context_limit, _calculate_threshold
 from utils.cortex.tier_tracker import get_progress
 from utils.database import get_message_count

@@ -379,7 +379,7 @@ if __name__ == '__main__':
             show_console_window()
             log.warning("PyWebView nicht installiert. Starte im Browser-Modus...")
             init_all_dbs()
-            from utils.cortex_service import ensure_cortex_dirs
+            from utils.cortex import ensure_cortex_dirs
             ensure_cortex_dirs()
             log.info("Server running at: http://%s:%s", host, server_port)
             log.info("Web UI & Backend developed by Sakushi-Dev")
@@ -387,7 +387,7 @@ if __name__ == '__main__':
     else:
         # Fallback: Normaler Flask-Server ohne GUI-Fenster
         init_all_dbs()
-        from utils.cortex_service import ensure_cortex_dirs
+        from utils.cortex import ensure_cortex_dirs
         ensure_cortex_dirs()
         if dev_mode:
             log.info("Dev-Modus: Vite Dev-Server läuft auf http://localhost:%s", launch_cfg['vite_port'])
