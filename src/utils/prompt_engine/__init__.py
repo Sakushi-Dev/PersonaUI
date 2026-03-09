@@ -1,16 +1,15 @@
 """
-Prompt Engine Package – Strukturiertes JSON-basiertes Prompt-System.
+Prompt Engine Package – File-basiertes Prompt-System mit Tool-Support.
 
-Ersetzt das alte .txt-basierte System mit:
-- JSON-Dateien pro Domain (chat, prefill, afterthought, summary, spec_autofill)
-- Prompt-Manifest mit Metadata und Reihenfolge
-- Placeholder-Registry mit 3-Phasen-Resolution (static → computed → runtime)
-- Varianten-System (default/experimental)
+Prompts als Markdown-Dateien in 3 Kategorien:
+- core/     → Immer inline im System-Prompt
+- files/    → Per read_file Tool für die API verfügbar
+- internal/ → Nur intern (Afterthought, Cortex, Autofill)
 
 Usage:
     from utils.prompt_engine import PromptEngine
     engine = PromptEngine()
-    system_prompt = engine.build_system_prompt(variant='default', runtime_vars={...})
+    system_prompt = engine.build_core_system_prompt(variant='default', runtime_vars={...})
 """
 
 from .engine import PromptEngine
