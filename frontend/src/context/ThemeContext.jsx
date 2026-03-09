@@ -12,9 +12,9 @@ export function ThemeProvider({ children }) {
     backgroundColorLight: storage.getItem('backgroundColorLight', '#a3baff'),
     gradientColor1Light: storage.getItem('gradientColor1Light', '#66cfff'),
     secondaryColorLight: storage.getItem('secondaryColorLight', '#fd91ee'),
-    backgroundColorDark: storage.getItem('backgroundColorDark', '#1a2332'),
-    gradientColor1Dark: storage.getItem('gradientColor1Dark', '#2a3f5f'),
-    secondaryColorDark: storage.getItem('secondaryColorDark', '#3d4f66'),
+    backgroundColorDark: storage.getItem('backgroundColorDark', '#151a24'),
+    gradientColor1Dark: storage.getItem('gradientColor1Dark', '#1f2d47'),
+    secondaryColorDark: storage.getItem('secondaryColorDark', '#1a2e2b'),
     nonverbalColor: storage.getItem('nonverbalColor', '#e4ba00'),
   }));
   const [fontKey, setFontKey] = useState(() => storage.getItem('bubbleFontFamily', 'ubuntu'));

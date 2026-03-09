@@ -16,11 +16,11 @@
             "fontSize": "18"
         },
         "theme": {
-            "backgroundColorDark": "#1a2332",
+            "backgroundColorDark": "#151a24",
             "backgroundColorLight": "#a3baff",
-            "secondaryColorDark": "#3d4f66",
+            "secondaryColorDark": "#1a2e2b",
             "secondaryColorLight": "#fd91ee",
-            "gradientColor1Dark": "#2a3f5f",
+            "gradientColor1Dark": "#1f2d47",
             "gradientColor1Light": "#66cfff",
             "nonverbalColor": "#e4ba00",
             "colorHue": "220"

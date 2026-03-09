@@ -47,9 +47,9 @@ function hslToHex(h, s, l) {
 export function hueToColors(hue, isDark) {
   if (isDark) {
     return {
-      bg: hslToHex(hue, 30, 15),
-      g1: hslToHex(hue, 30, 27),
-      c2: hslToHex(hue, 22, 33),
+      bg: hslToHex(hue, 35, 11),
+      g1: hslToHex(hue - 25, 40, 22),
+      c2: hslToHex(hue + 120, 30, 18),
     };
   }
   return {
@@ -82,9 +82,9 @@ export const DEFAULTS = {
   backgroundColorLight: '#a3baff',
   gradientColor1Light: '#66cfff',
   secondaryColorLight: '#fd91ee',
-  backgroundColorDark: '#1a2332',
-  gradientColor1Dark: '#2a3f5f',
-  secondaryColorDark: '#3d4f66',
+  backgroundColorDark: '#151a24',
+  gradientColor1Dark: '#1f2d47',
+  secondaryColorDark: '#1a2e2b',
   apiModel: '',
   apiTemperature: 0.7,
   contextLimit: 100,
