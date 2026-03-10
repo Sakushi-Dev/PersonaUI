@@ -151,9 +151,9 @@ print_info "Build-Tools..."
 pkg install -y build-essential
 print_ok "Build-Tools installiert (clang, make, etc.)"
 
-# --- Rust (für jiter, benötigt von pydantic-core/anthropic) ---
-print_info "Rust compiler (fuer jiter/pydantic-core)..."
-pkg install -y rust
+# --- Rust + Binutils (für jiter, benötigt von pydantic-core/anthropic) ---
+print_info "Rust compiler & linker (fuer jiter/pydantic-core)..."
+pkg install -y rust binutils
 print_ok "Rust installiert: $(rustc --version 2>&1)"
 
 # --- Bibliotheken für native Python-Pakete ---
@@ -227,6 +227,30 @@ fi
 print_info "pip aktualisieren..."
 "$VENV_PY" -m pip install --upgrade pip --quiet
 print_ok "pip aktualisiert"
+
+# Rust-Build-Umgebung fuer Termux setzen (noetig fuer jiter, pydantic-core)
+export CARGO_BUILD_TARGET=""  # auto-detect
+export CC="clang"
+export CXX="clang++"
+export CARGO_NET_GIT_FETCH_WITH_CLI=true
+export RUSTFLAGS="-C target-feature=-crt-static"
+
+# jiter vorab installieren (groesste Huerde auf Termux)
+print_info "Installiere jiter (Rust-basierter JSON-Parser, kann dauern)..."
+if "$VENV_PY" -m pip install jiter 2>&1 | tail -3; then
+    print_ok "jiter installiert"
+else
+    print_warn "jiter Build fehlgeschlagen — versuche mit maturin..."
+    "$VENV_PY" -m pip install maturin --quiet 2>/dev/null
+    if "$VENV_PY" -m pip install jiter --no-build-isolation 2>&1 | tail -5; then
+        print_ok "jiter installiert (mit maturin)"
+    else
+        print_warn "jiter konnte nicht gebaut werden"
+        print_warn "Versuche pydantic v1 Fallback..."
+        # pydantic v1 braucht kein jiter/pydantic-core
+        "$VENV_PY" -m pip install "pydantic<2" --quiet 2>/dev/null
+    fi
+fi
 
 # ══════════════════════════════════════════════════════════════════════
 #  Step 5: Python-Abhängigkeiten installieren
