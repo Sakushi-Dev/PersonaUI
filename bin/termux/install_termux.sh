@@ -151,6 +151,11 @@ print_info "Build-Tools..."
 pkg install -y build-essential
 print_ok "Build-Tools installiert (clang, make, etc.)"
 
+# --- Rust (für jiter, benötigt von pydantic-core/anthropic) ---
+print_info "Rust compiler (fuer jiter/pydantic-core)..."
+pkg install -y rust
+print_ok "Rust installiert: $(rustc --version 2>&1)"
+
 # --- Bibliotheken für native Python-Pakete ---
 print_info "Native Bibliotheken..."
 pkg install -y libyaml            # pyyaml C-Erweiterung
