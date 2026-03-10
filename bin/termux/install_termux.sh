@@ -98,8 +98,8 @@ SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 if [[ -f "$SELF_DIR/src/app.py" ]]; then
     ROOT="$SELF_DIR"
-elif [[ -f "$SELF_DIR/../src/app.py" ]]; then
-    ROOT="$(cd "$SELF_DIR/.." && pwd)"
+elif [[ -f "$SELF_DIR/../../src/app.py" ]]; then
+    ROOT="$(cd "$SELF_DIR/../.." && pwd)"
 else
     fail "src/app.py nicht gefunden! Bitte starte aus dem PersonaUI-Ordner."
 fi
@@ -400,7 +400,7 @@ echo ""
 echo -e "  ${BOLD}So startest du PersonaUI:${RESET}"
 echo ""
 echo -e "    ${CYAN}cd $ROOT${RESET}"
-echo -e "    ${CYAN}bash bin/start.sh${RESET}"
+echo -e "    ${CYAN}bash bin/termux/start_termux.sh${RESET}"
 echo ""
 echo -e "  ${BOLD}Dann im Browser oeffnen:${RESET}"
 echo -e "    ${CYAN}http://localhost:5000${RESET}"

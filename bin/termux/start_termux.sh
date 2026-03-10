@@ -29,7 +29,7 @@ fi
 
 VENV_PY="$ROOT/.venv/bin/python"
 INIT="$ROOT/src/personaui.py"
-INSTALL_SCRIPT="$ROOT/bin/install_termux.sh"
+INSTALL_SCRIPT="$ROOT/bin/termux/install_termux.sh"
 
 # Prüfe ob Installation nötig ist (kein Python, kein venv, oder kein Node)
 needs_install=false
