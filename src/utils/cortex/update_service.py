@@ -14,18 +14,14 @@ Enthält:
 
 import time
 import threading
-import json
-import os
 from datetime import datetime
 from typing import Dict, Any, Tuple
 
-from utils.logger import log
-from utils.api_request import RequestConfig
+from ..logger import log
+from ..api_request import RequestConfig
 
 
 # ─── Konstanten ──────────────────────────────────────────────────────────────
-
-_BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 CORTEX_UPDATE_MAX_TOKENS = 8192
 CORTEX_UPDATE_TEMPERATURE = 0.4
@@ -214,7 +210,7 @@ class CortexUpdateService:
             persona_name = character.get('char_name', 'Assistant')
 
             user_profile = self._load_user_profile()
-            user_name = user_profile.get('user_name', 'User') or 'User'
+            user_name = user_profile.get('userName', 'User') or 'User'
 
             # ── 3. Context-Limit aus User-Settings lesen ──────────
             context_limit = self._get_context_limit()
@@ -274,6 +270,7 @@ class CortexUpdateService:
                 system_prompt=system_prompt,
                 messages=messages,
                 tools=tools,
+                model=self._get_user_model(),
                 max_tokens=CORTEX_UPDATE_MAX_TOKENS,
                 temperature=CORTEX_UPDATE_TEMPERATURE,
                 request_type='cortex_update'
@@ -452,7 +449,7 @@ class CortexUpdateService:
         try:
             from routes.user_profile import get_user_profile_data
             profile = get_user_profile_data()
-            persona_language = profile.get('persona_language', 'english') or 'english'
+            persona_language = profile.get('personaLanguage', 'english') or 'english'
         except Exception:
             persona_language = 'english'
 
@@ -600,7 +597,7 @@ Now read your Cortex files and update them based on this conversation. Use the `
         """
         Lädt Tool-Beschreibungen aus der PromptEngine und baut CORTEX_TOOLS.
 
-        Versucht die Texte aus cortex_update_tools.json zu laden.
+        Versucht die Tools via Engine zu laden.
         Fällt bei Fehler auf _FALLBACK_CORTEX_TOOLS zurück.
         """
         engine = self._get_prompt_engine()
@@ -608,57 +605,8 @@ Now read your Cortex files and update them based on this conversation. Use the `
             return _FALLBACK_CORTEX_TOOLS
 
         try:
-            tool_data = engine.get_domain_data('cortex_update_tools')
-            descriptions = tool_data.get('tool_descriptions', {})
-
-            if not descriptions:
-                return _FALLBACK_CORTEX_TOOLS
-
-            read_desc = descriptions.get('read_file', {})
-            write_desc = descriptions.get('write_file', {})
-
-            return [
-                {
-                    "name": "read_file",
-                    "description": read_desc.get('tool_description',
-                        _FALLBACK_CORTEX_TOOLS[0]['description']),
-                    "input_schema": {
-                        "type": "object",
-                        "properties": {
-                            "filename": {
-                                "type": "string",
-                                "enum": ["memory.md", "soul.md", "relationship.md"],
-                                "description": read_desc.get('filename_description',
-                                    "Name of the Cortex file to read")
-                            }
-                        },
-                        "required": ["filename"]
-                    }
-                },
-                {
-                    "name": "write_file",
-                    "description": write_desc.get('tool_description',
-                        _FALLBACK_CORTEX_TOOLS[1]['description']),
-                    "input_schema": {
-                        "type": "object",
-                        "properties": {
-                            "filename": {
-                                "type": "string",
-                                "enum": ["memory.md", "soul.md", "relationship.md"],
-                                "description": write_desc.get('filename_description',
-                                    "Name of the Cortex file to write")
-                            },
-                            "content": {
-                                "type": "string",
-                                "description": write_desc.get('content_description',
-                                    "The new complete file content (Markdown format). "
-                                    "Write from your first-person perspective.")
-                            }
-                        },
-                        "required": ["filename", "content"]
-                    }
-                }
-            ]
+            tools = engine.get_cortex_tools()
+            return tools if tools else _FALLBACK_CORTEX_TOOLS
         except Exception as e:
             log.warning("Cortex Tools via Engine fehlgeschlagen, nutze Fallback: %s", e)
             return _FALLBACK_CORTEX_TOOLS
@@ -684,28 +632,15 @@ Now read your Cortex files and update them based on this conversation. Use the `
 
     # ─── Hilfsmethoden ──────────────────────────────────────────────
 
+    def _get_user_model(self) -> str:
+        """Reads the user's selected API model from settings."""
+        from utils.settings_manager import get_value
+        return get_value('api', 'model') or None
+
     def _get_context_limit(self) -> int:
-        """Liest den User-contextLimit (ungeclampt) aus user_settings.json."""
-        settings_path = os.path.join(_BASE_DIR, 'settings', 'user_settings.json')
-        defaults_path = os.path.join(_BASE_DIR, 'settings', 'defaults.json')
-
-        raw = None
-        try:
-            if os.path.exists(settings_path):
-                with open(settings_path, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-                raw = data.get('contextLimit')
-        except Exception:
-            pass
-
-        if raw is None:
-            try:
-                if os.path.exists(defaults_path):
-                    with open(defaults_path, 'r', encoding='utf-8') as f:
-                        data = json.load(f)
-                    raw = data.get('contextLimit', '65')
-            except Exception:
-                raw = '65'
+        """Liest den User-contextLimit (ungeclampt) aus settings.json (user-Sektion)."""
+        from utils.settings_manager import get_value
+        raw = get_value('user', 'contextLimit', '65')
 
         try:
             return max(10, int(raw))

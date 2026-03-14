@@ -1,0 +1,69 @@
+{
+    "api": {
+        "key": "",
+        "model": "claude-sonnet-4-5-20250929",
+        "autofillModel": "claude-sonnet-4-5-20250929",
+        "temperature": "0.7",
+        "contextLimit": "100"
+    },
+    "interface": {
+        "uiLanguage": "en",
+        "darkMode": false,
+        "dynamicBackground": true,
+        "notificationSound": true,
+        "bubble": {
+            "fontFamily": "ubuntu",
+            "fontSize": "18"
+        },
+        "theme": {
+            "backgroundColorDark": "#151a24",
+            "backgroundColorLight": "#a3baff",
+            "secondaryColorDark": "#1a2e2b",
+            "secondaryColorLight": "#fd91ee",
+            "gradientColor1Dark": "#1f2d47",
+            "gradientColor1Light": "#66cfff",
+            "nonverbalColor": "#e4ba00",
+            "colorHue": "220"
+        }
+    },
+    "features": {
+        "experimentalMode": false
+    },
+    "afterthought": {
+        "mode": "off",
+        "phases": [
+            [20000, 45000],
+            [45000, 60000],
+            [60000, 120000]
+        ],
+        "frequency": {
+            "rare": 3,
+            "medium": 2,
+            "high": 1
+        }
+    },
+    "cortex": {
+        "enabled": true,
+        "frequency": "medium",
+        "journalReminderRange": [6, 12]
+    },
+    "profile": {
+        "userName": "",
+        "userAvatar": null,
+        "userAvatarType": null,
+        "userGender": null,
+        "userInterestedIn": [],
+        "userInfo": "",
+        "personaLanguage": "english"
+    },
+    "initialization": {
+        "completed": false,
+        "disclaimerAccepted": false
+    },
+    "window": {
+        "width": 1280,
+        "height": 860,
+        "x": null,
+        "y": null
+    }
+}

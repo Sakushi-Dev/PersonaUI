@@ -8,7 +8,8 @@
     "cancelTitle": "Cancel",
     "emojisTitle": "Emojis",
     "cortexUpdating": "Cortex is updating…",
-    "loadMore": "Load older messages"
+    "loadMore": "Load older messages",
+    "thinkingPhrases": ["Thinking", "Gathering thoughts", "Typing"]
   },
   "de": {
     "loadingText": "Lade...",
@@ -19,6 +20,7 @@
     "cancelTitle": "Abbrechen",
     "emojisTitle": "Emojis",
     "cortexUpdating": "Cortex aktualisiert sich…",
-    "loadMore": "Ältere Nachrichten laden"
+    "loadMore": "Ältere Nachrichten laden",
+    "thinkingPhrases": ["Denkt nach", "Sammelt Gedanken", "Tippt"]
   }
 }

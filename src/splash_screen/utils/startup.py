@@ -7,7 +7,7 @@ import socket as sock
 import threading
 
 from utils.database import init_all_dbs
-from utils.cortex_service import ensure_cortex_dirs
+from utils.cortex import ensure_cortex_dirs
 from splash_screen.utils.update_check import check_for_update
 
 
@@ -112,7 +112,7 @@ def get_fun_messages():
 # Startup sequence
 # ---------------------------------------------------------------------------
 
-def startup_sequence(window, server_mode, server_port, start_flask_fn, host, dev_mode=False):
+def startup_sequence(window, server_mode, server_port, start_flask_fn, host, launch_cfg=None):
     """Initialize everything and type output into the splash window.
 
     Args:
@@ -121,8 +121,13 @@ def startup_sequence(window, server_mode, server_port, start_flask_fn, host, dev
         server_port:     port number
         start_flask_fn:  callable to start the Flask server
         host:            host address
-        dev_mode:        True if --dev flag is set (Vite dev server)
+        launch_cfg:      dict from launch_options.ini (or None for defaults)
     """
+    if launch_cfg is None:
+        launch_cfg = {}
+    dev_mode = launch_cfg.get('dev_mode', False)
+    check_updates = launch_cfg.get('check_updates', True)
+    vite_port = launch_cfg.get('vite_port', 5173)
     from splash_screen.utils.update_check import get_local_version
 
     local_ver = get_local_version() or 'unknown'
@@ -135,41 +140,38 @@ def startup_sequence(window, server_mode, server_port, start_flask_fn, host, dev
     splash_type(window, '', 'default')
 
     # Update check: compare local version against origin/main
-    splash_type(window, '> Checking for updates...', 'default')
-    try:
-        update_info = check_for_update()
-        error = update_info.get('error')
-        if error and 'no network' in error:
-            splash_type(window, '  Update check skipped (no network).', 'default')
-        elif update_info.get('available'):
-            remote_ver = update_info.get('remote_version', '?')
-            splash_type(window, '', 'default')
-            splash_type(window, f'  *** New version available: v{remote_ver} (current: v{local_ver}) ***', 'warn')
-            splash_type(window, '  Run bin/update.sh (Linux) or bin\\update.bat (Windows) to update.', 'warn')
-            splash_type(window, '', 'default')
-        else:
-            splash_type(window, f'  PersonaUI is up to date (v{local_ver}).', 'info')
-    except Exception:
-        splash_type(window, '  Update check skipped.', 'default')
-    splash_type(window, '', 'default')
+    if check_updates:
+        splash_type(window, '> Checking for updates...', 'default')
+        try:
+            update_info = check_for_update()
+            error = update_info.get('error')
+            if error and 'no network' in error:
+                splash_type(window, '  Update check skipped (no network).', 'default')
+            elif update_info.get('available'):
+                remote_ver = update_info.get('remote_version', '?')
+                splash_type(window, '', 'default')
+                splash_type(window, f'  *** New version available: v{remote_ver} (current: v{local_ver}) ***', 'warn')
+                splash_type(window, '  Run bin/update.sh (Linux) or bin\\update.bat (Windows) to update.', 'warn')
+                splash_type(window, '', 'default')
+            else:
+                splash_type(window, f'  PersonaUI is up to date (v{local_ver}).', 'info')
+        except Exception:
+            splash_type(window, '  Update check skipped.', 'default')
+        splash_type(window, '', 'default')
+    else:
+        splash_type(window, '> Update check disabled.', 'default')
+        splash_type(window, '', 'default')
 
-    # Initialize databases
-    splash_type(window, '> Initializing databases...', 'default')
+    # Initialize data directories
+    splash_type(window, '> Initializing data directories...', 'default')
     init_all_dbs()
-    splash_type(window, '  Databases ready.', 'info')
+    splash_type(window, '  Data directories ready.', 'info')
     splash_type(window, '', 'default')
 
     # Ensure Cortex directories
     splash_type(window, '> Checking Cortex directories...', 'default')
     ensure_cortex_dirs()
     splash_type(window, '  Cortex ready.', 'info')
-    splash_type(window, '', 'default')
-
-    # Settings migration (memoriesEnabled → cortexEnabled)
-    splash_type(window, '> Checking settings migration...', 'default')
-    from utils.settings_migration import migrate_settings
-    migrate_settings()
-    splash_type(window, '  Settings ready.', 'info')
     splash_type(window, '', 'default')
 
     # Fun persona loading messages
@@ -229,8 +231,7 @@ def startup_sequence(window, server_mode, server_port, start_flask_fn, host, dev
 
         if dev_mode:
             # Dev-Modus: Auf Vite Dev-Server warten und laden
-            vite_port = 5173
-            splash_type(window, '> Waiting for Vite dev server (port 5173)...', 'info')
+            splash_type(window, f'> Waiting for Vite dev server (port {vite_port})...', 'info')
             vite_waited = 0
             vite_ready = False
             vite_max_wait = 30  # npm + Vite can take >15s on Windows

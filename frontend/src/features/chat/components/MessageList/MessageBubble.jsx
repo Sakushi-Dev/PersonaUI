@@ -8,6 +8,7 @@ import PromptInfoOverlay from './PromptInfoOverlay';
 import { formatMessage } from '../../../../utils/formatMessage';
 import { formatTimestamp } from '../../../../utils/formatTime';
 import { useLanguage } from '../../../../hooks/useLanguage';
+import ThinkingWave from './ThinkingWave';
 import styles from './MessageList.module.css';
 
 export default function MessageBubble({
@@ -28,15 +29,35 @@ export default function MessageBubble({
   const { profile } = useContext(UserContext);
   const { language, t } = useLanguage();
   const s = t('messageBubble');
+  const chatStrings = t('chat');
   const [showStats, setShowStats] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState('');
   const [confirmAction, setConfirmAction] = useState(null);
   const editRef = useRef(null);
+  const wasThinking = useRef(false);
+  const [delayedVisible, setDelayedVisible] = useState(false);
+  const isStreamingEntry = useRef(isStreaming && !message);
 
-  const avatarSrc = isUser ? profile?.user_avatar : characterAvatar;
-  const avatarType = isUser ? profile?.user_avatar_type : characterAvatarType;
-  const avatarName = isUser ? (profile?.user_name || s.you) : characterName;
+  // Delay the streaming bubble appearance for a soft entrance
+  useEffect(() => {
+    if (!isStreamingEntry.current) {
+      setDelayedVisible(true);
+      return;
+    }
+    const timer = setTimeout(() => setDelayedVisible(true), 600);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Track thinking → text transition for smooth fade
+  const isThinking = isStreaming && !message;
+  if (isThinking) wasThinking.current = true;
+  const showFadeIn = !isThinking && wasThinking.current;
+  if (!isStreaming) wasThinking.current = false;
+
+  const avatarSrc = isUser ? profile?.userAvatar : characterAvatar;
+  const avatarType = isUser ? profile?.userAvatarType : characterAvatarType;
+  const avatarName = isUser ? (profile?.userName || s.you) : characterName;
 
   // Streaming text is already formatted by the hook — skip double-formatting
   const formattedMessage = isStreaming ? message : formatMessage(message);
@@ -82,9 +103,13 @@ export default function MessageBubble({
     }
   };
 
+  if (!delayedVisible) return null;
+
   return (
-    <div className={`${styles.message} ${isUser ? styles.userMessage : styles.botMessage}`}>
-      <div className={styles.messageAvatar}>
+    <div
+      className={`${styles.message} ${isUser ? styles.userMessage : styles.botMessage} ${isStreamingEntry.current ? styles.bubbleEnter : ''}`}
+    >
+      <div className={`${styles.messageAvatar} ${isThinking ? styles.avatarThinking : ''}`}>
         <Avatar
           src={avatarSrc}
           type={avatarType}
@@ -95,7 +120,7 @@ export default function MessageBubble({
       <div className={styles.messageContent}>
         <div className={styles.messageSenderRow}>
           <div className={styles.messageSender}>
-            {isUser ? (profile?.user_name || s.you) : characterName}
+            {isUser ? (profile?.userName || s.you) : characterName}
           </div>
           {!isUser && !isStreaming && stats && (
             <button
@@ -133,8 +158,17 @@ export default function MessageBubble({
             </div>
           ) : (
             <>
-              <span dangerouslySetInnerHTML={{ __html: formattedMessage }} />
-              {isStreaming && <span className={styles.streamingCursor}>▌</span>}
+              {isThinking && (
+                <span className={styles.thinkingFade}>
+                  <ThinkingWave phrases={chatStrings.thinkingPhrases || []} />
+                </span>
+              )}
+              {!isThinking && (
+                <span className={showFadeIn ? styles.streamingTextEnter : undefined}>
+                  <span dangerouslySetInnerHTML={{ __html: formattedMessage }} />
+                  {isStreaming && <span className={styles.streamingCursor}>▌</span>}
+                </span>
+              )}
               {timestamp && !isStreaming && (
                 <div className={styles.messageTime}>
                   {formatTimestamp(timestamp, language)}
@@ -149,8 +183,8 @@ export default function MessageBubble({
           <div className={`${styles.messageActions} ${isUser ? styles.messageActionsUser : ''}`}>
             <button
               className={styles.actionBtn}
-              onClick={() => setConfirmAction({ type: 'delete', message: s.confirmDelete, handler: onDelete })}
-              title={s.deleteTitle}
+              onClick={() => setConfirmAction({ type: 'delete', message: s.deleteConfirm, handler: onDelete })}
+              title={s.deleteMsg}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
@@ -160,7 +194,7 @@ export default function MessageBubble({
             <button
               className={styles.actionBtn}
               onClick={handleStartEdit}
-              title={s.editTitle}
+              title={s.editMsg}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
@@ -170,8 +204,8 @@ export default function MessageBubble({
             {!isUser && (
               <button
                 className={styles.actionBtn}
-                onClick={() => setConfirmAction({ type: 'regenerate', message: s.confirmRegenerate, handler: onRegenerate })}
-                title={s.regenerateTitle}
+                onClick={() => setConfirmAction({ type: 'regenerate', message: s.regenerateConfirm, handler: onRegenerate })}
+                title={s.regenerateMsg}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" /><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
@@ -181,9 +215,9 @@ export default function MessageBubble({
             )}
             {isUser && (
               <button
-                className={styles.actionBtn}
+                className={`${styles.actionBtn} ${styles.resendBtn}`}
                 onClick={onResend}
-                title={s.resendTitle}
+                title={s.resendMsg}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />

@@ -6,15 +6,17 @@ import os
 import pytest
 from unittest.mock import MagicMock
 
-import utils.cortex_service as cortex_module
-from utils.cortex_service import (
+import utils.cortex as cortex_module
+import utils.cortex.constants as cortex_constants
+from utils.cortex import (
     CortexService,
     CORTEX_FILES,
-    CORTEX_DEFAULT_DIR,
-    CORTEX_CUSTOM_DIR,
+    DATA_DIR,
     MEMORY_TEMPLATE,
     SOUL_TEMPLATE,
     RELATIONSHIP_TEMPLATE,
+    BONDING_TEMPLATE,
+    GROWTH_TEMPLATE,
     get_cortex_dir,
     ensure_cortex_dir,
     create_cortex_dir,
@@ -42,24 +44,16 @@ def cortex_service(mock_api_client):
 
 @pytest.fixture
 def temp_cortex_dir(tmp_path):
-    """Temporäres Cortex-Verzeichnis für isolierte Tests."""
-    original_base = cortex_module.CORTEX_BASE_DIR
-    original_default = cortex_module.CORTEX_DEFAULT_DIR
-    original_custom = cortex_module.CORTEX_CUSTOM_DIR
+    """Temporäres Data-Verzeichnis für isolierte Cortex-Tests."""
+    original_data_dir = cortex_constants.DATA_DIR
 
-    test_base = str(tmp_path / 'cortex')
-    test_default = str(tmp_path / 'cortex' / 'default')
-    test_custom = str(tmp_path / 'cortex' / 'custom')
+    test_data_dir = str(tmp_path / 'data')
 
-    cortex_module.CORTEX_BASE_DIR = test_base
-    cortex_module.CORTEX_DEFAULT_DIR = test_default
-    cortex_module.CORTEX_CUSTOM_DIR = test_custom
+    cortex_constants.DATA_DIR = test_data_dir
 
-    yield tmp_path / 'cortex'
+    yield tmp_path / 'data'
 
-    cortex_module.CORTEX_BASE_DIR = original_base
-    cortex_module.CORTEX_DEFAULT_DIR = original_default
-    cortex_module.CORTEX_CUSTOM_DIR = original_custom
+    cortex_constants.DATA_DIR = original_data_dir
 
 
 # ============================================================
@@ -69,39 +63,39 @@ def temp_cortex_dir(tmp_path):
 class TestGetCortexDir:
     def test_default_persona(self):
         result = get_cortex_dir('default')
-        assert result == CORTEX_DEFAULT_DIR
+        assert result == os.path.join(DATA_DIR, 'default', 'cortex')
 
     def test_empty_persona_id(self):
         result = get_cortex_dir('')
-        assert result == CORTEX_DEFAULT_DIR
+        assert result == os.path.join(DATA_DIR, 'default', 'cortex')
 
     def test_none_persona_id(self):
         result = get_cortex_dir(None)
-        assert result == CORTEX_DEFAULT_DIR
+        assert result == os.path.join(DATA_DIR, 'default', 'cortex')
 
     def test_custom_persona(self):
         result = get_cortex_dir('a1b2c3d4')
-        assert result == os.path.join(CORTEX_CUSTOM_DIR, 'a1b2c3d4')
+        assert result == os.path.join(DATA_DIR, 'a1b2c3d4', 'cortex')
 
 
 class TestEnsureCortexDir:
     def test_creates_default_dir_and_files(self, temp_cortex_dir):
         ensure_cortex_dir('default')
-        default_dir = temp_cortex_dir / 'default'
+        default_dir = temp_cortex_dir / 'default' / 'cortex'
         assert default_dir.exists()
         for fname in CORTEX_FILES:
             assert (default_dir / fname).exists()
 
     def test_creates_custom_dir_and_files(self, temp_cortex_dir):
         ensure_cortex_dir('test123')
-        custom_dir = temp_cortex_dir / 'custom' / 'test123'
+        custom_dir = temp_cortex_dir / 'test123' / 'cortex'
         assert custom_dir.exists()
         for fname in CORTEX_FILES:
             assert (custom_dir / fname).exists()
 
     def test_does_not_overwrite_existing_files(self, temp_cortex_dir):
         ensure_cortex_dir('default')
-        memory_file = temp_cortex_dir / 'default' / 'memory.md'
+        memory_file = temp_cortex_dir / 'default' / 'cortex' / 'memory.md'
         memory_file.write_text('Custom content', encoding='utf-8')
 
         # Erneuter Aufruf darf nicht überschreiben
@@ -110,17 +104,19 @@ class TestEnsureCortexDir:
 
     def test_template_content_is_correct(self, temp_cortex_dir):
         ensure_cortex_dir('default')
-        default_dir = temp_cortex_dir / 'default'
+        default_dir = temp_cortex_dir / 'default' / 'cortex'
         assert (default_dir / 'memory.md').read_text(encoding='utf-8') == MEMORY_TEMPLATE
         assert (default_dir / 'soul.md').read_text(encoding='utf-8') == SOUL_TEMPLATE
         assert (default_dir / 'relationship.md').read_text(encoding='utf-8') == RELATIONSHIP_TEMPLATE
+        assert (default_dir / 'bonding.md').read_text(encoding='utf-8') == BONDING_TEMPLATE
+        assert (default_dir / 'growth.md').read_text(encoding='utf-8') == GROWTH_TEMPLATE
 
 
 class TestCreateCortexDir:
     def test_success(self, temp_cortex_dir):
         result = create_cortex_dir('new_persona')
         assert result is True
-        assert (temp_cortex_dir / 'custom' / 'new_persona').exists()
+        assert (temp_cortex_dir / 'new_persona' / 'cortex').exists()
 
     def test_returns_true_for_default(self, temp_cortex_dir):
         result = create_cortex_dir('default')
@@ -130,17 +126,17 @@ class TestCreateCortexDir:
 class TestDeleteCortexDir:
     def test_delete_custom_persona(self, temp_cortex_dir):
         ensure_cortex_dir('abc123')
-        assert (temp_cortex_dir / 'custom' / 'abc123').exists()
+        assert (temp_cortex_dir / 'abc123' / 'cortex').exists()
 
         result = delete_cortex_dir('abc123')
         assert result is True
-        assert not (temp_cortex_dir / 'custom' / 'abc123').exists()
+        assert not (temp_cortex_dir / 'abc123' / 'cortex').exists()
 
     def test_cannot_delete_default(self, temp_cortex_dir):
         ensure_cortex_dir('default')
         result = delete_cortex_dir('default')
         assert result is False
-        assert (temp_cortex_dir / 'default').exists()
+        assert (temp_cortex_dir / 'default' / 'cortex').exists()
 
     def test_delete_nonexistent_returns_false(self, temp_cortex_dir):
         result = delete_cortex_dir('nonexistent')
@@ -154,11 +150,11 @@ class TestDeleteCortexDir:
 class TestCortexServicePathResolution:
     def test_get_cortex_path_default(self, cortex_service):
         path = cortex_service.get_cortex_path('default')
-        assert path == CORTEX_DEFAULT_DIR
+        assert path == os.path.join(DATA_DIR, 'default', 'cortex')
 
     def test_get_cortex_path_custom(self, cortex_service):
         path = cortex_service.get_cortex_path('xyz789')
-        assert path.endswith(os.path.join('custom', 'xyz789'))
+        assert path.endswith(os.path.join('xyz789', 'cortex'))
 
 
 class TestCortexServiceReadFile:
@@ -221,66 +217,3 @@ class TestCortexServiceFilenameValidation:
     def test_invalid_filenames(self, cortex_service, bad_name):
         with pytest.raises(ValueError):
             cortex_service.read_file('default', bad_name)
-
-
-class TestCortexServiceToolCallHandler:
-    def test_handle_read_tool_call(self, cortex_service, temp_cortex_dir):
-        ensure_cortex_dir('default')
-        result = cortex_service._handle_tool_call(
-            'default', 'cortex_read_file', {'filename': 'memory.md'}
-        )
-        assert '# Memory' in result
-
-    def test_handle_write_tool_call(self, cortex_service, temp_cortex_dir):
-        ensure_cortex_dir('default')
-        result = cortex_service._handle_tool_call(
-            'default', 'cortex_write_file',
-            {'filename': 'soul.md', 'content': '# Updated Soul'}
-        )
-        assert 'erfolgreich aktualisiert' in result
-
-        # Verify it was written
-        content = cortex_service.read_file('default', 'soul.md')
-        assert content == '# Updated Soul'
-
-    def test_handle_invalid_tool_name(self, cortex_service):
-        result = cortex_service._handle_tool_call(
-            'default', 'unknown_tool', {}
-        )
-        assert 'Unbekanntes Tool' in result
-
-    def test_handle_invalid_filename_in_read(self, cortex_service):
-        result = cortex_service._handle_tool_call(
-            'default', 'cortex_read_file', {'filename': 'hack.md'}
-        )
-        assert 'Fehler' in result
-
-
-class TestCortexServiceFormatHistory:
-    def test_formats_history(self, cortex_service):
-        history = [
-            {'role': 'user', 'content': 'Hallo!'},
-            {'role': 'assistant', 'content': 'Hi, wie gehts?'},
-            {'role': 'user', 'content': 'Gut, danke!'},
-        ]
-        result = cortex_service._format_history_for_update(history, 'Mia')
-        assert 'User: Hallo!' in result
-        assert 'Mia: Hi, wie gehts?' in result
-        assert 'User: Gut, danke!' in result
-
-
-class TestCortexServiceExecuteUpdate:
-    def test_returns_error_when_api_not_ready(self, cortex_service, mock_api_client):
-        mock_api_client.is_ready = False
-        result = cortex_service.execute_cortex_update(
-            'default', [{'role': 'user', 'content': 'hi'}], {'char_name': 'Mia'}
-        )
-        assert result['success'] is False
-        assert 'nicht initialisiert' in result['error']
-
-    def test_returns_error_without_history(self, cortex_service):
-        result = cortex_service.execute_cortex_update(
-            'default', [], {'char_name': 'Mia'}
-        )
-        assert result['success'] is False
-        assert 'Kein Gesprächsverlauf' in result['error']

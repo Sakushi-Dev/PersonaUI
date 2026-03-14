@@ -46,5 +46,5 @@ def test_health_endpoint_version_value(client):
     assert version is not None
     assert version != 'unknown'
     assert len(version) > 0
-    # Should match the actual version from version.json
+    # Should match the actual version from config/version.ini
     assert version == '0.3.2-alpha'

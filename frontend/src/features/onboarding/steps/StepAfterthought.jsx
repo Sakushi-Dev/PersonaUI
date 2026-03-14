@@ -10,23 +10,23 @@ export default function StepAfterthought({ data, onChange, onNext, onBack }) {
 
   const MODES = [
     { value: 'off',    label: s.modeOff },
-    { value: 'selten', label: s.modeRare },
-    { value: 'mittel', label: s.modeMedium },
-    { value: 'hoch',   label: s.modeHigh },
+    { value: 'rare',   label: s.modeRare },
+    { value: 'medium', label: s.modeMedium },
+    { value: 'high',   label: s.modeHigh },
   ];
 
   const MODE_INFO = {
     off:    { text: s.modeInfoOff,    extra: null },
-    selten: { text: s.modeInfoRare,   extra: s.modeInfoRareExtra },
-    mittel: { text: s.modeInfoMedium, extra: s.modeInfoMediumExtra },
-    hoch:   { text: s.modeInfoHigh,   extra: s.modeInfoHighExtra },
+    rare:   { text: s.modeInfoRare,   extra: s.modeInfoRareExtra },
+    medium: { text: s.modeInfoMedium, extra: s.modeInfoMediumExtra },
+    high:   { text: s.modeInfoHigh,   extra: s.modeInfoHighExtra },
   };
 
   const update = (field, value) => {
     onChange((prev) => ({ ...prev, [field]: value }));
   };
 
-  const currentMode = MODE_INFO[data.nachgedankeMode] || MODE_INFO.off;
+  const currentMode = MODE_INFO[data.afterthoughtMode] || MODE_INFO.off;
 
   return (
     <div className={styles.card}>
@@ -82,8 +82,8 @@ export default function StepAfterthought({ data, onChange, onNext, onBack }) {
               <button
                 key={opt.value}
                 type="button"
-                className={`${styles.typeChip} ${data.nachgedankeMode === opt.value ? styles.chipActive : ''}`}
-                onClick={() => update('nachgedankeMode', opt.value)}
+                className={`${styles.typeChip} ${data.afterthoughtMode === opt.value ? styles.chipActive : ''}`}
+                onClick={() => update('afterthoughtMode', opt.value)}
               >
                 {opt.label}
               </button>
@@ -100,7 +100,7 @@ export default function StepAfterthought({ data, onChange, onNext, onBack }) {
                   <br /><strong>{currentMode.extra}</strong>
                 </>
               )}
-              {data.nachgedankeMode !== 'off' && (
+              {data.afterthoughtMode !== 'off' && (
                 <>
                   {' '}{s.apiNote}
                 </>

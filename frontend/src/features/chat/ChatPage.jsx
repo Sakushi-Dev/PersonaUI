@@ -10,6 +10,7 @@ import { UserContext } from '../../context/UserContext';
 import { useMessages } from './hooks/useMessages';
 import { useAfterthought } from './hooks/useAfterthought';
 import { useSidebar } from './hooks/useSidebar';
+import { hueToColors } from '../../utils/constants';
 import { useSwipe } from './hooks/useSwipe';
 
 import DynamicBackground from '../../components/DynamicBackground/DynamicBackground';
@@ -87,13 +88,18 @@ function ChatPageContent({ disclaimerAccepted = true }) {
     const dm = get('darkMode', false);
     setIsDark(dm);
 
+    // Recompute colors from stored hue to pick up formula changes
+    const hue = parseInt(get('colorHue', '220'), 10);
+    const lightColors = hueToColors(hue, false);
+    const darkColors = hueToColors(hue, true);
+
     updateColors({
-      backgroundColor_light: get('backgroundColor_light', '#a3baff'),
-      colorGradient1_light: get('colorGradient1_light', '#66cfff'),
-      color2_light: get('color2_light', '#fd91ee'),
-      backgroundColor_dark: get('backgroundColor_dark', '#1a2332'),
-      colorGradient1_dark: get('colorGradient1_dark', '#2a3f5f'),
-      color2_dark: get('color2_dark', '#3d4f66'),
+      backgroundColorLight: lightColors.bg,
+      gradientColor1Light: lightColors.g1,
+      secondaryColorLight: lightColors.c2,
+      backgroundColorDark: darkColors.bg,
+      gradientColor1Dark: darkColors.g1,
+      secondaryColorDark: darkColors.c2,
       nonverbalColor: get('nonverbalColor', '#e4ba00'),
     });
 

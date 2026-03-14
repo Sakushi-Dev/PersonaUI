@@ -30,11 +30,11 @@
 }
 
 .blobDeep2 {
-  width: min(60vw, 700px);
-  height: min(60vw, 700px);
+  width: min(75vw, 850px);
+  height: min(75vw, 850px);
   background: var(--color-sky);
-  opacity: 0.3;
-  filter: blur(130px);
+  opacity: 0.45;
+  filter: blur(110px);
   bottom: -10%;
   right: -10%;
   animation: driftB 50s ease-in-out infinite;
@@ -55,11 +55,11 @@
 }
 
 .blobMid2 {
-  width: min(35vw, 420px);
-  height: min(35vw, 420px);
+  width: min(45vw, 520px);
+  height: min(45vw, 520px);
   background: var(--color-sky);
-  opacity: 0.35;
-  filter: blur(100px);
+  opacity: 0.45;
+  filter: blur(85px);
   bottom: 15%;
   left: 10%;
   animation: driftD 40s ease-in-out infinite;
@@ -112,11 +112,11 @@
   }
   33% {
     border-radius: 55% 45% 40% 60% / 45% 55% 45% 55%;
-    transform: translate(4%, 6%) scale(1.05);
+    transform: translate(8%, 10%) scale(1.08);
   }
   66% {
     border-radius: 45% 55% 60% 40% / 60% 45% 55% 40%;
-    transform: translate(-3%, -4%) scale(0.97);
+    transform: translate(-6%, -8%) scale(0.94);
   }
 }
 
@@ -127,11 +127,11 @@
   }
   33% {
     border-radius: 60% 40% 50% 50% / 50% 45% 55% 50%;
-    transform: translate(-5%, 3%) scale(1.03);
+    transform: translate(-9%, 6%) scale(1.06);
   }
   66% {
     border-radius: 45% 55% 55% 45% / 55% 50% 45% 55%;
-    transform: translate(3%, -5%) scale(0.96);
+    transform: translate(6%, -9%) scale(0.93);
   }
 }
 
@@ -142,15 +142,15 @@
   }
   25% {
     border-radius: 45% 55% 55% 45% / 60% 40% 55% 45%;
-    transform: translate(-3%, 5%) scale(1.04);
+    transform: translate(-6%, 9%) scale(1.07);
   }
   50% {
     border-radius: 50% 50% 40% 60% / 45% 55% 50% 50%;
-    transform: translate(4%, -2%) scale(0.98);
+    transform: translate(7%, -5%) scale(0.95);
   }
   75% {
     border-radius: 55% 45% 55% 45% / 50% 50% 45% 55%;
-    transform: translate(-2%, -4%) scale(1.02);
+    transform: translate(-4%, -7%) scale(1.04);
   }
 }
 
@@ -161,11 +161,11 @@
   }
   33% {
     border-radius: 55% 45% 48% 52% / 45% 55% 52% 48%;
-    transform: translate(5%, -3%) scale(0.97);
+    transform: translate(9%, -6%) scale(0.94);
   }
   66% {
     border-radius: 50% 50% 52% 48% / 55% 45% 48% 52%;
-    transform: translate(-4%, 4%) scale(1.04);
+    transform: translate(-7%, 8%) scale(1.07);
   }
 }
 
@@ -176,7 +176,7 @@
   }
   50% {
     border-radius: 45% 55% 52% 48% / 55% 45% 48% 52%;
-    transform: translate(3%, 5%) scale(1.06);
+    transform: translate(6%, 9%) scale(1.1);
   }
 }
 
@@ -187,11 +187,11 @@
   }
   33% {
     border-radius: 55% 45% 50% 50% / 45% 55% 50% 50%;
-    transform: translate(-5%, -3%) scale(1.08);
+    transform: translate(-9%, -6%) scale(1.12);
   }
   66% {
     border-radius: 45% 55% 55% 45% / 55% 45% 45% 55%;
-    transform: translate(4%, 2%) scale(0.95);
+    transform: translate(7%, 4%) scale(0.92);
   }
 }
 

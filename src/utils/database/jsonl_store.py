@@ -20,9 +20,32 @@ Verwendung:
 
 import json
 import os
-import fcntl
+import sys
 import threading
-from typing import List, Dict, Any, Callable, Optional, Tuple
+from typing import List, Dict, Any, Callable, Optional, Tuple, Generator
+
+# Plattformabhängiges File-Locking
+if sys.platform != 'win32':
+    import fcntl
+
+    def _flock_exclusive(f):
+        fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+
+    def _flock_shared(f):
+        fcntl.flock(f.fileno(), fcntl.LOCK_SH)
+
+    def _flock_unlock(f):
+        fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+else:
+    # Windows: Thread-Locks reichen aus, OS-Level File-Locking nicht nötig
+    def _flock_exclusive(f):
+        pass
+
+    def _flock_shared(f):
+        pass
+
+    def _flock_unlock(f):
+        pass
 
 from ..logger import log
 
@@ -50,7 +73,7 @@ def _get_file_lock(filepath: str) -> threading.Lock:
         return _file_locks[normalized_path]
 
 
-def _read_lines_raw(f) -> Tuple[int, str]:
+def _read_lines_raw(f) -> Generator[Tuple[int, str], None, None]:
     """
     Generator für das zeilenweise Lesen einer Datei.
     Überspringt leere Zeilen und gibt (line_num, stripped_line) zurück.
@@ -99,14 +122,14 @@ def append(filepath: str, record: Dict[str, Any]) -> Dict[str, Any]:
         os.makedirs(os.path.dirname(os.path.abspath(filepath)), exist_ok=True)
         
         with open(filepath, 'a', encoding='utf-8') as f:
-            fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+            _flock_exclusive(f)
             try:
                 json_line = json.dumps(record, ensure_ascii=False, separators=(',', ':'))
                 f.write(json_line + '\n')
                 f.flush()
                 os.fsync(f.fileno())  # Ensure data is written to disk
             finally:
-                fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+                _flock_unlock(f)
     
     return record.copy()
 
@@ -133,14 +156,14 @@ def read_all(filepath: str) -> List[Dict[str, Any]]:
     with file_lock:
         try:
             with open(filepath, 'r', encoding='utf-8') as f:
-                fcntl.flock(f.fileno(), fcntl.LOCK_SH)
+                _flock_shared(f)
                 try:
                     for line_num, line in _read_lines_raw(f):
                         record = _parse_line(line, filepath, line_num)
                         if record is not None:
                             records.append(record)
                 finally:
-                    fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+                    _flock_unlock(f)
         except IOError as e:
             log.warning("Fehler beim Lesen von %s: %s", filepath, e)
             return []
@@ -171,7 +194,7 @@ def read_filtered(filepath: str, filter_fn: Callable[[Dict[str, Any]], bool]) ->
     with file_lock:
         try:
             with open(filepath, 'r', encoding='utf-8') as f:
-                fcntl.flock(f.fileno(), fcntl.LOCK_SH)
+                _flock_shared(f)
                 try:
                     for line_num, line in _read_lines_raw(f):
                         record = _parse_line(line, filepath, line_num)
@@ -182,7 +205,7 @@ def read_filtered(filepath: str, filter_fn: Callable[[Dict[str, Any]], bool]) ->
                             except Exception as e:
                                 log.warning("Filter-Fehler bei Record %d in %s: %s", line_num, filepath, e)
                 finally:
-                    fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+                    _flock_unlock(f)
         except IOError as e:
             log.warning("Fehler beim Lesen von %s: %s", filepath, e)
             return []
@@ -212,7 +235,7 @@ def read_last_n(filepath: str, n: int) -> List[Dict[str, Any]]:
     with file_lock:
         try:
             with open(filepath, 'rb') as f:
-                fcntl.flock(f.fileno(), fcntl.LOCK_SH)
+                _flock_shared(f)
                 try:
                     # Dateigröße ermitteln
                     f.seek(0, 2)  # Seek to end
@@ -261,7 +284,7 @@ def read_last_n(filepath: str, n: int) -> List[Dict[str, Any]]:
                     return records
                 
                 finally:
-                    fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+                    _flock_unlock(f)
         
         except IOError as e:
             log.warning("Fehler beim Lesen der letzten %d Zeilen von %s: %s", n, filepath, e)
@@ -301,7 +324,7 @@ def read_paginated(filepath: str, limit: int, offset: int, reverse: bool = False
     with file_lock:
         try:
             with open(filepath, 'r', encoding='utf-8') as f:
-                fcntl.flock(f.fileno(), fcntl.LOCK_SH)
+                _flock_shared(f)
                 try:
                     for line_num, line in _read_lines_raw(f):
                         record = _parse_line(line, filepath, line_num)
@@ -316,7 +339,7 @@ def read_paginated(filepath: str, limit: int, offset: int, reverse: bool = False
                             else:
                                 break
                 finally:
-                    fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+                    _flock_unlock(f)
         except IOError as e:
             log.warning("Fehler beim paginierten Lesen von %s: %s", filepath, e)
             return []
@@ -346,13 +369,13 @@ def count_lines(filepath: str) -> int:
     with file_lock:
         try:
             with open(filepath, 'r', encoding='utf-8') as f:
-                fcntl.flock(f.fileno(), fcntl.LOCK_SH)
+                _flock_shared(f)
                 try:
                     for line in f:
                         if line.strip():
                             count += 1
                 finally:
-                    fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+                    _flock_unlock(f)
         except IOError as e:
             log.warning("Fehler beim Zählen der Zeilen von %s: %s", filepath, e)
             return 0
@@ -382,7 +405,7 @@ def count_filtered(filepath: str, filter_fn: Callable[[Dict[str, Any]], bool]) -
     with file_lock:
         try:
             with open(filepath, 'r', encoding='utf-8') as f:
-                fcntl.flock(f.fileno(), fcntl.LOCK_SH)
+                _flock_shared(f)
                 try:
                     for line_num, line in _read_lines_raw(f):
                         record = _parse_line(line, filepath, line_num)
@@ -393,7 +416,7 @@ def count_filtered(filepath: str, filter_fn: Callable[[Dict[str, Any]], bool]) -
                             except Exception as e:
                                 log.warning("Filter-Fehler bei Record %d in %s: %s", line_num, filepath, e)
                 finally:
-                    fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+                    _flock_unlock(f)
         except IOError as e:
             log.warning("Fehler beim gefilterten Zählen von %s: %s", filepath, e)
             return 0
@@ -423,7 +446,7 @@ def rewrite(filepath: str, records: List[Dict[str, Any]]) -> None:
         
         try:
             with open(temp_path, 'w', encoding='utf-8') as f:
-                fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+                _flock_exclusive(f)
                 try:
                     for record in records:
                         json_line = json.dumps(record, ensure_ascii=False, separators=(',', ':'))
@@ -431,7 +454,7 @@ def rewrite(filepath: str, records: List[Dict[str, Any]]) -> None:
                     f.flush()
                     os.fsync(f.fileno())  # Ensure data is written to disk
                 finally:
-                    fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+                    _flock_unlock(f)
             
             # Atomic replace
             os.replace(temp_path, filepath)

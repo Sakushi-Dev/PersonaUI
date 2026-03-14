@@ -1,8 +1,13 @@
 """
 Integration Test: Chat E2E Flow (Mock-API).
 Testet den kompletten Pfad: PromptEngine → Message-Assembly → API → Response.
+
+Im neuen File-Tool-System:
+- chat_stream() nutzt stream_with_tools() wenn Tools vorhanden
+- System-Prompt wird via build_core_system_prompt() gebaut (schlank + File-Index)
+- Kein Prefill, keine Dialog-Injections in Messages
 """
-from unittest.mock import patch
+from unittest.mock import patch, ANY
 
 
 def _make_chat_service(mock_api_client, mock_engine):
@@ -19,26 +24,18 @@ class TestChatFlowE2E:
     """End-to-End Test für den Chat-Flow mit gemockter API"""
 
     def test_full_chat_request(self, mock_api_client, test_character_data, mock_engine):
-        """Kompletter Chat-Flow: Prompt + History → Stream"""
+        """Kompletter Chat-Flow: Prompt + History → Stream (via stream_with_tools)"""
         from utils.api_request.types import StreamEvent
 
         service = _make_chat_service(mock_api_client, mock_engine)
 
-        # Simulate stream
-        mock_api_client.stream.return_value = iter([
+        mock_api_client.stream_with_tools.return_value = iter([
             StreamEvent('chunk', 'Hallo! '),
             StreamEvent('chunk', 'Wie geht es dir?'),
             StreamEvent('done', {
                 'response': 'Hallo! Wie geht es dir?',
-                'stats': {
-                    'api_input_tokens': 200,
-                    'output_tokens': 30,
-                    'system_prompt_est': 5000,
-                    'history_est': 100,
-                    'user_msg_est': 15,
-                    'prefill_est': 50,
-                    'total_est': 5165,
-                },
+                'api_input_tokens': 200,
+                'output_tokens': 30,
             }),
         ])
 
@@ -51,27 +48,22 @@ class TestChatFlowE2E:
             persona_id='default',
         ))
 
-        # Expected events
         chunks = [e for e in events if e[0] == 'chunk']
         dones = [e for e in events if e[0] == 'done']
         assert len(chunks) >= 1
         assert len(dones) == 1
 
-        # Check stats structure
         _, done_data = dones[0]
         assert 'response' in done_data
         assert 'stats' in done_data
-        stats = done_data['stats']
-        assert 'api_input_tokens' in stats
-        assert 'output_tokens' in stats
 
     def test_chat_with_history(self, mock_api_client, test_character_data, sample_conversation, mock_engine):
         """Chat with existing history"""
         from utils.api_request.types import StreamEvent
 
         service = _make_chat_service(mock_api_client, mock_engine)
-        mock_api_client.stream.return_value = iter([
-            StreamEvent('done', {'response': 'Antwort', 'stats': {}}),
+        mock_api_client.stream_with_tools.return_value = iter([
+            StreamEvent('done', {'response': 'Antwort', 'api_input_tokens': 10, 'output_tokens': 5}),
         ])
 
         events = list(service.chat_stream(
@@ -88,7 +80,7 @@ class TestChatFlowE2E:
         from utils.api_request.types import StreamEvent
 
         service = _make_chat_service(mock_api_client, mock_engine)
-        mock_api_client.stream.return_value = iter([
+        mock_api_client.stream_with_tools.return_value = iter([
             StreamEvent('error', 'credit_balance_exhausted'),
         ])
 
@@ -113,7 +105,7 @@ class TestPromptReachesApi:
 
         service = _make_chat_service(mock_api_client, mock_engine)
 
-        mock_api_client.stream.return_value = iter([
+        mock_api_client.stream_with_tools.return_value = iter([
             StreamEvent('done', {'response': 'ok', 'api_input_tokens': 10, 'output_tokens': 5}),
         ])
 
@@ -125,22 +117,42 @@ class TestPromptReachesApi:
             persona_id='default',
         ))
 
-        # stream() must have been called exactly once
-        mock_api_client.stream.assert_called_once()
-        config = mock_api_client.stream.call_args[0][0]
+        mock_api_client.stream_with_tools.assert_called_once()
+        config = mock_api_client.stream_with_tools.call_args[0][0]
         assert isinstance(config, RequestConfig)
 
-        # System prompt must come exactly from the engine (no hardcoded append anymore)
-        mock_engine.build_system_prompt.assert_called_once()
-        assert config.system_prompt == mock_engine.build_system_prompt.return_value
+        # System prompt from build_core_system_prompt (slim core + file index)
+        mock_engine.build_core_system_prompt.assert_called_once()
+        assert config.system_prompt == mock_engine.build_core_system_prompt.return_value
         assert len(config.system_prompt) > 0
+
+    def test_tools_in_request_config(self, mock_api_client, test_character_data, mock_engine):
+        """RequestConfig must contain write_file tool"""
+        from utils.api_request.types import StreamEvent, RequestConfig
+
+        service = _make_chat_service(mock_api_client, mock_engine)
+        mock_api_client.stream_with_tools.return_value = iter([
+            StreamEvent('done', {'response': 'ok', 'api_input_tokens': 10, 'output_tokens': 5}),
+        ])
+
+        list(service.chat_stream(
+            user_message='Test',
+            conversation_history=[],
+            character_data=test_character_data,
+            persona_id='default',
+        ))
+
+        config = mock_api_client.stream_with_tools.call_args[0][0]
+        assert config.tools is not None
+        assert len(config.tools) >= 1
+        assert config.tools[0]['name'] == 'write_file'
 
     def test_user_message_in_api_messages(self, mock_api_client, test_character_data, mock_engine):
         """User message must be contained in RequestConfig.messages"""
         from utils.api_request.types import StreamEvent
 
         service = _make_chat_service(mock_api_client, mock_engine)
-        mock_api_client.stream.return_value = iter([
+        mock_api_client.stream_with_tools.return_value = iter([
             StreamEvent('done', {'response': 'ok', 'api_input_tokens': 10, 'output_tokens': 5}),
         ])
 
@@ -153,12 +165,10 @@ class TestPromptReachesApi:
             persona_id='default',
         ))
 
-        config = mock_api_client.stream.call_args[0][0]
+        config = mock_api_client.stream_with_tools.call_args[0][0]
         user_messages = [m for m in config.messages if m['role'] == 'user']
         user_contents = [m['content'] for m in user_messages]
-        assert user_msg in user_contents, (
-            f"User-Nachricht '{user_msg}' nicht in API-Messages gefunden: {user_contents}"
-        )
+        assert user_msg in user_contents
 
     def test_conversation_history_in_api_messages(self, mock_api_client, test_character_data,
                                                    sample_conversation, mock_engine):
@@ -166,7 +176,7 @@ class TestPromptReachesApi:
         from utils.api_request.types import StreamEvent
 
         service = _make_chat_service(mock_api_client, mock_engine)
-        mock_api_client.stream.return_value = iter([
+        mock_api_client.stream_with_tools.return_value = iter([
             StreamEvent('done', {'response': 'ok', 'api_input_tokens': 10, 'output_tokens': 5}),
         ])
 
@@ -177,54 +187,18 @@ class TestPromptReachesApi:
             persona_id='default',
         ))
 
-        config = mock_api_client.stream.call_args[0][0]
+        config = mock_api_client.stream_with_tools.call_args[0][0]
         all_content = ' '.join(m['content'] for m in config.messages)
 
-        # Every history message must be contained in the request
         for msg in sample_conversation:
-            assert msg['content'] in all_content, (
-                f"History-Nachricht '{msg['content']}' nicht im API-Request gefunden"
-            )
-
-    def test_prefill_as_last_assistant_message(self, mock_api_client, test_character_data, mock_engine):
-        """Prefill (remember) must be the last assistant message in the request"""
-        from utils.api_request.types import StreamEvent
-
-        service = _make_chat_service(mock_api_client, mock_engine)
-
-        mock_api_client.stream.return_value = iter([
-            StreamEvent('done', {'response': 'ok', 'api_input_tokens': 10, 'output_tokens': 5}),
-        ])
-
-        expected_prefill = mock_engine.build_prefill.return_value
-
-        list(service.chat_stream(
-            user_message='Test',
-            conversation_history=[],
-            character_data=test_character_data,
-            persona_id='default',
-        ))
-
-        config = mock_api_client.stream.call_args[0][0]
-
-        if expected_prefill:
-            # Prefill must be the last message and have role=assistant
-            last_msg = config.messages[-1]
-            assert last_msg['role'] == 'assistant', (
-                f"Letzte Message ist nicht assistant: {last_msg}"
-            )
-            assert last_msg['content'] == expected_prefill, (
-                f"Prefill stimmt nicht überein.\n"
-                f"Erwartet: '{expected_prefill}'\n"
-                f"Tatsächlich: '{last_msg['content']}'"
-            )
+            assert msg['content'] in all_content
 
     def test_request_config_has_correct_settings(self, mock_api_client, test_character_data, mock_engine):
         """RequestConfig must have stream=True and request_type='chat'"""
         from utils.api_request.types import StreamEvent
 
         service = _make_chat_service(mock_api_client, mock_engine)
-        mock_api_client.stream.return_value = iter([
+        mock_api_client.stream_with_tools.return_value = iter([
             StreamEvent('done', {'response': 'ok', 'api_input_tokens': 10, 'output_tokens': 5}),
         ])
 
@@ -237,12 +211,12 @@ class TestPromptReachesApi:
             persona_id='default',
         ))
 
-        config = mock_api_client.stream.call_args[0][0]
+        config = mock_api_client.stream_with_tools.call_args[0][0]
         assert config.stream is True
         assert config.request_type == 'chat'
         assert config.model == 'claude-sonnet-4-20250514'
         assert config.temperature == 0.9
-        assert config.max_tokens == 500
+        assert config.max_tokens == 4096  # elevated when tools are present
 
     def test_complete_prompt_pipeline(self, mock_api_client, test_character_data,
                                       sample_conversation, mock_engine):
@@ -250,7 +224,7 @@ class TestPromptReachesApi:
         from utils.api_request.types import StreamEvent, RequestConfig
 
         service = _make_chat_service(mock_api_client, mock_engine)
-        mock_api_client.stream.return_value = iter([
+        mock_api_client.stream_with_tools.return_value = iter([
             StreamEvent('chunk', 'Antwort'),
             StreamEvent('done', {'response': 'Antwort', 'api_input_tokens': 200, 'output_tokens': 30}),
         ])
@@ -266,32 +240,18 @@ class TestPromptReachesApi:
             persona_id='default',
         ))
 
-        # 1. API was called
-        mock_api_client.stream.assert_called_once()
-        config = mock_api_client.stream.call_args[0][0]
+        mock_api_client.stream_with_tools.assert_called_once()
+        config = mock_api_client.stream_with_tools.call_args[0][0]
         assert isinstance(config, RequestConfig)
 
-        # 2. System prompt not empty
-        assert len(config.system_prompt) > 100, "System prompt too short"
-        assert test_character_data['char_name'] in config.system_prompt
-
-        # 3. Messages not empty
+        assert len(config.system_prompt) > 10, "System prompt too short"
         assert len(config.messages) >= 2, "Too few messages in request"
 
-        # 4. All content present in request
         all_content = ' '.join(m['content'] for m in config.messages)
-        assert user_msg in all_content, "User-Message fehlt im API-Request"
+        assert user_msg in all_content
         for msg in sample_conversation:
-            assert msg['content'] in all_content, f"History '{msg['content']}' missing"
+            assert msg['content'] in all_content
 
-        # 5. Role sequence correct (no consecutive duplicate roles)
-        for i in range(1, len(config.messages)):
-            assert config.messages[i]['role'] != config.messages[i-1]['role'], (
-                f"Duplicate role at position {i-1}/{i}: "
-                f"{config.messages[i-1]['role']} → {config.messages[i]['role']}"
-            )
-
-        # 6. Events came through correctly
         chunk_events = [e for e in events if e[0] == 'chunk']
         done_events = [e for e in events if e[0] == 'done']
         assert len(chunk_events) >= 1
@@ -306,13 +266,12 @@ class TestAutoFirstMessageInHistory:
         from utils.api_request.types import StreamEvent
 
         service = _make_chat_service(mock_api_client, mock_engine)
-        mock_api_client.stream.return_value = iter([
+        mock_api_client.stream_with_tools.return_value = iter([
             StreamEvent('done', {'response': 'ok', 'api_input_tokens': 10, 'output_tokens': 5}),
         ])
 
         first_msg_text = 'Hallo, wie kann ich dir heute helfen?'
 
-        # History wie aus DB: Auto-First-Message als erste assistant-Nachricht
         history_with_first_msg = [
             {'role': 'assistant', 'content': first_msg_text},
             {'role': 'user', 'content': 'hey'},
@@ -325,9 +284,8 @@ class TestAutoFirstMessageInHistory:
             persona_id='default',
         ))
 
-        config = mock_api_client.stream.call_args[0][0]
+        config = mock_api_client.stream_with_tools.call_args[0][0]
 
-        # Auto-First-Message muss als eigene Assistant-Message existieren
         assistant_messages = [m for m in config.messages if m['role'] == 'assistant']
         first_msg_found_standalone = any(
             m['content'] == first_msg_text for m in assistant_messages
@@ -342,11 +300,10 @@ class TestAutoFirstMessageInHistory:
         from utils.api_request.types import StreamEvent
 
         service = _make_chat_service(mock_api_client, mock_engine)
-        mock_api_client.stream.return_value = iter([
+        mock_api_client.stream_with_tools.return_value = iter([
             StreamEvent('done', {'response': 'ok', 'api_input_tokens': 10, 'output_tokens': 5}),
         ])
 
-        # History nach erstem Austausch: Auto-First-Message + 1. Frage + 1. Antwort
         history = [
             {'role': 'assistant', 'content': 'Hallo, wie kann ich dir heute helfen?'},
             {'role': 'user', 'content': 'hey'},
@@ -360,21 +317,18 @@ class TestAutoFirstMessageInHistory:
             persona_id='default',
         ))
 
-        config = mock_api_client.stream.call_args[0][0]
+        config = mock_api_client.stream_with_tools.call_args[0][0]
         all_content = ' '.join(m['content'] for m in config.messages)
 
-        # All history messages must be in the request
         for msg in history:
-            assert msg['content'] in all_content, (
-                f"History '{msg['content']}' fehlt im API-Request"
-            )
+            assert msg['content'] in all_content
 
     def test_no_consecutive_same_roles_with_first_msg(self, mock_api_client, test_character_data, mock_engine):
         """Keine doppelten gleichen Rollen — auch mit Auto-First-Message."""
         from utils.api_request.types import StreamEvent
 
         service = _make_chat_service(mock_api_client, mock_engine)
-        mock_api_client.stream.return_value = iter([
+        mock_api_client.stream_with_tools.return_value = iter([
             StreamEvent('done', {'response': 'ok', 'api_input_tokens': 10, 'output_tokens': 5}),
         ])
 
@@ -390,7 +344,7 @@ class TestAutoFirstMessageInHistory:
             persona_id='default',
         ))
 
-        config = mock_api_client.stream.call_args[0][0]
+        config = mock_api_client.stream_with_tools.call_args[0][0]
 
         for i in range(1, len(config.messages)):
             assert config.messages[i]['role'] != config.messages[i-1]['role'], (

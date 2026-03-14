@@ -235,6 +235,9 @@ export function useMessages() {
       return;
     }
 
+    // Keep backup of old message for recovery on error
+    const oldMessage = { ...lastMsg };
+
     // Remove the old bot message from frontend
     removeLastMessage();
 
@@ -284,7 +287,15 @@ export function useMessages() {
       onError: (err) => {
         setIsStreaming(false);
         setIsLoading(false);
-        removeLastMessage();
+        // Replace streaming placeholder with restored old message
+        updateLastMessage({
+          message: oldMessage.message,
+          is_user: oldMessage.is_user,
+          character_name: oldMessage.character_name,
+          timestamp: oldMessage.timestamp,
+          stats: oldMessage.stats,
+          _streaming: false,
+        });
         setError(err);
       },
     });
@@ -312,6 +323,7 @@ export function useMessages() {
     removeLastMessage();
 
     // Send as new input (will add user msg + bot streaming placeholder)
+    // If sendMessage fails, user message is still in the input flow
     sendMessage(text);
   }, [sessionId, personaId, isStreaming, isLoading, chatHistory, removeLastMessage, sendMessage]);
 

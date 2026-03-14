@@ -26,7 +26,7 @@ export default function ApiSettingsOverlay({ open, onClose, panelOnly }) {
   const [temperature, setTemperature] = useState(0.7);
   const [contextLimit, setContextLimit] = useState(100);
   const [experimentalMode, setExperimentalMode] = useState(false);
-  const [nachgedankeMode, setNachgedankeMode] = useState('off');
+  const [afterthoughtMode, setAfterthoughtMode] = useState('off');
 
   // ── Load settings when overlay opens ──
   useEffect(() => {
@@ -35,7 +35,7 @@ export default function ApiSettingsOverlay({ open, onClose, panelOnly }) {
     setTemperature(parseFloat(get('apiTemperature', '0.7')));
     setContextLimit(parseInt(get('contextLimit', '100'), 10));
     setExperimentalMode(get('experimentalMode', false));
-    setNachgedankeMode(get('nachgedankeMode', 'off'));
+    setAfterthoughtMode(get('afterthoughtMode', 'off'));
   }, [open, get]);
 
   // ── Save ──
@@ -45,10 +45,10 @@ export default function ApiSettingsOverlay({ open, onClose, panelOnly }) {
       apiTemperature: String(temperature),
       contextLimit: String(contextLimit),
       experimentalMode,
-      nachgedankeMode,
+      afterthoughtMode,
     });
     onClose();
-  }, [model, temperature, contextLimit, experimentalMode, nachgedankeMode, setMany, onClose]);
+  }, [model, temperature, contextLimit, experimentalMode, afterthoughtMode, setMany, onClose]);
 
   // ── Reset ──
   const handleReset = useCallback(() => {
@@ -56,7 +56,7 @@ export default function ApiSettingsOverlay({ open, onClose, panelOnly }) {
     setTemperature(0.7);
     setContextLimit(100);
     setExperimentalMode(false);
-    setNachgedankeMode('off');
+    setAfterthoughtMode('off');
   }, []);
 
   return (
@@ -152,26 +152,26 @@ export default function ApiSettingsOverlay({ open, onClose, panelOnly }) {
               <div className={styles.typePills}>
                 {[
                   { value: 'off',     label: s.afterthoughtOff },
-                  { value: 'selten',  label: s.afterthoughtRare },
-                  { value: 'mittel',  label: s.afterthoughtMedium },
-                  { value: 'hoch',    label: s.afterthoughtHigh },
+                  { value: 'rare',    label: s.afterthoughtRare },
+                  { value: 'medium',  label: s.afterthoughtMedium },
+                  { value: 'high',    label: s.afterthoughtHigh },
                 ].map((opt) => (
                   <button
                     key={opt.value}
                     type="button"
-                    className={`${styles.typePill} ${nachgedankeMode === opt.value ? styles.typePillActive : ''}`}
-                    onClick={() => setNachgedankeMode(opt.value)}
+                    className={`${styles.typePill} ${afterthoughtMode === opt.value ? styles.typePillActive : ''}`}
+                    onClick={() => setAfterthoughtMode(opt.value)}
                   >
                     {opt.label}
                   </button>
                 ))}
               </div>
-              {nachgedankeMode !== 'off' && (
+              {afterthoughtMode !== 'off' && (
                 <div className={styles.typeDescBox}>
                   <span className={styles.typeDescText}>
-                    {nachgedankeMode === 'selten' && s.afterthoughtDescRare}
-                    {nachgedankeMode === 'mittel' && s.afterthoughtDescMedium}
-                    {nachgedankeMode === 'hoch' && s.afterthoughtDescHigh}
+                    {afterthoughtMode === 'rare' && s.afterthoughtDescRare}
+                    {afterthoughtMode === 'medium' && s.afterthoughtDescMedium}
+                    {afterthoughtMode === 'high' && s.afterthoughtDescHigh}
                   </span>
                 </div>
               )}

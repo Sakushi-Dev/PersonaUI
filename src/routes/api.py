@@ -4,9 +4,7 @@ API Routes - API-Key Verwaltung und Testing
 from flask import Blueprint, request
 import os
 import sys
-import secrets
 import json
-from dotenv import load_dotenv
 import anthropic
 import qrcode
 from io import BytesIO
@@ -14,6 +12,7 @@ import base64
 from utils.settings_defaults import get_api_model_default
 from utils.logger import log
 from utils.provider import get_api_client
+from utils import settings_manager as _sm
 from routes.helpers import success_response, error_response, handle_route_error
 
 api_bp = Blueprint('api', __name__)
@@ -62,20 +61,9 @@ def test_api_key():
 @api_bp.route('/api/check_api_status', methods=['GET'])
 @handle_route_error('check_api_status')
 def check_api_status():
-    """Prüft ob ein API-Key konfiguriert ist (direkt in der .env Datei)"""
-    env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
-    has_api_key = False
-    
-    # Prüfe ob .env existiert und einen API-Key enthält
-    if os.path.exists(env_path):
-        with open(env_path, 'r', encoding='utf-8') as f:
-            for line in f:
-                line = line.strip()
-                if line.startswith('ANTHROPIC_API_KEY='):
-                    api_key = line.split('=', 1)[1].strip()
-                    # Prüfe ob der Key nicht leer ist und ein gültiges Format hat
-                    has_api_key = bool(api_key and len(api_key) > 10 and api_key.startswith('sk-'))
-                    break
+    """Prüft ob ein API-Key konfiguriert ist"""
+    api_key = _sm.get_value('api', 'key') or ''
+    has_api_key = bool(api_key and len(api_key) > 10 and api_key.startswith('sk-'))
     
     return success_response(
         has_api_key=has_api_key,
@@ -86,44 +74,17 @@ def check_api_status():
 @api_bp.route('/api/save_api_key', methods=['POST'])
 @handle_route_error('save_api_key')
 def save_api_key():
-    """Speichert den API-Key in der .env Datei"""
+    """Speichert den API-Key in settings.json"""
     data = request.get_json()
     api_key = data.get('api_key', '').strip()
     
     if not api_key:
         return error_response('API-Key ist leer')
     
-    # Pfad zur .env Datei
-    env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
-    
-    # Lese existierende .env oder erstelle neue
-    env_vars = {}
-    if os.path.exists(env_path):
-        with open(env_path, 'r', encoding='utf-8') as f:
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith('#') and '=' in line:
-                    key, value = line.split('=', 1)
-                    env_vars[key.strip()] = value.strip()
-    
-    # Aktualisiere oder füge API-Key hinzu
-    env_vars['ANTHROPIC_API_KEY'] = api_key
-    
-    # Stelle sicher, dass SECRET_KEY existiert
-    if 'SECRET_KEY' not in env_vars:
-        env_vars['SECRET_KEY'] = secrets.token_hex(32)
-    
-    # Schreibe .env Datei
-    with open(env_path, 'w', encoding='utf-8') as f:
-        f.write('# Umgebungsvariablen - Automatisch generiert\n')
-        for key, value in env_vars.items():
-            f.write(f'{key}={value}\n')
-    
-    # WICHTIG: Aktualisiere zuerst os.environ direkt
-    os.environ['ANTHROPIC_API_KEY'] = api_key
-    
-    # Dann lade auch die .env Datei neu (für zukünftige Prozesse)
-    load_dotenv(env_path, override=True)
+    # Speichere API-Key in settings.json
+    api_section = _sm.load_section('api')
+    api_section['key'] = api_key
+    _sm.save_section('api', api_section)
     
     # Aktualisiere den Claude API Client mit dem neuen Key
     api_client = get_api_client()
@@ -173,18 +134,16 @@ def get_local_ips():
     """Gibt die lokalen IP-Adressen zurück"""
     ip_addresses = get_local_ip_addresses()
     
-    # Get port from .env or use default
+    # Get port from server_settings.json or use default
     port = 5000
-    env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
-    if os.path.exists(env_path):
-        with open(env_path, 'r', encoding='utf-8') as f:
-            for line in f:
-                line = line.strip()
-                if line.startswith('SERVER_PORT='):
-                    try:
-                        port = int(line.split('=', 1)[1].strip())
-                    except ValueError:
-                        port = 5000
+    settings_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'settings', 'server_settings.json')
+    if os.path.exists(settings_path):
+        try:
+            with open(settings_path, 'r', encoding='utf-8') as f:
+                srv = json.load(f).get('server_settings', {})
+                port = int(srv.get('SERVER_PORT', 5000))
+        except (json.JSONDecodeError, OSError, ValueError):
+            pass
     
     return success_response(ip_addresses=ip_addresses, port=port)
 
@@ -192,37 +151,32 @@ def get_local_ips():
 @api_bp.route('/api/save_server_mode', methods=['POST'])
 @handle_route_error('save_server_mode')
 def save_server_mode():
-    """Speichert den Server-Modus in der .env Datei"""
+    """Speichert den Server-Modus in server_settings.json"""
     data = request.get_json()
     server_mode = data.get('server_mode', 'local')
     
     if server_mode not in ['local', 'listen']:
         return error_response('Ungültiger Server-Modus')
     
-    env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
+    settings_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'settings', 'server_settings.json')
     
-    # Lese existierende .env
-    env_vars = {}
-    if os.path.exists(env_path):
-        with open(env_path, 'r', encoding='utf-8') as f:
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith('#') and '=' in line:
-                    key, value = line.split('=', 1)
-                    env_vars[key.strip()] = value.strip()
+    # Lese existierende server_settings.json
+    srv_data = {}
+    if os.path.exists(settings_path):
+        try:
+            with open(settings_path, 'r', encoding='utf-8') as f:
+                srv_data = json.load(f)
+        except (json.JSONDecodeError, OSError):
+            srv_data = {}
     
-    # Update Server-Modus
-    env_vars['SERVER_MODE'] = server_mode
+    server_settings = srv_data.get('server_settings', {})
+    server_settings['SERVER_MODE'] = server_mode
+    if 'SERVER_PORT' not in server_settings:
+        server_settings['SERVER_PORT'] = '5000'
+    srv_data['server_settings'] = server_settings
     
-    # Stelle sicher, dass Port existiert
-    if 'SERVER_PORT' not in env_vars:
-        env_vars['SERVER_PORT'] = '5000'
-    
-    # Schreibe .env Datei
-    with open(env_path, 'w', encoding='utf-8') as f:
-        f.write('# Umgebungsvariablen - Automatisch generiert\n')
-        for key, value in env_vars.items():
-            f.write(f'{key}={value}\n')
+    with open(settings_path, 'w', encoding='utf-8') as f:
+        json.dump(srv_data, f, indent=4, ensure_ascii=False)
     
     return success_response()
 

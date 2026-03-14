@@ -6,23 +6,16 @@ import os
 import json
 from routes.helpers import success_response, handle_route_error
 from utils.logger import log
+from utils.settings_manager import load_section, save_section
 from routes.react_frontend import serve_react_app
 
 onboarding_bp = Blueprint('onboarding', __name__)
 
-ONBOARDING_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'settings', 'onboarding.json')
-
 
 def is_onboarding_complete():
     """Prüft ob das Onboarding bereits abgeschlossen wurde."""
-    try:
-        if os.path.exists(ONBOARDING_FILE):
-            with open(ONBOARDING_FILE, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            return data.get('completed', False)
-    except (json.JSONDecodeError, OSError):
-        pass
-    return False
+    data = load_section('initialization')
+    return data.get('completed', False)
 
 
 @onboarding_bp.route('/onboarding')
@@ -36,9 +29,7 @@ def onboarding():
 def complete_onboarding():
     """Markiert das Onboarding als abgeschlossen."""
     try:
-        os.makedirs(os.path.dirname(ONBOARDING_FILE), exist_ok=True)
-        with open(ONBOARDING_FILE, 'w', encoding='utf-8') as f:
-            json.dump({'completed': True, 'disclaimer_accepted': False}, f, indent=2)
+        save_section('initialization', {'completed': True, 'disclaimerAccepted': False})
         log.info("Onboarding abgeschlossen.")
         return success_response()
     except Exception as e:
@@ -51,14 +42,9 @@ def complete_onboarding():
 def accept_disclaimer():
     """Markiert den Disclaimer als akzeptiert."""
     try:
-        data = {}
-        if os.path.exists(ONBOARDING_FILE):
-            with open(ONBOARDING_FILE, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-        data['disclaimer_accepted'] = True
-        os.makedirs(os.path.dirname(ONBOARDING_FILE), exist_ok=True)
-        with open(ONBOARDING_FILE, 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=2)
+        data = load_section('initialization')
+        data['disclaimerAccepted'] = True
+        save_section('initialization', data)
         log.info("Disclaimer akzeptiert.")
         return success_response()
     except Exception as e:
@@ -88,12 +74,6 @@ def shutdown_server():
 @handle_route_error('onboarding_status')
 def onboarding_status():
     """Prüft ob das Onboarding bereits abgeschlossen wurde (für React SPA)."""
-    disclaimer_accepted = False
-    try:
-        if os.path.exists(ONBOARDING_FILE):
-            with open(ONBOARDING_FILE, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            disclaimer_accepted = data.get('disclaimer_accepted', False)
-    except (json.JSONDecodeError, OSError):
-        pass
+    data = load_section('initialization')
+    disclaimer_accepted = data.get('disclaimerAccepted', False)
     return success_response(completed=is_onboarding_complete(), disclaimer_accepted=disclaimer_accepted)

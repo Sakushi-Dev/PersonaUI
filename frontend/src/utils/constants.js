@@ -47,9 +47,9 @@ function hslToHex(h, s, l) {
 export function hueToColors(hue, isDark) {
   if (isDark) {
     return {
-      bg: hslToHex(hue, 30, 15),
-      g1: hslToHex(hue, 30, 27),
-      c2: hslToHex(hue, 22, 33),
+      bg: hslToHex(hue, 35, 11),
+      g1: hslToHex(hue - 25, 40, 22),
+      c2: hslToHex(hue + 120, 30, 18),
     };
   }
   return {
@@ -79,17 +79,17 @@ export const DEFAULTS = {
   darkMode: false,
   dynamicBackground: true,
   colorHue: 220,
-  backgroundColor_light: '#a3baff',
-  colorGradient1_light: '#66cfff',
-  color2_light: '#fd91ee',
-  backgroundColor_dark: '#1a2332',
-  colorGradient1_dark: '#2a3f5f',
-  color2_dark: '#3d4f66',
+  backgroundColorLight: '#a3baff',
+  gradientColor1Light: '#66cfff',
+  secondaryColorLight: '#fd91ee',
+  backgroundColorDark: '#151a24',
+  gradientColor1Dark: '#1f2d47',
+  secondaryColorDark: '#1a2e2b',
   apiModel: '',
   apiTemperature: 0.7,
   contextLimit: 100,
   experimentalMode: false,
-  nachgedankeMode: 'off',
+  afterthoughtMode: 'off',
   notificationSound: true,
   notificationVolume: 0.5,
 };
@@ -111,7 +111,7 @@ export const AFTERTHOUGHT_PHASES = [
 
 // How many user messages between afterthought triggers
 export const AFTERTHOUGHT_FREQUENCY = {
-  selten: 3,  // every 3rd message
-  mittel: 2,  // every 2nd message
-  hoch:   1,  // every message
+  rare:   3,  // every 3rd message
+  medium: 2,  // every 2nd message
+  high:   1,  // every message
 };

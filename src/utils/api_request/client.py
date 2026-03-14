@@ -32,7 +32,10 @@ class ApiClient:
     """
 
     def __init__(self, api_key: str = None):
-        self.api_key = api_key or os.environ.get('ANTHROPIC_API_KEY')
+        self.api_key = api_key
+        if not self.api_key:
+            from ..settings_manager import get_value
+            self.api_key = get_value('api', 'key') or None
         self.client = None
         self._init_client()
 
@@ -221,6 +224,128 @@ class ApiClient:
                 yield StreamEvent('error', 'credit_balance_exhausted')
             else:
                 yield StreamEvent('error', error_str)
+
+    def stream_with_tools(
+        self,
+        config: RequestConfig,
+        executor: ToolExecutor
+    ) -> Generator[StreamEvent, None, None]:
+        """
+        Streaming mit Tool-Support. Verwendet für:
+        - Chat mit read_file Tool
+
+        Flow:
+        1. Non-streaming API-Call mit Tools
+        2. Bei tool_use → Tools ausführen, repeat
+        3. Wenn fertig → Ergebnis als Stream-Events yielden
+
+        Args:
+            config: RequestConfig mit tools=[...]
+            executor: Callback (tool_name, tool_input) → (success, result_text)
+
+        Yields:
+            StreamEvent('chunk', text)
+            StreamEvent('done', {'response': str, 'stats': dict})
+            StreamEvent('error', error_message)
+        """
+        if not self.is_ready:
+            yield StreamEvent('error', 'ApiClient nicht initialisiert – kein API-Key konfiguriert')
+            return
+
+        if not config.tools:
+            # No tools → use normal streaming
+            yield from self.stream(config)
+            return
+
+        model = self._resolve_model(config.model)
+        messages = self._prepare_messages(config)
+        total_input_tokens = 0
+        total_output_tokens = 0
+
+        try:
+            for round_num in range(1, MAX_TOOL_ROUNDS + 1):
+                response = self.client.messages.create(
+                    model=model,
+                    max_tokens=config.max_tokens,
+                    temperature=config.temperature,
+                    system=config.system_prompt,
+                    tools=config.tools,
+                    messages=messages
+                )
+
+                # Accumulate usage
+                if hasattr(response, 'usage') and response.usage:
+                    total_input_tokens += getattr(response.usage, 'input_tokens', 0) or 0
+                    total_output_tokens += getattr(response.usage, 'output_tokens', 0) or 0
+
+                if response.stop_reason != "tool_use":
+                    # Final response — yield text as stream
+                    text = self._extract_text_from_content(response.content)
+                    cleaned = clean_api_response(text)
+                    if not cleaned and round_num > 1:
+                        # Claude ended after tool calls without text — nudge for a reply
+                        log.info("stream_with_tools: Empty text after Round %d, requesting reply", round_num)
+                        messages.append({"role": "assistant", "content": response.content})
+                        messages.append({"role": "user", "content": [{"type": "text", "text": "[continue]"}]})
+                        continue
+                    yield StreamEvent('chunk', cleaned)
+                    yield StreamEvent('done', {
+                        'response': cleaned,
+                        'raw_response': text,
+                        'api_input_tokens': total_input_tokens,
+                        'output_tokens': total_output_tokens
+                    })
+                    return
+
+                # Handle tool calls
+                log.info("stream_with_tools: Round %d — tool_use", round_num)
+                messages.append({"role": "assistant", "content": response.content})
+
+                tool_result_contents = []
+                for block in response.content:
+                    if block.type != "tool_use":
+                        continue
+
+                    log.info("Tool-Call: %s(%s)", block.name, block.input)
+                    try:
+                        success, result_text = executor(block.name, block.input)
+                    except Exception as exec_err:
+                        log.error("Tool-Executor error: %s", exec_err)
+                        success = False
+                        result_text = f"Error: {exec_err}"
+
+                    tool_result_contents.append({
+                        "type": "tool_result",
+                        "tool_use_id": block.id,
+                        "content": result_text,
+                        **({"is_error": True} if not success else {})
+                    })
+
+                messages.append({"role": "user", "content": tool_result_contents})
+
+            # Max rounds reached
+            log.warning("stream_with_tools: max rounds (%d) reached", MAX_TOOL_ROUNDS)
+            text = self._extract_text_from_content(response.content)
+            cleaned = clean_api_response(text)
+            yield StreamEvent('chunk', cleaned)
+            yield StreamEvent('done', {
+                'response': cleaned,
+                'raw_response': text,
+                'api_input_tokens': total_input_tokens,
+                'output_tokens': total_output_tokens
+            })
+
+        except anthropic.APIError as e:
+            error_str = str(e)
+            log.error("API error in stream_with_tools: %s", e)
+            if 'credit balance' in error_str.lower():
+                yield StreamEvent('error', 'credit_balance_exhausted')
+            else:
+                yield StreamEvent('error', error_str)
+
+        except Exception as e:
+            log.error("Unexpected error in stream_with_tools: %s", e)
+            yield StreamEvent('error', str(e))
 
     def tool_request(
         self,

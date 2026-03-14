@@ -161,24 +161,41 @@ def mock_api_client():
 
 @pytest.fixture
 def mock_engine():
-    """Gemockte PromptEngine für ChatService"""
+    """Gemockte PromptEngine für ChatService (file-tool based)"""
     engine = MagicMock()
     engine.is_loaded = True
-    engine.build_system_prompt.return_value = (
+    engine.build_core_system_prompt.return_value = (
+        'Du bist TestPersona. Eine Test-Persona für Unit-Tests.\n\n'
+        'Antworte immer auf Deutsch. Bleibe stets in deiner Rolle als TestPersona.\n\n'
+        '**YOUR JOURNAL FILES** (writable with write_file):\n- bonding.md\n- growth.md'
+    )
+    engine.build_full_system_prompt.return_value = (
         'Du bist TestPersona. Eine Test-Persona für Unit-Tests.\n\n'
         'Antworte immer auf Deutsch. Bleibe stets in deiner Rolle als TestPersona.'
     )
+    engine.get_chat_tools.return_value = [
+        {
+            'name': 'write_file',
+            'description': 'Update one of your journal files',
+            'input_schema': {
+                'type': 'object',
+                'properties': {
+                    'filename': {'type': 'string', 'enum': ['bonding.md', 'growth.md']},
+                    'content': {'type': 'string'}
+                },
+                'required': ['filename', 'content']
+            }
+        }
+    ]
+    engine.read_prompt_file.return_value = 'File content for test'
     engine.build_prefill.return_value = 'Ich antworte als TestPersona:'
     engine.resolve_prompt.return_value = 'Ich bin TestPersona und bleibe in meiner Rolle.'
-    engine.get_dialog_injections.return_value = []
     engine.get_system_prompt_append.return_value = ''
     engine.build_afterthought_inner_dialogue.return_value = 'Innerer Dialog Anweisung'
     engine.build_afterthought_followup.return_value = 'Followup Anweisung'
-    engine.get_chat_message_sequence.return_value = [
-        {'id': 'memory_context', 'position': 'first_assistant', 'order': 100},
-        {'id': 'conversation_history', 'position': 'history', 'order': 200},
-        {'id': 'remember', 'position': 'prefill', 'order': 300},
-    ]
+    engine.invalidate_cache.return_value = None
+    engine.reload.return_value = None
+    engine.load_errors = []
     return engine
 
 

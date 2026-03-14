@@ -216,7 +216,7 @@ def background_autofill():
     # Sprache aus User-Profil
     from routes.user_profile import get_user_profile_data
     profile = get_user_profile_data()
-    language = profile.get('persona_language', 'english') or 'english'
+    language = profile.get('personaLanguage', 'english') or 'english'
     
     # Persona-Daten für Referenz zusammenbauen
     char_name = data.get('name', 'Assistant')

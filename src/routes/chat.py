@@ -13,9 +13,10 @@ from utils.logger import log
 from utils.provider import get_chat_service, get_api_client, get_cortex_service
 from utils.cortex.tier_checker import check_and_trigger_cortex_update
 from utils.cortex.tier_tracker import reset_persona as reset_persona_cycle_state
-from utils.cortex_service import TEMPLATES
+from utils.cortex import TEMPLATES
 from routes.helpers import success_response, error_response, handle_route_error, resolve_persona_id, get_client_ip
 from routes.user_profile import get_user_profile_data
+from utils import settings_manager as _sm
 
 chat_bp = Blueprint('chat', __name__)
 
@@ -74,8 +75,8 @@ def chat_stream():
     
     # User-Name aus Profil
     user_profile = get_user_profile_data()
-    user_name = user_profile.get('user_name', 'User') or 'User'
-    persona_language = user_profile.get('persona_language', 'english') or 'english'
+    user_name = user_profile.get('userName', 'User') or 'User'
+    persona_language = user_profile.get('personaLanguage', 'english') or 'english'
     
     # Context Limit
     context_limit = data.get('context_limit', 25)
@@ -90,7 +91,10 @@ def chat_stream():
     
     def generate():
         chat_service = get_chat_service()
-        user_msg_saved = False
+
+        # User-Nachricht sofort speichern (nicht erst beim ersten Chunk)
+        save_message(user_message, True, character_name, session_id, persona_id=persona_id)
+
         try:
             for event_type, event_data in chat_service.chat_stream(
                 user_message=user_message,
@@ -106,10 +110,6 @@ def chat_stream():
                 session_id=session_id
             ):
                 if event_type == 'chunk':
-                    # Benutzernachricht erst beim ersten erfolgreichen Chunk speichern
-                    if not user_msg_saved:
-                        save_message(user_message, True, character_name, session_id, persona_id=persona_id)
-                        user_msg_saved = True
                     yield f"data: {json.dumps({'type': 'chunk', 'text': event_data})}\n\n"
                 elif event_type == 'done':
                     # Bot-Antwort in Persona-DB speichern
@@ -255,7 +255,8 @@ def api_regenerate():
     if last_msg['is_user']:
         return error_response('Letzte Nachricht ist keine Bot-Nachricht')
 
-    # Bot-Nachricht löschen
+    # Bot-Nachricht löschen (Backup für Rollback bei API-Fehler)
+    deleted_message_backup = last_msg.copy()
     delete_last_message(session_id, persona_id)
     log.info("Regenerate: Letzte Bot-Nachricht gelöscht (id=%s, session=%s)", last_msg['id'], session_id)
 
@@ -263,8 +264,8 @@ def api_regenerate():
     character = load_character()
     character_name = character.get('char_name', 'Assistant')
     user_profile = get_user_profile_data()
-    user_name = user_profile.get('user_name', 'User') or 'User'
-    persona_language = user_profile.get('persona_language', 'english') or 'english'
+    user_name = user_profile.get('userName', 'User') or 'User'
+    persona_language = user_profile.get('personaLanguage', 'english') or 'english'
 
     # Konversationskontext holen (endet jetzt mit der User-Nachricht)
     conversation_history = get_conversation_context(
@@ -321,11 +322,32 @@ def api_regenerate():
 
                     yield f"data: {json.dumps(done_payload)}\n\n"
                 elif event_type == 'error':
+                    # Restore deleted bot message on API error
+                    try:
+                        save_message(
+                            deleted_message_backup['message'], False,
+                            deleted_message_backup.get('character_name', character_name),
+                            session_id, persona_id=persona_id
+                        )
+                        log.info("Regenerate: Bot-Nachricht nach API-Fehler wiederhergestellt (session=%s)", session_id)
+                    except Exception as restore_err:
+                        log.warning("Regenerate: Rollback fehlgeschlagen: %s", restore_err)
+
                     error_payload = {'type': 'error', 'error': event_data}
                     if event_data == 'credit_balance_exhausted':
                         error_payload['error_type'] = 'credit_balance_exhausted'
                     yield f"data: {json.dumps(error_payload)}\n\n"
         except Exception as e:
+            # Restore deleted bot message on unexpected error
+            try:
+                save_message(
+                    deleted_message_backup['message'], False,
+                    deleted_message_backup.get('character_name', character_name),
+                    session_id, persona_id=persona_id
+                )
+                log.info("Regenerate: Bot-Nachricht nach Exception wiederhergestellt (session=%s)", session_id)
+            except Exception as restore_err:
+                log.warning("Regenerate: Rollback fehlgeschlagen: %s", restore_err)
             log.error("Regenerate-Stream-Fehler: %s", e)
             yield f"data: {json.dumps({'type': 'error', 'error': str(e)})}\n\n"
 
@@ -349,10 +371,9 @@ def afterthought():
     Phase 2: Falls ja, streame die Ergänzung.
     """
     # Guard: Nachgedanke muss aktiviert sein
-    from routes.settings import _load_settings
-    user_settings = _load_settings()
-    nachgedanke_mode = user_settings.get('nachgedankeMode', 'off')
-    if nachgedanke_mode == 'off' or not nachgedanke_mode:
+    afterthought_settings = _sm.load_section('afterthought')
+    afterthought_mode = afterthought_settings.get('mode', 'off')
+    if afterthought_mode == 'off' or not afterthought_mode:
         return success_response(decision=False, inner_dialogue='', blocked=True)
 
     data = request.get_json()
@@ -381,8 +402,8 @@ def afterthought():
     
     # User-Name aus Profil
     afterthought_profile = get_user_profile_data()
-    afterthought_user_name = afterthought_profile.get('user_name', 'User') or 'User'
-    afterthought_persona_language = afterthought_profile.get('persona_language', 'english') or 'english'
+    afterthought_user_name = afterthought_profile.get('userName', 'User') or 'User'
+    afterthought_persona_language = afterthought_profile.get('personaLanguage', 'english') or 'english'
     
     # Konversationskontext holen (aus Persona-DB)
     conversation_history = get_conversation_context(limit=context_limit, session_id=session_id, persona_id=persona_id)
@@ -489,8 +510,8 @@ def auto_first_message():
 
     # User-Name und Sprache aus Profil
     user_profile = get_user_profile_data()
-    user_name = user_profile.get('user_name', 'User') or 'User'
-    persona_language = user_profile.get('persona_language', 'english') or 'english'
+    user_name = user_profile.get('userName', 'User') or 'User'
+    persona_language = user_profile.get('personaLanguage', 'english') or 'english'
 
     # IP-Adresse ermitteln
     user_ip = get_client_ip()

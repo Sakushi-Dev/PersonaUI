@@ -2,6 +2,7 @@
 // Full token breakdown matching the legacy overlay
 
 import { useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useSettings } from '../../../../hooks/useSettings';
 import { useLanguage } from '../../../../hooks/useLanguage';
 import styles from './PromptInfoOverlay.module.css';
@@ -60,7 +61,7 @@ export default function PromptInfoOverlay({ open, onClose, stats }) {
 
   const mouseDownOnBackdrop = useRef(false);
 
-  return (
+  return createPortal(
     <div
       className={styles.overlay}
       onMouseDown={(e) => { mouseDownOnBackdrop.current = e.target === e.currentTarget; }}
@@ -152,6 +153,7 @@ export default function PromptInfoOverlay({ open, onClose, stats }) {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

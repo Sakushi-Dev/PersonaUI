@@ -7,48 +7,22 @@ import uuid
 import json
 
 from utils.logger import log
+from utils.settings_manager import load_section, save_section, get_section_defaults
 from routes.helpers import success_response, error_response, handle_route_error
 
 user_profile_bp = Blueprint('user_profile', __name__)
 
-PROFILE_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'settings', 'user_profile.json')
-
-DEFAULT_PROFILE = {
-    "user_name": "User",
-    "user_avatar": None,
-    "user_avatar_type": None,
-    "user_gender": None,
-    "user_interested_in": [],
-    "user_info": "",
-    "persona_language": "english"
-}
+DEFAULT_PROFILE = get_section_defaults('profile')
 
 
 def _load_profile():
-    """Lädt das User-Profil aus JSON-Datei"""
-    try:
-        if os.path.exists(PROFILE_FILE):
-            with open(PROFILE_FILE, 'r', encoding='utf-8') as f:
-                saved = json.load(f)
-            # Merge mit Defaults
-            merged = {**DEFAULT_PROFILE, **saved}
-            return merged
-        return dict(DEFAULT_PROFILE)
-    except Exception as e:
-        log.error("Fehler beim Laden des User-Profils: %s", e)
-        return dict(DEFAULT_PROFILE)
+    """Lädt das User-Profil aus settings.json (profile-Sektion)"""
+    return load_section('profile')
 
 
 def _save_profile(profile):
-    """Speichert das User-Profil in JSON-Datei"""
-    try:
-        os.makedirs(os.path.dirname(PROFILE_FILE), exist_ok=True)
-        with open(PROFILE_FILE, 'w', encoding='utf-8') as f:
-            json.dump(profile, f, indent=4, ensure_ascii=False)
-        return True
-    except Exception as e:
-        log.error("Fehler beim Speichern des User-Profils: %s", e)
-        return False
+    """Speichert das User-Profil in settings.json (profile-Sektion)"""
+    return save_section('profile', profile)
 
 
 def get_user_profile_data():
@@ -75,37 +49,37 @@ def update_user_profile():
     current = _load_profile()
     
     # Nur erlaubte Felder aktualisieren
-    allowed_keys = {'user_name', 'user_avatar', 'user_avatar_type', 'user_gender', 'user_interested_in', 'user_info', 'persona_language'}
+    allowed_keys = {'userName', 'userAvatar', 'userAvatarType', 'userGender', 'userInterestedIn', 'userInfo', 'personaLanguage'}
     for key in allowed_keys:
         if key in data:
             current[key] = data[key]
     
     # Validierung: user_gender
-    valid_genders = {'Männlich', 'Weiblich', 'Divers'}
-    if current.get('user_gender') and current['user_gender'] not in valid_genders:
-        current['user_gender'] = None
+    valid_genders = {'Male', 'Female', 'Other'}
+    if current.get('userGender') and current['userGender'] not in valid_genders:
+        current['userGender'] = None
     
-    # Validierung: user_interested_in (Liste von Geschlechtern)
-    if isinstance(current.get('user_interested_in'), list):
-        current['user_interested_in'] = [g for g in current['user_interested_in'] if g in valid_genders]
+    # Validierung: userInterestedIn (Liste von Geschlechtern)
+    if isinstance(current.get('userInterestedIn'), list):
+        current['userInterestedIn'] = [g for g in current['userInterestedIn'] if g in valid_genders]
     else:
-        current['user_interested_in'] = []
+        current['userInterestedIn'] = []
     
-    # Validierung: user_info max 500 Zeichen
-    if current.get('user_info') and len(current['user_info']) > 500:
-        current['user_info'] = current['user_info'][:500]
+    # Validierung: userInfo max 500 Zeichen
+    if current.get('userInfo') and len(current['userInfo']) > 500:
+        current['userInfo'] = current['userInfo'][:500]
     
-    # Validierung: user_name max 30 Zeichen, nicht leer
-    if current.get('user_name'):
-        current['user_name'] = current['user_name'].strip()[:30]
-    if not current.get('user_name'):
-        current['user_name'] = 'User'
+    # Validierung: userName max 30 Zeichen, nicht leer
+    if current.get('userName'):
+        current['userName'] = current['userName'].strip()[:30]
+    if not current.get('userName'):
+        current['userName'] = 'User'
     
-    # Validierung: persona_language – muss ein nicht-leerer String sein
-    if not current.get('persona_language') or not isinstance(current['persona_language'], str):
-        current['persona_language'] = 'english'
+    # Validierung: personaLanguage – muss ein nicht-leerer String sein
+    if not current.get('personaLanguage') or not isinstance(current['personaLanguage'], str):
+        current['personaLanguage'] = 'english'
     else:
-        current['persona_language'] = current['persona_language'].strip().lower()
+        current['personaLanguage'] = current['personaLanguage'].strip().lower()
     
     if _save_profile(current):
         # PromptEngine-Cache invalidieren (user_profile-Werte wie language sind gecached)
@@ -195,8 +169,8 @@ def upload_user_avatar():
         
         # Profil aktualisieren
         profile = _load_profile()
-        profile['user_avatar'] = unique_filename
-        profile['user_avatar_type'] = 'custom'
+        profile['userAvatar'] = unique_filename
+        profile['userAvatarType'] = 'custom'
         _save_profile(profile)
         
         return success_response(filename=unique_filename, avatar_type='custom')

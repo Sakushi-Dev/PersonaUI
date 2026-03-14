@@ -1,6 +1,6 @@
 // ── useAfterthought Hook ──
-// Nachgedanke v2: message-count triggered with 3-phase random delay escalation.
-// Modes: "selten" (every 3rd msg), "mittel" (every 2nd), "hoch" (every msg).
+// Afterthought v2: message-count triggered with 3-phase random delay escalation.
+// Modes: "rare" (every 3rd msg), "medium" (every 2nd), "high" (every msg).
 // Phase ranges & frequencies loaded from server (afterthought_settings.json).
 
 import { useState, useCallback, useRef, useEffect } from 'react';
@@ -39,7 +39,7 @@ export function useAfterthought() {
   // Last inner dialogue from a [i_can_wait] decision — sent with next user message then cleared
   const pendingThoughtRef = useRef(null);
 
-  const mode = get('nachgedankeMode', 'off');
+  const mode = get('afterthoughtMode', 'off');
   const enabled = mode !== 'off' && mode !== false && mode !== undefined;
 
   // ── Load afterthought config from server on mount ──
@@ -97,7 +97,7 @@ export function useAfterthought() {
   // ── Core check: decision → optional followup ──
   const executeCheck = useCallback(async () => {
     // Re-check enabled state from settings (guards against stale closure)
-    const currentMode = get('nachgedankeMode', 'off');
+    const currentMode = get('afterthoughtMode', 'off');
     if (currentMode === 'off' || currentMode === false || currentMode === undefined) {
       stopTimer();
       return;
@@ -240,7 +240,7 @@ export function useAfterthought() {
     };
   }, []);
 
-  // ── Immediately stop when nachgedankeMode is set to 'off' ──
+  // ── Immediately stop when afterthoughtMode is set to 'off' ──
   useEffect(() => {
     if (!enabled) {
       stopTimer();

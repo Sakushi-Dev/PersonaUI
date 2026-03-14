@@ -39,6 +39,15 @@ export function SettingsProvider({ children }) {
     updateSettings(updates).catch((err) => console.warn('Settings save failed:', err));
   }, []);
 
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (flushTimer.current) {
+        clearTimeout(flushTimer.current);
+      }
+    };
+  }, []);
+
   const scheduleFlush = useCallback(() => {
     if (flushTimer.current) clearTimeout(flushTimer.current);
     flushTimer.current = setTimeout(flush, 300);

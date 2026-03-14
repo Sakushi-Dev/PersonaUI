@@ -18,9 +18,6 @@ Thumbs.db
 
 # === RUNTIME-GENERIERTE DATEIEN ===
 
-# Environment
-.env
-
 # Logs
 *.log
 src/logs/
@@ -37,25 +34,17 @@ src/data/
 # Backup-Dateien
 *.backup
 
-# Benutzer-Einstellungen (nur defaults.json ist versioniert)
-src/settings/user_settings.json
-src/settings/server_settings.json
-src/settings/user_profile.json
-src/settings/window_settings.json
-src/settings/emoji_usage.json
+# Settings-Verzeichnis ignorieren, Defaults in settings/default/
+src/settings/*
+!src/settings/default/
+
+# Launch-Options (Nutzer-spezifisch, Defaults in config/default/)
+config/launch_options.ini
 
 # Benutzer-erstellte Personas
 src/instructions/created_personas/
 
-# Cortex-Dateien (Persona-Erinnerungen, benutzergeneriert)
-src/instructions/personas/cortex/default/*.md
-src/instructions/personas/cortex/custom/
-
-# Cortex-Settings (Benutzer-Konfiguration)
-src/settings/cortex_settings.json
-
-# Cortex Cycle State (auto-generiert, Session-Tracking)
-src/settings/cycle_state.json
+# Cortex-Dateien (jetzt in src/data/{persona_id}/cortex/, bereits durch src/data/ abgedeckt)
 
 # Aktive Persona-Config (wird bei jeder Aktivierung überschrieben)
 src/instructions/personas/active/persona_config.json
@@ -79,9 +68,6 @@ frontend/public/avatar/index.json
 *.temp
 *.backup
 src/restart_server.bat
-
-# Lokale Status-Dateien (pro Installation)
-src/settings/onboarding.json
 
 # pytest_cache
 .pytest_cache/

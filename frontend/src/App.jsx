@@ -35,12 +35,12 @@ function AppRoutes() {
   useEffect(() => {
     getOnboardingStatus()
       .then((data) => {
-        setOnboardingDone(data.completed ?? true);
-        setDisclaimerAccepted(data.disclaimer_accepted ?? true);
+        setOnboardingDone(data.completed ?? false);
+        setDisclaimerAccepted(data.disclaimer_accepted ?? false);
       })
       .catch(() => {
-        setOnboardingDone(true);
-        setDisclaimerAccepted(true);
+        setOnboardingDone(false);
+        setDisclaimerAccepted(false);
       });
   }, []);
 

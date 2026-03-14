@@ -7,20 +7,16 @@ Bei Erreichen der Schwelle: Update → Zähler reset → zyklisch wiederholen.
 
 import threading
 import math
-import json
-import os
 from typing import Dict, Optional
 
-from utils.logger import log
-from utils.database import get_message_count
-from utils.cortex.tier_tracker import (
+from ..logger import log
+from ..database import get_message_count
+from .tier_tracker import (
     get_cycle_base, set_cycle_base, get_progress
 )
 
 
 # ─── Konstanten ──────────────────────────────────────────────────────────────
-
-_BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Frequenz-Mapping
 FREQUENCIES = {
@@ -35,53 +31,24 @@ DEFAULT_FREQUENCY = "medium"
 
 def _load_cortex_config() -> dict:
     """
-    Lädt die Cortex-Konfiguration aus cortex_settings.json.
+    Lädt die Cortex-Konfiguration aus settings.json (cortex-Sektion).
 
     Returns:
         {"enabled": True, "frequency": "medium"}
     """
-    settings_path = os.path.join(_BASE_DIR, 'settings', 'cortex_settings.json')
-    defaults = {"enabled": True, "frequency": DEFAULT_FREQUENCY}
-
-    try:
-        if os.path.exists(settings_path):
-            with open(settings_path, 'r', encoding='utf-8') as f:
-                saved = json.load(f)
-            return {**defaults, **saved}
-    except Exception:
-        pass
-    return defaults
+    from utils.settings_manager import load_section
+    return load_section('cortex')
 
 
 def _get_context_limit() -> int:
     """
-    Liest den User-contextLimit (ungeclampt) aus user_settings.json.
+    Liest den User-contextLimit (ungeclampt) aus settings.json (user-Sektion).
 
     Verwendet den User-Wert für Cortex-Berechnung, nicht den
     geclampten Server-Wert. Nur Minimum 10, kein Maximum-Clamp.
     """
-    settings_path = os.path.join(_BASE_DIR, 'settings', 'user_settings.json')
-    defaults_path = os.path.join(_BASE_DIR, 'settings', 'defaults.json')
-
-    # Zuerst User-Settings versuchen
-    raw = None
-    try:
-        if os.path.exists(settings_path):
-            with open(settings_path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            raw = data.get('contextLimit')
-    except Exception:
-        pass
-
-    # Fallback auf Defaults
-    if raw is None:
-        try:
-            if os.path.exists(defaults_path):
-                with open(defaults_path, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-                raw = data.get('contextLimit', '100')
-        except Exception:
-            raw = '100'
+    from utils.settings_manager import get_value
+    raw = get_value('api', 'contextLimit', '100')
 
     try:
         return max(10, int(raw))  # Minimum 10 Nachrichten

@@ -4,14 +4,15 @@ import subprocess
 import threading
 
 
-import json
+import configparser
 
 def load_version():
-    """Load version from version.json file."""
-    version_path = os.path.join(os.path.dirname(__file__), "..", "version.json")
+    """Load version from config/version.ini."""
+    version_path = os.path.join(os.path.dirname(__file__), "..", "config", "version.ini")
     try:
-        with open(version_path, "r", encoding="utf-8") as f:
-            return json.load(f).get("version", "unknown")
+        cp = configparser.ConfigParser()
+        cp.read(version_path, encoding='utf-8')
+        return cp.get('version', 'version', fallback='unknown').strip()
     except Exception:
         return "unknown"
 
@@ -21,14 +22,13 @@ os.chdir(script_dir)
 
 from flask import Flask, jsonify, redirect, url_for, request
 from flask_cors import CORS
-from dotenv import load_dotenv
 from datetime import timedelta
+import secrets as _secrets
 
 # Importiere Utility-Funktionen
 from utils.logger import log
 from utils.database import init_all_dbs
 from utils.provider import init_services
-from utils.helpers import ensure_env_file
 from utils.access_control import check_access
 
 # Importiere Route-Registrierung
@@ -43,22 +43,21 @@ from splash_screen import (
 )
 
 
-# Stelle sicher, dass .env Datei existiert
-ensure_env_file()
-
-# Lade Umgebungsvariablen
-load_dotenv()
-
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'fallback-secret-key-for-development')
+app.secret_key = _secrets.token_hex(32)
 app.json.sort_keys = False  # Reihenfolge der Keys beibehalten (Default -> Custom)
 
-# CORS für React-Frontend (Vite Dev-Server auf Port 5173)
-CORS(app, resources={r"/*": {"origins": ["http://localhost:5173", "http://127.0.0.1:5173"]}}, supports_credentials=True)
+# CORS für React-Frontend (Vite Dev-Server)
+from utils.launch_config import config as _launch_cfg
+_vite_port = _launch_cfg['vite_port']
+CORS(app, resources={r"/*": {"origins": [f"http://localhost:{_vite_port}", f"http://127.0.0.1:{_vite_port}"]}}, supports_credentials=True)
+
+# Configure log level from launch_options.ini
+log.setLevel(getattr(__import__('logging'), _launch_cfg['log_level'], __import__('logging').INFO))
 
 # Session-Konfiguration
 
-# Load version from version.json
+# Load version from config/version.ini
 app.config["APP_VERSION"] = load_version()
 
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # Session remains valid for 7 days
@@ -222,7 +221,13 @@ def start_vite_dev_server():
         return False
 
     # Port 5173 freigeben falls noch ein alter Prozess läuft
-    _kill_port(5173)
+    vite_port = 5173
+    try:
+        from utils.launch_config import config as _lcfg
+        vite_port = _lcfg.get('vite_port', 5173)
+    except Exception:
+        pass
+    _kill_port(vite_port)
 
     log.info("Starte Vite Dev-Server (npm run dev) in separater Konsole...")
     kwargs = {
@@ -252,26 +257,15 @@ def stop_vite_dev_server():
 
 
 if __name__ == '__main__':
-    # Settings only preloaded for port (so pywebview knows which port it needs)
-    import json
-    settings_path = os.path.join(os.path.dirname(__file__), 'settings', 'server_settings.json')
-    server_mode = 'local'
-    server_port = 5000
-    try:
-        if os.path.exists(settings_path):
-            with open(settings_path, 'r', encoding='utf-8') as f:
-                settings = json.load(f)
-                server_settings = settings.get('server_settings', {})
-                server_mode = server_settings.get('SERVER_MODE', 'local')
-                server_port = int(server_settings.get('SERVER_PORT', 5000))
-    except Exception:
-        pass
-    
-    host = '0.0.0.0' if server_mode == 'listen' else '127.0.0.1'
-    
-    # Check if PyWebView should be used (--no-gui disables it)
-    use_webview = '--no-gui' not in sys.argv
-    dev_mode = '--dev' in sys.argv
+    from utils.launch_config import config as launch_cfg
+
+    host = launch_cfg['host']
+    server_port = launch_cfg['port']
+
+    # Check if PyWebView should be used (no_gui disables it)
+    use_webview = not launch_cfg['no_gui']
+    dev_mode = launch_cfg['dev_mode']
+    show_console = launch_cfg['show_console']
     
     # Im Dev-Modus: Vite Dev-Server starten
     if dev_mode:
@@ -282,8 +276,9 @@ if __name__ == '__main__':
             import webview
             from utils.window_settings import load_window_settings, save_window_settings
             
-            # Hide console - pywebview takes over the display
-            hide_console_window()
+            # Hide console unless show_console is set
+            if not show_console:
+                hide_console_window()
 
             # AppUserModelID setzen, damit Windows die App als eigenständig erkennt
             # und das eigene Icon in der Taskleiste anzeigt (statt python.exe-Icon)
@@ -340,9 +335,10 @@ if __name__ == '__main__':
             )
             
             # Startup im Hintergrund-Thread, startet wenn Fenster sichtbar wird
+            server_mode = 'listen' if host == '0.0.0.0' else 'local'
             boot_thread = threading.Thread(
                 target=startup_sequence,
-                args=(window, server_mode, server_port, start_flask_server, host, dev_mode),
+                args=(window, server_mode, server_port, start_flask_server, host, launch_cfg),
                 daemon=True,
             )
             
@@ -383,22 +379,18 @@ if __name__ == '__main__':
             show_console_window()
             log.warning("PyWebView nicht installiert. Starte im Browser-Modus...")
             init_all_dbs()
-            from utils.cortex_service import ensure_cortex_dirs
+            from utils.cortex import ensure_cortex_dirs
             ensure_cortex_dirs()
-            from utils.settings_migration import migrate_settings
-            migrate_settings()
             log.info("Server running at: http://%s:%s", host, server_port)
             log.info("Web UI & Backend developed by Sakushi-Dev")
             app.run(host=host, port=server_port, debug=False)
     else:
         # Fallback: Normaler Flask-Server ohne GUI-Fenster
         init_all_dbs()
-        from utils.cortex_service import ensure_cortex_dirs
+        from utils.cortex import ensure_cortex_dirs
         ensure_cortex_dirs()
-        from utils.settings_migration import migrate_settings
-        migrate_settings()
         if dev_mode:
-            log.info("Dev-Modus: Vite Dev-Server läuft auf http://localhost:5173")
+            log.info("Dev-Modus: Vite Dev-Server läuft auf http://localhost:%s", launch_cfg['vite_port'])
             log.info("Flask-Backend auf http://%s:%s", host, server_port)
         else:
             log.info("Server running at: http://%s:%s", host, server_port)

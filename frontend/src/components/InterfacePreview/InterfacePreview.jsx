@@ -29,9 +29,9 @@ export default function InterfacePreview({
   fontFamily,
 }) {
   // Fallback to theme defaults if no override provided
-  const bg = bgColor ?? (isDark ? '#1a2332' : '#a3baff');
-  const g1 = gradient1 ?? (isDark ? '#2a3f5f' : '#66cfff');
-  const g2 = gradient2 ?? (isDark ? '#3d4f66' : '#fd91ee');
+  const bg = bgColor ?? (isDark ? '#151a24' : '#a3baff');
+  const g1 = gradient1 ?? (isDark ? '#1f2d47' : '#66cfff');
+  const g2 = gradient2 ?? (isDark ? '#1a2e2b' : '#fd91ee');
   const { t } = useLanguage();
   const s = t('interfacePreview');
 
